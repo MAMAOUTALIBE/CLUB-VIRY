@@ -1,0 +1,47 @@
+import { Clock, Mail, MapPin, MessageSquare, Phone, Users } from "lucide-react";
+import { ContactForm } from "@/components/Forms";
+import { FeatureCards } from "@/components/FeatureCards";
+import { PageHero } from "@/components/PageHero";
+import { SectionTitle } from "@/components/SectionTitle";
+import { images } from "@/lib/images";
+
+export const metadata = {
+  title: "Contact"
+};
+
+export default function ContactPage() {
+  return (
+    <>
+      <PageHero description="Nous sommes à votre écoute." image={images.stadiumAerial} title="Contactez-nous" />
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+        <address className="not-italic">
+          <div className="club-panel rounded-lg p-6 text-white">
+            <h2 className="text-2xl font-black uppercase text-[#f7c600]">Coordonnées</h2>
+            <div className="mt-6 space-y-5">
+              <p className="flex gap-3"><MapPin className="shrink-0 text-[#f7c600]" /> Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon</p>
+              <p className="flex gap-3"><Phone className="shrink-0 text-[#f7c600]" /> 01 69 24 39 50</p>
+              <p className="flex gap-3"><Mail className="shrink-0 text-[#f7c600]" /> contact@esviryfootball.com</p>
+            </div>
+          </div>
+          <div className="official-card mt-5 h-72 rounded-lg bg-white p-4">
+            <div className="flex h-full items-center justify-center rounded border-2 border-dashed border-slate-300 text-center font-black uppercase text-[#002f1d]">
+              Carte à connecter
+            </div>
+          </div>
+        </address>
+        <ContactForm />
+      </section>
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+        <SectionTitle eyebrow="Contact utile" title="Trouver rapidement le bon interlocuteur" text="Une page contact premium doit orienter les familles, joueurs, partenaires et bénévoles." />
+        <FeatureCards
+          items={[
+            { title: "Familles", text: "Questions inscriptions, licences, documents et catégories.", icon: Users },
+            { title: "Partenaires", text: "Demandes de sponsoring, visibilité et collaboration.", icon: MessageSquare },
+            { title: "Stade", text: "Accès, localisation, horaires et informations pratiques.", icon: MapPin },
+            { title: "Horaires", text: "Informer clairement sur les disponibilités du club.", icon: Clock }
+          ]}
+        />
+      </section>
+    </>
+  );
+}
