@@ -103,6 +103,10 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <header
       className={`sticky top-0 z-50 border-b border-[#f7c600]/25 text-white transition-all duration-300 ${

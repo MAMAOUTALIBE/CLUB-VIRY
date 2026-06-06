@@ -4,7 +4,7 @@ import { getAdminContext } from "@/lib/api/admin-auth";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminRegistrationReviewPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
-import { getRegistrationBundleForAdmin, reviewRegistration } from "@/lib/db/registrations";
+import { getRegistrationDetailForAdmin, reviewRegistration } from "@/lib/db/registrations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const registration = await getRegistrationBundleForAdmin(id);
+    const registration = await getRegistrationDetailForAdmin(id);
 
     if (!registration) {
       return jsonError(404, "NOT_FOUND", "Dossier introuvable.");

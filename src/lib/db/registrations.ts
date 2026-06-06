@@ -5,11 +5,17 @@ import { getActiveSeason, recordActivity } from "@/lib/db/foundations";
 import { getFamilyDashboard, isProfileFamilyMember } from "@/lib/db/family";
 import { queueAdminNotification, queueNotification } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
-import type { Registration, RegistrationDocument } from "@/lib/db/types";
+import type { Family, Payment, Player, Registration, RegistrationDocument } from "@/lib/db/types";
 
 export type RegistrationBundle = {
   registration: Registration;
   documents: RegistrationDocument[];
+};
+
+export type AdminRegistrationDetail = RegistrationBundle & {
+  family: Family | null;
+  player: Player | null;
+  payments: Payment[];
 };
 
 export type RegistrationDocumentDownload = {
@@ -165,6 +171,44 @@ export async function getRegistrationBundleForAdmin(registrationId: string): Pro
   return {
     registration: registration as Registration,
     documents: (documents ?? []) as RegistrationDocument[]
+  };
+}
+
+export async function getRegistrationDetailForAdmin(registrationId: string): Promise<AdminRegistrationDetail | null> {
+  const supabase = getSupabaseAdminClient();
+  const bundle = await getRegistrationBundleForAdmin(registrationId);
+
+  if (!bundle) {
+    return null;
+  }
+
+  const [
+    { data: family, error: familyError },
+    { data: player, error: playerError },
+    { data: payments, error: paymentsError }
+  ] = await Promise.all([
+    supabase.from("families").select("*").eq("id", bundle.registration.family_id).maybeSingle(),
+    supabase.from("players").select("*").eq("id", bundle.registration.player_id).maybeSingle(),
+    supabase.from("payments").select("*").eq("registration_id", registrationId).order("created_at", { ascending: false })
+  ]);
+
+  if (familyError) {
+    throw new Error(`Unable to fetch admin registration family: ${familyError.message}`);
+  }
+
+  if (playerError) {
+    throw new Error(`Unable to fetch admin registration player: ${playerError.message}`);
+  }
+
+  if (paymentsError) {
+    throw new Error(`Unable to fetch admin registration payments: ${paymentsError.message}`);
+  }
+
+  return {
+    ...bundle,
+    family: family as Family | null,
+    player: player as Player | null,
+    payments: (payments ?? []) as Payment[]
   };
 }
 
