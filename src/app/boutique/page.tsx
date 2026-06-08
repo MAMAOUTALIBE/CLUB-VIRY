@@ -30,7 +30,7 @@ export default function ShopPage() {
                 <div className="club-panel flex h-40 items-center justify-center rounded-md text-[#f7c600]">
                   <Icon size={70} aria-hidden="true" />
                 </div>
-                <p className="mt-5 text-xs font-black uppercase text-[#f7c600]">{product.category}</p>
+                <p className="mt-5 text-xs font-black uppercase text-[#8a6d00]">{product.category}</p>
                 <h2 className="text-xl font-black uppercase text-[#002f1d]">{product.name}</h2>
                 <p className="mt-2 text-lg font-black">{product.price}</p>
                 <button className="mt-4 cursor-not-allowed rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] px-4 py-3 text-sm font-black uppercase text-slate-400" type="button" disabled aria-disabled="true">

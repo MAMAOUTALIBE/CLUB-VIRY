@@ -106,7 +106,7 @@ export default async function CalendarPage() {
             {calendar.items.map((item) => (
               <article className="official-card group rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl" key={item.id}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-black uppercase text-[#f7c600]">
+                  <p className="text-sm font-black uppercase text-[#8a6d00]">
                     {item.dateLabel} · {item.timeLabel}
                   </p>
                   <span className="rounded-full bg-[#002f1d]/10 px-3 py-1 text-xs font-black uppercase text-[#002f1d]">

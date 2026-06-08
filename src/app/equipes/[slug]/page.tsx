@@ -62,7 +62,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {["Présentation", "Résultats", "Calendrier"].map((tab) => (
               <div className="rounded-md border border-[#002f1d]/10 bg-[#fbfcf8] p-4" key={tab}>
-                <p className="text-xs font-black uppercase text-[#f7c600]">{tab}</p>
+                <p className="text-xs font-black uppercase text-[#8a6d00]">{tab}</p>
                 <p className="mt-2 text-sm text-slate-700">Informations prêtes à être affichées dans une fiche officielle claire et lisible.</p>
               </div>
             ))}

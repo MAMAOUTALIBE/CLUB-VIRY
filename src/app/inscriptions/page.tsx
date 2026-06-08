@@ -20,7 +20,7 @@ export default function RegistrationPage() {
           <div className="grid gap-4">
             {["Choisir sa catégorie", "Remplir le formulaire en ligne", "Fournir les pièces demandées", "Paiement de la licence"].map((step, index) => (
               <div className="official-card rounded-lg bg-white p-5" key={step}>
-                <p className="text-sm font-black uppercase text-[#f7c600]">Étape {index + 1}</p>
+                <p className="text-sm font-black uppercase text-[#8a6d00]">Étape {index + 1}</p>
                 <h2 className="mt-1 text-xl font-black uppercase text-[#002f1d]">{step}</h2>
               </div>
             ))}

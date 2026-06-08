@@ -108,7 +108,7 @@ export default function HomePage() {
 	                    <Icon size={25} aria-hidden="true" />
 	                  </div>
 	                  <div>
-	                    <p className="text-[11px] font-black uppercase tracking-wide text-[#f7c600]">Accès rapide</p>
+	                    <p className="text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Accès rapide</p>
 	                    <h2 className="mt-1 text-xl font-black uppercase leading-none text-[#002f1d]">{action.label}</h2>
 	                    <p className="mt-2 text-sm font-bold text-slate-600">{action.text}</p>
 	                  </div>
@@ -184,7 +184,7 @@ export default function HomePage() {
 	            <div className="grid sm:grid-cols-[0.95fr_1.05fr]">
 	              <img alt="" className="h-64 w-full object-cover sm:h-full" src={leadNews.image} />
 	              <div className="p-6">
-	                <p className="text-xs font-black uppercase text-[#f7c600]">
+	                <p className="text-xs font-black uppercase text-[#8a6d00]">
 	                  {leadNews.category} · {leadNews.date}
 	                </p>
 	                <h2 className="mt-2 text-3xl font-black uppercase leading-tight text-[#002f1d]">{leadNews.title}</h2>
@@ -201,7 +201,7 @@ export default function HomePage() {
 	          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_42px_rgba(0,31,19,0.08)]">
 	            <div className="flex items-start justify-between gap-4">
 	              <div>
-	                <p className="text-xs font-black uppercase text-[#f7c600]">Club</p>
+	                <p className="text-xs font-black uppercase text-[#8a6d00]">Club</p>
 	                <h2 className="text-2xl font-black uppercase text-[#002f1d]">À suivre</h2>
 	              </div>
 	              <Link className="focus-ring text-xs font-black uppercase text-[#002f1d] hover:text-[#f7c600]" href="/actualites">
@@ -213,7 +213,7 @@ export default function HomePage() {
 	                <article className="grid grid-cols-[82px_1fr] gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-[#f7c600]/60 hover:bg-[#f7c600]/5" key={item.title}>
 	                  <img alt="" className="h-20 w-20 rounded-lg object-cover" src={item.image} />
 	                  <div>
-	                    <p className="text-[11px] font-black uppercase text-[#f7c600]">{item.date}</p>
+	                    <p className="text-[11px] font-black uppercase text-[#8a6d00]">{item.date}</p>
 	                    <h3 className="mt-1 font-black uppercase leading-tight text-[#002f1d]">{item.title}</h3>
 	                    <p className="mt-1 line-clamp-2 text-sm text-slate-600">{item.excerpt}</p>
 	                  </div>
@@ -336,7 +336,7 @@ export default function HomePage() {
               <StaggerItem className="premium-card overflow-hidden rounded-lg bg-white" key={team.slug}>
                 <img alt="" className="h-52 w-full object-cover" src={team.image} />
                 <div className="p-5">
-                  <p className="text-xs font-black uppercase text-[#f7c600]">{team.category}</p>
+                  <p className="text-xs font-black uppercase text-[#8a6d00]">{team.category}</p>
                   <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{team.name}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-700">{team.description}</p>
                 </div>

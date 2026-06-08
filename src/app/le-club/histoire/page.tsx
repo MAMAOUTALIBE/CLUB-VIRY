@@ -26,7 +26,7 @@ export default function HistoryPage() {
           {timeline.map(([year, text], index) => (
             <Reveal key={year} delay={index * 0.06}>
               <article className="premium-card grid gap-4 rounded-lg bg-white p-6 sm:grid-cols-[90px_1fr] sm:items-center">
-                <p className="text-4xl font-black text-[#f7c600]">{year}</p>
+                <p className="text-4xl font-black text-[#8a6d00]">{year}</p>
                 <p className="text-lg leading-8 text-slate-700">{text}</p>
               </article>
             </Reveal>

@@ -23,7 +23,7 @@ export default function MemberSpacePage() {
           </div>
         </div>
         <div className="official-card flex flex-col justify-center rounded-lg bg-white p-6 sm:p-8">
-          <p className="text-xs font-black uppercase text-[#f7c600]">Bientôt disponible</p>
+          <p className="text-xs font-black uppercase text-[#8a6d00]">Bientôt disponible</p>
           <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">Votre espace personnel arrive</h2>
           <div className="gold-divider mt-3" aria-hidden="true" />
           <p className="mt-5 text-sm font-semibold text-slate-700">
