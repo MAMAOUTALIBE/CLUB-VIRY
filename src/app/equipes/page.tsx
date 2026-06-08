@@ -30,7 +30,7 @@ export default function TeamsPage() {
             <StaggerItem key={team.slug}>
             <Link className="focus-ring premium-card group block overflow-hidden rounded-lg bg-white" href={`/equipes/${team.slug}`}>
               <div className="relative">
-                <img alt="" className="h-56 w-full object-cover transition group-hover:scale-105" src={team.image} />
+                <img decoding="async" loading="lazy" alt={team.name} className="h-56 w-full object-cover transition group-hover:scale-105" src={team.image} />
                 <span className="absolute left-4 top-4 rounded bg-[#f7c600] px-3 py-1 text-xs font-black uppercase text-[#002f1d]">{team.season}</span>
               </div>
               <div className="p-5">

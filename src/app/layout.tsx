@@ -65,6 +65,10 @@ const sportsClubJsonLd = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html data-scroll-behavior="smooth" lang="fr" className={scriptFont.variable}>
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body>
         <a
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-[#f7c600] focus:px-4 focus:py-2 focus:text-sm focus:font-black focus:uppercase focus:text-[#002f1d]"

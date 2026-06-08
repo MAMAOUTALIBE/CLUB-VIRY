@@ -24,6 +24,8 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Préchargement prioritaire de l'image du hero (LCP) */}
+      <link rel="preload" as="image" href={images.stadiumHero} fetchPriority="high" />
       <section
         className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 bg-cover bg-center text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0"
         style={{ backgroundImage: `url(${images.stadiumHero})` }}
@@ -182,7 +184,7 @@ export default function HomePage() {
 	        <div className="grid gap-6">
 	          <article className="official-card overflow-hidden rounded-2xl bg-white">
 	            <div className="grid sm:grid-cols-[0.95fr_1.05fr]">
-	              <img alt="" className="h-64 w-full object-cover sm:h-full" src={leadNews.image} />
+	              <img decoding="async" loading="lazy" alt={leadNews.title} className="h-64 w-full object-cover sm:h-full" src={leadNews.image} />
 	              <div className="p-6">
 	                <p className="text-xs font-black uppercase text-[#8a6d00]">
 	                  {leadNews.category} · {leadNews.date}
@@ -211,7 +213,7 @@ export default function HomePage() {
 	            <div className="mt-5 grid gap-3">
 	              {sideNews.map((item) => (
 	                <article className="grid grid-cols-[82px_1fr] gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-[#f7c600]/60 hover:bg-[#f7c600]/5" key={item.title}>
-	                  <img alt="" className="h-20 w-20 rounded-lg object-cover" src={item.image} />
+	                  <img decoding="async" loading="lazy" alt={item.title} className="h-20 w-20 rounded-lg object-cover" src={item.image} />
 	                  <div>
 	                    <p className="text-[11px] font-black uppercase text-[#8a6d00]">{item.date}</p>
 	                    <h3 className="mt-1 font-black uppercase leading-tight text-[#002f1d]">{item.title}</h3>
@@ -334,7 +336,7 @@ export default function HomePage() {
           <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {teams.slice(0, 3).map((team) => (
               <StaggerItem className="premium-card overflow-hidden rounded-lg bg-white" key={team.slug}>
-                <img alt="" className="h-52 w-full object-cover" src={team.image} />
+                <img decoding="async" loading="lazy" alt={team.name} className="h-52 w-full object-cover" src={team.image} />
                 <div className="p-5">
                   <p className="text-xs font-black uppercase text-[#8a6d00]">{team.category}</p>
                   <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{team.name}</h3>

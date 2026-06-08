@@ -52,7 +52,7 @@ export function Footer() {
     <footer className="club-shell border-t-4 border-[#f7c600] text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.2fr_2fr_1.4fr] lg:px-8">
         <div>
-          <img className="h-[140px] w-[140px] rounded-full object-contain drop-shadow-xl" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={140} height={140} />
+          <img decoding="async" loading="lazy" className="h-[140px] w-[140px] rounded-full object-contain drop-shadow-xl" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={140} height={140} />
           <p className="mt-4 max-w-xs text-sm text-white/80">Site officiel de l'ES Viry-Châtillon Football. Jaune et Vert pour toujours.</p>
         </div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
