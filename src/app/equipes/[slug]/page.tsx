@@ -70,16 +70,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         </div>
         <aside className="club-panel rounded-lg p-6 text-white">
           <h2 className="text-xl font-black uppercase text-[#f7c600]">Classement</h2>
-          <ol className="mt-5 space-y-3 text-sm">
-            {["ES Viry-Châtillon", "FC Massy", "US Torcy", "Evry FC", "Sénart Moissy"].map((club, index) => (
-              <li className="flex justify-between rounded bg-white/10 px-3 py-2" key={club}>
-                <span>
-                  {index + 1}. {club}
-                </span>
-                <strong>{51 - index * 4} pts</strong>
-              </li>
-            ))}
-          </ol>
+          <p className="mt-5 text-sm text-white/80">Le classement officiel sera affiché ici dès la publication des résultats par le district / la ligue.</p>
           <div className="mt-6">
             <ButtonLink href="/equipes">Toutes les équipes</ButtonLink>
           </div>
@@ -90,7 +81,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         primaryLabel="Toutes les équipes"
         secondaryHref="/calendrier"
         secondaryLabel="Voir les matchs"
-        text="Une fiche équipe doit donner immédiatement une image sérieuse du groupe, de son staff et de sa saison."
+        text="Le groupe, son staff et sa saison, présentés clairement."
         title={`${team.name}, un groupe qui porte le blason`}
       />
     </>

@@ -49,7 +49,7 @@ export default function TeamsPage() {
         primaryLabel="Rejoindre une équipe"
         secondaryHref="/detections-recrutement"
         secondaryLabel="Candidater aux détections"
-        text="Chaque catégorie doit donner envie aux joueurs et aux parents de rejoindre une structure sérieuse."
+        text="De l'école de foot aux seniors, chaque catégorie accueille joueurs et parents dans une structure sérieuse."
         title="Votre enfant a sa place dans la famille Viry"
       />
     </>

@@ -773,6 +773,14 @@ export function validateRecruitmentApplicationPayload(input: unknown): Validatio
     issues.push({ field: "message", message: "Message trop long." });
   }
 
+  if (!position || position.length < 2 || position.length > 80) {
+    issues.push({ field: "position", message: "Poste invalide." });
+  }
+
+  if (!currentClub || currentClub.length < 2 || currentClub.length > 120) {
+    issues.push({ field: "currentClub", message: "Club actuel invalide." });
+  }
+
   if (issues.length > 0) {
     return { ok: false, issues };
   }

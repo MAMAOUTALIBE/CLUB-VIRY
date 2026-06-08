@@ -29,7 +29,7 @@ export default function RegistrationPage() {
         <RegistrationForm />
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Parents & joueurs" title="Un parcours clair, rassurant et efficace" text="L'inscription doit inspirer confiance : informations simples, étapes lisibles, accompagnement du club." />
+        <SectionTitle eyebrow="Parents & joueurs" title="Un parcours clair, rassurant et efficace" text="Des informations simples, des étapes lisibles, et l'accompagnement du club à chaque étape." />
         <FeatureCards
           items={[
             { title: "Catégories", text: "Identifier rapidement la bonne catégorie selon l'âge et le niveau.", icon: Users },

@@ -34,7 +34,7 @@ export default function PartnersPage() {
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Offres" title="Une vitrine crédible pour les sponsors" text="Un partenaire doit comprendre rapidement ce qu'il gagne : visibilité, proximité, impact local et image positive." />
+        <SectionTitle eyebrow="Offres" title="Devenez partenaire du club" text="Ce que vous y gagnez : visibilité, proximité, impact local et image positive." />
         <FeatureCards
           items={[
             { title: "Visibilité", text: "Présence sur le site, les supports et les temps forts du club.", icon: Eye },

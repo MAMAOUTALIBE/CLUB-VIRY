@@ -15,7 +15,7 @@ export default function ShopPage() {
       <PageHero description="Portez les couleurs de Viry : textile, accessoires et packs supporters." image={images.football} title="Boutique officielle" />
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <SectionTitle title="Tous les produits" text="Une boutique officielle doit donner envie de porter les couleurs du club." />
+          <SectionTitle title="Tous les produits" text="Portez fièrement les couleurs de l'ES Viry-Châtillon." />
           <div className="mb-8 flex flex-wrap gap-2">
             {["Tout", "Textile", "Accessoires", "Packs"].map((item) => (
               <span className="rounded-full border border-[#002f1d]/15 bg-white px-3 py-2 text-xs font-black uppercase text-[#002f1d]" key={item}>{item}</span>
@@ -33,8 +33,8 @@ export default function ShopPage() {
                 <p className="mt-5 text-xs font-black uppercase text-[#f7c600]">{product.category}</p>
                 <h2 className="text-xl font-black uppercase text-[#002f1d]">{product.name}</h2>
                 <p className="mt-2 text-lg font-black">{product.price}</p>
-                <button className="focus-ring mt-4 rounded-md bg-[#f7c600] px-4 py-3 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white" type="button">
-                  Ajouter au panier
+                <button className="mt-4 cursor-not-allowed rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] px-4 py-3 text-sm font-black uppercase text-slate-400" type="button" disabled aria-disabled="true">
+                  Bientôt disponible
                 </button>
               </article>
             );

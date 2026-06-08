@@ -48,11 +48,38 @@ function buildReference(type: LeadType): string {
   return `${type}-${Date.now()}-${random}`;
 }
 
+/**
+ * Anonymise une IP avant stockage (minimisation RGPD) :
+ * IPv4 -> dernier octet masqué (1.2.3.0) ; IPv6 -> préfixe /48 conservé.
+ */
+function anonymizeIp(ip: string | null | undefined): string | null {
+  if (!ip) return null;
+  const value = ip.trim();
+  if (value.length === 0) return null;
+
+  if (value.includes(".")) {
+    const parts = value.split(".");
+    if (parts.length === 4) {
+      return `${parts[0]}.${parts[1]}.${parts[2]}.0`;
+    }
+  }
+
+  if (value.includes(":")) {
+    return `${value.split(":").slice(0, 3).join(":")}::`;
+  }
+
+  return null;
+}
+
 async function appendToFile(type: LeadType, record: Record<string, unknown>): Promise<void> {
   const dir = getLeadsDir();
-  await fs.mkdir(dir, { recursive: true });
+  // Dossier privé (rwx pour le propriétaire uniquement) + fichiers non world-readable.
+  await fs.mkdir(dir, { recursive: true, mode: 0o700 });
   const file = path.join(dir, `${type}.jsonl`);
-  await fs.appendFile(file, `${JSON.stringify(record)}\n`, "utf8");
+  await fs.appendFile(file, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
+  // Garantit les permissions même si le dossier/fichier préexistait avec des droits plus larges.
+  await fs.chmod(dir, 0o700).catch(() => {});
+  await fs.chmod(file, 0o600).catch(() => {});
 }
 
 async function forwardToWebhook(record: Record<string, unknown>): Promise<boolean> {
@@ -86,12 +113,17 @@ export async function captureLead(
   meta: LeadMeta = {}
 ): Promise<LeadCaptureResult> {
   const reference = buildReference(type);
+  // Minimisation : on n'enregistre pas l'IP brute (RGPD, demandes pouvant concerner des mineurs).
+  const safeMeta = {
+    userAgent: meta.userAgent ?? null,
+    ip: anonymizeIp(meta.ip)
+  };
   const record = {
     reference,
     type,
     createdAt: new Date().toISOString(),
     data,
-    meta
+    meta: safeMeta
   };
 
   let storedToFile = false;

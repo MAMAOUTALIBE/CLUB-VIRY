@@ -36,7 +36,7 @@ export default function ContactPage() {
         <ContactForm />
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Contact utile" title="Trouver rapidement le bon interlocuteur" text="Une page contact premium doit orienter les familles, joueurs, partenaires et bénévoles." />
+        <SectionTitle eyebrow="Contact utile" title="Trouver rapidement le bon interlocuteur" text="Familles, joueurs, partenaires, bénévoles : trouvez rapidement le bon interlocuteur." />
         <FeatureCards
           items={[
             { title: "Familles", text: "Questions inscriptions, licences, documents et catégories.", icon: Users },

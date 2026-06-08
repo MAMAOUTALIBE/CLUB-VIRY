@@ -37,7 +37,9 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    return jsonError(400, "SUPABASE_ERROR", error.message);
+    // Log serveur uniquement ; côté client on renvoie toujours la même réponse
+    // pour ne pas révéler si l'adresse existe (anti-énumération).
+    console.error("password-reset error:", error.message);
   }
 
   return jsonOk({ sent: true });

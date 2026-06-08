@@ -46,7 +46,7 @@ export default function ClubPage() {
         <SectionTitle
           eyebrow="Identité"
           title="Un club structuré, familial et ambitieux"
-          text="Le site doit refléter ce que le club veut incarner : sérieux, proximité, formation, passion et exigence."
+          text="Sérieux, proximité, formation, passion et exigence : les valeurs qui guident l’ES Viry-Châtillon."
         />
         <FeatureCards
           items={[
@@ -80,7 +80,7 @@ export default function ClubPage() {
         primaryLabel="Rejoindre le club"
         secondaryHref="/partenaires"
         secondaryLabel="Devenir partenaire"
-        text="Chaque saison doit être une vitrine pour les joueurs, les familles et les partenaires."
+        text="Chaque saison rassemble joueurs, familles et partenaires autour du club."
         title="Construisons ensemble la prochaine saison jaune et verte"
       />
     </>

@@ -24,68 +24,80 @@ export default function HomePage() {
 
   return (
     <>
-	      <section
-	        className="hero-stadium image-tint min-h-[720px] border-b border-[#f7c600]/35 bg-cover bg-center text-white lg:h-[calc(100svh-128px)] lg:min-h-[560px]"
-	        style={{ backgroundImage: `url(${images.stadiumHero})` }}
-	      >
-	        <div className="mx-auto flex min-h-[720px] max-w-[1720px] flex-col justify-end px-4 pb-6 pt-10 sm:px-6 lg:h-full lg:min-h-0 lg:px-8 lg:pb-5 lg:pt-6">
-	          <div className="grid flex-1 items-center gap-8 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-5">
-	            <Reveal>
-	              <div>
-		                <div className="flex items-center gap-5 text-xs font-black uppercase tracking-[0.5em] text-[#44d13f] sm:text-sm">
-		                  <span className="h-px w-10 bg-[#44d13f]" />
-		                  Un club, une ville
-		                </div>
-		                <h1 className="mt-5 max-w-4xl text-4xl font-black uppercase leading-[0.94] tracking-tight text-white sm:text-6xl lg:text-5xl xl:text-6xl 2xl:text-7xl">
-		                  Une passion{" "}
-		                  <span className="block text-[#f7c600]">notre force</span>
-		                </h1>
-		                <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">
-		                  Porté par un nouveau bureau nouvellement nommé, notre club ouvre un nouveau chapitre.
-		                </p>
-		                <div className="mt-4 h-1 w-24 rounded-full bg-[#f7c600]" />
-		                <div className="mt-5 flex flex-wrap gap-4">
-		                  <Link className="focus-ring inline-flex items-center gap-4 rounded-lg bg-[#f7c600] px-7 py-4 text-sm font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white" href="/le-club">
-		                    Découvrir le club
-		                    <ArrowRight size={22} aria-hidden="true" />
-		                  </Link>
-		                  <Link className="focus-ring inline-flex items-center gap-4 rounded-lg border border-white/70 bg-black/10 px-7 py-4 text-sm font-black uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]" href="/equipes">
-	                    Nos équipes
-	                    <ArrowRight size={22} aria-hidden="true" />
-	                  </Link>
-	                </div>
-	              </div>
-	            </Reveal>
-	            <Reveal delay={0.12} className="hidden justify-center lg:flex">
-		              <div className="relative min-h-[330px] w-full max-w-[600px]">
-		                <div className="absolute left-1/2 top-0 h-[230px] w-[230px] -translate-x-1/2 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
-		                <img className="absolute left-1/2 top-0 h-[230px] w-[230px] -translate-x-1/2 rounded-full object-contain drop-shadow-2xl 2xl:h-[270px] 2xl:w-[270px]" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={270} height={270} />
-		                <div className="absolute bottom-2 right-0 text-right">
-		                  <p className="text-4xl font-black italic leading-none text-[#f7c600] drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] xl:text-5xl">Jaune et Vert</p>
-		                  <p className="mt-1 -rotate-2 text-3xl font-black italic leading-none text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.45)] xl:text-4xl">pour toujours !</p>
-		                  <div className="ml-auto mt-3 h-1 w-64 -rotate-2 rounded-full bg-[#f7c600]" />
-	                </div>
-	              </div>
-	            </Reveal>
-	          </div>
-	          <Stagger aria-label="Chiffres clés du club" className="grid overflow-hidden rounded-2xl border border-white/25 bg-[#00120b]/72 shadow-2xl backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-5">
-	            {clubStats.map((stat) => {
-	              const Icon = stat.icon;
-	              return (
-	                <StaggerItem className="flex min-h-24 items-center gap-4 border-white/14 p-4 sm:border-r lg:min-h-[104px] last:border-r-0" key={stat.label}>
-	                  <Icon className="shrink-0 text-[#f7c600]" size={42} strokeWidth={1.8} aria-hidden="true" />
-	                  <div>
-	                    <p className="text-3xl font-black leading-none text-white lg:text-4xl">{stat.value}</p>
-	                    <p className="mt-2 text-xs font-black uppercase tracking-wide text-white/90">{stat.label}</p>
-	                  </div>
-	                </StaggerItem>
-	              );
-	            })}
-	          </Stagger>
-	        </div>
-	      </section>
+      <section
+        className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 bg-cover bg-center text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0"
+        style={{ backgroundImage: `url(${images.stadiumHero})` }}
+      >
+        {/* Fondu bas : transition douce vers la barre statistiques */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-44 bg-gradient-to-t from-[#00120b] via-[#00120b]/45 to-transparent"
+          aria-hidden="true"
+        />
 
-	      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+        {/* Contenu principal (centré, occupe l'espace disponible) */}
+        <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="grid w-full items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+            <Reveal>
+              <div>
+                <h1 className="max-w-4xl">
+                  <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
+                    Une passion
+                  </span>
+                  <span className="font-script -mt-1 block pl-6 text-6xl leading-[1.05] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
+                    notre force
+                  </span>
+                </h1>
+                <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">
+                  Porté par un nouveau bureau nouvellement nommé, notre club ouvre un nouveau chapitre.
+                </p>
+                <div className="mt-4 h-1 w-24 rounded-full bg-[#f7c600]" />
+                <div className="mt-7 flex flex-wrap gap-4">
+                  <Link className="focus-ring inline-flex items-center gap-4 rounded-lg bg-[#f7c600] px-7 py-3.5 text-sm font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white" href="/le-club">
+                    Découvrir le club
+                    <ArrowRight size={22} aria-hidden="true" />
+                  </Link>
+                  <Link className="focus-ring inline-flex items-center gap-4 rounded-lg border border-white/70 bg-black/10 px-7 py-3.5 text-sm font-black uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]" href="/equipes">
+                    Nos équipes
+                    <ArrowRight size={22} aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
+            </Reveal>
+            <Reveal delay={0.12} className="hidden justify-center lg:flex">
+              <div className="relative min-h-[300px] w-full max-w-[600px]">
+                <div className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
+                <img className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full object-contain drop-shadow-2xl 2xl:h-[250px] 2xl:w-[250px]" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={250} height={250} />
+              </div>
+            </Reveal>
+          </div>
+        </div>
+
+        {/* Barre statistiques : tout en bas du hero, compacte, une seule ligne par carte */}
+        <div className="relative z-[2] mx-auto w-full max-w-[1560px] shrink-0 px-4 pb-4 sm:px-6 lg:px-8 lg:pb-5">
+          <Stagger
+            aria-label="Chiffres clés du club"
+            className="grid overflow-hidden rounded-xl border border-white/15 bg-[#00150d]/75 shadow-[0_22px_55px_rgba(0,18,11,0.5)] ring-1 ring-[#f7c600]/10 backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-5"
+          >
+            {clubStats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <StaggerItem
+                  className="flex items-center gap-2.5 border-b border-white/10 px-4 py-2.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 lg:py-3"
+                  key={stat.label}
+                >
+                  <Icon className="shrink-0 text-[#f7c600]" size={26} strokeWidth={1.9} aria-hidden="true" />
+                  <p className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+                    <span className="text-xl font-black leading-none text-white lg:text-2xl">{stat.value}</span>
+                    <span className="truncate text-[11px] font-black uppercase tracking-wide text-white/80">{stat.label}</span>
+                  </p>
+                </StaggerItem>
+              );
+            })}
+          </Stagger>
+        </div>
+      </section>
+
+	      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
 	        <Stagger className="grid overflow-hidden rounded-2xl border border-[#002f1d]/10 bg-white shadow-[0_20px_55px_rgba(0,31,19,0.12)] md:grid-cols-2 xl:grid-cols-4">
 	          {quickActions.map((action) => {
 	            const Icon = action.icon;
@@ -297,7 +309,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <SectionTitle
               eyebrow="Partenaires"
-              text="Un club sérieux inspire confiance. Les partenaires doivent voir une vitrine crédible, stable et ambitieuse."
+              text="Un club sérieux, stable et ambitieux : associez votre image à un acteur majeur du territoire."
               title="Ils accompagnent le projet"
             />
             <div className="pb-8">
