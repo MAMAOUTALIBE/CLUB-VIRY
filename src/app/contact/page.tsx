@@ -23,10 +23,14 @@ export default function ContactPage() {
               <p className="flex gap-3"><Mail className="shrink-0 text-[#f7c600]" /> contact@esviryfootball.com</p>
             </div>
           </div>
-          <div className="official-card mt-5 h-72 rounded-lg bg-white p-4">
-            <div className="flex h-full items-center justify-center rounded border-2 border-dashed border-slate-300 text-center font-black uppercase text-[#002f1d]">
-              Carte à connecter
-            </div>
+          <div className="official-card mt-5 overflow-hidden rounded-lg bg-white p-2">
+            <iframe
+              className="h-72 w-full rounded"
+              title="Localisation du Stade Henri Longuet à Viry-Châtillon"
+              src="https://www.google.com/maps?q=Stade%20Henri%20Longuet%2C%20Viry-Ch%C3%A2tillon&output=embed"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </address>
         <ContactForm />

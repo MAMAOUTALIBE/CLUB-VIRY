@@ -74,6 +74,16 @@ export type ContactMessagePayload = {
   message: string;
 };
 
+export type RegistrationLeadPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  category: string;
+  message?: string;
+};
+
 export type OrderItemPayload = {
   productId: string;
   variantId?: string;
@@ -829,6 +839,68 @@ export function validateContactMessagePayload(input: unknown): ValidationResult<
       ...(phone ? { phone } : {}),
       subject: subject as string,
       message: message as string
+    }
+  };
+}
+
+export function validateRegistrationLeadPayload(input: unknown): ValidationResult<RegistrationLeadPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+  const email = normalizeEmail(body.email);
+  const phone = normalizeString(body.phone);
+  const birthDate = normalizeString(body.birthDate);
+  const category = normalizeString(body.category);
+  const message = normalizeString(body.message);
+
+  if (!firstName || firstName.length < 2 || firstName.length > 80) {
+    issues.push({ field: "firstName", message: "Prenom invalide." });
+  }
+
+  if (!lastName || lastName.length < 2 || lastName.length > 80) {
+    issues.push({ field: "lastName", message: "Nom invalide." });
+  }
+
+  if (!email || !isValidEmail(email)) {
+    issues.push({ field: "email", message: "Adresse email invalide." });
+  }
+
+  if (!phone || phone.length < 6 || phone.length > 32) {
+    issues.push({ field: "phone", message: "Telephone invalide." });
+  }
+
+  if (!birthDate || !isValidBirthDate(birthDate)) {
+    issues.push({ field: "birthDate", message: "Date de naissance invalide." });
+  }
+
+  if (!category || category.length < 2 || category.length > 120) {
+    issues.push({ field: "category", message: "Categorie souhaitee invalide." });
+  }
+
+  if (message && message.length > 1500) {
+    issues.push({ field: "message", message: "Message trop long." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      firstName: firstName as string,
+      lastName: lastName as string,
+      email: email as string,
+      phone: phone as string,
+      birthDate: birthDate as string,
+      category: category as string,
+      ...(message ? { message } : {})
     }
   };
 }
