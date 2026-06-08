@@ -14,7 +14,11 @@ export const metadata = {
 
 export default async function CalendarPage() {
   const calendar = await getCalendarPageData();
-  const days = Array.from({ length: 31 }, (_, index) => index + 1);
+  // Grille calendaire correcte : vrai nombre de jours + offset du 1er jour (semaine commençant lundi).
+  const daysInMonth = new Date(calendar.year, calendar.month + 1, 0).getDate();
+  const firstWeekday = new Date(calendar.year, calendar.month, 1).getDay(); // 0 = dimanche
+  const leadingBlanks = (firstWeekday + 6) % 7;
+  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
 
   return (
     <>
@@ -71,11 +75,14 @@ export default async function CalendarPage() {
             <CalendarDays className="text-[#f7c600]" />
             <h2 className="text-2xl font-black uppercase">{calendar.monthTitle}</h2>
           </div>
-          <div className="mt-6 grid grid-cols-7 gap-2 text-center text-sm">
+          <div className="mt-6 grid grid-cols-7 gap-2 text-center text-sm" role="grid" aria-label={`Calendrier ${calendar.monthTitle}`}>
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
               <span className="font-black uppercase text-[#f7c600]" key={day}>
                 {day}
               </span>
+            ))}
+            {Array.from({ length: leadingBlanks }).map((_, index) => (
+              <span aria-hidden="true" key={`blank-${index}`} />
             ))}
             {days.map((day) => {
               const isHighlighted = calendar.highlightedDays.includes(day);
@@ -99,7 +106,7 @@ export default async function CalendarPage() {
             {calendar.items.map((item) => (
               <article className="official-card group rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl" key={item.id}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-black uppercase text-[#f7c600]">
+                  <p className="text-sm font-black uppercase text-[#8a6d00]">
                     {item.dateLabel} · {item.timeLabel}
                   </p>
                   <span className="rounded-full bg-[#002f1d]/10 px-3 py-1 text-xs font-black uppercase text-[#002f1d]">

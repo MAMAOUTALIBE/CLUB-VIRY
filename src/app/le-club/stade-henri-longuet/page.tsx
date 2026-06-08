@@ -31,15 +31,13 @@ export default function StadiumPage() {
           <MapPin className="text-[#f7c600]" size={38} aria-hidden="true" />
           <h2 className="mt-4 text-2xl font-black uppercase">Adresse</h2>
           <p className="mt-3">Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon</p>
-          <div className="mt-6 h-64 rounded-lg bg-[linear-gradient(135deg,#e7efe4,#ffffff)] p-4 text-[#002f1d]">
-            <div className="flex h-full items-center justify-center rounded border-2 border-dashed border-[#002f1d]/30 text-center font-black uppercase">
-              Carte interactive à connecter
-            </div>
+          <div className="mt-6 overflow-hidden rounded-lg">
+            <iframe className="h-64 w-full rounded-lg" title="Localisation du Stade Henri Longuet à Viry-Châtillon" src="https://www.google.com/maps?q=Stade%20Henri%20Longuet%2C%20Viry-Ch%C3%A2tillon&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
           </div>
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Lieu de vie" title="Plus qu'un terrain, une maison" text="Le stade doit être ressenti comme un point de rassemblement : match, entraînement, familles, supporters et bénévoles." />
+        <SectionTitle eyebrow="Lieu de vie" title="Plus qu'un terrain, une maison" text="Un point de rassemblement : matchs, entraînements, familles, supporters et bénévoles." />
         <FeatureCards
           items={[
             { title: "Matchday", text: "Un lieu pour vivre les rencontres et porter les couleurs du club.", icon: Waves },

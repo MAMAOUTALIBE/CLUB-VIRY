@@ -7,6 +7,8 @@
   --viry-yellow: #f7c600;
   --viry-yellow-2: #ffd84d;
   --viry-ink: #102018;
+  /* Hauteur du header (mise à jour dynamiquement par le composant Header) */
+  --header-h: 108px;
 }
 
 html {
@@ -115,6 +117,45 @@ select {
   width: 4rem;
   border-radius: 999px;
   background: var(--viry-yellow);
+}
+
+/* Lettrage brush / calligraphie (titre hero) */
+.font-script {
+  font-family: var(--font-script), "Snell Roundhand", "Brush Script MT", "Apple Chancery", cursive;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* Bandeau d'annonce defilant (top bar) */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee__track {
+  display: inline-flex;
+  width: max-content;
+  animation: marquee-scroll 26s linear infinite;
+}
+
+.marquee:hover .marquee__track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track {
+    animation: none;
+    transform: none;
+  }
 }
 
 .image-tint {

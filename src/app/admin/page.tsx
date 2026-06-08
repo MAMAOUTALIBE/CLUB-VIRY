@@ -235,7 +235,7 @@ export default function AdminPage() {
                 <p className="text-xs font-black uppercase text-[#07542f]">Prochaine phase</p>
                 <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">Fiches 360 degres</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  La prochaine evolution doit connecter ce shell aux donnees reelles et livrer les fiches famille, joueur et inscription avec documents, paiements, historique et actions rapides.
+                  Module CRM : fiches famille, joueur et inscription (documents, paiements, historique, actions rapides) — activé avec le backend Supabase.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">

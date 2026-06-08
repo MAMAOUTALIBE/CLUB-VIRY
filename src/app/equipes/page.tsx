@@ -30,11 +30,11 @@ export default function TeamsPage() {
             <StaggerItem key={team.slug}>
             <Link className="focus-ring premium-card group block overflow-hidden rounded-lg bg-white" href={`/equipes/${team.slug}`}>
               <div className="relative">
-                <img alt="" className="h-56 w-full object-cover transition group-hover:scale-105" src={team.image} />
+                <img decoding="async" loading="lazy" alt={team.name} className="h-56 w-full object-cover transition group-hover:scale-105" src={team.image} />
                 <span className="absolute left-4 top-4 rounded bg-[#f7c600] px-3 py-1 text-xs font-black uppercase text-[#002f1d]">{team.season}</span>
               </div>
               <div className="p-5">
-                <p className="text-sm font-black uppercase text-[#f7c600]">{team.category}</p>
+                <p className="text-sm font-black uppercase text-[#8a6d00]">{team.category}</p>
                 <h2 className="text-2xl font-black uppercase text-[#002f1d]">{team.name}</h2>
                 <p className="mt-2 text-sm text-slate-700">{team.description}</p>
                 <p className="mt-4 text-xs font-black uppercase text-[#002f1d]">Voir la fiche équipe</p>
@@ -49,7 +49,7 @@ export default function TeamsPage() {
         primaryLabel="Rejoindre une équipe"
         secondaryHref="/detections-recrutement"
         secondaryLabel="Candidater aux détections"
-        text="Chaque catégorie doit donner envie aux joueurs et aux parents de rejoindre une structure sérieuse."
+        text="De l'école de foot aux seniors, chaque catégorie accueille joueurs et parents dans une structure sérieuse."
         title="Votre enfant a sa place dans la famille Viry"
       />
     </>

@@ -1,6 +1,7 @@
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { jsonError, readJsonBody } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateLoginPayload } from "@/lib/api/validation";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
@@ -33,23 +34,42 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await getSupabaseClient().auth.signInWithPassword(payload.data);
 
-  if (error) {
-    return jsonError(401, "AUTH_FAILED", error.message);
+  if (error || !data.session) {
+    // Message générique : ne révèle pas si le compte existe (anti-énumération)
+    // et ne propage pas l'erreur interne Supabase.
+    return jsonError(401, "AUTH_FAILED", "Identifiants invalides.");
   }
 
-  return jsonOk({
-    user: data.user
-      ? {
-          id: data.user.id,
-          email: data.user.email
-        }
-      : null,
-    session: data.session
-      ? {
-          accessToken: data.session.access_token,
-          refreshToken: data.session.refresh_token,
+  const response = NextResponse.json(
+    {
+      ok: true,
+      data: {
+        user: data.user ? { id: data.user.id, email: data.user.email } : null,
+        session: {
           expiresAt: data.session.expires_at
         }
-      : null
+      }
+    },
+    { status: 200 }
+  );
+
+  const secure = process.env.NODE_ENV === "production";
+  // Jetons en cookies HttpOnly (non lisibles par JS) au lieu du sessionStorage côté client.
+  // Le cookie `admin_session` autorise aussi l'accès à /admin via le proxy.
+  response.cookies.set("admin_session", data.session.access_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "strict",
+    path: "/",
+    maxAge: data.session.expires_in ?? 3600
   });
+  response.cookies.set("admin_refresh", data.session.refresh_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7
+  });
+
+  return response;
 }

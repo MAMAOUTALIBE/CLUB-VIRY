@@ -1,0 +1,40 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: es-viry-football:latest
+    container_name: es-viry-football
+    restart: unless-stopped
+    # Variables d'environnement (NEXT_PUBLIC_SITE_URL, NOTIFICATION_WEBHOOK_URL, etc.)
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=production
+      - LEADS_DIR=/app/var/leads
+    # Les demandes (contact / inscription / recrutement) sont ecrites ici et
+    # restent lisibles sur le VPS meme apres une mise a jour du conteneur.
+    volumes:
+      - ./var/leads:/app/var/leads
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      # Remplacer gandal.example.com par le domaine reel du club.
+      - "traefik.http.routers.esviry.rule=Host(`${SITE_DOMAIN:-esviryfootball.com}`)"
+      - "traefik.http.routers.esviry.entrypoints=websecure"
+      - "traefik.http.routers.esviry.tls=true"
+      - "traefik.http.routers.esviry.tls.certresolver=letsencrypt"
+      - "traefik.http.services.esviry.loadbalancer.server.port=3000"
+      # Redirection HTTP -> HTTPS
+      - "traefik.http.routers.esviry-http.rule=Host(`${SITE_DOMAIN:-esviryfootball.com}`)"
+      - "traefik.http.routers.esviry-http.entrypoints=web"
+      - "traefik.http.routers.esviry-http.middlewares=esviry-redirect"
+      - "traefik.http.middlewares.esviry-redirect.redirectscheme.scheme=https"
+
+# Reseau Traefik partage (deja cree sur le VPS, comme pour e-formationgn).
+# Adapter le nom si votre reseau Traefik s'appelle autrement (ex: proxy, web).
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}

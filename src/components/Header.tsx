@@ -1,10 +1,13 @@
 "use client";
 
-import { ArrowRight, ChevronDown, Mail, MapPin, Menu, Phone, Search, ShoppingBag, Ticket, User, X } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronDown, Menu, ShoppingBag, Ticket, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MotionDiv } from "@/components/Motion";
+
+const ANNOUNCEMENT =
+  "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !";
 
 const navItems = [
   { label: "Accueil", href: "/" },
@@ -92,6 +95,7 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     function onScroll() {
@@ -103,31 +107,52 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Expose la hauteur réelle du header en variable CSS (--header-h)
+  // pour que le hero puisse occuper exactement 100vh - header (zéro scroll).
+  useEffect(() => {
+    function applyHeaderHeight() {
+      const el = headerRef.current;
+      if (!el) return;
+      document.documentElement.style.setProperty("--header-h", `${el.offsetHeight}px`);
+    }
+
+    applyHeaderHeight();
+    window.addEventListener("resize", applyHeaderHeight);
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(applyHeaderHeight).catch(() => {});
+    }
+
+    return () => window.removeEventListener("resize", applyHeaderHeight);
+  }, []);
+
   if (pathname.startsWith("/admin")) {
     return null;
   }
 
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-50 border-b border-[#f7c600]/25 text-white transition-all duration-300 ${
         scrolled ? "bg-[#00120b]/94 shadow-2xl backdrop-blur-xl" : "bg-[#00120b]/98 shadow-xl"
       }`}
     >
       <div className="hidden border-b border-[#f7c600]/20 bg-black/30 text-xs font-bold lg:block">
-        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-1.5">
-          <div className="flex min-w-0 items-center gap-7 text-white/82">
-            <span className="inline-flex items-center gap-2 whitespace-nowrap">
-              <MapPin className="text-[#f7c600]" size={17} aria-hidden="true" />
-              Stade Henri Longuet, Viry-Châtillon
-            </span>
-            <span className="hidden items-center gap-2 whitespace-nowrap xl:inline-flex">
-              <Phone className="text-[#f7c600]" size={16} aria-hidden="true" />
-              01 69 24 39 50
-            </span>
-            <span className="hidden items-center gap-2 whitespace-nowrap 2xl:inline-flex">
-              <Mail className="text-[#f7c600]" size={17} aria-hidden="true" />
-              contact@esviryfootball.com
-            </span>
+        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-1">
+          <div className="marquee min-w-0 flex-1 text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">
+            <span className="sr-only">{ANNOUNCEMENT}</span>
+            <div className="marquee__track" aria-hidden="true">
+              {[0, 1].map((half) => (
+                <div className="flex shrink-0 items-center" key={half}>
+                  {[0, 1, 2].map((index) => (
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap px-8" key={index}>
+                      <CalendarDays className="shrink-0 text-[#f7c600]" size={20} aria-hidden="true" />
+                      {ANNOUNCEMENT}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-5">
@@ -136,7 +161,7 @@ export function Header() {
               {socialItems.map((item) => (
                 <span
                   aria-label={item.label}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border transition hover:scale-105"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border transition hover:scale-105"
                   key={item.label}
                   role="img"
                   style={{
@@ -156,7 +181,7 @@ export function Header() {
             <div className="flex overflow-hidden rounded-md border border-[#f7c600]/35">
               <Link className="focus-ring inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase hover:bg-white/10" href="/calendrier">
                 <Ticket size={16} aria-hidden="true" />
-                Billetterie
+                Matchs
               </Link>
               <Link className="focus-ring inline-flex items-center gap-2 border-l border-[#f7c600]/30 px-4 py-2 text-xs font-black uppercase text-[#f7c600] hover:bg-white/10" href="/boutique">
                 <ShoppingBag size={16} aria-hidden="true" />
@@ -169,13 +194,13 @@ export function Header() {
 
       <nav
         className={`mx-auto flex max-w-[1680px] items-center gap-4 px-4 transition-all sm:px-6 lg:px-8 ${
-          scrolled ? "py-2" : "py-2.5"
+          scrolled ? "py-1.5" : "py-2"
         }`}
         aria-label="Navigation principale"
       >
         <Link className="focus-ring flex min-w-0 flex-none items-center gap-3" href="/" onClick={() => setOpen(false)}>
           <img
-            className={`shrink-0 rounded-full object-contain drop-shadow-xl transition-all duration-300 ${scrolled ? "h-12 w-12 lg:h-14 lg:w-14" : "h-14 w-14 lg:h-[60px] lg:w-[60px]"}`}
+            className={`shrink-0 rounded-full object-contain drop-shadow-xl transition-all duration-300 ${scrolled ? "h-10 w-10 lg:h-11 lg:w-11" : "h-11 w-11 lg:h-12 lg:w-12"}`}
             src="/club-logo.svg"
             alt="ES Viry-Châtillon Football"
             width={60}
@@ -192,6 +217,7 @@ export function Header() {
             return (
               <div className="group relative" key={item.href}>
                 <Link
+                  aria-current={active ? "page" : undefined}
                   className={`focus-ring relative inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[12px] font-black uppercase transition min-[1500px]:px-4 min-[1500px]:text-[13px] ${
                     active ? "bg-[#f7c600] text-[#001c10] shadow-[0_8px_22px_rgba(247,198,0,0.24)]" : "text-white/90 hover:bg-white/8 hover:text-[#f7c600]"
                   }`}
@@ -201,7 +227,7 @@ export function Header() {
                   {item.children ? <ChevronDown size={13} aria-hidden="true" /> : null}
                 </Link>
                 {item.children ? (
-                  <div className="pointer-events-none absolute left-0 top-[calc(100%+16px)] w-72 translate-y-2 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100">
+                  <div className="pointer-events-none absolute left-0 top-[calc(100%+16px)] w-72 translate-y-2 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100">
                     <div className="club-panel rounded-lg p-3 shadow-2xl">
                       <p className="px-3 pb-2 text-xs font-black uppercase text-[#f7c600]">{item.label}</p>
                       <div className="grid gap-1">
@@ -220,9 +246,6 @@ export function Header() {
         </div>
 
         <div className="ml-auto flex flex-none items-center gap-2">
-          <Link aria-label="Recherche" className="focus-ring hidden h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/5 hover:border-[#f7c600]/65 hover:text-[#f7c600] sm:inline-flex" href="/plan-du-site">
-            <Search size={21} />
-          </Link>
           <Link className="focus-ring hidden h-11 items-center gap-2 rounded-full border border-white/18 bg-white/5 px-4 text-xs font-black uppercase hover:border-[#f7c600]/65 hover:text-[#f7c600] min-[1800px]:inline-flex" href="/espace-membre">
             <User size={18} aria-hidden="true" />
             Mon espace
@@ -257,6 +280,7 @@ export function Header() {
             {navItems.map((item) => (
               <div key={item.href}>
                 <Link
+                  aria-current={pathname === item.href ? "page" : undefined}
                   className={`focus-ring flex items-center justify-between rounded-md px-3 py-3 text-sm font-black uppercase hover:bg-white/10 ${
                     pathname === item.href ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
                   }`}

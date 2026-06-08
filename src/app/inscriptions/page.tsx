@@ -20,7 +20,7 @@ export default function RegistrationPage() {
           <div className="grid gap-4">
             {["Choisir sa catégorie", "Remplir le formulaire en ligne", "Fournir les pièces demandées", "Paiement de la licence"].map((step, index) => (
               <div className="official-card rounded-lg bg-white p-5" key={step}>
-                <p className="text-sm font-black uppercase text-[#f7c600]">Étape {index + 1}</p>
+                <p className="text-sm font-black uppercase text-[#8a6d00]">Étape {index + 1}</p>
                 <h2 className="mt-1 text-xl font-black uppercase text-[#002f1d]">{step}</h2>
               </div>
             ))}
@@ -29,7 +29,7 @@ export default function RegistrationPage() {
         <RegistrationForm />
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Parents & joueurs" title="Un parcours clair, rassurant et efficace" text="L'inscription doit inspirer confiance : informations simples, étapes lisibles, accompagnement du club." />
+        <SectionTitle eyebrow="Parents & joueurs" title="Un parcours clair, rassurant et efficace" text="Des informations simples, des étapes lisibles, et l'accompagnement du club à chaque étape." />
         <FeatureCards
           items={[
             { title: "Catégories", text: "Identifier rapidement la bonne catégorie selon l'âge et le niveau.", icon: Users },

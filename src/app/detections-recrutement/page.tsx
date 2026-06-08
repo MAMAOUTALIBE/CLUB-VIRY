@@ -33,7 +33,7 @@ export default function RecruitmentPage() {
       </section>
       <section className="club-shell px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <SectionTitle inverse eyebrow="Process" title="Un parcours talent clair" text="La page détection doit transmettre ambition, sérieux et exigence sportive." />
+          <SectionTitle inverse eyebrow="Process" title="Un parcours talent clair" text="Un cadre exigeant et bienveillant pour révéler et accompagner les talents du territoire." />
           <FeatureCards
             inverse
             items={[
@@ -50,7 +50,7 @@ export default function RecruitmentPage() {
         primaryLabel="Voir les équipes"
         secondaryHref="/contact"
         secondaryLabel="Contacter le club"
-        text="La détection doit donner envie aux talents du territoire de rejoindre Viry."
+        text="Tu as le talent et l'envie ? Rejoins un club ambitieux qui forme et fait progresser."
         title="Le talent se développe dans un cadre exigeant"
       />
     </>

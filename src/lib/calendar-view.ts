@@ -20,6 +20,8 @@ export type CalendarPageData = {
   items: CalendarDisplayItem[];
   highlightedDays: number[];
   monthTitle: string;
+  year: number;
+  month: number;
   isFallback: boolean;
 };
 
@@ -95,16 +97,16 @@ function dayFromLabel(value: string) {
   return match ? Number(match[0]) : undefined;
 }
 
-function getMonthTitle(items: CalendarDisplayItem[]) {
+function getReferenceMonth(items: CalendarDisplayItem[]) {
   const firstDatedItem = items.find((item) => item.startsAt);
-  const date = readDate(firstDatedItem?.startsAt);
+  // À défaut de date réelle (mode vitrine sans Supabase), on affiche le mois courant.
+  const date = readDate(firstDatedItem?.startsAt) ?? new Date();
+  return { year: date.getFullYear(), month: date.getMonth() };
+}
 
-  if (!date) {
-    return "Mai 2025";
-  }
-
-  const month = monthFormatter.format(date);
-  return month.charAt(0).toUpperCase() + month.slice(1);
+function formatMonthTitle(year: number, month: number) {
+  const label = monthFormatter.format(new Date(year, month, 1));
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function getMatchTeams(location: MatchLocation, opponentName: string) {
@@ -178,11 +180,15 @@ export function buildCalendarPageData(items: CalendarDisplayItem[], isFallback: 
   const calendarItems = items.length > 0 ? items : fallbackItems;
   const highlightedDays = Array.from(new Set(calendarItems.map((item) => item.dayOfMonth).filter((day): day is number => Boolean(day))));
 
+  const { year, month } = getReferenceMonth(calendarItems);
+
   return {
     featured: calendarItems[0],
     items: calendarItems,
     highlightedDays,
-    monthTitle: getMonthTitle(calendarItems),
+    monthTitle: formatMonthTitle(year, month),
+    year,
+    month,
     isFallback
   };
 }

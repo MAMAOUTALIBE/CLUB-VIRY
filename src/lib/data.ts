@@ -60,7 +60,7 @@ export const matches = [
     team: "Seniors R1",
     home: "ES Viry-Châtillon",
     away: "COMPACT",
-    date: "Sam. 24 mai",
+    date: "Sam. 5 sept.",
     time: "18:00",
     place: "Stade Henri Longuet"
   },
@@ -68,7 +68,7 @@ export const matches = [
     team: "U18 R1",
     home: "ES Viry-Châtillon",
     away: "Brétigny FC",
-    date: "Dim. 25 mai",
+    date: "Dim. 6 sept.",
     time: "15:00",
     place: "Stade Henri Longuet"
   },
@@ -76,7 +76,7 @@ export const matches = [
     team: "U15 R1",
     home: "ES Viry-Châtillon",
     away: "Evry FC",
-    date: "Sam. 24 mai",
+    date: "Sam. 5 sept.",
     time: "15:00",
     place: "Stade Henri Longuet"
   }
@@ -85,28 +85,28 @@ export const matches = [
 export const news = [
   {
     title: "Victoire des Seniors R1 !",
-    date: "24 mai 2025",
+    date: "24 mai 2026",
     category: "Équipes",
     excerpt: "Un match maîtrisé de bout en bout et une belle dynamique collective.",
     image: images.teamHuddle
   },
   {
     title: "Stage de perfectionnement",
-    date: "29 avr. 2025",
+    date: "29 avr. 2026",
     category: "Jeunes",
     excerpt: "Vacances d'avril : une semaine de travail, de plaisir et de progression.",
     image: images.training
   },
   {
     title: "Détection U13 : les dates à retenir",
-    date: "5 avr. 2025",
+    date: "5 avr. 2026",
     category: "Détections",
     excerpt: "Le club accueille les jeunes talents du territoire pour préparer demain.",
     image: images.youthTeam
   },
   {
     title: "Tournoi U11 : un beau week-end",
-    date: "12 avr. 2025",
+    date: "12 avr. 2026",
     category: "Événements",
     excerpt: "Bénévoles, éducateurs et familles réunis autour du football.",
     image: images.football
