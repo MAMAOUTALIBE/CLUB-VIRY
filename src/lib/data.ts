@@ -43,8 +43,8 @@ export const clubStats = [
   { label: "Licenciés", value: "+600", icon: Users },
   { label: "Éducateurs", value: "50", icon: Award },
   { label: "Équipes", value: "30", icon: Shield },
-  { label: "Stade Henri Longuet", value: "1", icon: Building2 },
-  { label: "Depuis", value: "1967", icon: CalendarDays }
+  { label: "Places au stade", value: "5 700", icon: Building2 },
+  { label: "Depuis", value: "1958", icon: CalendarDays }
 ];
 
 export const values = [
@@ -57,7 +57,7 @@ export const values = [
 
 export const matches = [
   {
-    team: "Seniors R1",
+    team: "Seniors D1",
     home: "ES Viry-Châtillon",
     away: "COMPACT",
     date: "Sam. 5 sept.",
@@ -84,7 +84,7 @@ export const matches = [
 
 export const news = [
   {
-    title: "Victoire des Seniors R1 !",
+    title: "Victoire des Seniors D1 !",
     date: "24 mai 2026",
     category: "Équipes",
     excerpt: "Un match maîtrisé de bout en bout et une belle dynamique collective.",
@@ -116,10 +116,10 @@ export const news = [
 export const teams: Team[] = [
   {
     slug: "seniors-r1",
-    name: "Seniors R1",
+    name: "Seniors D1",
     category: "Seniors",
     season: "2025 / 2026",
-    description: "L'équipe fanion porte les couleurs jaune et verte au plus haut niveau régional.",
+    description: "L'équipe fanion porte les couleurs jaune et verte au niveau départemental (D1).",
     image: images.teamHuddle,
     coach: "Yanis B.",
     assistant: "Mourad S.",

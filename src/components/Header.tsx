@@ -26,7 +26,7 @@ const navItems = [
     href: "/equipes",
     children: [
       ["Toutes les équipes", "/equipes"],
-      ["Seniors R1", "/equipes/seniors-r1"],
+      ["Seniors D1", "/equipes/seniors-r1"],
       ["École de foot", "/equipes/ecole-de-foot"],
       ["Féminines", "/equipes/feminines"],
       ["Futsal", "/equipes/futsal"]

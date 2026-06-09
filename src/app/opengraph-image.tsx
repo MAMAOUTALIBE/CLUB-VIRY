@@ -37,7 +37,7 @@ export default function OpengraphImage() {
           Football
         </div>
         <div style={{ marginTop: 36, fontSize: 36, color: "rgba(255,255,255,0.85)" }}>
-          Une passion, notre force — Jaune et Vert depuis 1967
+          Une passion, notre force — Jaune et Vert depuis 1958
         </div>
       </div>
     ),

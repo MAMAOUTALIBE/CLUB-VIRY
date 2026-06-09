@@ -15,7 +15,7 @@ export default function ClubPage() {
   return (
     <>
       <PageHero
-        description="Fondé en 1967, l'ES Viry-Châtillon Football est un club formateur, ambitieux et attaché à son territoire."
+        description="Fondé en 1958, l'ES Viry-Châtillon Football est un club formateur, ambitieux et attaché à son territoire."
         eyebrow="Le Club"
         image={images.stadiumAerial}
         title="Notre histoire, nos valeurs, notre maison"

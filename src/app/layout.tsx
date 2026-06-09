@@ -51,7 +51,7 @@ const sportsClubJsonLd = {
   logo: `${siteUrl}/club-logo.svg`,
   telephone: "+33169243950",
   email: "contact@esviryfootball.com",
-  foundingDate: "1967",
+  foundingDate: "1958",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Stade Henri Longuet, Avenue de l'Armée Leclerc",
