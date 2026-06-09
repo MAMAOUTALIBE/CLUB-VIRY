@@ -5,9 +5,10 @@ import {
   ClipboardCheck,
   Handshake,
   LayoutDashboard,
-  Package,
-  ShieldCheck,
+  Mail,
   Sparkles,
+  ShieldCheck,
+  Target,
   Trophy,
   UserSquare2,
   Users
@@ -21,10 +22,11 @@ const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: n
   { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck, badge: 42 },
   { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
   { label: "Joueurs", href: "/admin/joueurs", icon: Users },
+  { label: "Détections", href: "/admin/recrutement", icon: Target },
+  { label: "Finances", href: "/admin/finances", icon: BadgeEuro, badge: 8 },
+  { label: "Messages", href: "/admin/messages", icon: Mail },
+  { label: "Partenaires", href: "/admin/partenaires", icon: Handshake, badge: 3 },
   { label: "Sportif", href: "/admin#modules", icon: Trophy },
-  { label: "Finances", href: "/admin#modules", icon: BadgeEuro, badge: 8 },
-  { label: "Boutique", href: "/admin#modules", icon: Package },
-  { label: "Partenaires", href: "/admin#modules", icon: Handshake, badge: 3 },
   { label: "Automatisations", href: "/admin#modules", icon: Sparkles }
 ];
 
