@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Clock, Flag, HeartHandshake, MapPin, Shield, Trophy, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Shield, Sparkles, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Reveal, Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -371,27 +371,125 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-12">
+      <section className="bg-white py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <SectionTitle
               eyebrow="Partenaires"
               text="Un club sérieux, stable et ambitieux : associez votre image à un acteur majeur du territoire."
               title="Ils accompagnent le projet"
             />
-            <div className="pb-8">
+            <div className="lg:pb-9">
               <ButtonLink href="/partenaires" variant="dark">
                 Devenir partenaire
               </ButtonLink>
             </div>
           </div>
-          <Stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {partners.slice(0, 8).map((partner) => (
-              <StaggerItem className="premium-card rounded-md px-4 py-5 text-center text-sm font-black uppercase text-[#002f1d]" key={partner}>
-                {partner}
-              </StaggerItem>
-            ))}
+
+          <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[#002f1d]/10 py-4 text-xs font-black uppercase tracking-wide text-[#8a6d00]">
+            <span className="inline-flex items-center gap-2">
+              <Handshake size={16} aria-hidden="true" />
+              Partenaires institutionnels &amp; officiels
+            </span>
+            <span className="hidden h-3 w-px bg-[#002f1d]/15 sm:inline-block" aria-hidden="true" />
+            <span className="inline-flex items-center gap-2 text-[#002f1d]/70">
+              <Sparkles size={16} className="text-[#f7c600]" aria-hidden="true" />
+              Un territoire qui soutient son club
+            </span>
+          </div>
+
+          <Stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+            {partners.slice(0, 8).map((partner, index) => {
+              const TIERS: Record<string, string> = {
+                "Essonne Département": "Institutionnel",
+                "Ville de Viry-Châtillon": "Institutionnel",
+                Intersport: "Partenaire officiel",
+                "E.Leclerc": "Partenaire officiel",
+                Engie: "Partenaire officiel",
+                "Crédit Mutuel": "Partenaire officiel",
+                Nike: "Équipementier",
+                Adidas: "Équipementier"
+              };
+              const tier = TIERS[partner] ?? "Partenaire officiel";
+              const isInstitutionnel = tier === "Institutionnel";
+
+              const MONOGRAM_OVERRIDES: Record<string, string> = {
+                "Ville de Viry-Châtillon": "VC",
+                "Essonne Département": "ED",
+                "E.Leclerc": "EL",
+                "Crédit Mutuel": "CM"
+              };
+              const STOP_WORDS = new Set(["de", "du", "des", "la", "le", "les", "et", "d"]);
+              const derivedMonogram = partner
+                .replace(/[^A-Za-zÀ-ÿ]+/g, " ")
+                .split(/\s+/)
+                .filter((word) => word && !STOP_WORDS.has(word.toLowerCase()))
+                .slice(0, 2)
+                .map((word) => word[0].toUpperCase())
+                .join("");
+              const monogram = MONOGRAM_OVERRIDES[partner] ?? derivedMonogram;
+
+              return (
+                <StaggerItem key={partner}>
+                  <article
+                    className="premium-card group relative flex h-full flex-col items-center justify-center overflow-hidden rounded-xl px-5 py-7 text-center"
+                    title={partner}
+                  >
+                    <span
+                      className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-[#f7c600]/0 blur-2xl transition-all duration-300 group-hover:bg-[#f7c600]/15"
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="pointer-events-none absolute right-3 top-2 text-[11px] font-black tabular-nums text-[#002f1d]/15 transition-colors duration-200 group-hover:text-[#8a6d00]/40"
+                      aria-hidden="true"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      className={`relative mb-4 flex h-16 w-16 items-center justify-center rounded-full shadow-[0_10px_24px_rgba(0,31,19,0.22)] transition-all duration-300 group-hover:shadow-[0_14px_30px_rgba(0,31,19,0.3)] ${
+                        isInstitutionnel
+                          ? "bg-gradient-to-br from-[#f7c600] to-[#8a6d00] ring-1 ring-[#8a6d00]/30 group-hover:ring-[#f7c600]"
+                          : "bg-gradient-to-br from-[#00351f] to-[#001c10] ring-1 ring-[#f7c600]/30 group-hover:ring-[#f7c600]"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <span className="absolute inset-1.5 rounded-full ring-1 ring-inset ring-white/10" />
+                      <span
+                        className={`text-lg font-black uppercase tracking-tight ${
+                          isInstitutionnel ? "text-[#002f1d]" : "text-[#f7c600]"
+                        }`}
+                      >
+                        {monogram}
+                      </span>
+                    </span>
+                    <h3 className="text-sm font-black uppercase leading-tight text-[#002f1d]">{partner}</h3>
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#8a6d00]">
+                      <BadgeCheck size={13} aria-hidden="true" />
+                      {tier}
+                    </p>
+                    <span
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-[#f7c600] transition-transform duration-300 group-hover:scale-x-100"
+                      aria-hidden="true"
+                    />
+                  </article>
+                </StaggerItem>
+              );
+            })}
           </Stagger>
+
+          <div className="mt-8 flex flex-col items-center gap-4 rounded-xl bg-[#f7f8f4] px-6 py-7 text-center sm:flex-row sm:justify-between sm:text-left">
+            <p className="max-w-xl text-base font-bold text-slate-700">
+              Et si votre marque rejoignait le mouvement ?{" "}
+              <span className="font-black text-[#002f1d]">Votre image a toute sa place à nos côtés.</span>
+            </p>
+            <a
+              href="/partenaires"
+              className="focus-ring inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-black uppercase text-[#002f1d] underline decoration-[#f7c600] decoration-2 underline-offset-4 transition hover:text-[#00351f]"
+            >
+              Découvrir nos offres
+              <ArrowRight size={15} aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </section>
 
