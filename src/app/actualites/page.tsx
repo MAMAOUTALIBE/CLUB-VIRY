@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LiveMatch } from "@/components/LiveMatch";
+import { LiveVideo } from "@/components/LiveVideo";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -17,6 +19,13 @@ export default function NewsPage() {
   return (
     <>
       <PageHero description="Toute la vie du club : résultats, stages, événements, informations pratiques." image={images.teamHuddle} title="Actualités" />
+      <section className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 lg:px-8">
+        <SectionTitle eyebrow="Match en direct" title="Suivez les Jaune et Vert" text="Regardez le match en vidéo et suivez le score, le chrono et les faits de match en temps réel." />
+        <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <LiveVideo />
+          <LiveMatch />
+        </div>
+      </section>
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <SectionTitle title="Dernières actualités" text="L'actualité forte du moment, puis toutes les nouvelles du club." />
         <Link
