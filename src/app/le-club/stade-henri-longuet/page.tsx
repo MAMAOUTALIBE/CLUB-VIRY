@@ -37,6 +37,27 @@ export default function StadiumPage() {
         </div>
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+        <SectionTitle eyebrow="Galerie" title="Le stade en images" text="Tribunes, piste et pelouse du Parc des sports Henri Longuet, au bord du lac de Viry-Châtillon." />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { src: images.stadeTribune, alt: "Tribune principale et piste d'athlétisme du Stade Henri Longuet", caption: "La tribune principale et la piste" },
+            { src: images.stadeTribune2, alt: "Vue rapprochée de la tribune depuis la piste", caption: "La tribune vue depuis la piste" }
+          ].map((photo) => (
+            <figure className="official-card overflow-hidden rounded-lg bg-white" key={photo.src}>
+              <img
+                className="aspect-[4/3] w-full object-cover"
+                src={photo.src}
+                alt={photo.alt}
+                width={600}
+                height={450}
+                loading="lazy"
+              />
+              <figcaption className="p-4 text-sm font-black uppercase text-[#002f1d]">{photo.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
         <SectionTitle eyebrow="Lieu de vie" title="Plus qu'un terrain, une maison" text="Un point de rassemblement : matchs, entraînements, familles, supporters et bénévoles." />
         <FeatureCards
           items={[

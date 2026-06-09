@@ -1,8 +1,8 @@
 export const images = {
-  stadiumHero:
-    "https://images.unsplash.com/photo-1517137879134-48acfbe3be13?auto=format&fit=crop&w=2400&q=82",
-  stadiumAerial:
-    "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1400&q=80",
+  stadiumHero: "/stade/aerien.jpg",
+  stadiumAerial: "/stade/aerien.jpg",
+  stadeTribune: "/stade/tribune.jpg",
+  stadeTribune2: "/stade/tribune2.jpg",
   teamHuddle:
     "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1200&q=80",
   youthTeam:
