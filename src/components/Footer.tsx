@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ArrowUpRight, Mail, MapPin } from "lucide-react";
+import { socialItems } from "@/lib/socials";
 
 const columns = [
   {
@@ -49,54 +51,115 @@ export function Footer() {
   }
 
   return (
-    <footer className="club-shell border-t-4 border-[#f7c600] text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.2fr_2fr_1.4fr] lg:px-8">
-        <div>
-          <img decoding="async" loading="lazy" className="h-[140px] w-[140px] rounded-full object-contain drop-shadow-xl" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={140} height={140} />
-          <p className="mt-4 max-w-xs text-sm text-white/80">Site officiel de l'ES Viry-Châtillon Football. Jaune et Vert pour toujours.</p>
-        </div>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {columns.map((column) => (
-            <div key={column.title}>
-              <h2 className="border-b border-[#f7c600]/35 pb-2 text-sm font-black uppercase text-[#f7c600]">{column.title}</h2>
-              <ul className="mt-3 space-y-2 text-sm text-white/80">
-                {column.links.map(([label, href]) => (
-                  <li key={href}>
-                    <Link className="focus-ring hover:text-[#f7c600]" href={href}>
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+    <footer className="club-shell relative overflow-hidden border-t-4 border-[#f7c600] text-white">
+      {/* Halos décoratifs */}
+      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-[#f7c600]/10 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-[#07542f]/40 blur-3xl" />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-[1.25fr_2fr_1.5fr]">
+          {/* Bloc marque */}
+          <div>
+            <div className="flex items-center gap-4">
+              <img
+                decoding="async"
+                loading="lazy"
+                className="h-[88px] w-[88px] shrink-0 rounded-full object-contain drop-shadow-xl"
+                src="/club-logo.svg"
+                alt="ES Viry-Châtillon Football"
+                width={88}
+                height={88}
+              />
+              <div>
+                <p className="text-lg font-black uppercase leading-tight">ES Viry-Châtillon</p>
+                <p className="text-sm font-black uppercase tracking-[0.2em] text-[#f7c600]">Football</p>
+              </div>
             </div>
-          ))}
-        </div>
-        <div>
-          <div className="rounded-lg border border-[#f7c600]/35 bg-white/5 p-5">
-            <p className="text-3xl font-black uppercase text-[#f7c600]">Jaune et Vert</p>
-            <p className="mt-1 text-2xl italic">pour toujours !</p>
-            <p className="mt-4 text-sm text-white/75">Stade Henri Longuet · Avenue de l'Armée Leclerc · 91170 Viry-Châtillon</p>
+            <p className="mt-5 max-w-xs text-sm leading-6 text-white/70">
+              Site officiel de l'ES Viry-Châtillon Football. Jaune et Vert pour toujours.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3" aria-label="Réseaux sociaux">
+              {socialItems.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  aria-label={social.label}
+                  title={social.label}
+                  className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-[#f7c600]/60"
+                  style={{
+                    background: social.background,
+                    borderColor: social.borderColor,
+                    color: social.color,
+                    boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
+                  }}
+                >
+                  <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="currentColor" viewBox={social.viewBox}>
+                    <path d={social.path} />
+                  </svg>
+                </a>
+              ))}
+            </div>
           </div>
-          <div className="mt-5 flex gap-3" aria-label="Réseaux sociaux">
-            {["f", "ig", "yt", "tk"].map((item) => (
-              <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-white/10 px-2 text-xs font-black uppercase" key={item}>
-                {item}
-              </span>
+
+          {/* Colonnes de liens */}
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {columns.map((column) => (
+              <nav key={column.title} aria-label={column.title}>
+                <h2 className="text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">{column.title}</h2>
+                <span aria-hidden="true" className="mt-2 block h-[2px] w-8 rounded-full bg-[#f7c600]/60" />
+                <ul className="mt-4 space-y-2.5 text-sm">
+                  {column.links.map(([label, href]) => (
+                    <li key={href}>
+                      <Link className="focus-ring group inline-flex items-center gap-2 text-white/75 transition hover:text-[#f7c600]" href={href}>
+                        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#f7c600]/0 transition group-hover:bg-[#f7c600]" />
+                        <span className="transition group-hover:translate-x-0.5">{label}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
             ))}
+          </div>
+
+          {/* Bloc contact + CTA */}
+          <div>
+            <div className="club-panel rounded-2xl p-6">
+              <p className="font-script text-4xl leading-none text-[#f7c600]">Jaune et Vert</p>
+              <p className="mt-1 text-lg font-bold italic text-white/90">pour toujours !</p>
+              <div className="mt-5 space-y-3 text-sm text-white/75">
+                <p className="flex items-start gap-3">
+                  <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-[#f7c600]" size={18} />
+                  <span>Stade Henri Longuet · Avenue de l'Armée Leclerc · 91170 Viry-Châtillon</span>
+                </p>
+                <Link className="focus-ring flex items-center gap-3 transition hover:text-[#f7c600]" href="/contact">
+                  <Mail aria-hidden="true" className="shrink-0 text-[#f7c600]" size={18} />
+                  <span>Nous contacter</span>
+                </Link>
+              </div>
+            </div>
+            <Link
+              className="focus-ring mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f7c600] px-5 py-3 text-sm font-black uppercase text-[#001c10] shadow-[0_14px_30px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white"
+              href="/inscriptions"
+            >
+              Rejoindre le club
+              <ArrowUpRight aria-hidden="true" size={18} />
+            </Link>
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 text-xs text-white/70 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <p>© 2026 ES Viry-Châtillon Football - Tous droits réservés</p>
-          <div className="flex flex-wrap gap-4">
-            <Link className="focus-ring hover:text-[#f7c600]" href="/mentions-legales">
+
+      {/* Barre inférieure */}
+      <div className="relative border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 text-xs text-white/60 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <p>© 2026 ES Viry-Châtillon Football — Tous droits réservés</p>
+          <div className="flex flex-wrap gap-5">
+            <Link className="focus-ring transition hover:text-[#f7c600]" href="/mentions-legales">
               Mentions légales
             </Link>
-            <Link className="focus-ring hover:text-[#f7c600]" href="/politique-confidentialite">
+            <Link className="focus-ring transition hover:text-[#f7c600]" href="/politique-confidentialite">
               Politique de confidentialité
             </Link>
-            <Link className="focus-ring hover:text-[#f7c600]" href="/plan-du-site">
+            <Link className="focus-ring transition hover:text-[#f7c600]" href="/plan-du-site">
               Plan du site
             </Link>
           </div>

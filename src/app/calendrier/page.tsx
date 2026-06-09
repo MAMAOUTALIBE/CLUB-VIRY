@@ -1,10 +1,12 @@
-import { CalendarDays, Clock, MapPin, Shield, Sparkles } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock, MapPin, Shield, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData } from "@/lib/calendar-view";
 import { images } from "@/lib/images";
+import { socialItems } from "@/lib/socials";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,20 @@ export default async function CalendarPage() {
   const firstWeekday = new Date(calendar.year, calendar.month, 1).getDay(); // 0 = dimanche
   const leadingBlanks = (firstWeekday + 6) % 7;
   const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
+
+  const now = new Date();
+  const todayDate = now.getFullYear() === calendar.year && now.getMonth() === calendar.month ? now.getDate() : null;
+
+  // Stats du mois pour combler élégamment le panneau de gauche.
+  const matchCount = calendar.items.filter((item) => item.kind === "match").length;
+  const homeCount = calendar.items.filter(
+    (item) => item.kind === "match" && (item.home ?? "").toLowerCase().includes("viry")
+  ).length;
+  const stats = [
+    { value: calendar.items.length, label: "Rendez-vous" },
+    { value: matchCount, label: "Matchs" },
+    { value: homeCount, label: "À domicile" }
+  ];
 
   return (
     <>
@@ -69,15 +85,18 @@ export default async function CalendarPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8">
-        <div className="club-panel rounded-lg p-6 text-white">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:px-8">
+        <div className="club-panel rounded-2xl p-6 text-white lg:sticky lg:top-28">
           <div className="flex items-center gap-3">
-            <CalendarDays className="text-[#f7c600]" />
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f7c600]/15 text-[#f7c600]">
+              <CalendarDays size={22} />
+            </span>
             <h2 className="text-2xl font-black uppercase">{calendar.monthTitle}</h2>
           </div>
-          <div className="mt-6 grid grid-cols-7 gap-2 text-center text-sm" role="grid" aria-label={`Calendrier ${calendar.monthTitle}`}>
+
+          <div className="mt-6 grid grid-cols-7 gap-1.5 text-center text-sm" role="grid" aria-label={`Calendrier ${calendar.monthTitle}`}>
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
-              <span className="font-black uppercase text-[#f7c600]" key={day}>
+              <span className="pb-1 text-xs font-black uppercase tracking-wide text-[#f7c600]/90" key={day}>
                 {day}
               </span>
             ))}
@@ -86,17 +105,79 @@ export default async function CalendarPage() {
             ))}
             {days.map((day) => {
               const isHighlighted = calendar.highlightedDays.includes(day);
+              const isToday = day === todayDate;
               return (
                 <span
-                  className={`rounded py-2 transition ${
-                    isHighlighted ? "bg-[#f7c600] font-black text-[#002f1d] shadow-[0_0_22px_rgba(247,198,0,0.35)]" : "bg-white/10"
-                  }`}
+                  className={`flex h-10 items-center justify-center rounded-lg text-sm transition sm:h-11 ${
+                    isHighlighted
+                      ? "bg-gradient-to-br from-[#f7c600] to-[#ffd84d] font-black text-[#002f1d] shadow-[0_6px_16px_rgba(247,198,0,0.32)]"
+                      : "bg-white/[0.06] text-white/85 hover:bg-white/[0.14]"
+                  } ${isToday && !isHighlighted ? "ring-2 ring-[#f7c600]/70" : ""}`}
                   key={day}
                 >
                   {day}
                 </span>
               );
             })}
+          </div>
+
+          {/* Contenu sous la grille : légende, stats, lieu, réseaux */}
+          <div className="mt-7 space-y-5 border-t border-white/10 pt-6">
+            <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-wide text-white/70">
+              <span aria-hidden="true" className="h-5 w-5 rounded-md bg-gradient-to-br from-[#f7c600] to-[#ffd84d]" />
+              Jour de match ou d'événement
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {stats.map((stat) => (
+                <div className="rounded-xl border border-[#f7c600]/15 bg-white/[0.04] p-3 text-center" key={stat.label}>
+                  <p className="text-2xl font-black text-[#f7c600]">{stat.value}</p>
+                  <p className="mt-0.5 text-[10px] font-black uppercase tracking-wide text-white/60">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <Link
+              className="focus-ring group flex items-center gap-3 rounded-xl border border-[#f7c600]/15 bg-white/[0.04] p-4 transition hover:border-[#f7c600]/40"
+              href="/le-club/stade-henri-longuet"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f7c600]/15 text-[#f7c600]">
+                <MapPin size={20} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-black uppercase text-white">Stade Henri Longuet</span>
+                <span className="block truncate text-xs text-white/60">Avenue de l'Armée Leclerc · Viry-Châtillon</span>
+              </span>
+              <ChevronRight aria-hidden="true" className="ml-auto shrink-0 text-[#f7c600] transition group-hover:translate-x-0.5" size={18} />
+            </Link>
+
+            <div className="rounded-xl border border-[#f7c600]/15 bg-white/[0.04] p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">Ne rien manquer</p>
+              <p className="mt-1.5 text-sm leading-6 text-white/65">
+                Compositions, résultats et changements d'horaire en temps réel sur nos réseaux.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2" aria-label="Réseaux sociaux">
+                {socialItems.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    aria-label={social.label}
+                    title={social.label}
+                    className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-[#f7c600]/60"
+                    style={{
+                      background: social.background,
+                      borderColor: social.borderColor,
+                      color: social.color,
+                      boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
+                    }}
+                  >
+                    <svg aria-hidden="true" className="h-4 w-4" fill="currentColor" viewBox={social.viewBox}>
+                      <path d={social.path} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

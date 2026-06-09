@@ -23,10 +23,10 @@ export function PageHero({ title, eyebrow, description, image, children }: PageH
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-20 sm:px-6 lg:px-8">
         <Reveal>
           <div>
-            {eyebrow ? <p className="text-sm font-black uppercase text-[#f7c600]">{eyebrow}</p> : null}
+            {eyebrow ? <p className="text-sm font-black uppercase text-[#f7c600] [text-shadow:0_2px_8px_rgba(0,0,0,0.55)]">{eyebrow}</p> : null}
             <div className="gold-divider mb-5 mt-3" aria-hidden="true" />
-            <h1 className="max-w-4xl text-4xl font-black uppercase leading-tight sm:text-5xl lg:text-6xl">{title}</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-white/90">{description}</p>
+            <h1 className="max-w-4xl text-4xl font-black uppercase leading-tight [text-shadow:0_3px_14px_rgba(0,0,0,0.6)] sm:text-5xl lg:text-6xl">{title}</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.6)]">{description}</p>
             {children ? <div className="mt-6">{children}</div> : null}
           </div>
         </Reveal>

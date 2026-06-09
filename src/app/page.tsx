@@ -22,20 +22,50 @@ export default function HomePage() {
     { label: "Partenaires", href: "/partenaires", icon: HeartHandshake, text: "Associer son image" }
   ];
 
+  const nextMatch = matches[0];
+  const otherMatches = matches.slice(1);
+  const isClub = (name: string) => name.toLowerCase().includes("viry");
+  const teamInitials = (name: string) =>
+    name
+      .replace(/^ES\s+/i, "")
+      .split(/[\s-]+/)
+      .filter(Boolean)
+      .map((word) => word[0])
+      .join("")
+      .slice(0, 3)
+      .toUpperCase();
+  const shortTeam = (name: string) => (isClub(name) ? "ES Viry" : name);
+  const crest = (name: string, size: "sm" | "lg") => {
+    const dim = size === "lg" ? "h-16 w-16 sm:h-[84px] sm:w-[84px]" : "h-9 w-9";
+    return isClub(name) ? (
+      <img
+        src="/club-logo.svg"
+        alt=""
+        aria-hidden="true"
+        className={`${dim} shrink-0 rounded-full object-contain ring-2 ring-[#f7c600]/40`}
+        width={84}
+        height={84}
+      />
+    ) : (
+      <span
+        aria-hidden="true"
+        className={`${dim} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f7c600] to-[#ffd84d] font-black text-[#002f1d] ring-2 ring-white/15 ${
+          size === "lg" ? "text-lg sm:text-2xl" : "text-[11px]"
+        }`}
+      >
+        {teamInitials(name)}
+      </span>
+    );
+  };
+
   return (
     <>
       {/* Préchargement prioritaire de l'image du hero (LCP) */}
       <link rel="preload" as="image" href={images.stadiumHero} fetchPriority="high" />
       <section
         className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 bg-cover bg-center text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0"
-        style={{ backgroundImage: `url(${images.stadiumHero})` }}
+        style={{ backgroundImage: `url(${images.stadiumHero})`, backgroundPosition: "center 90%" }}
       >
-        {/* Fondu bas : transition douce vers la barre statistiques */}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-44 bg-gradient-to-t from-[#00120b] via-[#00120b]/45 to-transparent"
-          aria-hidden="true"
-        />
-
         {/* Contenu principal (centré, occupe l'espace disponible) */}
         <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="grid w-full items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
@@ -122,64 +152,99 @@ export default function HomePage() {
 	      </section>
 	
 	      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-	        <div className="club-panel overflow-hidden rounded-2xl text-white">
-	          <div className="grid min-h-full lg:grid-cols-[1fr_0.92fr]">
-	            <div className="p-6 sm:p-8">
-	              <div className="flex items-start justify-between gap-4">
-	                <div>
-	                  <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">Matchday</p>
-	                  <h2 className="mt-1 text-3xl font-black uppercase leading-tight">Prochain rendez-vous</h2>
-	                </div>
-	                <span className="rounded-full border border-[#f7c600]/35 px-3 py-1 text-[11px] font-black uppercase text-[#f7c600]">À domicile</span>
-	              </div>
-	              <div className="mt-8 rounded-2xl border border-white/14 bg-black/18 p-5">
-	                <p className="text-sm font-black uppercase text-white/65">{matches[0].team}</p>
-	                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-	                  <p className="text-xl font-black uppercase leading-tight sm:text-2xl">{matches[0].home}</p>
-	                  <span className="rounded-full bg-[#f7c600] px-3 py-2 text-xs font-black uppercase text-[#002f1d]">VS</span>
-	                  <p className="text-right text-xl font-black uppercase leading-tight sm:text-2xl">{matches[0].away}</p>
-	                </div>
-	              </div>
-	              <div className="mt-6 grid gap-3 text-sm font-bold text-white/82 sm:grid-cols-3">
-	                <span className="inline-flex items-center gap-2 rounded-lg bg-white/8 p-3">
-	                  <CalendarDays className="text-[#f7c600]" size={18} aria-hidden="true" />
-	                  {matches[0].date}
-	                </span>
-	                <span className="inline-flex items-center gap-2 rounded-lg bg-white/8 p-3">
-	                  <Clock className="text-[#f7c600]" size={18} aria-hidden="true" />
-	                  {matches[0].time}
-	                </span>
-	                <span className="inline-flex items-center gap-2 rounded-lg bg-white/8 p-3">
-	                  <MapPin className="text-[#f7c600]" size={18} aria-hidden="true" />
-	                  {matches[0].place}
-	                </span>
-	              </div>
-	              <div className="mt-7 flex flex-wrap gap-3">
-	                <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
-	                <ButtonLink href="/equipes/seniors-r1" variant="outline">
-	                  Fiche équipe
-	                </ButtonLink>
-	              </div>
-	            </div>
-	            <div className="border-t border-white/10 bg-[#00120b]/40 p-5 lg:border-l lg:border-t-0">
-	              <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">Autres matchs</p>
-	              <div className="mt-4 space-y-3">
-	                {matches.slice(1).map((match) => (
-	                  <article className="rounded-xl border border-white/10 bg-white/8 p-4" key={`${match.team}-${match.away}`}>
-	                    <div className="flex items-center justify-between gap-3">
-	                      <p className="text-sm font-black uppercase">{match.team}</p>
-	                      <span className="text-[11px] font-black uppercase text-[#f7c600]">{match.time}</span>
-	                    </div>
-	                    <p className="mt-2 text-sm font-bold text-white/75">
-	                      {match.home} vs {match.away}
-	                    </p>
-	                    <p className="mt-1 text-xs font-bold text-white/55">{match.date} · {match.place}</p>
-	                  </article>
-	                ))}
-	              </div>
-	            </div>
-	          </div>
-	        </div>
+        <div className="club-panel overflow-hidden rounded-2xl text-white">
+          <div className="grid min-h-full lg:grid-cols-[1fr_0.82fr]">
+            <div className="relative p-6 sm:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#f7c600]">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f7c600]" />
+                    Matchday
+                  </p>
+                  <h2 className="mt-2 text-3xl font-black uppercase leading-tight">Prochain rendez-vous</h2>
+                </div>
+                <span className="shrink-0 rounded-full border border-[#f7c600]/40 bg-[#f7c600]/10 px-3 py-1 text-[11px] font-black uppercase text-[#f7c600]">
+                  {isClub(nextMatch.home) ? "À domicile" : "À l'extérieur"}
+                </span>
+              </div>
+
+              <div className="mt-6 inline-flex items-center gap-2 text-xs font-black uppercase">
+                <span className="rounded-md bg-white/10 px-2.5 py-1 text-[#f7c600]">{nextMatch.team}</span>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-white/12 bg-black/20 p-5 sm:p-6">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    {crest(nextMatch.home, "lg")}
+                    <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.home)}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f7c600] text-sm font-black text-[#002f1d] shadow-[0_0_28px_rgba(247,198,0,0.55)]">
+                      VS
+                    </span>
+                    <span className="mt-2 text-xs font-black uppercase tracking-wide text-white/65">{nextMatch.time}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    {crest(nextMatch.away, "lg")}
+                    <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.away)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-2.5 text-sm font-bold text-white/85 sm:grid-cols-2">
+                <span className="inline-flex items-center gap-2 rounded-lg bg-white/[0.07] p-3">
+                  <CalendarDays className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
+                  {nextMatch.date}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-lg bg-white/[0.07] p-3">
+                  <Clock className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
+                  Coup d'envoi · {nextMatch.time}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-lg bg-white/[0.07] p-3 sm:col-span-2">
+                  <MapPin className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
+                  {nextMatch.place}
+                </span>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
+                <ButtonLink href="/equipes/seniors-r1" variant="outline">
+                  Fiche équipe
+                </ButtonLink>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 bg-[#00120b]/40 p-5 sm:p-6 lg:border-l lg:border-t-0">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">Autres matchs</p>
+              <div className="mt-4 space-y-3">
+                {otherMatches.map((match) => (
+                  <article
+                    className="group rounded-xl border border-white/10 bg-white/[0.06] p-4 transition hover:-translate-y-0.5 hover:border-[#f7c600]/40 hover:bg-white/[0.1]"
+                    key={match.team + "-" + match.away}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-md bg-[#f7c600]/15 px-2 py-0.5 text-[11px] font-black uppercase text-[#f7c600]">
+                        {match.team}
+                      </span>
+                      <span className="text-[11px] font-black uppercase text-white/60">{match.time}</span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2 text-sm font-bold">
+                      {crest(match.home, "sm")}
+                      <span className="min-w-0 flex-1 truncate">{shortTeam(match.home)}</span>
+                      <span className="shrink-0 text-xs font-black uppercase text-[#f7c600]">vs</span>
+                      <span className="min-w-0 flex-1 truncate text-right">{shortTeam(match.away)}</span>
+                      {crest(match.away, "sm")}
+                    </div>
+                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-white/55">
+                      <CalendarDays className="shrink-0 text-[#f7c600]/80" size={13} aria-hidden="true" />
+                      {match.date} · {match.place}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 	
 	        <div className="grid gap-6">
 	          <article className="official-card overflow-hidden rounded-2xl bg-white">
