@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 const timeline = [
-  ["1967", "Création du club et premiers collectifs à Viry-Châtillon."],
+  ["1958", "Fusion de l'US Viry et du FC Viry : naissance de l'ES Viry-Châtillon."],
   ["1980-90", "Développement de la formation et structuration des catégories jeunes."],
   ["2000", "Montée en exigences régionales et rayonnement local renforcé."],
   ["Aujourd'hui", "Un club familial, formateur et tourné vers l'avenir."]
@@ -20,7 +20,7 @@ export default function HistoryPage() {
     <>
       <PageHero description="Un club historique de l'Essonne, porté par des bénévoles, des éducateurs et des familles." image={images.stadiumAerial} title="Notre histoire" />
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-        <SectionTitle title="Depuis 1967" text="L'ES Viry-Châtillon Football grandit avec sa ville. L'histoire du club est celle d'une transmission : former, rassembler et faire progresser." />
+        <SectionTitle title="Depuis 1958" text="L'ES Viry-Châtillon Football grandit avec sa ville. L'histoire du club est celle d'une transmission : former, rassembler et faire progresser." />
         <div className="relative grid gap-5">
           <div className="absolute left-6 top-0 hidden h-full w-px bg-[#f7c600]/60 sm:block" aria-hidden="true" />
           {timeline.map(([year, text], index) => (
