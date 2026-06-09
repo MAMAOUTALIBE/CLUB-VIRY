@@ -35,8 +35,28 @@ export type DashboardMetric = {
   count: number;
 };
 
+export type StatusCount = {
+  status: string;
+  label: string;
+  count: number;
+};
+
+export type MonthlyPoint = {
+  label: string;
+  count: number;
+};
+
+export type DashboardBreakdowns = {
+  registrations: StatusCount[];
+  orders: StatusCount[];
+  payments: StatusCount[];
+  recruitment: StatusCount[];
+  monthlyRegistrations: MonthlyPoint[];
+};
+
 export type AdminDashboard = {
   metrics: DashboardMetric[];
+  breakdowns: DashboardBreakdowns;
   latestLogs: ActivityLog[];
   queuedNotifications: number;
 };
@@ -160,6 +180,87 @@ async function countRowsByIn(table: string, column: string, values: readonly str
   return count ?? 0;
 }
 
+type StatusEntry = { status: string; label: string };
+
+const REGISTRATION_STATUSES: readonly StatusEntry[] = [
+  { status: "DRAFT", label: "Brouillon" },
+  { status: "SUBMITTED", label: "Soumis" },
+  { status: "IN_REVIEW", label: "En revue" },
+  { status: "MISSING_DOCUMENTS", label: "Documents manquants" },
+  { status: "VALIDATED", label: "Validé" },
+  { status: "REJECTED", label: "Rejeté" },
+  { status: "CANCELLED", label: "Annulé" }
+];
+
+const ORDER_STATUSES: readonly StatusEntry[] = [
+  { status: "PENDING", label: "En attente" },
+  { status: "PAID", label: "Payée" },
+  { status: "PREPARING", label: "En préparation" },
+  { status: "READY", label: "Prête" },
+  { status: "DELIVERED", label: "Livrée" },
+  { status: "CANCELLED", label: "Annulée" },
+  { status: "REFUNDED", label: "Remboursée" }
+];
+
+const PAYMENT_STATUSES: readonly StatusEntry[] = [
+  { status: "PENDING", label: "En attente" },
+  { status: "SUCCEEDED", label: "Encaissé" },
+  { status: "FAILED", label: "Échoué" },
+  { status: "CANCELLED", label: "Annulé" },
+  { status: "REFUNDED", label: "Remboursé" }
+];
+
+const RECRUITMENT_STATUSES: readonly StatusEntry[] = [
+  { status: "PENDING", label: "En attente" },
+  { status: "CONTACTED", label: "Contacté" },
+  { status: "TRIAL_SCHEDULED", label: "Essai planifié" },
+  { status: "ACCEPTED", label: "Accepté" },
+  { status: "REJECTED", label: "Refusé" },
+  { status: "ARCHIVED", label: "Archivé" }
+];
+
+async function countByStatus(table: string, column: string, entries: readonly StatusEntry[]): Promise<StatusCount[]> {
+  const counts = await Promise.all(entries.map((entry) => countRowsByEq(table, column, entry.status)));
+  return entries.map((entry, index) => ({ status: entry.status, label: entry.label, count: counts[index] }));
+}
+
+async function monthlyCounts(table: string, dateColumn: string, months: number): Promise<MonthlyPoint[]> {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+
+  const { data, error } = await getSupabaseAdminClient()
+    .from(table)
+    .select(dateColumn)
+    .gte(dateColumn, start.toISOString());
+
+  if (error) {
+    throw new Error(`Unable to bucket ${table}: ${error.message}`);
+  }
+
+  const buckets = Array.from({ length: months }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (months - 1) + index, 1);
+    return {
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      label: date.toLocaleDateString("fr-FR", { month: "short" }),
+      count: 0
+    };
+  });
+
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
+    const raw = row[dateColumn];
+    if (typeof raw !== "string") {
+      continue;
+    }
+    const date = new Date(raw);
+    const bucket = buckets.find((entry) => entry.key === `${date.getFullYear()}-${date.getMonth()}`);
+    if (bucket) {
+      bucket.count += 1;
+    }
+  }
+
+  return buckets.map(({ label, count }) => ({ label, count }));
+}
+
 export async function getAdminDashboard(): Promise<AdminDashboard> {
   const [
     profiles,
@@ -191,6 +292,20 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     listActivityLogs(8)
   ]);
 
+  const [
+    registrationsByStatus,
+    ordersByStatus,
+    paymentsByStatus,
+    recruitmentByStatus,
+    monthlyRegistrations
+  ] = await Promise.all([
+    countByStatus("registrations", "status", REGISTRATION_STATUSES),
+    countByStatus("orders", "status", ORDER_STATUSES),
+    countByStatus("payments", "status", PAYMENT_STATUSES),
+    countByStatus("recruitment_applications", "status", RECRUITMENT_STATUSES),
+    monthlyCounts("registrations", "created_at", 6)
+  ]);
+
   return {
     metrics: [
       { key: "profiles", label: "Profils", count: profiles },
@@ -205,6 +320,13 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       { key: "contactMessages", label: "Messages contact", count: contactMessages },
       { key: "recruitmentApplications", label: "Candidatures detection", count: recruitmentApplications }
     ],
+    breakdowns: {
+      registrations: registrationsByStatus,
+      orders: ordersByStatus,
+      payments: paymentsByStatus,
+      recruitment: recruitmentByStatus,
+      monthlyRegistrations
+    },
     latestLogs,
     queuedNotifications
   };

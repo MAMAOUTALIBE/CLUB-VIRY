@@ -1,9 +1,12 @@
 "use client";
 
-import { BadgeEuro, Bell, ClipboardCheck, ShieldCheck, Users } from "lucide-react";
+import { BadgeEuro, Bell, BarChart3, ClipboardCheck, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminAccessControl, ADMIN_TOKEN_STORAGE_KEY } from "@/components/admin/AdminAccessControl";
+import { BarChart } from "@/components/admin/charts/BarChart";
+import { ProgressBar } from "@/components/admin/charts/ProgressBar";
+import { StatusBarChart } from "@/components/admin/charts/StatusBarChart";
 import type { LucideIcon } from "lucide-react";
 
 type DashboardMetricKey =
@@ -33,8 +36,28 @@ type ActivityLog = {
   created_at: string;
 };
 
+type StatusCount = {
+  status: string;
+  label: string;
+  count: number;
+};
+
+type MonthlyPoint = {
+  label: string;
+  count: number;
+};
+
+type DashboardBreakdowns = {
+  registrations: StatusCount[];
+  orders: StatusCount[];
+  payments: StatusCount[];
+  recruitment: StatusCount[];
+  monthlyRegistrations: MonthlyPoint[];
+};
+
 type AdminDashboard = {
   metrics: DashboardMetric[];
+  breakdowns: DashboardBreakdowns;
   latestLogs: ActivityLog[];
   queuedNotifications: number;
 };
@@ -114,6 +137,85 @@ const fallbackWorkItems: WorkItem[] = [
   }
 ];
 
+const fallbackBreakdowns: DashboardBreakdowns = {
+  registrations: [
+    { status: "DRAFT", label: "Brouillon", count: 14 },
+    { status: "SUBMITTED", label: "Soumis", count: 38 },
+    { status: "IN_REVIEW", label: "En revue", count: 21 },
+    { status: "MISSING_DOCUMENTS", label: "Documents manquants", count: 17 },
+    { status: "VALIDATED", label: "Validé", count: 286 },
+    { status: "REJECTED", label: "Rejeté", count: 6 },
+    { status: "CANCELLED", label: "Annulé", count: 9 }
+  ],
+  orders: [
+    { status: "PENDING", label: "En attente", count: 7 },
+    { status: "PAID", label: "Payée", count: 23 },
+    { status: "PREPARING", label: "En préparation", count: 11 },
+    { status: "READY", label: "Prête", count: 5 },
+    { status: "DELIVERED", label: "Livrée", count: 64 },
+    { status: "CANCELLED", label: "Annulée", count: 3 },
+    { status: "REFUNDED", label: "Remboursée", count: 2 }
+  ],
+  payments: [
+    { status: "PENDING", label: "En attente", count: 19 },
+    { status: "SUCCEEDED", label: "Encaissé", count: 248 },
+    { status: "FAILED", label: "Échoué", count: 8 },
+    { status: "CANCELLED", label: "Annulé", count: 4 },
+    { status: "REFUNDED", label: "Remboursé", count: 3 }
+  ],
+  recruitment: [
+    { status: "PENDING", label: "En attente", count: 12 },
+    { status: "CONTACTED", label: "Contacté", count: 7 },
+    { status: "TRIAL_SCHEDULED", label: "Essai planifié", count: 4 },
+    { status: "ACCEPTED", label: "Accepté", count: 3 },
+    { status: "REJECTED", label: "Refusé", count: 5 },
+    { status: "ARCHIVED", label: "Archivé", count: 6 }
+  ],
+  monthlyRegistrations: [
+    { label: "janv.", count: 18 },
+    { label: "févr.", count: 24 },
+    { label: "mars", count: 31 },
+    { label: "avr.", count: 47 },
+    { label: "mai", count: 62 },
+    { label: "juin", count: 39 }
+  ]
+};
+
+function isStatusCount(value: unknown): value is StatusCount {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const datum = value as Record<string, unknown>;
+  return typeof datum.status === "string" && typeof datum.label === "string" && typeof datum.count === "number";
+}
+
+function isMonthlyPoint(value: unknown): value is MonthlyPoint {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const datum = value as Record<string, unknown>;
+  return typeof datum.label === "string" && typeof datum.count === "number";
+}
+
+function parseBreakdowns(value: unknown): DashboardBreakdowns | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const raw = value as Record<string, unknown>;
+  const arrays = [raw.registrations, raw.orders, raw.payments, raw.recruitment];
+  if (!arrays.every(Array.isArray) || !Array.isArray(raw.monthlyRegistrations)) {
+    return null;
+  }
+
+  return {
+    registrations: (raw.registrations as unknown[]).filter(isStatusCount),
+    orders: (raw.orders as unknown[]).filter(isStatusCount),
+    payments: (raw.payments as unknown[]).filter(isStatusCount),
+    recruitment: (raw.recruitment as unknown[]).filter(isStatusCount),
+    monthlyRegistrations: (raw.monthlyRegistrations as unknown[]).filter(isMonthlyPoint)
+  };
+}
+
 function isDashboardMetric(value: unknown): value is DashboardMetric {
   if (!value || typeof value !== "object") {
     return false;
@@ -178,6 +280,7 @@ function parseDashboardResponse(value: unknown): ApiSuccess | ApiFailure {
     ok: true,
     data: {
       metrics: dashboard.metrics.filter(isDashboardMetric),
+      breakdowns: parseBreakdowns(dashboard.breakdowns) ?? fallbackBreakdowns,
       latestLogs: dashboard.latestLogs.filter(isActivityLog),
       queuedNotifications: dashboard.queuedNotifications
     }
@@ -301,6 +404,18 @@ function buildWorkItems(dashboard: AdminDashboard | null): WorkItem[] {
   ];
 }
 
+function sumStatus(items: StatusCount[]): number {
+  return items.reduce((total, item) => total + item.count, 0);
+}
+
+function findStatus(items: StatusCount[], status: string): number {
+  return items.find((item) => item.status === status)?.count ?? 0;
+}
+
+function ratio(part: number, total: number): number {
+  return total > 0 ? (part / total) * 100 : 0;
+}
+
 export function AdminDashboardLive() {
   const [token, setToken] = useState("");
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
@@ -309,6 +424,40 @@ export function AdminDashboardLive() {
 
   const metricCards = useMemo(() => buildMetricCards(dashboard), [dashboard]);
   const workItems = useMemo(() => buildWorkItems(dashboard), [dashboard]);
+  const breakdowns = useMemo(() => dashboard?.breakdowns ?? fallbackBreakdowns, [dashboard]);
+
+  const kpiBars = useMemo(() => {
+    const registrationsTotal = sumStatus(breakdowns.registrations);
+    const paymentsTotal = sumStatus(breakdowns.payments);
+    const ordersTotal = sumStatus(breakdowns.orders);
+    const validated = findStatus(breakdowns.registrations, "VALIDATED");
+    const succeeded = findStatus(breakdowns.payments, "SUCCEEDED");
+    const delivered = findStatus(breakdowns.orders, "DELIVERED");
+
+    return [
+      {
+        label: "Inscriptions validées",
+        value: `${formatCount(validated)} / ${formatCount(registrationsTotal)}`,
+        percent: ratio(validated, registrationsTotal),
+        tone: "green" as const,
+        hint: "Dossiers validés sur le total reçu"
+      },
+      {
+        label: "Paiements encaissés",
+        value: `${formatCount(succeeded)} / ${formatCount(paymentsTotal)}`,
+        percent: ratio(succeeded, paymentsTotal),
+        tone: "yellow" as const,
+        hint: "Paiements aboutis sur le total enregistré"
+      },
+      {
+        label: "Commandes livrées",
+        value: `${formatCount(delivered)} / ${formatCount(ordersTotal)}`,
+        percent: ratio(delivered, ordersTotal),
+        tone: "green" as const,
+        hint: "Commandes boutique livrées"
+      }
+    ];
+  }, [breakdowns]);
 
   async function loadDashboard(accessToken: string) {
     const normalizedToken = accessToken.trim();
@@ -410,6 +559,66 @@ export function AdminDashboardLive() {
           );
         })}
       </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-black uppercase text-[#07542f]">Indicateurs clés</p>
+          <h3 className="mt-1 text-xl font-black uppercase text-[#002f1d]">Taux de traitement</h3>
+          <div className="mt-5 grid gap-5">
+            {kpiBars.map((bar) => (
+              <ProgressBar
+                key={bar.label}
+                label={bar.label}
+                value={bar.value}
+                percent={bar.percent}
+                tone={bar.tone}
+                hint={bar.hint}
+              />
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase text-[#07542f]">Tendance</p>
+              <h3 className="mt-1 text-xl font-black uppercase text-[#002f1d]">Inscriptions par mois</h3>
+            </div>
+            <TrendingUp className="text-[#07542f]" size={22} aria-hidden="true" />
+          </div>
+          <div className="mt-6">
+            <BarChart data={breakdowns.monthlyRegistrations} />
+          </div>
+        </article>
+      </div>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase text-[#07542f]">Pilotage visuel</p>
+            <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">Répartitions par statut</h3>
+          </div>
+          <BarChart3 className="text-[#07542f]" size={24} aria-hidden="true" />
+        </div>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div>
+            <p className="mb-3 text-xs font-black uppercase text-slate-500">Inscriptions</p>
+            <StatusBarChart data={breakdowns.registrations} />
+          </div>
+          <div>
+            <p className="mb-3 text-xs font-black uppercase text-slate-500">Commandes boutique</p>
+            <StatusBarChart data={breakdowns.orders} />
+          </div>
+          <div>
+            <p className="mb-3 text-xs font-black uppercase text-slate-500">Paiements</p>
+            <StatusBarChart data={breakdowns.payments} />
+          </div>
+          <div>
+            <p className="mb-3 text-xs font-black uppercase text-slate-500">Détections / recrutement</p>
+            <StatusBarChart data={breakdowns.recruitment} />
+          </div>
+        </div>
+      </section>
 
       <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
