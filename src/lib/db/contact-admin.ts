@@ -246,7 +246,7 @@ async function monthlyCounts(table: string, dateColumn: string, months: number):
     };
   });
 
-  for (const row of (data ?? []) as Record<string, unknown>[]) {
+  for (const row of (data ?? []) as unknown as Record<string, unknown>[]) {
     const raw = row[dateColumn];
     if (typeof raw !== "string") {
       continue;
