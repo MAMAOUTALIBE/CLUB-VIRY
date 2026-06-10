@@ -110,6 +110,13 @@ export const news = [
     category: "Événements",
     excerpt: "Bénévoles, éducateurs et familles réunis autour du football.",
     image: images.football
+  },
+  {
+    title: "École de foot : un bel élan",
+    date: "31 mars 2026",
+    category: "Jeunes",
+    excerpt: "Retour sur un mois de mars riche en émotions et en progrès.",
+    image: images.pitch
   }
 ];
 

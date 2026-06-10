@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { LiveMatch } from "@/components/LiveMatch";
 import { LiveVideo } from "@/components/LiveVideo";
 import { Stagger, StaggerItem } from "@/components/Motion";
@@ -59,6 +60,52 @@ export default function NewsPage() {
             </StaggerItem>
           ))}
         </Stagger>
+      </section>
+
+      {/* Bandeau contact + QR */}
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="grid overflow-hidden rounded-2xl border border-[#002f1d]/10 bg-white shadow-[0_20px_55px_rgba(0,31,19,0.1)] lg:grid-cols-[minmax(0,auto)_1fr]">
+          <div className="club-shell flex items-center gap-4 p-5 text-white sm:p-6">
+            <img src="/qr-club.png" alt="QR code — suivez l'ES Viry-Châtillon" width={300} height={300} className="h-24 w-24 shrink-0 rounded-lg bg-white p-1.5 sm:h-28 sm:w-28" />
+            <div>
+              <p className="inline-flex items-center gap-2 text-lg font-black uppercase">
+                <Phone className="text-[#f7c600]" size={20} aria-hidden="true" />
+                Scannez-moi
+              </p>
+              <p className="mt-1 max-w-[12rem] text-sm leading-5 text-white/70">Suivez le club en un clic !</p>
+              <span className="mt-3 inline-block h-1 w-12 rounded-full bg-[#f7c600]" />
+            </div>
+          </div>
+          <div className="grid gap-5 p-5 sm:grid-cols-3 sm:gap-4 sm:p-6">
+            <a className="focus-ring group flex items-start gap-3" href="tel:+33629670433">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#002f1d] text-[#f7c600]">
+                <Phone size={20} aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Téléphone</span>
+                <span className="block text-sm font-bold text-[#002f1d] transition group-hover:text-[#8a6d00]">06 29 67 04 33<br />01 69 96 67 00</span>
+              </span>
+            </a>
+            <div className="flex items-start gap-3 sm:border-l sm:border-slate-200 sm:pl-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#002f1d] text-[#f7c600]">
+                <MapPin size={20} aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Adresse du club</span>
+                <span className="block text-sm font-bold text-[#002f1d]">Stade Henri Longuet<br />91170 Viry-Châtillon</span>
+              </span>
+            </div>
+            <a className="focus-ring group flex items-start gap-3 sm:border-l sm:border-slate-200 sm:pl-4" href="mailto:esvirychatillon91170@gmail.com">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#002f1d] text-[#f7c600]">
+                <Mail size={20} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Email</span>
+                <span className="block break-words text-sm font-bold text-[#002f1d] transition group-hover:text-[#8a6d00]">esvirychatillon91170@gmail.com</span>
+              </span>
+            </a>
+          </div>
+        </div>
       </section>
     </>
   );

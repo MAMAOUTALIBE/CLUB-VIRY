@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Shield, Sparkles, Trophy, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Reveal, Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -8,13 +8,6 @@ import { images } from "@/lib/images";
 
 export default function HomePage() {
   const leadNews = news[0];
-  const sideNews = news.slice(1, 4);
-  const pathways = [
-    ["École de foot", "U6 à U11", "Découvrir, apprendre, aimer le jeu."],
-    ["Préformation", "U12 à U13", "Construire les repères et l'exigence."],
-    ["Formation", "U14 à U18", "Préparer les joueurs au niveau régional."],
-    ["Seniors", "R1 / R3 / D1", "Porter le club avec ambition."]
-  ];
   const quickActions = [
     { label: "Inscriptions", href: "/inscriptions", icon: Users, text: "Rejoindre le club" },
     { label: "Détections", href: "/detections-recrutement", icon: Flag, text: "Montrer son talent" },
@@ -150,7 +143,7 @@ export default function HomePage() {
 	          })}
 	        </Stagger>
 	      </section>
-	
+
 	      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
         <div className="club-panel overflow-hidden rounded-2xl text-white">
           <div className="grid min-h-full lg:grid-cols-[1fr_0.82fr]">
@@ -246,104 +239,50 @@ export default function HomePage() {
           </div>
         </div>
 	
-	        <div className="grid gap-6">
-	          <article className="official-card overflow-hidden rounded-2xl bg-white">
-	            <div className="grid sm:grid-cols-[0.95fr_1.05fr]">
-	              <img decoding="async" loading="lazy" alt={leadNews.title} className="h-64 w-full object-cover sm:h-full" src={leadNews.image} />
-	              <div className="p-6">
-	                <p className="text-xs font-black uppercase text-[#8a6d00]">
-	                  {leadNews.category} · {leadNews.date}
-	                </p>
-	                <h2 className="mt-2 text-3xl font-black uppercase leading-tight text-[#002f1d]">{leadNews.title}</h2>
-	                <p className="mt-3 text-sm leading-6 text-slate-700">{leadNews.excerpt}</p>
-	                <div className="mt-5">
-	                  <ButtonLink href="/actualites" variant="dark">
-	                    Voir les actualités
-	                  </ButtonLink>
-	                </div>
-	              </div>
-	            </div>
-	          </article>
-	
-	          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_42px_rgba(0,31,19,0.08)]">
-	            <div className="flex items-start justify-between gap-4">
-	              <div>
-	                <p className="text-xs font-black uppercase text-[#8a6d00]">Club</p>
-	                <h2 className="text-2xl font-black uppercase text-[#002f1d]">À suivre</h2>
-	              </div>
-	              <Link className="focus-ring text-xs font-black uppercase text-[#002f1d] hover:text-[#f7c600]" href="/actualites">
-	                Tout voir
-	              </Link>
-	            </div>
-	            <div className="mt-5 grid gap-3">
-	              {sideNews.map((item) => (
-	                <article className="grid grid-cols-[82px_1fr] gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-[#f7c600]/60 hover:bg-[#f7c600]/5" key={item.title}>
-	                  <img decoding="async" loading="lazy" alt={item.title} className="h-20 w-20 rounded-lg object-cover" src={item.image} />
-	                  <div>
-	                    <p className="text-[11px] font-black uppercase text-[#8a6d00]">{item.date}</p>
-	                    <h3 className="mt-1 font-black uppercase leading-tight text-[#002f1d]">{item.title}</h3>
-	                    <p className="mt-1 line-clamp-2 text-sm text-slate-600">{item.excerpt}</p>
-	                  </div>
-	                </article>
-	              ))}
-	            </div>
-	          </div>
-	        </div>
+        <article className="official-card flex flex-col overflow-hidden rounded-2xl bg-white">
+          <div className="relative">
+            <img decoding="async" loading="lazy" alt={leadNews.title} className="h-56 w-full object-cover sm:h-72" src={leadNews.image} />
+            <span className="absolute left-4 top-4 rounded-full bg-[#002f1d] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#f7c600]">Actualité à la une</span>
+          </div>
+          <div className="flex flex-1 flex-col p-6 sm:p-7">
+            <p className="text-xs font-black uppercase tracking-wide text-[#8a6d00]">{leadNews.category} · {leadNews.date}</p>
+            <h3 className="mt-2 text-2xl font-black uppercase leading-tight text-[#002f1d] sm:text-3xl">{leadNews.title}</h3>
+            <p className="mt-3 leading-7 text-slate-700">{leadNews.excerpt}</p>
+            <div className="mt-auto pt-5">
+              <ButtonLink href="/actualites" variant="dark">Lire l'article</ButtonLink>
+            </div>
+          </div>
+        </article>
 	      </section>
 
-	      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-	        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-	          <SectionTitle
-	            eyebrow="Projet sportif"
-	            text="Un parcours clair pour progresser, être accompagné et porter les couleurs du club à chaque âge."
-	            title="Une école de football structurée"
-	          />
-	          <div className="flex gap-3 pb-2">
-	            <ButtonLink href="/equipes" variant="dark">Voir les équipes</ButtonLink>
-	          </div>
-	        </div>
-	        <div className="grid overflow-hidden rounded-2xl border border-[#002f1d]/10 bg-white shadow-[0_24px_70px_rgba(0,31,19,0.14)] lg:grid-cols-[0.88fr_1.12fr]">
-	          <div
-	            className="image-tint min-h-[420px] bg-cover bg-center"
-	            style={{ backgroundImage: `url(${images.training})` }}
-	            aria-label="Entraînement football"
-	          >
-	            <div className="flex h-full min-h-[420px] flex-col justify-end p-6 text-white sm:p-8">
-	              <p className="text-xs font-black uppercase tracking-[0.34em] text-[#f7c600]">Club formateur</p>
-	              <h2 className="mt-3 max-w-md text-4xl font-black uppercase leading-tight">Former des joueurs, construire des citoyens</h2>
-	              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-	                {["Plaisir", "Exigence", "Progression"].map((item) => (
-	                  <span className="rounded-full border border-[#f7c600]/45 bg-black/25 px-4 py-2 text-center text-xs font-black uppercase backdrop-blur" key={item}>
-	                    {item}
-	                  </span>
-	                ))}
-	              </div>
-	            </div>
-	          </div>
-	          <div className="club-panel p-5 text-white sm:p-7">
-	            <div className="grid gap-4">
-	              {pathways.map(([title, category, text], index) => (
-	                <article className="group grid gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 transition hover:border-[#f7c600]/60 hover:bg-white/[0.09] sm:grid-cols-[72px_1fr_auto]" key={title}>
-	                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f7c600] text-xl font-black text-[#002f1d] shadow-[0_12px_28px_rgba(247,198,0,0.22)]">
-	                    {index + 1}
-	                  </div>
-	                  <div>
-	                    <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">{category}</p>
-	                    <h3 className="mt-1 text-2xl font-black uppercase leading-tight">{title}</h3>
-	                    <p className="mt-2 text-sm leading-6 text-white/75">{text}</p>
-	                  </div>
-	                  <ArrowRight className="hidden self-center text-[#f7c600] transition group-hover:translate-x-1 sm:block" size={24} aria-hidden="true" />
-	                </article>
-	              ))}
-	            </div>
-	            <div className="mt-5 rounded-2xl border border-[#f7c600]/35 bg-[#00120b]/40 p-4">
-	              <p className="text-sm font-bold leading-6 text-white/80">
-	                Chaque joueur doit comprendre son chemin : apprendre, progresser, s'engager, puis représenter Viry avec fierté.
-	              </p>
-	            </div>
-	          </div>
-	        </div>
-	      </section>
+      <section className="bg-[#f7f8f4] py-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <SectionTitle eyebrow="Équipes" title="Une famille, plusieurs ambitions" text="De l'école de foot aux Seniors : chaque catégorie porte le même blason, avec un accompagnement adapté." />
+            <div className="pb-2">
+              <ButtonLink href="/equipes" variant="dark">Voir toutes les équipes</ButtonLink>
+            </div>
+          </div>
+          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {teams.slice(0, 5).map((team) => (
+              <StaggerItem key={team.slug}>
+                <Link className="focus-ring premium-card group flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/equipes/${team.slug}`}>
+                  <div className="relative">
+                    <img decoding="async" loading="lazy" alt={team.name} className="h-36 w-full object-cover" src={team.image} />
+                    <span className="absolute left-3 top-3 rounded-full bg-[#002f1d]/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] backdrop-blur">{team.category}</span>
+                  </div>
+                  <div className="flex flex-1 items-center justify-between gap-2 p-4">
+                    <h3 className="text-base font-black uppercase leading-tight text-[#002f1d]">{team.name}</h3>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f7c600] text-[#002f1d] transition group-hover:translate-x-0.5">
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </span>
+                  </div>
+                </Link>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <div
@@ -369,6 +308,30 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <SectionTitle eyebrow="Actualités" title="Dernières actualités" text="Résultats, stages, détections et temps forts : toute la vie du club." />
+          <div className="pb-2">
+            <ButtonLink href="/actualites" variant="dark">Voir toutes les actualités</ButtonLink>
+          </div>
+        </div>
+        <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {news.slice(1, 5).map((item) => (
+            <StaggerItem key={item.title}>
+              <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href="/actualites">
+                <img decoding="async" loading="lazy" alt={item.title} className="h-40 w-full object-cover" src={item.image} />
+                <div className="flex flex-1 flex-col p-5">
+                  <p className="text-[11px] font-black uppercase text-[#8a6d00]">{item.category} · {item.date}</p>
+                  <h3 className="mt-1.5 text-lg font-black uppercase leading-tight text-[#002f1d]">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">{item.excerpt}</p>
+                  <p className="mt-auto pt-4 text-xs font-black uppercase text-[#002f1d]">Lire l'article →</p>
+                </div>
+              </Link>
+            </StaggerItem>
+          ))}
+        </Stagger>
       </section>
 
       <section className="bg-white py-14 sm:py-16">
@@ -490,24 +453,6 @@ export default function HomePage() {
               <ArrowRight size={15} aria-hidden="true" />
             </a>
           </div>
-        </div>
-      </section>
-
-      <section className="bg-[#f7f8f4] py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionTitle centered eyebrow="Équipes" title="Une famille, plusieurs ambitions" text="Chaque catégorie porte le même blason, avec un accompagnement adapté à son âge et à son niveau." />
-          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {teams.slice(0, 3).map((team) => (
-              <StaggerItem className="premium-card overflow-hidden rounded-lg bg-white" key={team.slug}>
-                <img decoding="async" loading="lazy" alt={team.name} className="h-52 w-full object-cover" src={team.image} />
-                <div className="p-5">
-                  <p className="text-xs font-black uppercase text-[#8a6d00]">{team.category}</p>
-                  <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{team.name}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{team.description}</p>
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
         </div>
       </section>
 
