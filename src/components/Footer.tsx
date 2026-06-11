@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, Mail, MapPin } from "lucide-react";
-import { socialItems } from "@/lib/socials";
+import { isLiveSocial, socialItems } from "@/lib/socials";
 
 const columns = [
   {
@@ -79,25 +79,33 @@ export function Footer() {
               Site officiel de l'ES Viry-Châtillon Football. Jaune et Vert pour toujours.
             </p>
             <div className="mt-6 flex flex-wrap gap-3" aria-label="Réseaux sociaux">
-              {socialItems.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  aria-label={social.label}
-                  title={social.label}
-                  className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-[#f7c600]/60"
-                  style={{
-                    background: social.background,
-                    borderColor: social.borderColor,
-                    color: social.color,
-                    boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
-                  }}
-                >
+              {socialItems.map((social) => {
+                const live = isLiveSocial(social);
+                const className = "focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-[#f7c600]/60";
+                const style = {
+                  background: social.background,
+                  borderColor: social.borderColor,
+                  color: social.color,
+                  boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
+                };
+                const icon = (
                   <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="currentColor" viewBox={social.viewBox}>
                     <path d={social.path} />
                   </svg>
-                </a>
-              ))}
+                );
+
+                // Lien cliquable seulement si une vraie URL existe ; sinon icone decorative
+                // (pas de lien mort vers "#").
+                return live ? (
+                  <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label} title={social.label} className={className} style={style}>
+                    {icon}
+                  </a>
+                ) : (
+                  <span key={social.label} role="img" aria-label={social.label} title={social.label} className={className} style={style}>
+                    {icon}
+                  </span>
+                );
+              })}
             </div>
           </div>
 

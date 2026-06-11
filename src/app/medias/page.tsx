@@ -15,13 +15,9 @@ export default function MediaPage() {
     <>
       <PageHero description="Photos, vidéos et interviews du club." image={images.supporters} title="Médias / Galerie" />
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        {/* Pas de barre de filtres : la galerie n'a pas de filtrage reel (false affordance retiree). */}
+        <div className="mb-8">
           <SectionTitle title="Photos récentes" text="La vie du club en images : joie, effort, supporters, matchs et moments de transmission." />
-          <div className="mb-8 flex flex-wrap gap-2">
-            {["Photos", "Vidéos", "Interviews", "Matchs"].map((item) => (
-              <span className="rounded-full border border-[#002f1d]/15 bg-white px-3 py-2 text-xs font-black uppercase text-[#002f1d]" key={item}>{item}</span>
-            ))}
-          </div>
         </div>
         <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {news.map((item, index) => (

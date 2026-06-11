@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MotionDiv } from "@/components/Motion";
-import { socialItems } from "@/lib/socials";
+import { isLiveSocial, socialItems } from "@/lib/socials";
 
 const ANNOUNCEMENT =
   "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !";
@@ -168,25 +168,31 @@ export function Header() {
           <div className="flex items-center gap-5">
             <div className="hidden items-center gap-2 xl:flex">
               <span className="text-white/82">Suivez-nous :</span>
-              {socialItems.map((item) => (
-                <span
-                  aria-label={item.label}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border transition hover:scale-105"
-                  key={item.label}
-                  role="img"
-                  style={{
-                    background: item.background,
-                    borderColor: item.borderColor,
-                    color: item.color,
-                    boxShadow: item.label === "TikTok" ? "2px 0 0 #fe2c55, -2px 0 0 #25f4ee" : undefined
-                  }}
-                  title={item.label}
-                >
+              {socialItems.map((item) => {
+                const live = isLiveSocial(item);
+                const className = "inline-flex h-7 w-7 items-center justify-center rounded-full border transition hover:scale-105";
+                const style = {
+                  background: item.background,
+                  borderColor: item.borderColor,
+                  color: item.color,
+                  boxShadow: item.label === "TikTok" ? "2px 0 0 #fe2c55, -2px 0 0 #25f4ee" : undefined
+                };
+                const icon = (
                   <svg aria-hidden="true" className="h-4 w-4" fill="currentColor" viewBox={item.viewBox}>
                     <path d={item.path} />
                   </svg>
-                </span>
-              ))}
+                );
+
+                return live ? (
+                  <a aria-label={item.label} className={`focus-ring ${className}`} href={item.href} key={item.label} rel="noopener noreferrer" style={style} target="_blank" title={item.label}>
+                    {icon}
+                  </a>
+                ) : (
+                  <span aria-label={item.label} className={className} key={item.label} role="img" style={style} title={item.label}>
+                    {icon}
+                  </span>
+                );
+              })}
             </div>
             <div className="flex overflow-hidden rounded-md border border-[#f7c600]/35">
               <Link className="focus-ring inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase hover:bg-white/10" href="/calendrier">
