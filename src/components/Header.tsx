@@ -49,6 +49,8 @@ export function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const desktopNavRef = useRef<HTMLDivElement>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
 
   // Surlignage de l'item actif : le parent reste actif sur ses sous-pages
@@ -103,6 +105,36 @@ export function Header() {
 
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  // Menus deroulants desktop (pattern disclosure) : Echap ferme et rend le focus au
+  // declencheur ; un clic en dehors de la nav ferme le menu ouvert.
+  useEffect(() => {
+    if (!openMenu) {
+      return;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        const trigger = document.getElementById(`menu-trigger-${openMenu}`);
+        setOpenMenu(null);
+        trigger?.focus();
+      }
+    }
+
+    function onPointerDown(event: MouseEvent) {
+      if (desktopNavRef.current && !desktopNavRef.current.contains(event.target as Node)) {
+        setOpenMenu(null);
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("mousedown", onPointerDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, [openMenu]);
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -189,35 +221,76 @@ export function Header() {
           </span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-white/12 bg-white/[0.045] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl min-[1280px]:flex">
+        <div ref={desktopNavRef} className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-white/12 bg-white/[0.045] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl min-[1280px]:flex">
           {navItems.map((item) => {
             const active = isActive(item.href);
+            const triggerClass = `focus-ring relative inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[12px] font-black uppercase transition min-[1500px]:px-4 min-[1500px]:text-[13px] ${
+              active ? "bg-[#f7c600] text-[#001c10] shadow-[0_8px_22px_rgba(247,198,0,0.24)]" : "text-white/90 hover:bg-white/8 hover:text-[#f7c600]"
+            }`;
+
+            if (!item.children) {
+              return (
+                <Link aria-current={active ? "page" : undefined} className={triggerClass} href={item.href} key={item.href}>
+                  {item.label}
+                </Link>
+              );
+            }
+
+            const expanded = openMenu === item.href;
             return (
-              <div className="group relative" key={item.href}>
-                <Link
+              <div
+                className="relative"
+                key={item.href}
+                onMouseEnter={() => setOpenMenu(item.href)}
+                onMouseLeave={() => setOpenMenu(null)}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setOpenMenu((current) => (current === item.href ? null : current));
+                  }
+                }}
+              >
+                <button
                   aria-current={active ? "page" : undefined}
-                  className={`focus-ring relative inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[12px] font-black uppercase transition min-[1500px]:px-4 min-[1500px]:text-[13px] ${
-                    active ? "bg-[#f7c600] text-[#001c10] shadow-[0_8px_22px_rgba(247,198,0,0.24)]" : "text-white/90 hover:bg-white/8 hover:text-[#f7c600]"
-                  }`}
-                  href={item.href}
+                  aria-controls={`submenu-${item.href}`}
+                  aria-expanded={expanded}
+                  aria-haspopup="true"
+                  className={triggerClass}
+                  id={`menu-trigger-${item.href}`}
+                  onClick={() => setOpenMenu(item.href)}
+                  type="button"
                 >
                   {item.label}
-                  {item.children ? <ChevronDown size={13} aria-hidden="true" /> : null}
-                </Link>
-                {item.children ? (
-                  <div className="pointer-events-none absolute left-0 top-[calc(100%+16px)] w-72 translate-y-2 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                    <div className="club-panel rounded-lg p-3 shadow-2xl">
-                      <p className="px-3 pb-2 text-xs font-black uppercase text-[#f7c600]">{item.label}</p>
-                      <div className="grid gap-1">
-                        {item.children.map(([label, href]) => (
-                          <Link className="focus-ring rounded-md px-3 py-3 text-sm font-black uppercase text-white/85 hover:bg-white/10 hover:text-[#f7c600]" href={href} key={`${item.label}-${label}-${href}`}>
-                            {label}
-                          </Link>
-                        ))}
-                      </div>
+                  <ChevronDown size={13} aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
+                </button>
+                <div
+                  id={`submenu-${item.href}`}
+                  inert={!expanded}
+                  className={`absolute left-0 top-[calc(100%+16px)] w-72 transition duration-200 ${
+                    expanded ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
+                  }`}
+                >
+                  <div className="club-panel rounded-lg p-3 shadow-2xl">
+                    <Link
+                      className="focus-ring mb-1 block rounded-md px-3 py-2 text-xs font-black uppercase text-[#f7c600] hover:bg-white/10"
+                      href={item.href}
+                      onClick={() => setOpenMenu(null)}
+                    >
+                      {item.label} — voir la page
+                    </Link>
+                    <div className="grid gap-1">
+                      {item.children.map(([label, href]) => (
+                        <Link
+                          className="focus-ring rounded-md px-3 py-3 text-sm font-black uppercase text-white/85 hover:bg-white/10 hover:text-[#f7c600]"
+                          href={href}
+                          key={`${item.label}-${label}-${href}`}
+                          onClick={() => setOpenMenu(null)}
+                        >
+                          {label}
+                        </Link>
+                      ))}
                     </div>
                   </div>
-                ) : null}
+                </div>
               </div>
             );
           })}
