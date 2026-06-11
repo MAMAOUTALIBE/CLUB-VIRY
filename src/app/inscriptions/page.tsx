@@ -5,10 +5,9 @@ import { RegistrationForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Inscriptions"
-};
+export const metadata = pageMetadata("/inscriptions");
 
 export default function RegistrationPage() {
   return (

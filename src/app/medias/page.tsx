@@ -5,10 +5,9 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { news } from "@/lib/data";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Médias / Galerie"
-};
+export const metadata = pageMetadata("/medias");
 
 export default function MediaPage() {
   return (

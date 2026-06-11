@@ -4,10 +4,9 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { Reveal } from "@/components/Motion";
 import { images } from "@/lib/images";
 import { Flag, GraduationCap, TrendingUp, HeartHandshake } from "lucide-react";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Histoire"
-};
+export const metadata = pageMetadata("/le-club/histoire");
 
 const timeline = [
   {

@@ -2,10 +2,9 @@ import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
 import { navItems } from "@/lib/data";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Plan du site"
-};
+export const metadata = pageMetadata("/plan-du-site");
 
 const extraLinks = [
   ["/le-club/histoire", "Histoire"],

@@ -3,10 +3,9 @@ import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Stade Henri Longuet"
-};
+export const metadata = pageMetadata("/le-club/stade-henri-longuet");
 
 export default function StadiumPage() {
   return (

@@ -5,10 +5,9 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { teams } from "@/lib/data";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Équipes"
-};
+export const metadata = pageMetadata("/equipes");
 
 export default function TeamsPage() {
   return (

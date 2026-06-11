@@ -8,10 +8,9 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { news } from "@/lib/data";
 import { images } from "@/lib/images";
 import { slugify } from "@/lib/slug";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Actualités"
-};
+export const metadata = pageMetadata("/actualites");
 
 export default function NewsPage() {
   const leadNews = news[0];
@@ -36,7 +35,7 @@ export default function NewsPage() {
           <img alt={leadNews.title} className="h-72 w-full object-cover lg:h-full" loading="lazy" src={leadNews.image} />
           <div className="p-6">
             <p className="text-xs font-black uppercase text-[#8a6d00]">
-              À la une · <time>{leadNews.date}</time>
+              À la une · <time dateTime={leadNews.isoDate}>{leadNews.date}</time>
             </p>
             <h2 className="mt-3 text-4xl font-black uppercase text-[#002f1d]">{leadNews.title}</h2>
             <p className="mt-4 leading-7 text-slate-700">{leadNews.excerpt}</p>
@@ -50,7 +49,7 @@ export default function NewsPage() {
                 <img alt={item.title} className="h-48 w-full object-cover" loading="lazy" src={item.image} />
                 <div className="p-5">
                   <p className="text-xs font-black uppercase text-[#8a6d00]">
-                    {item.category} · <time>{item.date}</time>
+                    {item.category} · <time dateTime={item.isoDate}>{item.date}</time>
                   </p>
                   <h2 className="mt-2 text-xl font-black uppercase text-[#002f1d]">{item.title}</h2>
                   <p className="mt-2 text-sm text-slate-700">{item.excerpt}</p>

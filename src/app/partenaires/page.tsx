@@ -5,10 +5,9 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { partners } from "@/lib/data";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Partenaires"
-};
+export const metadata = pageMetadata("/partenaires");
 
 export default function PartnersPage() {
   return (

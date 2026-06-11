@@ -32,6 +32,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   images: {
+    // AVIF en premier (poids ~20-30% < WebP), WebP en repli. Sert les <Image> en formats modernes.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",

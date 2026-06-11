@@ -1,9 +1,8 @@
 import { PageHero } from "@/components/PageHero";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Conditions générales"
-};
+export const metadata = pageMetadata("/boutique/conditions-generales");
 
 export default function TermsPage() {
   return (

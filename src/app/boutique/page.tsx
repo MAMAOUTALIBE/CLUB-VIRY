@@ -4,10 +4,9 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { products } from "@/lib/data";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Boutique"
-};
+export const metadata = pageMetadata("/boutique");
 
 export default function ShopPage() {
   return (

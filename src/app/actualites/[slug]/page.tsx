@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { news } from "@/lib/data";
+import { buildBreadcrumb, buildNewsArticle } from "@/lib/jsonld";
 import { slugify } from "@/lib/slug";
 
 type ArticlePageProps = {
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   return {
     title: article.title,
     description: article.excerpt,
+    alternates: { canonical: `/actualites/${slug}` },
     openGraph: {
       title: article.title,
       description: article.excerpt,
@@ -41,8 +43,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
+  const articleJsonLd = buildNewsArticle(article, `/actualites/${slug}`);
+  const breadcrumbJsonLd = buildBreadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Actualités", path: "/actualites" },
+    { name: article.title }
+  ]);
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <PageHero description={article.excerpt} eyebrow={`${article.category} · ${article.date}`} image={article.image} title={article.title} />
       <article className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
         <Link className="focus-ring inline-flex items-center gap-2 text-sm font-black uppercase text-[#002f1d] hover:text-[#8a6d00]" href="/actualites">
@@ -50,7 +61,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           Toutes les actualités
         </Link>
         <p className="mt-6 text-xs font-black uppercase text-[#8a6d00]">
-          {article.category} · <time>{article.date}</time>
+          {article.category} · <time dateTime={article.isoDate}>{article.date}</time>
         </p>
         <h1 className="mt-2 text-3xl font-black uppercase leading-tight text-[#002f1d] sm:text-4xl">{article.title}</h1>
         <div className="gold-divider mt-4" aria-hidden="true" />

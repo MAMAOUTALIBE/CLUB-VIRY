@@ -6,6 +6,21 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { clubStats, matches, news, partners, teams, values } from "@/lib/data";
 import { images } from "@/lib/images";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+export const metadata = {
+  alternates: { canonical: "/" }
+};
+
+// JSON-LD WebSite (uniquement sur l'accueil) : aide Google a afficher le nom du site.
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "ES Viry-Châtillon Football",
+  url: siteUrl,
+  inLanguage: "fr-FR"
+};
+
 export default function HomePage() {
   const leadNews = news[0];
   const quickActions = [
@@ -53,6 +68,7 @@ export default function HomePage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
       {/* Préchargement prioritaire de l'image du hero (LCP) */}
       <link rel="preload" as="image" href={images.stadiumHero} fetchPriority="high" />
       <section

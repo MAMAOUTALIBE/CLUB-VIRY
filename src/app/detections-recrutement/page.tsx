@@ -5,10 +5,9 @@ import { RecruitmentForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Détections / Recrutement"
-};
+export const metadata = pageMetadata("/detections-recrutement");
 
 export default function RecruitmentPage() {
   return (
