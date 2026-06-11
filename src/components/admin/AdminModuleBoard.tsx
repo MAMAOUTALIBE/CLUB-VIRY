@@ -124,18 +124,12 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
 
   async function load(accessToken: string) {
     const normalized = accessToken.trim();
-    if (!normalized) {
-      setRows(demo);
-      setState("demo");
-      setMessage("Mode démo : ajoutez un token admin pour charger les données réelles.");
-      return;
-    }
 
     setState("loading");
-    setMessage("Chargement des données...");
+    setMessage(normalized ? "Chargement des données..." : "Chargement via la session admin...");
 
     try {
-      const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${normalized}` } });
+      const response = await fetch(endpoint, { headers: normalized ? { Authorization: `Bearer ${normalized}` } : undefined });
       const parsed = extractRows(await response.json(), dataKey);
 
       if (!parsed.ok) {
@@ -145,7 +139,9 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
         return;
       }
 
-      window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalized);
+      if (normalized) {
+        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalized);
+      }
       setRows(parsed.rows);
       setState("connected");
       setMessage(`${parsed.rows.length} enregistrement(s) chargé(s) depuis le backend.`);
@@ -162,6 +158,8 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
       if (stored) {
         setToken(stored);
         void load(stored);
+      } else {
+        void load("");
       }
     }, 0);
     return () => window.clearTimeout(timeout);

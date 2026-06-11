@@ -228,22 +228,12 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
   const loadDetail = useCallback(async (accessToken: string) => {
     const normalizedToken = accessToken.trim();
 
-    if (!normalizedToken) {
-      setDetail(null);
-      setStatus("demo");
-      setMessage("Ajoutez un token admin pour charger la fiche 360.");
-      setAdminNotes("");
-      return;
-    }
-
     setStatus("loading");
-    setMessage("Chargement de la fiche 360...");
+    setMessage(normalizedToken ? "Chargement de la fiche 360..." : "Chargement via la session admin...");
 
     try {
       const response = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${normalizedToken}`
-        }
+        headers: normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : undefined
       });
       const payload: unknown = await response.json();
       const failure = parseFailure(payload);
@@ -257,7 +247,9 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       }
 
       const nextDetail = buildDetail(kind, payload);
-      window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
+      if (normalizedToken) {
+        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
+      }
       setDetail(nextDetail);
       setAdminNotes(nextDetail.adminNotes ?? "");
       setStatus("loaded");
@@ -273,12 +265,6 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
   const patchAdmin = useCallback(async (url: string, body: Record<string, unknown>) => {
     const normalizedToken = token.trim();
 
-    if (!normalizedToken) {
-      setActionStatus("error");
-      setActionMessage("Token admin requis pour executer cette action.");
-      return;
-    }
-
     setActionStatus("loading");
     setActionMessage("");
 
@@ -286,7 +272,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       const response = await fetch(url, {
         body: JSON.stringify(body),
         headers: {
-          Authorization: `Bearer ${normalizedToken}`,
+          ...(normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}),
           "Content-Type": "application/json"
         },
         method: "PATCH"
@@ -341,6 +327,8 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       if (storedToken) {
         setToken(storedToken);
         void loadDetail(storedToken);
+      } else {
+        void loadDetail("");
       }
     }, 0);
 

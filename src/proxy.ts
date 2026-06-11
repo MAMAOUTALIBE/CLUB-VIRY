@@ -15,8 +15,9 @@ export function proxy(request: NextRequest) {
 
   if (!hasSession) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/connexion";
     url.search = "";
+    url.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
     const redirect = NextResponse.redirect(url);
     redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
     return redirect;

@@ -220,21 +220,12 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
   const loadRecords = useCallback(async (accessToken: string) => {
     const normalizedToken = accessToken.trim();
 
-    if (!normalizedToken) {
-      setRecords([]);
-      setStatus("demo");
-      setMessage("Ajoutez un token admin pour charger les donnees reelles.");
-      return;
-    }
-
     setStatus("loading");
-    setMessage("Chargement des donnees CRM...");
+    setMessage(normalizedToken ? "Chargement des donnees CRM..." : "Chargement via la session admin...");
 
     try {
       const response = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${normalizedToken}`
-        }
+        headers: normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : undefined
       });
       const payload: unknown = await response.json();
       const failure = parseFailure(payload);
@@ -247,7 +238,9 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       }
 
       const nextRecords = buildCards(kind, payload);
-      window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
+      if (normalizedToken) {
+        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
+      }
       setRecords(nextRecords);
       setStatus("loaded");
       setMessage(`${nextRecords.length} fiche(s) chargee(s).`);
@@ -265,6 +258,8 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       if (storedToken) {
         setToken(storedToken);
         void loadRecords(storedToken);
+      } else {
+        void loadRecords("");
       }
     }, 0);
 

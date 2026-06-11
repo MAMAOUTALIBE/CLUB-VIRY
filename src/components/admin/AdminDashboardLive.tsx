@@ -462,21 +462,12 @@ export function AdminDashboardLive() {
   async function loadDashboard(accessToken: string) {
     const normalizedToken = accessToken.trim();
 
-    if (!normalizedToken) {
-      setDashboard(null);
-      setStatus("demo");
-      setMessage("Mode demo : ajoutez un token admin pour charger les compteurs backend.");
-      return;
-    }
-
     setStatus("loading");
-    setMessage("Chargement des donnees admin...");
+    setMessage(normalizedToken ? "Chargement des donnees admin..." : "Chargement via la session admin...");
 
     try {
       const response = await fetch("/api/admin/dashboard", {
-        headers: {
-          Authorization: `Bearer ${normalizedToken}`
-        }
+        headers: normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : undefined
       });
       const parsed = parseDashboardResponse(await response.json());
 
@@ -487,7 +478,9 @@ export function AdminDashboardLive() {
         return;
       }
 
-      window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
+      if (normalizedToken) {
+        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
+      }
       setDashboard(parsed.data);
       setStatus("connected");
       setMessage("Donnees backend chargees depuis /api/admin/dashboard.");
@@ -505,6 +498,8 @@ export function AdminDashboardLive() {
       if (storedToken) {
         setToken(storedToken);
         void loadDashboard(storedToken);
+      } else {
+        void loadDashboard("");
       }
     }, 0);
 

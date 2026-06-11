@@ -8,7 +8,7 @@ type LoginResponse =
       ok: true;
       data: {
         session: {
-          accessToken: string;
+          expiresAt?: number;
         } | null;
       };
     }
@@ -60,9 +60,14 @@ function parseLoginResponse(value: unknown): LoginResponse {
     if (session && typeof session === "object") {
       const payload = session as Record<string, unknown>;
 
-      if (typeof payload.accessToken === "string") {
-        return { ok: true, data: { session: { accessToken: payload.accessToken } } };
-      }
+      return {
+        ok: true,
+        data: {
+          session: {
+            expiresAt: typeof payload.expiresAt === "number" ? payload.expiresAt : undefined
+          }
+        }
+      };
     }
 
     return { ok: true, data: { session: null } };
@@ -103,19 +108,17 @@ export function AdminAccessControl({ loading, onClear, onTokenSubmit, token, tok
         return;
       }
 
-      const accessToken = parsed.data.session?.accessToken;
-
-      if (!accessToken) {
+      if (!parsed.data.session) {
         setLoginStatus("error");
         setLoginMessage("Session absente dans la reponse de connexion.");
         return;
       }
 
-      setToken(accessToken);
-      window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, accessToken);
+      setToken("");
+      window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
       setLoginStatus("idle");
       setLoginMessage("");
-      onTokenSubmit(accessToken);
+      onTokenSubmit("");
     } catch (error) {
       setLoginStatus("error");
       setLoginMessage(error instanceof Error ? error.message : "Erreur de connexion inconnue.");

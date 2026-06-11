@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Trophy, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Reveal, Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -144,56 +144,70 @@ export default function HomePage() {
 	        </Stagger>
 	      </section>
 
-	      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-        <div className="club-panel overflow-hidden rounded-2xl text-white">
-          <div className="grid min-h-full lg:grid-cols-[1fr_0.82fr]">
+      <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
+        {/* ── Prochain match : carte premium type tableau d'affichage ── */}
+        <div className="club-panel relative overflow-hidden rounded-3xl text-white">
+          <div className="stadium-grid pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-[#0a6b3d]/45 blur-3xl" aria-hidden="true" />
+          <div className="relative grid min-h-full lg:grid-cols-[1fr_0.74fr]">
             <div className="relative p-6 sm:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#f7c600]">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f7c600]" />
-                    Matchday
-                  </p>
-                  <h2 className="mt-2 text-3xl font-black uppercase leading-tight">Prochain rendez-vous</h2>
-                </div>
-                <span className="shrink-0 rounded-full border border-[#f7c600]/40 bg-[#f7c600]/10 px-3 py-1 text-[11px] font-black uppercase text-[#f7c600]">
-                  {isClub(nextMatch.home) ? "À domicile" : "À l'extérieur"}
+              <div className="flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#f7c600]/30 bg-[#f7c600]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[#f7c600]">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f7c600]/70" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f7c600]" />
+                  </span>
+                  Matchday
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white/85 ring-1 ring-white/15">
+                  <MapPin size={12} className="text-[#f7c600]" aria-hidden="true" />
+                  {isClub(nextMatch.home) ? "À domicile" : "Extérieur"}
                 </span>
               </div>
 
-              <div className="mt-6 inline-flex items-center gap-2 text-xs font-black uppercase">
-                <span className="rounded-md bg-white/10 px-2.5 py-1 text-[#f7c600]">{nextMatch.team}</span>
-              </div>
+              <h2 className="mt-5 text-3xl font-black uppercase leading-[0.95] sm:text-[2.6rem]">
+                Prochain
+                <span className="block text-[#f7c600]">rendez-vous</span>
+              </h2>
+              <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white/[0.07] px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white/85">
+                <Trophy size={14} className="text-[#f7c600]" aria-hidden="true" />
+                {nextMatch.team}
+              </p>
 
-              <div className="mt-5 rounded-2xl border border-white/12 bg-black/20 p-5 sm:p-6">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+              <div className="light-sweep relative mt-6 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-b from-white/[0.09] to-black/25 p-6 sm:p-7">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-4">
                   <div className="flex flex-col items-center gap-3 text-center">
-                    {crest(nextMatch.home, "lg")}
+                    <div className="relative">
+                      <span className="absolute inset-0 -z-10 rounded-full bg-[#f7c600]/25 blur-xl" aria-hidden="true" />
+                      {crest(nextMatch.home, "lg")}
+                    </div>
                     <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.home)}</span>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f7c600] text-sm font-black text-[#002f1d] shadow-[0_0_28px_rgba(247,198,0,0.55)]">
+                  <div className="flex flex-col items-center gap-2 pt-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f7c600] text-xs font-black text-[#002f1d] shadow-[0_0_30px_rgba(247,198,0,0.6)]">
                       VS
                     </span>
-                    <span className="mt-2 text-xs font-black uppercase tracking-wide text-white/65">{nextMatch.time}</span>
+                    <span className="rounded-full bg-black/30 px-2.5 py-1 text-base font-black tabular-nums tracking-tight text-[#f7c600]">
+                      {nextMatch.time}
+                    </span>
                   </div>
                   <div className="flex flex-col items-center gap-3 text-center">
-                    {crest(nextMatch.away, "lg")}
+                    <div className="relative">
+                      <span className="absolute inset-0 -z-10 rounded-full bg-white/10 blur-xl" aria-hidden="true" />
+                      {crest(nextMatch.away, "lg")}
+                    </div>
                     <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.away)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-2.5 text-sm font-bold text-white/85 sm:grid-cols-2">
-                <span className="inline-flex items-center gap-2 rounded-lg bg-white/[0.07] p-3">
+              <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
+                <span className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] p-3 text-sm font-bold text-white/85">
                   <CalendarDays className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
                   {nextMatch.date}
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-lg bg-white/[0.07] p-3">
-                  <Clock className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
-                  Coup d'envoi · {nextMatch.time}
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-lg bg-white/[0.07] p-3 sm:col-span-2">
+                <span className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] p-3 text-sm font-bold text-white/85">
                   <MapPin className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
                   {nextMatch.place}
                 </span>
@@ -201,35 +215,41 @@ export default function HomePage() {
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
-                <ButtonLink href="/equipes/seniors-r1" variant="outline">
-                  Fiche équipe
-                </ButtonLink>
+                <ButtonLink href="/equipes/seniors-r1" variant="outline">Fiche équipe</ButtonLink>
               </div>
             </div>
 
-            <div className="border-t border-white/10 bg-[#00120b]/40 p-5 sm:p-6 lg:border-l lg:border-t-0">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">Autres matchs</p>
+            <div className="relative border-t border-white/10 bg-[#00120b]/55 p-5 sm:p-6 lg:border-l lg:border-t-0">
+              <div className="flex items-center justify-between">
+                <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">
+                  <Ticket size={14} aria-hidden="true" /> Autres matchs
+                </p>
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#f7c600]/15 px-1.5 text-[11px] font-black text-[#f7c600]">
+                  {otherMatches.length}
+                </span>
+              </div>
               <div className="mt-4 space-y-3">
                 {otherMatches.map((match) => (
                   <article
-                    className="group rounded-xl border border-white/10 bg-white/[0.06] p-4 transition hover:-translate-y-0.5 hover:border-[#f7c600]/40 hover:bg-white/[0.1]"
+                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] p-3.5 transition duration-200 hover:-translate-y-0.5 hover:border-[#f7c600]/45 hover:bg-white/[0.09]"
                     key={match.team + "-" + match.away}
                   >
+                    <span className="absolute inset-y-0 left-0 w-1 origin-top scale-y-0 bg-[#f7c600] transition-transform duration-200 group-hover:scale-y-100" aria-hidden="true" />
                     <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-md bg-[#f7c600]/15 px-2 py-0.5 text-[11px] font-black uppercase text-[#f7c600]">
+                      <span className="rounded-md bg-[#f7c600]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#f7c600]">
                         {match.team}
                       </span>
-                      <span className="text-[11px] font-black uppercase text-white/60">{match.time}</span>
+                      <span className="text-[10px] font-black uppercase text-white/55">{match.time}</span>
                     </div>
                     <div className="mt-3 flex items-center gap-2 text-sm font-bold">
                       {crest(match.home, "sm")}
                       <span className="min-w-0 flex-1 truncate">{shortTeam(match.home)}</span>
-                      <span className="shrink-0 text-xs font-black uppercase text-[#f7c600]">vs</span>
+                      <span className="shrink-0 text-[10px] font-black uppercase text-[#f7c600]">vs</span>
                       <span className="min-w-0 flex-1 truncate text-right">{shortTeam(match.away)}</span>
                       {crest(match.away, "sm")}
                     </div>
-                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-white/55">
-                      <CalendarDays className="shrink-0 text-[#f7c600]/80" size={13} aria-hidden="true" />
+                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-white/55">
+                      <CalendarDays className="shrink-0 text-[#f7c600]/80" size={12} aria-hidden="true" />
                       {match.date} · {match.place}
                     </p>
                   </article>
@@ -238,22 +258,43 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-	
-        <article className="official-card flex flex-col overflow-hidden rounded-2xl bg-white">
-          <div className="relative">
-            <img decoding="async" loading="lazy" alt={leadNews.title} className="h-56 w-full object-cover sm:h-72" src={leadNews.image} />
-            <span className="absolute left-4 top-4 rounded-full bg-[#002f1d] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#f7c600]">Actualité à la une</span>
+
+        {/* ── Actualité à la une : carte éditoriale premium ── */}
+        <article className="official-card group flex flex-col overflow-hidden rounded-3xl bg-white">
+          <div className="relative overflow-hidden">
+            <img
+              decoding="async"
+              loading="lazy"
+              alt={leadNews.title}
+              className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] sm:h-80"
+              src={leadNews.image}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/85 via-[#001c10]/15 to-transparent" aria-hidden="true" />
+            <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[#002f1d]/90 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#f7c600] ring-1 ring-[#f7c600]/30 backdrop-blur">
+              <Sparkles size={12} aria-hidden="true" /> À la une
+            </span>
+            <p className="absolute inset-x-4 bottom-4 text-[11px] font-black uppercase tracking-[0.18em] text-white/90">
+              {leadNews.category} · {leadNews.date}
+            </p>
           </div>
           <div className="flex flex-1 flex-col p-6 sm:p-7">
-            <p className="text-xs font-black uppercase tracking-wide text-[#8a6d00]">{leadNews.category} · {leadNews.date}</p>
-            <h3 className="mt-2 text-2xl font-black uppercase leading-tight text-[#002f1d] sm:text-3xl">{leadNews.title}</h3>
+            <h3 className="text-2xl font-black uppercase leading-tight text-[#002f1d] transition-colors group-hover:text-[#064b2d] sm:text-[1.7rem]">
+              {leadNews.title}
+            </h3>
             <p className="mt-3 leading-7 text-slate-700">{leadNews.excerpt}</p>
-            <div className="mt-auto pt-5">
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6">
               <ButtonLink href="/actualites" variant="dark">Lire l'article</ButtonLink>
+              <Link
+                href="/actualites"
+                className="focus-ring inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#8a6d00] transition hover:text-[#002f1d]"
+              >
+                Toutes les actus
+                <ArrowUpRight size={14} aria-hidden="true" />
+              </Link>
             </div>
           </div>
         </article>
-	      </section>
+      </section>
 
       <section className="bg-[#f7f8f4] py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

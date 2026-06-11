@@ -28,10 +28,10 @@ export type AuthContextResult =
     };
 
 export async function getAuthContext(request: NextRequest): Promise<AuthContextResult> {
-  const token = getBearerToken(request);
+  const token = getBearerToken(request) ?? request.cookies.get("admin_session")?.value ?? null;
 
   if (!token) {
-    return { ok: false, status: 401, code: "AUTH_REQUIRED", message: "Token Bearer manquant." };
+    return { ok: false, status: 401, code: "AUTH_REQUIRED", message: "Session admin manquante." };
   }
 
   if (!isSupabaseConfigured) {
