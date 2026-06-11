@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-// Défense en profondeur : l'espace admin ne doit jamais être indexé,
-// en complément du middleware (qui en bloque l'accès public).
+// Défense en profondeur : l'espace admin ne doit jamais être indexé, en complément
+// du proxy (src/proxy.ts) qui valide la session Supabase avant de servir ces pages.
 export const metadata: Metadata = {
   robots: {
     index: false,

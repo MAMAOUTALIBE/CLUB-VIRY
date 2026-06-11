@@ -47,8 +47,11 @@ export type CreateOrderInput = {
 export type CreateCheckoutInput = {
   orderId?: string | null;
   registrationId?: string | null;
-  amountCents?: number | null;
+  // Montant TOUJOURS calculé côté serveur à partir de la ressource possédée.
+  // Ne jamais alimenter ce champ avec une valeur fournie par le client.
+  amountCents: number;
   provider: "manual" | "stripe";
+  profileId: string;
 };
 
 export type OrderBundle = {
@@ -726,23 +729,11 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderBundle>
 
 export async function createCheckout(input: CreateCheckoutInput): Promise<Payment> {
   const supabase = getSupabaseAdminClient();
-  let amountCents = input.amountCents ?? null;
+  // Le montant est déjà vérifié/calculé côté serveur par l'appelant (route checkout).
+  // On le revalide par sécurité mais on ne fait jamais confiance à une valeur client.
+  const amountCents = input.amountCents;
 
-  if (!amountCents && input.orderId) {
-    const { data: order, error: orderError } = await supabase.from("orders").select("*").eq("id", input.orderId).maybeSingle();
-
-    if (orderError) {
-      throw new Error(`Unable to fetch order: ${orderError.message}`);
-    }
-
-    if (!order) {
-      throw new Error("Order not found.");
-    }
-
-    amountCents = order.total_cents as number;
-  }
-
-  if (!amountCents || amountCents < 0) {
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
     throw new Error("Payment amount is missing.");
   }
 
@@ -782,6 +773,7 @@ export async function createCheckout(input: CreateCheckoutInput): Promise<Paymen
       supabase
     ),
     recordActivity({
+      actorId: input.profileId,
       action: "payment.checkout_created",
       entityType: "payments",
       entityId: data.id,

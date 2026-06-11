@@ -3,8 +3,9 @@ import type { NextRequest } from "next/server";
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminUserUpdatePayload } from "@/lib/api/validation";
+import { canAdminUpdateProfile } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/foundations";
-import { updateProfileForAdmin } from "@/lib/db/profiles";
+import { getProfileForAdmin, updateProfileForAdmin } from "@/lib/db/profiles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +37,34 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
 
+  const actorRole = admin.context.profile?.role;
+
+  if (!actorRole) {
+    return jsonError(403, "FORBIDDEN", "Profil club introuvable.");
+  }
+
   try {
+    const target = await getProfileForAdmin(id);
+
+    if (!target) {
+      return jsonError(404, "NOT_FOUND", "Utilisateur introuvable.");
+    }
+
+    // Anti-élévation de privilèges : un admin ne peut ni se promouvoir lui-même,
+    // ni gérer/attribuer un rôle de niveau supérieur ou égal au sien (sauf SUPER_ADMIN).
+    const guard = canAdminUpdateProfile({
+      actorRole,
+      actorId: admin.context.user.id,
+      targetId: target.id,
+      targetCurrentRole: target.role,
+      requestedRole: payload.data.role,
+      changesStatus: payload.data.status !== undefined
+    });
+
+    if (!guard.ok) {
+      return jsonError(403, "FORBIDDEN", guard.message);
+    }
+
     const profile = await updateProfileForAdmin(id, payload.data);
     await recordActivity({
       actorId: admin.context.user.id,

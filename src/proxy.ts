@@ -1,19 +1,39 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
+
 /**
  * Protège l'espace d'administration / CRM (convention Next.js 16 "proxy").
  *
- * Tant que l'authentification réelle (Supabase) n'est pas activée, l'espace
- * admin n'est pas exploitable : on évite donc d'exposer publiquement son shell.
- * Sans cookie de session admin, toute requête vers /admin est redirigée vers
- * l'accueil et marquée non-indexable. Quand le CRM sera activé, la connexion
- * posera le cookie `admin_session` (HttpOnly) et le proxy laissera passer.
+ * Le cookie `admin_session` (HttpOnly) contient l'access token Supabase posé à la
+ * connexion. On ne se contente PAS de vérifier sa présence : on valide réellement
+ * la session auprès de Supabase (signature + expiration). Un cookie forgé ou expiré
+ * est donc rejeté et la requête est redirigée vers /connexion, non indexable.
+ *
+ * Ce gate assure l'AUTHENTIFICATION au niveau page. L'AUTORISATION par rôle reste
+ * appliquée par les routes `/api/admin/*` (Bearer token + permissions), qui portent
+ * la donnée réelle : un utilisateur authentifié non-admin verra le shell mais aucune
+ * donnée sensible.
  */
-export function proxy(request: NextRequest) {
-  const hasSession = request.cookies.has("admin_session");
+async function hasValidAdminSession(token: string | undefined): Promise<boolean> {
+  if (!token || !isSupabaseConfigured) {
+    return false;
+  }
 
-  if (!hasSession) {
+  try {
+    const { data, error } = await getSupabaseClient().auth.getUser(token);
+    return Boolean(!error && data.user);
+  } catch {
+    return false;
+  }
+}
+
+export async function proxy(request: NextRequest) {
+  const token = request.cookies.get("admin_session")?.value;
+  const isAuthenticated = await hasValidAdminSession(token);
+
+  if (!isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
     url.search = "";

@@ -64,6 +64,20 @@ export async function listProfilesForAdmin(options: { limit?: number; role?: App
   return (data ?? []) as Profile[];
 }
 
+export async function getProfileForAdmin(profileId: string): Promise<Profile | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("profiles")
+    .select("*")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Unable to fetch profile: ${error.message}`);
+  }
+
+  return (data as Profile | null) ?? null;
+}
+
 export async function updateProfileForAdmin(profileId: string, input: AdminUserUpdatePayload): Promise<Profile> {
   const { data, error } = await getSupabaseAdminClient()
     .from("profiles")

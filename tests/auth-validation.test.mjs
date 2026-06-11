@@ -37,6 +37,7 @@ import {
   validateRegisterPayload
 } from "../src/lib/api/validation.ts";
 import { hasPermission } from "../src/lib/auth/permissions.ts";
+import { canAdminUpdateProfile } from "../src/lib/auth/roles.ts";
 
 test("public registration rejects privileged roles", () => {
   const result = validateRegisterPayload({
@@ -614,4 +615,79 @@ test("admin user update validation normalizes email and accepts profile fields",
     assert.equal(result.data.status, "ACTIVE");
     assert.equal(result.data.displayName, "Dirigeant Club");
   }
+});
+
+test("ADMIN_CLUB cannot promote a user to SUPER_ADMIN", () => {
+  const guard = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "actor-1",
+    targetId: "target-1",
+    targetCurrentRole: "FAMILLE",
+    requestedRole: "SUPER_ADMIN"
+  });
+  assert.equal(guard.ok, false);
+});
+
+test("ADMIN_CLUB cannot promote a user to ADMIN_CLUB (equal level)", () => {
+  const guard = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "actor-1",
+    targetId: "target-1",
+    targetCurrentRole: "FAMILLE",
+    requestedRole: "ADMIN_CLUB"
+  });
+  assert.equal(guard.ok, false);
+});
+
+test("ADMIN_CLUB cannot modify a SUPER_ADMIN account", () => {
+  const guard = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "actor-1",
+    targetId: "target-1",
+    targetCurrentRole: "SUPER_ADMIN",
+    changesStatus: true
+  });
+  assert.equal(guard.ok, false);
+});
+
+test("an actor cannot change their own role or status", () => {
+  const roleChange = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "same",
+    targetId: "same",
+    targetCurrentRole: "ADMIN_CLUB",
+    requestedRole: "ADMIN_CLUB"
+  });
+  assert.equal(roleChange.ok, false);
+
+  const statusChange = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "same",
+    targetId: "same",
+    targetCurrentRole: "ADMIN_CLUB",
+    changesStatus: true
+  });
+  assert.equal(statusChange.ok, false);
+});
+
+test("ADMIN_CLUB can update a lower-privilege account to a lower role", () => {
+  const guard = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "actor-1",
+    targetId: "target-1",
+    targetCurrentRole: "FAMILLE",
+    requestedRole: "EDUCATEUR"
+  });
+  assert.equal(guard.ok, true);
+});
+
+test("SUPER_ADMIN can promote anyone to SUPER_ADMIN", () => {
+  const guard = canAdminUpdateProfile({
+    actorRole: "SUPER_ADMIN",
+    actorId: "actor-1",
+    targetId: "target-1",
+    targetCurrentRole: "ADMIN_CLUB",
+    requestedRole: "SUPER_ADMIN"
+  });
+  assert.equal(guard.ok, true);
 });

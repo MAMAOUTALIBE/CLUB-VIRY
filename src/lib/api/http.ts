@@ -13,6 +13,7 @@ export type ApiErrorCode =
   | "FORBIDDEN"
   | "INVALID_JSON"
   | "NOT_FOUND"
+  | "PAYMENT_UNAVAILABLE"
   | "RATE_LIMITED"
   | "SUPABASE_ERROR"
   | "VALIDATION_ERROR";
