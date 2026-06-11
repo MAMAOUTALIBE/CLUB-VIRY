@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
-import { Reveal, Stagger, StaggerItem } from "@/components/Motion";
+import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
 import { clubStats, matches, news, partners, teams, values } from "@/lib/data";
 import { images } from "@/lib/images";
@@ -78,7 +78,9 @@ export default function HomePage() {
         {/* Contenu principal (centré, occupe l'espace disponible) */}
         <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="grid w-full items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-            <Reveal>
+            {/* Hero above-the-fold rendu en HTML statique (pas de framer-motion) :
+                le LCP ne depend plus de l'hydratation JS. */}
+            <div>
               <div>
                 <h1 className="max-w-4xl">
                   <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
@@ -103,13 +105,13 @@ export default function HomePage() {
                   </Link>
                 </div>
               </div>
-            </Reveal>
-            <Reveal delay={0.12} className="hidden justify-center lg:flex">
+            </div>
+            <div className="hidden justify-center lg:flex">
               <div className="relative min-h-[300px] w-full max-w-[600px]">
                 <div className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
                 <img className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full object-contain drop-shadow-2xl 2xl:h-[250px] 2xl:w-[250px]" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={250} height={250} />
               </div>
-            </Reveal>
+            </div>
           </div>
         </div>
 
