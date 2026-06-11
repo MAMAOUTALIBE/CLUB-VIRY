@@ -12,6 +12,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* est inline AU BUILD par Next.js : l'URL publique doit etre presente
+# ici, sinon le SEO / sitemap / liens canoniques tomberaient sur http://localhost:3000.
+ARG NEXT_PUBLIC_SITE_URL=https://virychatillonfootball.org
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 RUN npm run build
 
 # ---- Runner (image finale, legere) ----
@@ -36,5 +40,9 @@ RUN mkdir -p /app/var/leads && chown -R nextjs:nodejs /app/var
 
 USER nextjs
 EXPOSE 3000
+
+# Liveness : l'accueil doit repondre 200 (valable aussi en mode vitrine, sans Supabase).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 || exit 1
 
 CMD ["node", "server.js"]

@@ -12,7 +12,7 @@ export default function LegalPage() {
       <section className="mx-auto max-w-4xl px-4 py-14 leading-8 text-slate-700 sm:px-6 lg:px-8">
         <p>Éditeur : ES Viry-Châtillon Football.</p>
         <p>Adresse : Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon.</p>
-        <p>Contact : contact@esviryfootball.com.</p>
+        <p>Contact : esvirychatillon91170@gmail.com.</p>
       </section>
     </>
   );

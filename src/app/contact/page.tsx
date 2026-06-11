@@ -20,7 +20,7 @@ export default function ContactPage() {
             <div className="mt-6 space-y-5">
               <p className="flex gap-3"><MapPin className="shrink-0 text-[#f7c600]" /> Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon</p>
               <p className="flex gap-3"><Phone className="shrink-0 text-[#f7c600]" /> 01 69 24 39 50</p>
-              <p className="flex gap-3"><Mail className="shrink-0 text-[#f7c600]" /> contact@esviryfootball.com</p>
+              <p className="flex gap-3"><Mail className="shrink-0 text-[#f7c600]" /> esvirychatillon91170@gmail.com</p>
             </div>
           </div>
           <div className="official-card mt-5 overflow-hidden rounded-lg bg-white p-2">

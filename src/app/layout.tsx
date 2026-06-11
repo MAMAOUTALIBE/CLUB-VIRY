@@ -50,7 +50,7 @@ const sportsClubJsonLd = {
   url: siteUrl,
   logo: `${siteUrl}/club-logo.svg`,
   telephone: "+33169243950",
-  email: "contact@esviryfootball.com",
+  email: "esvirychatillon91170@gmail.com",
   foundingDate: "1958",
   address: {
     "@type": "PostalAddress",

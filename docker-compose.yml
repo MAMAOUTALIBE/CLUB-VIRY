@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # URL publique injectee au BUILD (inline par Next.js dans le SEO/sitemap/canonical).
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://virychatillonfootball.org}
     image: es-viry-football:latest
     container_name: es-viry-football
     restart: unless-stopped
@@ -20,14 +23,14 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      # Remplacer gandal.example.com par le domaine reel du club.
-      - "traefik.http.routers.esviry.rule=Host(`${SITE_DOMAIN:-esviryfootball.com}`)"
+      # Domaine reel defini dans .env.local (SITE_DOMAIN). Valeur par defaut ci-dessous.
+      - "traefik.http.routers.esviry.rule=Host(`${SITE_DOMAIN:-virychatillonfootball.org}`)"
       - "traefik.http.routers.esviry.entrypoints=websecure"
       - "traefik.http.routers.esviry.tls=true"
       - "traefik.http.routers.esviry.tls.certresolver=letsencrypt"
       - "traefik.http.services.esviry.loadbalancer.server.port=3000"
       # Redirection HTTP -> HTTPS
-      - "traefik.http.routers.esviry-http.rule=Host(`${SITE_DOMAIN:-esviryfootball.com}`)"
+      - "traefik.http.routers.esviry-http.rule=Host(`${SITE_DOMAIN:-virychatillonfootball.org}`)"
       - "traefik.http.routers.esviry-http.entrypoints=web"
       - "traefik.http.routers.esviry-http.middlewares=esviry-redirect"
       - "traefik.http.middlewares.esviry-redirect.redirectscheme.scheme=https"
