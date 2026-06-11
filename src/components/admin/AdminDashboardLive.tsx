@@ -3,7 +3,7 @@
 import { BadgeEuro, Bell, BarChart3, ClipboardCheck, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { AdminAccessControl, ADMIN_TOKEN_STORAGE_KEY } from "@/components/admin/AdminAccessControl";
+import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { BarChart } from "@/components/admin/charts/BarChart";
 import { ProgressBar } from "@/components/admin/charts/ProgressBar";
 import { StatusBarChart } from "@/components/admin/charts/StatusBarChart";
@@ -417,10 +417,9 @@ function ratio(part: number, total: number): number {
 }
 
 export function AdminDashboardLive() {
-  const [token, setToken] = useState("");
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [status, setStatus] = useState<"demo" | "loading" | "connected" | "error">("demo");
-  const [message, setMessage] = useState("Mode demo : ajoutez un token admin pour charger les compteurs backend.");
+  const [message, setMessage] = useState("Mode demo : connectez-vous pour charger les compteurs backend.");
 
   const metricCards = useMemo(() => buildMetricCards(dashboard), [dashboard]);
   const workItems = useMemo(() => buildWorkItems(dashboard), [dashboard]);
@@ -459,16 +458,13 @@ export function AdminDashboardLive() {
     ];
   }, [breakdowns]);
 
-  async function loadDashboard(accessToken: string) {
-    const normalizedToken = accessToken.trim();
-
+  async function loadDashboard() {
     setStatus("loading");
-    setMessage(normalizedToken ? "Chargement des donnees admin..." : "Chargement via la session admin...");
+    setMessage("Chargement via la session admin...");
 
     try {
-      const response = await fetch("/api/admin/dashboard", {
-        headers: normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : undefined
-      });
+      // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
+      const response = await fetch("/api/admin/dashboard", { credentials: "same-origin" });
       const parsed = parseDashboardResponse(await response.json());
 
       if (!parsed.ok) {
@@ -478,9 +474,6 @@ export function AdminDashboardLive() {
         return;
       }
 
-      if (normalizedToken) {
-        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
-      }
       setDashboard(parsed.data);
       setStatus("connected");
       setMessage("Donnees backend chargees depuis /api/admin/dashboard.");
@@ -492,17 +485,7 @@ export function AdminDashboardLive() {
   }
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const storedToken = window.sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
-
-      if (storedToken) {
-        setToken(storedToken);
-        void loadDashboard(storedToken);
-      } else {
-        void loadDashboard("");
-      }
-    }, 0);
-
+    const timeout = window.setTimeout(() => void loadDashboard(), 0);
     return () => window.clearTimeout(timeout);
   }, []);
 
@@ -520,19 +503,7 @@ export function AdminDashboardLive() {
             </div>
           </div>
 
-          <AdminAccessControl
-            loading={status === "loading"}
-            onClear={() => {
-                window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-                setToken("");
-                setDashboard(null);
-                setStatus("demo");
-                setMessage("Mode demo : ajoutez un token admin pour charger les compteurs backend.");
-            }}
-            onTokenSubmit={(nextToken) => void loadDashboard(nextToken)}
-            setToken={setToken}
-            token={token}
-          />
+          <AdminAccessControl loading={status === "loading"} onAuthenticated={() => void loadDashboard()} />
         </div>
       </section>
 

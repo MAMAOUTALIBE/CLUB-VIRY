@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, LogIn, RefreshCw } from "lucide-react";
+import { Loader2, LogIn } from "lucide-react";
 import { useState } from "react";
 
 type LoginResponse =
@@ -22,14 +22,11 @@ type LoginResponse =
 
 type AdminAccessControlProps = {
   loading: boolean;
-  onClear?: () => void;
-  onTokenSubmit: (token: string) => void;
-  token: string;
-  tokenLabel?: string;
-  setToken: (token: string) => void;
+  // Appelé après une connexion réussie : la session est désormais portée par le
+  // cookie HttpOnly `admin_session` posé par /api/auth/login. Le parent recharge
+  // alors ses données (le cookie part automatiquement avec les requêtes même origine).
+  onAuthenticated: () => void;
 };
-
-export const ADMIN_TOKEN_STORAGE_KEY = "club_admin_access_token";
 
 function parseLoginResponse(value: unknown): LoginResponse {
   if (!value || typeof value !== "object") {
@@ -76,7 +73,7 @@ function parseLoginResponse(value: unknown): LoginResponse {
   return { ok: false, error: { code: "INVALID_RESPONSE", message: "Reponse de connexion invalide." } };
 }
 
-export function AdminAccessControl({ loading, onClear, onTokenSubmit, token, tokenLabel = "Charger", setToken }: AdminAccessControlProps) {
+export function AdminAccessControl({ loading, onAuthenticated }: AdminAccessControlProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginStatus, setLoginStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -114,11 +111,11 @@ export function AdminAccessControl({ loading, onClear, onTokenSubmit, token, tok
         return;
       }
 
-      setToken("");
-      window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+      setPassword("");
       setLoginStatus("idle");
       setLoginMessage("");
-      onTokenSubmit("");
+      // La session vit dans le cookie HttpOnly ; on déclenche simplement le rechargement.
+      onAuthenticated();
     } catch (error) {
       setLoginStatus("error");
       setLoginMessage(error instanceof Error ? error.message : "Erreur de connexion inconnue.");
@@ -167,42 +164,6 @@ export function AdminAccessControl({ loading, onClear, onTokenSubmit, token, tok
       </form>
 
       {loginMessage ? <p className="text-sm font-bold text-red-700">{loginMessage}</p> : null}
-
-      <form
-        className="grid gap-3 sm:grid-cols-[minmax(0,320px)_auto_auto]"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onTokenSubmit(token);
-        }}
-      >
-        <label className="grid gap-1">
-          <span className="sr-only">Token admin Supabase</span>
-          <input
-            className="focus-ring min-h-11 rounded-md border border-slate-300 bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-900"
-            onChange={(event) => setToken(event.target.value)}
-            placeholder="Bearer token admin"
-            type="password"
-            value={token}
-          />
-        </label>
-        <button
-          className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#f7c600] px-4 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:cursor-wait disabled:opacity-70"
-          disabled={loading || loginStatus === "loading"}
-          type="submit"
-        >
-          {loading ? <Loader2 className="animate-spin" size={18} aria-hidden="true" /> : <RefreshCw size={18} aria-hidden="true" />}
-          {tokenLabel}
-        </button>
-        {onClear ? (
-          <button
-            className="focus-ring inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-black uppercase text-slate-700 hover:border-[#f7c600]"
-            onClick={onClear}
-            type="button"
-          >
-            Demo
-          </button>
-        ) : null}
-      </form>
     </div>
   );
 }

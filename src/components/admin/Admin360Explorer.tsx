@@ -3,7 +3,7 @@
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminAccessControl, ADMIN_TOKEN_STORAGE_KEY } from "@/components/admin/AdminAccessControl";
+import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 
 type ResourceKind = "families" | "players" | "registrations";
 
@@ -206,10 +206,9 @@ function buildCards(kind: ResourceKind, payload: unknown): CardRecord[] {
 }
 
 export function Admin360Explorer({ kind, endpoint, title, description }: ExplorerProps) {
-  const [token, setToken] = useState("");
   const [records, setRecords] = useState<CardRecord[]>([]);
   const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "error">("demo");
-  const [message, setMessage] = useState("Ajoutez un token admin pour charger les donnees reelles.");
+  const [message, setMessage] = useState("Connectez-vous pour charger les donnees reelles.");
   const [query, setQuery] = useState("");
 
   const filteredRecords = useMemo(() => {
@@ -222,16 +221,13 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
     return records.filter((record) => `${record.title} ${record.status} ${record.meta} ${record.detail}`.toLowerCase().includes(normalizedQuery));
   }, [query, records]);
 
-  const loadRecords = useCallback(async (accessToken: string) => {
-    const normalizedToken = accessToken.trim();
-
+  const loadRecords = useCallback(async () => {
     setStatus("loading");
-    setMessage(normalizedToken ? "Chargement des donnees CRM..." : "Chargement via la session admin...");
+    setMessage("Chargement via la session admin...");
 
     try {
-      const response = await fetch(endpoint, {
-        headers: normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : undefined
-      });
+      // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
+      const response = await fetch(endpoint, { credentials: "same-origin" });
       const payload: unknown = await response.json();
       const failure = parseFailure(payload);
 
@@ -243,9 +239,6 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       }
 
       const nextRecords = buildCards(kind, payload);
-      if (normalizedToken) {
-        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
-      }
       setRecords(nextRecords);
       setStatus("loaded");
       setMessage(`${nextRecords.length} fiche(s) chargee(s).`);
@@ -257,17 +250,7 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
   }, [endpoint, kind]);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const storedToken = window.sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
-
-      if (storedToken) {
-        setToken(storedToken);
-        void loadRecords(storedToken);
-      } else {
-        void loadRecords("");
-      }
-    }, 0);
-
+    const timeout = window.setTimeout(() => void loadRecords(), 0);
     return () => window.clearTimeout(timeout);
   }, [loadRecords]);
 
@@ -280,7 +263,7 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
 
-        <AdminAccessControl loading={status === "loading"} onTokenSubmit={(nextToken) => void loadRecords(nextToken)} setToken={setToken} token={token} />
+        <AdminAccessControl loading={status === "loading"} onAuthenticated={() => void loadRecords()} />
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
