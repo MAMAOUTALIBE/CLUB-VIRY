@@ -1,4 +1,5 @@
 import { Home, MapPin, Users, Waves } from "lucide-react";
+import Image from "next/image";
 import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -43,14 +44,9 @@ export default function StadiumPage() {
             { src: images.stadeTribune2, alt: "Vue rapprochée de la tribune depuis la piste", caption: "La tribune vue depuis la piste" }
           ].map((photo) => (
             <figure className="official-card overflow-hidden rounded-lg bg-white" key={photo.src}>
-              <img
-                className="aspect-[4/3] w-full object-cover"
-                src={photo.src}
-                alt={photo.alt}
-                width={600}
-                height={450}
-                loading="lazy"
-              />
+              <div className="relative aspect-[4/3] w-full">
+                <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover" />
+              </div>
               <figcaption className="p-4 text-sm font-black uppercase text-[#002f1d]">{photo.caption}</figcaption>
             </figure>
           ))}

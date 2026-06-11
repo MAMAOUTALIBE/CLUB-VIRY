@@ -1,4 +1,5 @@
 import { Camera, Clapperboard, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { FeatureCards } from "@/components/FeatureCards";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
@@ -25,7 +26,15 @@ export default function MediaPage() {
         <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {news.map((item, index) => (
             <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
-              <img decoding="async" loading="lazy" alt={item.title} className={`${index === 0 ? "h-[29rem]" : "h-52"} w-full object-cover`} src={item.image} />
+              <div className={`relative w-full ${index === 0 ? "h-[29rem]" : "h-52"}`}>
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  sizes={index === 0 ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
+                  className="object-cover"
+                />
+              </div>
               <figcaption className="p-3 text-sm font-black uppercase text-[#002f1d]">{item.title}</figcaption>
             </StaggerItem>
           ))}
