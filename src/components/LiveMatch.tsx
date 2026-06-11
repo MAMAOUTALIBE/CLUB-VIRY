@@ -110,25 +110,22 @@ function EventIcon({ type }: { type: LiveEventType }) {
 export function LiveMatch() {
   const [minute, setMinute] = useState(0);
   const [running, setRunning] = useState(true);
+  const finished = minute >= FULL_TIME;
 
+  // Le chrono avance jusqu'au coup de sifflet final, puis l'intervalle s'arrête
+  // de lui-même via la garde `finished` (on évite tout setState synchrone dans un
+  // effet, qui provoquerait des rendus en cascade).
   useEffect(() => {
-    if (!running) return undefined;
+    if (!running || finished) return undefined;
     const id = setInterval(() => {
       setMinute((current) => (current >= FULL_TIME ? current : current + 1));
     }, 850);
     return () => clearInterval(id);
-  }, [running]);
-
-  useEffect(() => {
-    if (minute >= FULL_TIME) {
-      setRunning(false);
-    }
-  }, [minute]);
+  }, [running, finished]);
 
   const visibleEvents = MATCH.events.filter((event) => event.minute <= minute);
   const homeScore = visibleEvents.filter((event) => event.type === "goal" && event.team === "home").length;
   const awayScore = visibleEvents.filter((event) => event.type === "goal" && event.team === "away").length;
-  const finished = minute >= FULL_TIME;
   const clockLabel = finished ? "Terminé" : minute === 0 ? "Coup d'envoi" : `${minute}'`;
   const lastEvent = visibleEvents[visibleEvents.length - 1];
 
