@@ -23,8 +23,8 @@ export default function MediaPage() {
           </div>
         </div>
         <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[...news, ...news].slice(0, 8).map((item, index) => (
-            <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={`${item.title}-${index}`}>
+          {news.map((item, index) => (
+            <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
               <img decoding="async" loading="lazy" alt={item.title} className={`${index === 0 ? "h-[29rem]" : "h-52"} w-full object-cover`} src={item.image} />
               <figcaption className="p-3 text-sm font-black uppercase text-[#002f1d]">{item.title}</figcaption>
             </StaggerItem>

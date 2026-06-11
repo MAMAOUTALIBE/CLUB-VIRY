@@ -137,9 +137,12 @@ export function AdminLoginPanel() {
           <span className="text-xs font-black uppercase text-slate-600">Email administrateur</span>
           <input
             autoComplete="email"
+            aria-describedby={status === "error" ? "login-error" : undefined}
+            aria-invalid={status === "error" || undefined}
             className="focus-ring min-h-12 rounded-md border border-slate-300 bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-900"
             onChange={(event) => setEmail(event.target.value)}
             placeholder="admin@club.fr"
+            required
             type="email"
             value={email}
           />
@@ -148,15 +151,18 @@ export function AdminLoginPanel() {
           <span className="text-xs font-black uppercase text-slate-600">Mot de passe</span>
           <input
             autoComplete="current-password"
+            aria-describedby={status === "error" ? "login-error" : undefined}
+            aria-invalid={status === "error" || undefined}
             className="focus-ring min-h-12 rounded-md border border-slate-300 bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-900"
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Votre mot de passe"
+            required
             type="password"
             value={password}
           />
         </label>
 
-        {message ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{message}</p> : null}
+        {message ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700" id="login-error" role="alert">{message}</p> : null}
 
         <button
           className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#002f1d] px-5 text-sm font-black uppercase text-white hover:bg-[#07542f] disabled:cursor-wait disabled:opacity-70"

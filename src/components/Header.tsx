@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, CalendarDays, ChevronDown, Menu, ShoppingBag, Ticket, User, X } from "lucide-react";
+import { useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -36,15 +37,7 @@ const navItems = [
   { label: "Actualités", href: "/actualites" },
   { label: "Calendrier", href: "/calendrier" },
   { label: "Partenaires", href: "/partenaires" },
-  {
-    label: "Médias",
-    href: "/medias",
-    children: [
-      ["Photos", "/medias"],
-      ["Vidéos", "/medias"],
-      ["Interviews", "/medias"]
-    ]
-  },
+  { label: "Médias", href: "/medias" },
   { label: "Boutique", href: "/boutique" },
   { label: "Contact", href: "/contact" }
 ];
@@ -54,6 +47,13 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  // Surlignage de l'item actif : le parent reste actif sur ses sous-pages
+  // (ex. « Le Club » sur /le-club/histoire). Logique partagee desktop + mobile.
+  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
 
   useEffect(() => {
     function onScroll() {
@@ -83,6 +83,26 @@ export function Header() {
 
     return () => window.removeEventListener("resize", applyHeaderHeight);
   }, []);
+
+  // Menu mobile : Echap ferme et restaure le focus sur le bouton ; a l'ouverture,
+  // le focus est deplace sur le premier element du panneau (pattern disclosure).
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    mobileMenuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -171,7 +191,7 @@ export function Header() {
 
         <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-white/12 bg-white/[0.045] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl min-[1280px]:flex">
           {navItems.map((item) => {
-            const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            const active = isActive(item.href);
             return (
               <div className="group relative" key={item.href}>
                 <Link
@@ -216,6 +236,8 @@ export function Header() {
             <ArrowRight size={18} aria-hidden="true" />
           </Link>
           <button
+            ref={menuButtonRef}
+            aria-controls="mobile-menu"
             aria-expanded={open}
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             className="focus-ring rounded-md border border-white/18 p-2 hover:bg-white/10 min-[1280px]:hidden"
@@ -229,24 +251,25 @@ export function Header() {
 
       {open ? (
         <MotionDiv
+          ref={mobileMenuRef}
+          id="mobile-menu"
           className="club-shell border-t border-[#f7c600]/30 px-4 py-4 min-[1280px]:hidden"
-          initial={{ opacity: 0, y: -8 }}
+          initial={reduceMotion ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.22 }}
         >
           <div className="mx-auto grid max-w-7xl gap-2">
             {navItems.map((item) => (
               <div key={item.href}>
                 <Link
-                  aria-current={pathname === item.href ? "page" : undefined}
+                  aria-current={isActive(item.href) ? "page" : undefined}
                   className={`focus-ring flex items-center justify-between rounded-md px-3 py-3 text-sm font-black uppercase hover:bg-white/10 ${
-                    pathname === item.href ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
+                    isActive(item.href) ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
                   }`}
                   href={item.href}
                   onClick={() => setOpen(false)}
                 >
                   {item.label}
-                  {item.children ? <ChevronDown size={15} aria-hidden="true" /> : null}
                 </Link>
                 {item.children ? (
                   <div className="ml-3 mt-1 grid gap-1 border-l border-[#f7c600]/30 pl-3">
