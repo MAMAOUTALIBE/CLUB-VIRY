@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    return jsonError(401, "AUTH_FAILED", error.message);
+    // Détail Supabase journalisé côté serveur, message générique côté client
+    // (ne pas exposer l'état interne du token / de la session).
+    console.error("refresh error:", error.message);
+    return jsonError(401, "AUTH_FAILED", "Session invalide ou expiree.");
   }
 
   return jsonOk({

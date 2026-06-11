@@ -23,6 +23,31 @@ function sanitizeFileName(fileName: string): string {
     .slice(0, 120);
 }
 
+/**
+ * V\u00e9rifie la signature binaire (magic bytes) r\u00e9elle du fichier, et pas seulement
+ * le Content-Type d\u00e9clar\u00e9 par le client (falsifiable). Emp\u00eache le stockage d'un
+ * contenu malveillant (HTML/SVG/script, ex\u00e9cutable) d\u00e9guis\u00e9 en PDF/image, qui
+ * serait ensuite re-servi via une URL sign\u00e9e.
+ */
+async function hasValidSignature(file: File): Promise<boolean> {
+  const header = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
+
+  switch (file.type) {
+    case "application/pdf":
+      return startsWith(0x25, 0x50, 0x44, 0x46); // %PDF
+    case "image/jpeg":
+      return startsWith(0xff, 0xd8, 0xff);
+    case "image/png":
+      return startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    case "image/webp":
+      // "RIFF" .... "WEBP"
+      return startsWith(0x52, 0x49, 0x46, 0x46) && header[8] === 0x57 && header[9] === 0x45 && header[10] === 0x42 && header[11] === 0x50;
+    default:
+      return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const rateLimit = checkRateLimit(request, "documents:upload", { max: 12, windowMs: 60_000 });
 
@@ -61,6 +86,10 @@ export async function POST(request: NextRequest) {
 
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return jsonError(400, "VALIDATION_ERROR", "Type de fichier non autorise.");
+  }
+
+  if (!(await hasValidSignature(file))) {
+    return jsonError(400, "VALIDATION_ERROR", "Le contenu du fichier ne correspond pas a son type declare.");
   }
 
   try {

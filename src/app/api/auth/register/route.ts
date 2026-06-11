@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    return jsonError(400, "AUTH_FAILED", error.message);
+    // Log serveur uniquement ; on renvoie un message générique pour ne pas révéler
+    // si l'adresse existe déjà (anti-énumération de comptes — données de familles/mineurs).
+    console.error("register error:", error.message);
+    return jsonError(400, "AUTH_FAILED", "Inscription impossible. Verifiez vos informations puis reessayez.");
   }
 
   return jsonOk(

@@ -70,11 +70,16 @@ function formatDate(value: unknown) {
     return "Non renseigne";
   }
 
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseigne";
+  }
+
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "short",
     year: "numeric"
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function formatMoney(cents: unknown, currency: unknown) {

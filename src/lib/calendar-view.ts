@@ -178,9 +178,23 @@ export function getFallbackCalendarItems(): CalendarDisplayItem[] {
 export function buildCalendarPageData(items: CalendarDisplayItem[], isFallback: boolean): CalendarPageData {
   const fallbackItems = getFallbackCalendarItems();
   const calendarItems = items.length > 0 ? items : fallbackItems;
-  const highlightedDays = Array.from(new Set(calendarItems.map((item) => item.dayOfMonth).filter((day): day is number => Boolean(day))));
 
   const { year, month } = getReferenceMonth(calendarItems);
+
+  // Ne surligner que les jours d'items réellement datés DANS le mois/année affichés.
+  // Sans ce filtre, le numéro de jour d'un item d'un autre mois (ex. un match le
+  // 15 juillet) surlignait le « 15 » de la grille de juin — les numéros de jour
+  // étant confondus d'un mois à l'autre.
+  const highlightedDays = Array.from(
+    new Set(
+      calendarItems
+        .map((item) => {
+          const date = readDate(item.startsAt);
+          return date && date.getFullYear() === year && date.getMonth() === month ? date.getDate() : undefined;
+        })
+        .filter((day): day is number => Boolean(day))
+    )
+  );
 
   return {
     featured: calendarItems[0],
