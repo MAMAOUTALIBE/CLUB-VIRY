@@ -3,11 +3,13 @@
 import {
   BadgeEuro,
   CalendarDays,
+  Camera,
   ClipboardCheck,
   Handshake,
   LayoutDashboard,
   Mail,
   Newspaper,
+  Shield,
   ShoppingBag,
   Sparkles,
   ShieldCheck,
@@ -24,6 +26,7 @@ const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: n
   { label: "Pilotage", href: "/admin", icon: LayoutDashboard },
   { label: "Actualités", href: "/admin/actualites", icon: Newspaper },
   { label: "Calendrier", href: "/admin/calendrier", icon: CalendarDays },
+  { label: "Équipes", href: "/admin/equipes", icon: Shield },
   { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck, badge: 42 },
   { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
   { label: "Joueurs", href: "/admin/joueurs", icon: Users },
@@ -32,6 +35,7 @@ const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: n
   { label: "Messages", href: "/admin/messages", icon: Mail },
   { label: "Partenaires", href: "/admin/partenaires", icon: Handshake, badge: 3 },
   { label: "Boutique", href: "/admin/boutique", icon: ShoppingBag },
+  { label: "Médias", href: "/admin/medias", icon: Camera },
   { label: "Sportif", href: "/admin#modules", icon: Trophy },
   { label: "Automatisations", href: "/admin#modules", icon: Sparkles }
 ];
