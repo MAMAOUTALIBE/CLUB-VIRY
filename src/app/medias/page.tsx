@@ -4,13 +4,15 @@ import { FeatureCards } from "@/components/FeatureCards";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { news } from "@/lib/data";
 import { images } from "@/lib/images";
+import { getPublicAlbums } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/medias");
+export const dynamic = "force-dynamic";
 
-export default function MediaPage() {
+export default async function MediaPage() {
+  const albums = await getPublicAlbums();
   return (
     <>
       <PageHero description="Photos, vidéos et interviews du club." image={images.supporters} title="Médias / Galerie" />
@@ -20,7 +22,7 @@ export default function MediaPage() {
           <SectionTitle title="Photos récentes" text="La vie du club en images : joie, effort, supporters, matchs et moments de transmission." />
         </div>
         <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {news.map((item, index) => (
+          {albums.map((item, index) => (
             <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
               <div className={`relative w-full ${index === 0 ? "h-[29rem]" : "h-52"}`}>
                 <Image

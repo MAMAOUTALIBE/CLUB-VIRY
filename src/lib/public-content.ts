@@ -3,7 +3,7 @@ import "server-only";
 import type { LucideIcon } from "lucide-react";
 
 import { news as mockNews, partners as mockPartners, products as mockProducts } from "@/lib/data";
-import { listPartnersForAdmin, listPublishedNews } from "@/lib/db/content";
+import { listPartnersForAdmin, listPublicMedia, listPublishedNews } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import { images } from "@/lib/images";
@@ -115,4 +115,20 @@ export async function getPublicProducts(): Promise<DisplayProduct[]> {
     }
   }
   return mockProducts.map((p) => ({ name: p.name, price: p.price, category: p.category, imageUrl: null, icon: p.icon }));
+}
+
+export type DisplayAlbum = { title: string; image: string };
+
+export async function getPublicAlbums(): Promise<DisplayAlbum[]> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const { albums } = await listPublicMedia();
+      if (albums.length > 0) {
+        return albums.map((a) => ({ title: a.title, image: a.cover_image_url || images.teamHuddle }));
+      }
+    } catch {
+      // repli mock
+    }
+  }
+  return mockNews.map((n) => ({ title: n.title, image: n.image }));
 }
