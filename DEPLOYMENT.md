@@ -1,7 +1,7 @@
 # Déploiement — ES Viry-Châtillon Football
 
 Mise en production sur **Docker / VPS Hostinger + Traefik partagé**, en mode **vitrine**
-(sans Supabase), sur **https://virychatillonfootball.org**.
+(sans Supabase), sur **https://esvirychatillonfootball.org**.
 
 > Mode vitrine : le site public et le module « Match en direct » fonctionnent ; les demandes
 > (contact / inscription / recrutement) sont enregistrées dans `var/leads` (persistant sur le VPS)
@@ -13,8 +13,8 @@ Mise en production sur **Docker / VPS Hostinger + Traefik partagé**, en mode **
 - Un **VPS** avec Docker et `docker compose`.
 - **Traefik** déjà en service sur le VPS (réseau partagé `traefik`), avec un entrypoint `websecure`
   (443), un entrypoint `web` (80) et un certresolver `letsencrypt` — comme pour e-formationgn.
-- Le **DNS** de `virychatillonfootball.org` : un enregistrement **A** (et `AAAA` si IPv6) pointant
-  vers l'IP du VPS. (Vérifier : `dig +short virychatillonfootball.org`.)
+- Le **DNS** de `esvirychatillonfootball.org` : un enregistrement **A** (et `AAAA` si IPv6) pointant
+  vers l'IP du VPS. (Vérifier : `dig +short esvirychatillonfootball.org`.)
 
 ## 1. Récupérer le code sur le VPS
 
@@ -27,15 +27,15 @@ cd CLUB-VIRY
 
 ```bash
 cp .env.production.example .env.local
-# Le fichier est déjà rempli pour virychatillonfootball.org en mode vitrine.
+# Le fichier est déjà rempli pour esvirychatillonfootball.org en mode vitrine.
 # (Optionnel) décommenter NOTIFICATION_WEBHOOK_URL pour recevoir les demandes en direct.
 ```
 
 Contenu minimal attendu :
 
 ```
-NEXT_PUBLIC_SITE_URL=https://virychatillonfootball.org
-SITE_DOMAIN=virychatillonfootball.org
+NEXT_PUBLIC_SITE_URL=https://esvirychatillonfootball.org
+SITE_DOMAIN=esvirychatillonfootball.org
 TRAEFIK_NETWORK=traefik
 LEADS_DIR=/app/var/leads
 ```
@@ -67,14 +67,14 @@ docker compose ps
 
 ## 5. Smoke tests (après démarrage)
 
-- `https://virychatillonfootball.org/` — accueil + hero, **HTTPS actif** (cadenas, cert Let's Encrypt).
-- `https://virychatillonfootball.org/actualites` — module **« Match en direct »** (score live + lecteur vidéo).
-- `https://virychatillonfootball.org/equipes/seniors-r1` — fiche équipe.
-- `https://virychatillonfootball.org/le-club/stade-henri-longuet` — galerie photos.
-- `https://virychatillonfootball.org/calendrier` — calendrier (repli statique en vitrine).
-- Redirection HTTP→HTTPS : `curl -sI http://virychatillonfootball.org` renvoie un `30x` vers `https://`.
+- `https://esvirychatillonfootball.org/` — accueil + hero, **HTTPS actif** (cadenas, cert Let's Encrypt).
+- `https://esvirychatillonfootball.org/actualites` — module **« Match en direct »** (score live + lecteur vidéo).
+- `https://esvirychatillonfootball.org/equipes/seniors-r1` — fiche équipe.
+- `https://esvirychatillonfootball.org/le-club/stade-henri-longuet` — galerie photos.
+- `https://esvirychatillonfootball.org/calendrier` — calendrier (repli statique en vitrine).
+- Redirection HTTP→HTTPS : `curl -sI http://esvirychatillonfootball.org` renvoie un `30x` vers `https://`.
 - Envoyer le **formulaire de contact**, puis vérifier la capture (voir §6).
-- `https://virychatillonfootball.org/admin` → redirige vers `/connexion` (espace admin non actif en vitrine).
+- `https://esvirychatillonfootball.org/admin` → redirige vers `/connexion` (espace admin non actif en vitrine).
 
 ## 6. Consulter les demandes reçues (mode vitrine)
 
@@ -117,7 +117,7 @@ Pour activer l'admin, l'authentification et les données dynamiques :
 3. Créer un compte **admin** (`ADMIN_CLUB` ou `SUPER_ADMIN`).
 4. Renseigner dans `.env.local` : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY`, puis `docker compose up -d --build`.
-5. Connexion via `https://virychatillonfootball.org/connexion`.
+5. Connexion via `https://esvirychatillonfootball.org/connexion`.
 
 ## Notes
 
