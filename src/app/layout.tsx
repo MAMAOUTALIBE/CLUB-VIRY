@@ -22,7 +22,6 @@ export const metadata: Metadata = {
   description:
     "Site officiel de l'ES Viry-Châtillon Football : actualités, équipes, inscriptions, calendrier, détections et boutique du club.",
   keywords: ["ES Viry-Châtillon", "football", "club", "Viry-Châtillon", "Essonne", "inscriptions", "école de foot"],
-  alternates: { canonical: "/" },
   openGraph: {
     title: "ES Viry-Châtillon Football",
     description: "Le site officiel de l'ES Viry-Châtillon Football : rejoignez la famille Jaune et Vert.",

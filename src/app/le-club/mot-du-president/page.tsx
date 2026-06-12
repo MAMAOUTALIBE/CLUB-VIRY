@@ -2,10 +2,9 @@ import { Quote } from "lucide-react";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Mot du Président"
-};
+export const metadata = pageMetadata("/le-club/mot-du-president");
 
 export default function PresidentPage() {
   return (

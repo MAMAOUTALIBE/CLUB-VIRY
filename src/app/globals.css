@@ -152,9 +152,27 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .marquee__track {
     animation: none;
     transform: none;
+  }
+
+  .light-sweep::after {
+    animation: none;
+  }
+
+  /* Filet de securite : neutralise toute animation/transition restante (cartes, futurs effets). */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

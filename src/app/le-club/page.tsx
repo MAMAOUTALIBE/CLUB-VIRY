@@ -6,10 +6,9 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { clubStats, values } from "@/lib/data";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Le Club"
-};
+export const metadata = pageMetadata("/le-club");
 
 export default function ClubPage() {
   return (

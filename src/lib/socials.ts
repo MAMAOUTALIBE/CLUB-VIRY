@@ -1,5 +1,6 @@
 // Réseaux sociaux du club — icônes de marque (SVG) réutilisées par le header et le footer.
-// Renseigner `href` avec les vraies URLs des comptes du club quand elles seront connues.
+// Renseigner `href` avec les vraies URLs des comptes du club pour activer les liens.
+// Tant que `href` est vide, l'icône reste décorative (pas de lien mort vers "#").
 export type SocialItem = {
   label: string;
   href: string;
@@ -10,10 +11,15 @@ export type SocialItem = {
   path: string;
 };
 
+// Un lien social n'est rendu cliquable que si une vraie URL est fournie.
+export function isLiveSocial(item: SocialItem): boolean {
+  return /^(https?:|mailto:|tel:)/.test(item.href.trim());
+}
+
 export const socialItems: SocialItem[] = [
   {
     label: "Facebook",
-    href: "#",
+    href: "",
     background: "#ffffff",
     borderColor: "#1877f2",
     color: "#1877f2",
@@ -22,7 +28,7 @@ export const socialItems: SocialItem[] = [
   },
   {
     label: "Instagram",
-    href: "#",
+    href: "",
     background: "linear-gradient(135deg, #f58529 0%, #dd2a7b 45%, #8134af 72%, #515bd4 100%)",
     borderColor: "#dd2a7b",
     color: "#ffffff",
@@ -31,7 +37,7 @@ export const socialItems: SocialItem[] = [
   },
   {
     label: "YouTube",
-    href: "#",
+    href: "",
     background: "#ffffff",
     borderColor: "#ff0033",
     color: "#ff0033",
@@ -40,7 +46,7 @@ export const socialItems: SocialItem[] = [
   },
   {
     label: "TikTok",
-    href: "#",
+    href: "",
     background: "#ffffff",
     borderColor: "#25f4ee",
     color: "#050505",
@@ -49,7 +55,7 @@ export const socialItems: SocialItem[] = [
   },
   {
     label: "WhatsApp",
-    href: "#",
+    href: "",
     background: "#25d366",
     borderColor: "#25d366",
     color: "#ffffff",

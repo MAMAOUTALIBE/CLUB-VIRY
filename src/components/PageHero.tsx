@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { Reveal } from "@/components/Motion";
 
 type PageHeroProps = {
@@ -11,15 +12,11 @@ type PageHeroProps = {
 
 export function PageHero({ title, eyebrow, description, image, children }: PageHeroProps) {
   return (
-    <section
-      className="image-tint stadium-grid light-sweep min-h-[390px] border-b-4 border-[#f7c600] bg-cover bg-center text-white"
-      style={{
-        backgroundImage: `url(${image})`,
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover"
-      }}
-    >
+    <section className="image-tint stadium-grid light-sweep min-h-[390px] border-b-4 border-[#f7c600] text-white">
+      {/* LCP des pages interieures : next/image (AVIF/WebP responsive) en fond.
+          zIndex:0 inline pour passer SOUS le voile .image-tint::before (z-1) tout en
+          restant au-dessus du fond ; le contenu reste a z-2 via .image-tint > *. */}
+      <Image src={image} alt="" fill priority sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-20 sm:px-6 lg:px-8">
         <Reveal>
           <div>

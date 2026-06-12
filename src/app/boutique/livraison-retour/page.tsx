@@ -1,9 +1,8 @@
 import { PageHero } from "@/components/PageHero";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Livraison & retour"
-};
+export const metadata = pageMetadata("/boutique/livraison-retour");
 
 export default function DeliveryPage() {
   return (

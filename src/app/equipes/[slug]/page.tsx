@@ -4,6 +4,7 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { teams } from "@/lib/data";
+import { buildBreadcrumb, buildSportsTeam } from "@/lib/jsonld";
 
 type TeamPageProps = {
   params: Promise<{ slug: string }>;
@@ -16,8 +17,21 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: TeamPageProps) {
   const { slug } = await params;
   const team = teams.find((item) => item.slug === slug);
+
+  if (!team) {
+    return { title: "Équipe" };
+  }
+
   return {
-    title: team?.name ?? "Équipe"
+    title: team.name,
+    description: team.description,
+    alternates: { canonical: `/equipes/${team.slug}` },
+    openGraph: {
+      title: `${team.name} — ES Viry-Châtillon`,
+      description: team.description,
+      images: [team.image],
+      type: "website"
+    }
   };
 }
 
@@ -29,8 +43,17 @@ export default async function TeamPage({ params }: TeamPageProps) {
     notFound();
   }
 
+  const teamJsonLd = buildSportsTeam(team);
+  const breadcrumbJsonLd = buildBreadcrumb([
+    { name: "Accueil", path: "/" },
+    { name: "Équipes", path: "/equipes" },
+    { name: team.name }
+  ]);
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(teamJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <PageHero description={team.description} eyebrow={team.season} image={team.image} title={team.name}>
         <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
       </PageHero>

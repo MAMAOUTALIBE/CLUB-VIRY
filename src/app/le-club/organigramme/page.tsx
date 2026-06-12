@@ -3,10 +3,9 @@ import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Organigramme"
-};
+export const metadata = pageMetadata("/le-club/organigramme");
 
 const groups = [
   ["Bureau", "Président, vice-présidents, trésorerie, secrétariat général"],

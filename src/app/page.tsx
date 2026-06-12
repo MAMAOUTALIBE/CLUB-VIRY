@@ -1,10 +1,26 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
-import { Reveal, Stagger, StaggerItem } from "@/components/Motion";
+import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
 import { clubStats, matches, news, partners, teams, values } from "@/lib/data";
 import { images } from "@/lib/images";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+export const metadata = {
+  alternates: { canonical: "/" }
+};
+
+// JSON-LD WebSite (uniquement sur l'accueil) : aide Google a afficher le nom du site.
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "ES Viry-Châtillon Football",
+  url: siteUrl,
+  inLanguage: "fr-FR"
+};
 
 export default function HomePage() {
   const leadNews = news[0];
@@ -53,16 +69,17 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Préchargement prioritaire de l'image du hero (LCP) */}
-      <link rel="preload" as="image" href={images.stadiumHero} fetchPriority="high" />
-      <section
-        className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 bg-cover bg-center text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0"
-        style={{ backgroundImage: `url(${images.stadiumHero})`, backgroundPosition: "center 90%" }}
-      >
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+      <section className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
+        {/* LCP : hero en next/image (priority -> preload auto + AVIF/WebP). zIndex:0 inline
+            pour rester sous le contenu (z-[2]) ; .hero-stadium::before neutralise le voile. */}
+        <Image src={images.stadiumHero} alt="" fill priority sizes="100vw" className="object-cover" style={{ objectPosition: "center 90%", zIndex: 0 }} />
         {/* Contenu principal (centré, occupe l'espace disponible) */}
         <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="grid w-full items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-            <Reveal>
+            {/* Hero above-the-fold rendu en HTML statique (pas de framer-motion) :
+                le LCP ne depend plus de l'hydratation JS. */}
+            <div>
               <div>
                 <h1 className="max-w-4xl">
                   <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
@@ -87,13 +104,13 @@ export default function HomePage() {
                   </Link>
                 </div>
               </div>
-            </Reveal>
-            <Reveal delay={0.12} className="hidden justify-center lg:flex">
+            </div>
+            <div className="hidden justify-center lg:flex">
               <div className="relative min-h-[300px] w-full max-w-[600px]">
                 <div className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
                 <img className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full object-contain drop-shadow-2xl 2xl:h-[250px] 2xl:w-[250px]" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={250} height={250} />
               </div>
-            </Reveal>
+            </div>
           </div>
         </div>
 
@@ -261,13 +278,13 @@ export default function HomePage() {
 
         {/* ── Actualité à la une : carte éditoriale premium ── */}
         <article className="official-card group flex flex-col overflow-hidden rounded-3xl bg-white">
-          <div className="relative overflow-hidden">
-            <img
-              decoding="async"
-              loading="lazy"
-              alt={leadNews.title}
-              className="h-60 w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] sm:h-80"
+          <div className="relative h-60 overflow-hidden sm:h-80">
+            <Image
               src={leadNews.image}
+              alt={leadNews.title}
+              fill
+              sizes="(max-width: 1024px) 100vw, 60vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/85 via-[#001c10]/15 to-transparent" aria-hidden="true" />
             <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[#002f1d]/90 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#f7c600] ring-1 ring-[#f7c600]/30 backdrop-blur">
@@ -308,9 +325,9 @@ export default function HomePage() {
             {teams.slice(0, 5).map((team) => (
               <StaggerItem key={team.slug}>
                 <Link className="focus-ring premium-card group flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/equipes/${team.slug}`}>
-                  <div className="relative">
-                    <img decoding="async" loading="lazy" alt={team.name} className="h-36 w-full object-cover" src={team.image} />
-                    <span className="absolute left-3 top-3 rounded-full bg-[#002f1d]/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] backdrop-blur">{team.category}</span>
+                  <div className="relative h-36">
+                    <Image src={team.image} alt={team.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 20vw" className="object-cover" />
+                    <span className="absolute left-3 top-3 z-[1] rounded-full bg-[#002f1d]/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] backdrop-blur">{team.category}</span>
                   </div>
                   <div className="flex flex-1 items-center justify-between gap-2 p-4">
                     <h3 className="text-base font-black uppercase leading-tight text-[#002f1d]">{team.name}</h3>
@@ -326,10 +343,8 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <div
-          className="image-tint grid min-h-[380px] overflow-hidden rounded-lg bg-cover bg-center text-white lg:grid-cols-[1fr_0.85fr]"
-          style={{ backgroundImage: `url(${images.youthTeam})` }}
-        >
+        <div className="image-tint grid min-h-[380px] overflow-hidden rounded-lg text-white lg:grid-cols-[1fr_0.85fr]">
+          <Image src={images.youthTeam} alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
           <div className="flex flex-col justify-end p-6 sm:p-8">
             <p className="text-sm font-black uppercase text-[#f7c600]">Inscriptions 2025 / 2026</p>
             <h2 className="mt-2 max-w-2xl text-4xl font-black uppercase leading-tight sm:text-5xl">Rejoignez la famille Viry !</h2>
@@ -362,7 +377,9 @@ export default function HomePage() {
           {news.slice(1, 5).map((item) => (
             <StaggerItem key={item.title}>
               <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href="/actualites">
-                <img decoding="async" loading="lazy" alt={item.title} className="h-40 w-full object-cover" src={item.image} />
+                <div className="relative h-40 w-full">
+                  <Image src={item.image} alt={item.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover" />
+                </div>
                 <div className="flex flex-1 flex-col p-5">
                   <p className="text-[11px] font-black uppercase text-[#8a6d00]">{item.category} · {item.date}</p>
                   <h3 className="mt-1.5 text-lg font-black uppercase leading-tight text-[#002f1d]">{item.title}</h3>

@@ -82,10 +82,13 @@ export const matches = [
   }
 ];
 
+// `isoDate` (AAAA-MM-JJ) est la version machine de `date` : utilisee pour <time datetime>
+// et le datePublished du JSON-LD NewsArticle.
 export const news = [
   {
     title: "Victoire des Seniors D1 !",
     date: "24 mai 2026",
+    isoDate: "2026-05-24",
     category: "Équipes",
     excerpt: "Un match maîtrisé de bout en bout et une belle dynamique collective.",
     image: images.teamHuddle
@@ -93,6 +96,7 @@ export const news = [
   {
     title: "Stage de perfectionnement",
     date: "29 avr. 2026",
+    isoDate: "2026-04-29",
     category: "Jeunes",
     excerpt: "Vacances d'avril : une semaine de travail, de plaisir et de progression.",
     image: images.training
@@ -100,6 +104,7 @@ export const news = [
   {
     title: "Détection U13 : les dates à retenir",
     date: "5 avr. 2026",
+    isoDate: "2026-04-05",
     category: "Détections",
     excerpt: "Le club accueille les jeunes talents du territoire pour préparer demain.",
     image: images.youthTeam
@@ -107,6 +112,7 @@ export const news = [
   {
     title: "Tournoi U11 : un beau week-end",
     date: "12 avr. 2026",
+    isoDate: "2026-04-12",
     category: "Événements",
     excerpt: "Bénévoles, éducateurs et familles réunis autour du football.",
     image: images.football
@@ -114,6 +120,7 @@ export const news = [
   {
     title: "École de foot : un bel élan",
     date: "31 mars 2026",
+    isoDate: "2026-03-31",
     category: "Jeunes",
     excerpt: "Retour sur un mois de mars riche en émotions et en progrès.",
     image: images.pitch

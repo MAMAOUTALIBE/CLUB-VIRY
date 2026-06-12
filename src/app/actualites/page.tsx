@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { LiveMatch } from "@/components/LiveMatch";
@@ -8,10 +9,9 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { news } from "@/lib/data";
 import { images } from "@/lib/images";
 import { slugify } from "@/lib/slug";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Actualités"
-};
+export const metadata = pageMetadata("/actualites");
 
 export default function NewsPage() {
   const leadNews = news[0];
@@ -33,10 +33,12 @@ export default function NewsPage() {
           className="focus-ring premium-card mb-6 grid overflow-hidden rounded-lg bg-white lg:grid-cols-[1.1fr_0.9fr]"
           href={`/actualites/${slugify(leadNews.title)}`}
         >
-          <img alt={leadNews.title} className="h-72 w-full object-cover lg:h-full" loading="lazy" src={leadNews.image} />
+          <div className="relative h-72 w-full lg:h-full">
+            <Image src={leadNews.image} alt={leadNews.title} fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+          </div>
           <div className="p-6">
             <p className="text-xs font-black uppercase text-[#8a6d00]">
-              À la une · <time>{leadNews.date}</time>
+              À la une · <time dateTime={leadNews.isoDate}>{leadNews.date}</time>
             </p>
             <h2 className="mt-3 text-4xl font-black uppercase text-[#002f1d]">{leadNews.title}</h2>
             <p className="mt-4 leading-7 text-slate-700">{leadNews.excerpt}</p>
@@ -47,10 +49,12 @@ export default function NewsPage() {
           {otherNews.map((item) => (
             <StaggerItem key={item.title}>
               <Link className="focus-ring premium-card block h-full overflow-hidden rounded-lg bg-white" href={`/actualites/${slugify(item.title)}`}>
-                <img alt={item.title} className="h-48 w-full object-cover" loading="lazy" src={item.image} />
+                <div className="relative h-48 w-full">
+                  <Image src={item.image} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
+                </div>
                 <div className="p-5">
                   <p className="text-xs font-black uppercase text-[#8a6d00]">
-                    {item.category} · <time>{item.date}</time>
+                    {item.category} · <time dateTime={item.isoDate}>{item.date}</time>
                   </p>
                   <h2 className="mt-2 text-xl font-black uppercase text-[#002f1d]">{item.title}</h2>
                   <p className="mt-2 text-sm text-slate-700">{item.excerpt}</p>

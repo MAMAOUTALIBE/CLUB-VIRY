@@ -7,12 +7,11 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData } from "@/lib/calendar-view";
 import { images } from "@/lib/images";
 import { socialItems } from "@/lib/socials";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Calendrier"
-};
+export const metadata = pageMetadata("/calendrier");
 
 export default async function CalendarPage() {
   const calendar = await getCalendarPageData();

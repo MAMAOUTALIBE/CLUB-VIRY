@@ -1,9 +1,8 @@
 import { PageHero } from "@/components/PageHero";
 import { images } from "@/lib/images";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Mentions légales"
-};
+export const metadata = pageMetadata("/mentions-legales");
 
 export default function LegalPage() {
   return (

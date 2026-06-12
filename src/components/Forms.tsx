@@ -102,7 +102,18 @@ function FormShell({
             nextFieldErrors[issue.field] = issue.message;
           }
         }
+        // Le contact envoie un seul `fullName` au serveur mais affiche deux champs
+        // (firstName/lastName) : on rabat l'erreur serveur sur les champs reellement rendus.
+        if (nextFieldErrors.fullName) {
+          nextFieldErrors.firstName = nextFieldErrors.firstName ?? nextFieldErrors.fullName;
+          nextFieldErrors.lastName = nextFieldErrors.lastName ?? nextFieldErrors.fullName;
+        }
         setFieldErrors(nextFieldErrors);
+        // Deplace le focus vers le premier champ en erreur (a11y).
+        const firstErrorField = fields.find((field) => nextFieldErrors[field.name]);
+        if (firstErrorField) {
+          requestAnimationFrame(() => document.getElementById(`${formId}-${firstErrorField.name}`)?.focus());
+        }
         const apiMessage = result?.error?.message as string | undefined;
         setStatus("error");
         setFeedback(
@@ -217,16 +228,16 @@ function FormShell({
       >
         {status === "loading" ? "Envoi..." : submitLabel}
       </button>
-      {status === "success" ? (
-        <p className="mt-3 text-sm font-bold text-green-700" role="status">
-          {feedback}
-        </p>
-      ) : null}
-      {status === "error" ? (
-        <p className="mt-3 text-sm font-bold text-red-700" role="alert">
-          {feedback}
-        </p>
-      ) : null}
+      {/* Region live toujours montee : l'insertion de texte est annoncee de maniere fiable. */}
+      <div aria-live="polite" className="mt-3 empty:mt-0">
+        {status === "success" ? (
+          <p className="text-sm font-bold text-green-700">{feedback}</p>
+        ) : status === "error" ? (
+          <p className="text-sm font-bold text-red-700" role="alert">
+            {feedback}
+          </p>
+        ) : null}
+      </div>
     </form>
   );
 }
