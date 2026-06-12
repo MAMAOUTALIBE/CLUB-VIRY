@@ -207,6 +207,116 @@ export async function assignTeamPlayer(teamId: string, input: AdminTeamPlayerPay
   return data as TeamPlayer;
 }
 
+/** Retire un joueur d'une équipe (clé composite team_id + player_id, pas d'id de ligne). */
+export async function removeTeamPlayer(teamId: string, playerId: string): Promise<void> {
+  const { error } = await getSupabaseAdminClient()
+    .from("team_players")
+    .delete()
+    .eq("team_id", teamId)
+    .eq("player_id", playerId);
+
+  if (error) {
+    throw new Error(`Unable to remove team player: ${error.message}`);
+  }
+}
+
+/** Met à jour un membre du staff (identifié par son id propre). */
+export async function updateTeamStaff(staffId: string, input: AdminTeamStaffPayload): Promise<TeamStaff> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("team_staff")
+    .update({
+      ...(input.profileId !== undefined ? { profile_id: input.profileId ?? null } : {}),
+      display_name: input.displayName,
+      role_title: input.roleTitle,
+      is_head_coach: input.isHeadCoach ?? false
+    })
+    .eq("id", staffId)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(`Unable to update team staff: ${error.message}`);
+  }
+
+  return data as TeamStaff;
+}
+
+/** Supprime un membre du staff. */
+export async function removeTeamStaff(staffId: string): Promise<void> {
+  const { error } = await getSupabaseAdminClient().from("team_staff").delete().eq("id", staffId);
+
+  if (error) {
+    throw new Error(`Unable to remove team staff: ${error.message}`);
+  }
+}
+
+/**
+ * Roster public d'une équipe par slug — SANS contrôle d'accès éducateur.
+ * Ne projette QUE des champs joueurs non sensibles (jamais license/medical/birth_date/family),
+ * conformément à la protection PII : seuls prénom + nom servent à l'affichage public tronqué.
+ */
+export async function getPublicTeamRosterBySlug(slug: string): Promise<TeamRoster | null> {
+  const supabase = getSupabaseAdminClient();
+  // Cohérence de visibilité : une équipe désactivée (absente du listing) ne doit pas
+  // rester consultable par URL directe — même filtre is_active que listTeams().
+  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("slug", slug).eq("is_active", true).maybeSingle();
+
+  if (teamError) {
+    throw new Error(`Unable to fetch public team: ${teamError.message}`);
+  }
+
+  if (!team) {
+    return null;
+  }
+
+  const [{ data: staff, error: staffError }, { data: matches, error: matchesError }, { data: assignments, error: assignmentsError }] =
+    await Promise.all([
+      supabase.from("team_staff").select("*").eq("team_id", team.id).order("is_head_coach", { ascending: false }),
+      supabase.from("matches").select("*").eq("team_id", team.id).order("starts_at", { ascending: true }),
+      supabase
+        .from("team_players")
+        .select("*")
+        .eq("team_id", team.id)
+        .order("shirt_number", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true })
+    ]);
+
+  if (staffError) {
+    throw new Error(`Unable to fetch public roster staff: ${staffError.message}`);
+  }
+
+  if (matchesError) {
+    throw new Error(`Unable to fetch public roster matches: ${matchesError.message}`);
+  }
+
+  if (assignmentsError) {
+    throw new Error(`Unable to fetch public roster players: ${assignmentsError.message}`);
+  }
+
+  const rosterAssignments = (assignments ?? []) as TeamPlayer[];
+  const playerIds = rosterAssignments.map((assignment) => assignment.player_id);
+  const { data: players, error: playersError } =
+    playerIds.length > 0
+      ? await supabase.from("players").select("id, first_name, last_name").in("id", playerIds)
+      : { data: [], error: null };
+
+  if (playersError) {
+    throw new Error(`Unable to fetch public players: ${playersError.message}`);
+  }
+
+  const playerById = new Map((players ?? []).map((player) => [player.id as string, player as Player]));
+
+  return {
+    team: team as Team,
+    staff: (staff ?? []) as TeamStaff[],
+    matches: (matches ?? []) as Match[],
+    players: rosterAssignments.map((assignment) => ({
+      assignment,
+      player: playerById.get(assignment.player_id) ?? null
+    }))
+  };
+}
+
 async function isTeamStaffMember(teamId: string, profileId: string): Promise<boolean> {
   const { data, error } = await getSupabaseAdminClient()
     .from("team_staff")

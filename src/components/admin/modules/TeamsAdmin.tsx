@@ -1,5 +1,7 @@
 "use client";
 
+import { Users } from "lucide-react";
+import Link from "next/link";
 import { AdminCrud } from "@/components/admin/AdminCrud";
 
 const GENDER = [
@@ -12,11 +14,21 @@ export function TeamsAdmin() {
   return (
     <AdminCrud
       title="Équipes"
-      description="Gérez les équipes du club (fiche, catégorie, photo). La gestion de l'effectif et du staff par équipe arrivera dans une prochaine étape."
+      description="Gérez les équipes du club (fiche, catégorie, photo) puis, via « Effectif & staff », l'encadrement et les joueurs de chaque équipe."
       endpoint="/api/admin/teams"
       listKey="teams"
       itemKey="team"
       newLabel="Nouvelle équipe"
+      rowActions={(r) =>
+        r.id ? (
+          <Link
+            href={`/admin/equipes/${String(r.id)}`}
+            className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-[#002f1d]/20 bg-[#002f1d] px-2.5 py-1.5 text-xs font-black uppercase text-white hover:bg-[#07542f]"
+          >
+            <Users size={14} aria-hidden="true" /> Effectif & staff
+          </Link>
+        ) : null
+      }
       fields={[
         { name: "name", label: "Nom de l'équipe", required: true, fullWidth: true, placeholder: "Seniors D1" },
         { name: "gender", label: "Genre", type: "select", options: GENDER },

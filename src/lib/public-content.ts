@@ -2,11 +2,13 @@ import "server-only";
 
 import type { LucideIcon } from "lucide-react";
 
-import { news as mockNews, partners as mockPartners, products as mockProducts } from "@/lib/data";
+import { news as mockNews, partners as mockPartners, products as mockProducts, teams as mockTeams } from "@/lib/data";
 import { listPartnersForAdmin, listPublicMedia, listPublishedNews } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { getAllSettings } from "@/lib/db/settings";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
+import { getPublicTeamRosterBySlug, listTeams } from "@/lib/db/teams";
+import type { Match } from "@/lib/db/types";
 import { images } from "@/lib/images";
 import { slugify } from "@/lib/slug";
 
@@ -120,29 +122,121 @@ export async function getPublicProducts(): Promise<DisplayProduct[]> {
 
 export type DisplayAlbum = { title: string; image: string };
 
+export type DisplayStat = { label: string; value: string; iconName: string };
+export type DisplayValue = { title: string; text: string; iconName: string };
+export type DisplayHistoryItem = { year: string; title: string; text: string; iconName: string };
+export type OrgGroup = { title: string; text: string };
+export type StadePhoto = { src: string; alt: string; caption: string };
+export type HistoireContent = { eyebrow: string; title: string; intro: string; timeline: DisplayHistoryItem[] };
+export type OrganigrammeContent = { title: string; intro: string; groups: OrgGroup[] };
+export type StadeContent = { address: string; mapsQuery: string; infrastructures: string[]; gallery: StadePhoto[] };
+
 export type SiteContent = {
   socials: { facebook: string; instagram: string; youtube: string; tiktok: string; whatsapp: string };
   contact: { phone1: string; phone2: string; email: string; address: string };
   president: { name: string; message: string; photoUrl: string };
   inscriptions_banner: { text: string; active: boolean };
+  club_stats: DisplayStat[];
+  values: DisplayValue[];
+  histoire: HistoireContent;
+  organigramme: OrganigrammeContent;
+  stade: StadeContent;
 };
 
 const SETTINGS_DEFAULTS: SiteContent = {
   socials: { facebook: "", instagram: "", youtube: "", tiktok: "", whatsapp: "" },
   contact: { phone1: "06 29 67 04 33", phone2: "01 69 96 67 00", email: "esvirychatillon91170@gmail.com", address: "Stade Henri Longuet, 91170 Viry-Châtillon" },
   president: { name: "Saglam Ferhat", message: "", photoUrl: "" },
-  inscriptions_banner: { text: "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !", active: true }
+  inscriptions_banner: { text: "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !", active: true },
+  club_stats: [
+    { label: "Licenciés", value: "+600", iconName: "Users" },
+    { label: "Éducateurs", value: "50", iconName: "Award" },
+    { label: "Équipes", value: "30", iconName: "Shield" },
+    { label: "Places", value: "5 700", iconName: "Building2" },
+    { label: "Depuis", value: "1958", iconName: "CalendarDays" }
+  ],
+  values: [
+    { title: "Respect", text: "Le respect de chacun, règle du jeu.", iconName: "Handshake" },
+    { title: "Travail", text: "Le travail et l'effort sont nos moteurs.", iconName: "Dumbbell" },
+    { title: "Solidarité", text: "On se tire toujours vers le haut.", iconName: "HeartHandshake" },
+    { title: "Ambition", text: "Viser l'excellence pour aller plus loin.", iconName: "Target" },
+    { title: "Passion", text: "Une passion qui nous unit tous.", iconName: "Trophy" }
+  ],
+  histoire: {
+    eyebrow: "Notre parcours",
+    title: "Depuis 1958",
+    intro: "L'ES Viry-Châtillon Football grandit avec sa ville. L'histoire du club est celle d'une transmission : former, rassembler et faire progresser.",
+    timeline: [
+      { year: "1958", title: "Naissance du club", text: "Fusion de l'US Viry et du FC Viry : naissance de l'ES Viry-Châtillon.", iconName: "Flag" },
+      { year: "1980-90", title: "L'essor de la formation", text: "Développement de la formation et structuration des catégories jeunes.", iconName: "GraduationCap" },
+      { year: "2000", title: "Ancrage régional", text: "Montée en exigences régionales et rayonnement local renforcé.", iconName: "TrendingUp" },
+      { year: "Aujourd'hui", title: "Tournés vers l'avenir", text: "Un club familial, formateur et tourné vers l'avenir.", iconName: "HeartHandshake" }
+    ]
+  },
+  organigramme: {
+    title: "Structure du club",
+    intro: "Une organisation claire permet au club d'être lisible pour les familles, les éducateurs et les partenaires.",
+    groups: [
+      { title: "Bureau", text: "Président, vice-présidents, trésorerie, secrétariat général" },
+      { title: "Direction sportive", text: "Responsable technique, coordinateurs catégories, référents gardiens" },
+      { title: "Éducateurs", text: "École de foot, jeunes, seniors, féminines, futsal" },
+      { title: "Administration", text: "Licences, inscriptions, communication, partenariats" }
+    ]
+  },
+  stade: {
+    address: "Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon",
+    mapsQuery: "Stade Henri Longuet, Viry-Châtillon",
+    infrastructures: ["2 terrains", "Vestiaires modernes", "Club house convivial", "Tribunes supporters"],
+    gallery: [
+      { src: images.stadeTribune, alt: "Tribune principale et piste d'athlétisme du Stade Henri Longuet", caption: "La tribune principale et la piste" },
+      { src: images.stadeTribune2, alt: "Vue rapprochée de la tribune depuis la piste", caption: "La tribune vue depuis la piste" }
+    ]
+  }
 };
+
+/** Retourne le tableau stocké s'il est non vide, sinon le défaut (saisie CMS défensive). */
+function pickArray<T>(raw: unknown, fallback: T[]): T[] {
+  return Array.isArray(raw) && raw.length > 0 ? (raw as T[]) : fallback;
+}
+
+/** Retourne la chaîne stockée si non vide, sinon le défaut. */
+function pickStr(raw: unknown, fallback: string): string {
+  return typeof raw === "string" && raw.trim() !== "" ? raw : fallback;
+}
 
 export async function getSiteSettings(): Promise<SiteContent> {
   if (isSupabaseAdminConfigured) {
     try {
       const all = await getAllSettings();
+      const stats = all.club_stats as Record<string, unknown> | undefined;
+      const vals = all.values as Record<string, unknown> | undefined;
+      const hist = all.histoire as Record<string, unknown> | undefined;
+      const org = all.organigramme as Record<string, unknown> | undefined;
+      const stade = all.stade as Record<string, unknown> | undefined;
       return {
         socials: { ...SETTINGS_DEFAULTS.socials, ...(all.socials ?? {}) },
         contact: { ...SETTINGS_DEFAULTS.contact, ...(all.contact ?? {}) },
         president: { ...SETTINGS_DEFAULTS.president, ...(all.president ?? {}) },
-        inscriptions_banner: { ...SETTINGS_DEFAULTS.inscriptions_banner, ...(all.inscriptions_banner ?? {}) }
+        inscriptions_banner: { ...SETTINGS_DEFAULTS.inscriptions_banner, ...(all.inscriptions_banner ?? {}) },
+        club_stats: pickArray<DisplayStat>(stats?.items, SETTINGS_DEFAULTS.club_stats),
+        values: pickArray<DisplayValue>(vals?.items, SETTINGS_DEFAULTS.values),
+        histoire: {
+          eyebrow: pickStr(hist?.eyebrow, SETTINGS_DEFAULTS.histoire.eyebrow),
+          title: pickStr(hist?.title, SETTINGS_DEFAULTS.histoire.title),
+          intro: pickStr(hist?.intro, SETTINGS_DEFAULTS.histoire.intro),
+          timeline: pickArray<DisplayHistoryItem>(hist?.timeline, SETTINGS_DEFAULTS.histoire.timeline)
+        },
+        organigramme: {
+          title: pickStr(org?.title, SETTINGS_DEFAULTS.organigramme.title),
+          intro: pickStr(org?.intro, SETTINGS_DEFAULTS.organigramme.intro),
+          groups: pickArray<OrgGroup>(org?.groups, SETTINGS_DEFAULTS.organigramme.groups)
+        },
+        stade: {
+          address: pickStr(stade?.address, SETTINGS_DEFAULTS.stade.address),
+          mapsQuery: pickStr(stade?.mapsQuery, SETTINGS_DEFAULTS.stade.mapsQuery),
+          infrastructures: pickArray<string>(stade?.infrastructures, SETTINGS_DEFAULTS.stade.infrastructures),
+          gallery: pickArray<StadePhoto>(stade?.gallery, SETTINGS_DEFAULTS.stade.gallery)
+        }
       } as SiteContent;
     } catch {
       // repli défauts
@@ -163,4 +257,102 @@ export async function getPublicAlbums(): Promise<DisplayAlbum[]> {
     }
   }
   return mockNews.map((n) => ({ title: n.title, image: n.image }));
+}
+
+export type DisplayTeam = { slug: string; name: string; category: string; season: string; description: string; image: string };
+export type DisplayTeamStaff = { name: string; role: string; isHeadCoach: boolean };
+export type DisplayTeamPlayer = { name: string; position: string; shirtNumber: number | null };
+export type DisplayTeamDetail = DisplayTeam & {
+  coach: string;
+  staff: DisplayTeamStaff[];
+  players: DisplayTeamPlayer[];
+  nextMatch: string;
+};
+
+const DEFAULT_SEASON = "2025 / 2026";
+
+/** Affichage public d'un nom de joueur : prénom + initiale du nom (protection PII). */
+function publicPlayerName(firstName: string, lastName: string): string {
+  const initial = lastName?.trim() ? `${lastName.trim().charAt(0).toUpperCase()}.` : "";
+  return `${firstName ?? ""} ${initial}`.trim();
+}
+
+function formatNextMatch(matches: Match[]): string {
+  const now = Date.now();
+  const next = matches.find((m) => m.starts_at && new Date(m.starts_at).getTime() >= now);
+  if (!next?.starts_at) {
+    return "Calendrier à confirmer";
+  }
+  const formatted = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(next.starts_at));
+  return next.opponent_name ? `${formatted} contre ${next.opponent_name}` : formatted;
+}
+
+export async function getPublicTeams(): Promise<DisplayTeam[]> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const rows = await listTeams();
+      if (rows.length > 0) {
+        return rows.map((t) => ({
+          slug: t.slug,
+          name: t.name,
+          category: t.age_range ?? t.level ?? "Équipe",
+          season: DEFAULT_SEASON,
+          description: t.description ?? "",
+          image: t.cover_image_url || images.teamHuddle
+        }));
+      }
+    } catch {
+      // repli mock
+    }
+  }
+  return mockTeams.map((t) => ({ slug: t.slug, name: t.name, category: t.category, season: t.season, description: t.description, image: t.image }));
+}
+
+export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDetail | null> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const roster = await getPublicTeamRosterBySlug(slug);
+      if (roster) {
+        const head = roster.staff.find((s) => s.is_head_coach) ?? roster.staff[0];
+        return {
+          slug: roster.team.slug,
+          name: roster.team.name,
+          category: roster.team.age_range ?? roster.team.level ?? "Équipe",
+          season: DEFAULT_SEASON,
+          description: roster.team.description ?? "",
+          image: roster.team.cover_image_url || images.teamHuddle,
+          coach: head?.display_name ?? "À confirmer",
+          staff: roster.staff.map((s) => ({ name: s.display_name, role: s.role_title, isHeadCoach: s.is_head_coach })),
+          players: roster.players.map((p) => ({
+            name: p.player ? publicPlayerName(p.player.first_name, p.player.last_name) : "Joueur",
+            position: p.assignment.position ?? "",
+            shirtNumber: p.assignment.shirt_number
+          })),
+          nextMatch: formatNextMatch(roster.matches)
+        };
+      }
+      // slug absent en base → on retombe sur les données mock ci-dessous (les fiches vitrine restent visibles).
+    } catch {
+      // repli mock
+    }
+  }
+  const mock = mockTeams.find((t) => t.slug === slug);
+  if (!mock) {
+    return null;
+  }
+  return {
+    slug: mock.slug,
+    name: mock.name,
+    category: mock.category,
+    season: mock.season,
+    description: mock.description,
+    image: mock.image,
+    coach: mock.coach,
+    staff: [
+      { name: mock.coach, role: "Coach principal", isHeadCoach: true },
+      { name: mock.assistant, role: "Adjoint", isHeadCoach: false }
+    ],
+    players: mock.players.map((name) => ({ name, position: "", shirtNumber: null })),
+    nextMatch: mock.nextMatch
+  };
 }

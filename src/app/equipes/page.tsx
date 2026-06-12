@@ -4,13 +4,15 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { teams } from "@/lib/data";
 import { images } from "@/lib/images";
+import { getPublicTeams } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/equipes");
+export const dynamic = "force-dynamic";
 
-export default function TeamsPage() {
+export default async function TeamsPage() {
+  const teams = await getPublicTeams();
   return (
     <>
       <PageHero description="De l'école de foot aux Seniors, retrouvez toutes les catégories du club." image={images.teamHuddle} title="Nos équipes" />

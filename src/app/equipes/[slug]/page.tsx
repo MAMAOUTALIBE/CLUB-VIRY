@@ -3,20 +3,18 @@ import { ButtonLink } from "@/components/ButtonLink";
 import { PremiumCta } from "@/components/PremiumCta";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
-import { teams } from "@/lib/data";
+import { getPublicTeamBySlug } from "@/lib/public-content";
 import { buildBreadcrumb, buildSportsTeam } from "@/lib/jsonld";
+
+export const dynamic = "force-dynamic";
 
 type TeamPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return teams.map((team) => ({ slug: team.slug }));
-}
-
 export async function generateMetadata({ params }: TeamPageProps) {
   const { slug } = await params;
-  const team = teams.find((item) => item.slug === slug);
+  const team = await getPublicTeamBySlug(slug);
 
   if (!team) {
     return { title: "Équipe" };
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: TeamPageProps) {
 
 export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
-  const team = teams.find((item) => item.slug === slug);
+  const team = await getPublicTeamBySlug(slug);
 
   if (!team) {
     notFound();
@@ -66,30 +64,45 @@ export default async function TeamPage({ params }: TeamPageProps) {
               <p className="mt-1 font-black">{team.coach}</p>
             </div>
             <div>
-              <p className="text-sm font-black uppercase text-slate-500">Adjoint</p>
-              <p className="mt-1 font-black">{team.assistant}</p>
+              <p className="text-sm font-black uppercase text-slate-500">Catégorie</p>
+              <p className="mt-1 font-black">{team.category}</p>
             </div>
             <div>
               <p className="text-sm font-black uppercase text-slate-500">Prochain match</p>
               <p className="mt-1 font-black">{team.nextMatch}</p>
             </div>
           </div>
+
+          {team.staff.length > 0 ? (
+            <>
+              <h3 className="mt-8 text-xl font-black uppercase text-[#002f1d]">Encadrement</h3>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {team.staff.map((member) => (
+                  <li className="rounded-md border border-[#002f1d]/10 bg-[#fbfcf8] p-4" key={`${member.name}-${member.role}`}>
+                    <p className="text-xs font-black uppercase text-[#8a6d00]">{member.role}</p>
+                    <p className="mt-1 text-sm font-black text-[#002f1d]">{member.name}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+
           <h3 className="mt-8 text-xl font-black uppercase text-[#002f1d]">Joueurs</h3>
-          <Stagger className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-            {team.players.map((player) => (
-              <StaggerItem className="rounded-md bg-slate-100 px-4 py-3 text-sm font-bold" key={player}>
-                {player}
-              </StaggerItem>
-            ))}
-          </Stagger>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {["Présentation", "Résultats", "Calendrier"].map((tab) => (
-              <div className="rounded-md border border-[#002f1d]/10 bg-[#fbfcf8] p-4" key={tab}>
-                <p className="text-xs font-black uppercase text-[#8a6d00]">{tab}</p>
-                <p className="mt-2 text-sm text-slate-700">Informations prêtes à être affichées dans une fiche officielle claire et lisible.</p>
-              </div>
-            ))}
-          </div>
+          {team.players.length > 0 ? (
+            <Stagger className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+              {team.players.map((player, index) => (
+                <StaggerItem className="flex items-center gap-3 rounded-md bg-slate-100 px-4 py-3 text-sm font-bold" key={`${player.name}-${index}`}>
+                  <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#002f1d] px-2 text-xs font-black text-[#f7c600]">{player.shirtNumber ?? "—"}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[#002f1d]">{player.name}</span>
+                    {player.position ? <span className="block text-xs font-medium text-slate-500">{player.position}</span> : null}
+                  </span>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          ) : (
+            <p className="mt-4 rounded-md border border-dashed border-slate-300 bg-[#fbfcf8] p-4 text-sm font-bold text-slate-500">L'effectif sera publié prochainement.</p>
+          )}
         </div>
         <aside className="club-panel rounded-lg p-6 text-white">
           <h2 className="text-xl font-black uppercase text-[#f7c600]">Classement</h2>

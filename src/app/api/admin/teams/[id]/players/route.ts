@@ -31,7 +31,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return jsonError(404, "NOT_FOUND", "Equipe introuvable.");
     }
 
-    return jsonOk({ players: roster.players });
+    // Ne renvoyer au client QUE les champs joueur necessaires a l'editeur d'effectif
+    // (jamais license_number / medical_notes / birth_date / family_id / profile_id : protection PII).
+    const players = roster.players.map((entry) => ({
+      assignment: entry.assignment,
+      player: entry.player ? { id: entry.player.id, first_name: entry.player.first_name, last_name: entry.player.last_name } : null
+    }));
+
+    return jsonOk({ team: roster.team, players });
   } catch (error) {
     return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur joueurs equipe inconnue.");
   }

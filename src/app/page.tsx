@@ -4,9 +4,10 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handsh
 import { ButtonLink } from "@/components/ButtonLink";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { clubStats, matches, partners, teams, values } from "@/lib/data";
+import { matches, partners, teams } from "@/lib/data";
+import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { getPublicNews } from "@/lib/public-content";
+import { getPublicNews, getSiteSettings } from "@/lib/public-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -26,9 +27,11 @@ const websiteJsonLd = {
 };
 
 export default async function HomePage() {
-  const allNews = await getPublicNews(5);
+  const [allNews, settings] = await Promise.all([getPublicNews(5), getSiteSettings()]);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
+  const clubStats = settings.club_stats;
+  const values = settings.values;
   const quickActions = [
     { label: "Inscriptions", href: "/inscriptions", icon: Users, text: "Rejoindre le club" },
     { label: "Détections", href: "/detections-recrutement", icon: Flag, text: "Montrer son talent" },
@@ -126,7 +129,7 @@ export default async function HomePage() {
             className="grid overflow-hidden rounded-xl border border-white/15 bg-[#00150d]/75 shadow-[0_22px_55px_rgba(0,18,11,0.5)] ring-1 ring-[#f7c600]/10 backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-5"
           >
             {clubStats.map((stat) => {
-              const Icon = stat.icon;
+              const Icon = iconByName(stat.iconName);
               return (
                 <StaggerItem
                   className="flex items-center gap-2.5 border-b border-white/10 px-4 py-2.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 lg:py-3"
@@ -529,7 +532,7 @@ export default async function HomePage() {
           />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {values.map((value) => {
-              const Icon = value.icon;
+              const Icon = iconByName(value.iconName);
               return (
                 <article className="rounded-lg border border-[#f7c600]/35 bg-white/5 p-5" key={value.title}>
                   <Icon className="text-[#f7c600]" size={38} aria-hidden="true" />
