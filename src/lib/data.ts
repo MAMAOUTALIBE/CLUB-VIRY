@@ -43,7 +43,7 @@ export const clubStats = [
   { label: "Licenciés", value: "+600", icon: Users },
   { label: "Éducateurs", value: "50", icon: Award },
   { label: "Équipes", value: "30", icon: Shield },
-  { label: "Places au stade", value: "5 700", icon: Building2 },
+  { label: "Places", value: "5 700", icon: Building2 },
   { label: "Depuis", value: "1958", icon: CalendarDays }
 ];
 
