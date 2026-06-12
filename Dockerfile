@@ -14,7 +14,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # NEXT_PUBLIC_* est inline AU BUILD par Next.js : l'URL publique doit etre presente
 # ici, sinon le SEO / sitemap / liens canoniques tomberaient sur http://localhost:3000.
-ARG NEXT_PUBLIC_SITE_URL=https://virychatillonfootball.org
+ARG NEXT_PUBLIC_SITE_URL=https://esvirychatillonfootball.org
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 RUN npm run build
 
