@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, Mail, MapPin } from "lucide-react";
-import { isLiveSocial, socialItems } from "@/lib/socials";
+import { socialItems } from "@/lib/socials";
+
+type FooterProps = {
+  socials?: Record<string, string>;
+  contact?: { address?: string };
+};
+
+function socialHref(socials: Record<string, string> | undefined, label: string): string {
+  return (socials?.[label.toLowerCase()] ?? "").trim();
+}
 
 const columns = [
   {
@@ -43,7 +52,7 @@ const columns = [
   }
 ];
 
-export function Footer() {
+export function Footer({ socials, contact }: FooterProps) {
   const pathname = usePathname();
 
   if (pathname.startsWith("/admin")) {
@@ -80,7 +89,8 @@ export function Footer() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3" aria-label="Réseaux sociaux">
               {socialItems.map((social) => {
-                const live = isLiveSocial(social);
+                const href = socialHref(socials, social.label);
+                const live = /^(https?:|mailto:|tel:)/.test(href);
                 const className = "focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-[#f7c600]/60";
                 const style = {
                   background: social.background,
@@ -97,7 +107,7 @@ export function Footer() {
                 // Lien cliquable seulement si une vraie URL existe ; sinon icone decorative
                 // (pas de lien mort vers "#").
                 return live ? (
-                  <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label} title={social.label} className={className} style={style}>
+                  <a key={social.label} href={href} target="_blank" rel="noopener noreferrer" aria-label={social.label} title={social.label} className={className} style={style}>
                     {icon}
                   </a>
                 ) : (
@@ -137,7 +147,7 @@ export function Footer() {
               <div className="mt-5 space-y-3 text-sm text-white/75">
                 <p className="flex items-start gap-3">
                   <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-[#f7c600]" size={18} />
-                  <span>Stade Henri Longuet · Avenue de l'Armée Leclerc · 91170 Viry-Châtillon</span>
+                  <span>{contact?.address?.trim() || "Stade Henri Longuet · Avenue de l'Armée Leclerc · 91170 Viry-Châtillon"}</span>
                 </p>
                 <Link className="focus-ring flex items-center gap-3 transition hover:text-[#f7c600]" href="/contact">
                   <Mail aria-hidden="true" className="shrink-0 text-[#f7c600]" size={18} />
