@@ -6,16 +6,17 @@ import { LiveVideo } from "@/components/LiveVideo";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { news } from "@/lib/data";
 import { images } from "@/lib/images";
-import { slugify } from "@/lib/slug";
+import { getPublicNews } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/actualites");
+export const dynamic = "force-dynamic";
 
-export default function NewsPage() {
-  const leadNews = news[0];
-  const otherNews = news.slice(1);
+export default async function NewsPage() {
+  const allNews = await getPublicNews(13);
+  const leadNews = allNews[0];
+  const otherNews = allNews.slice(1);
 
   return (
     <>
@@ -31,7 +32,7 @@ export default function NewsPage() {
         <SectionTitle title="Dernières actualités" text="L'actualité forte du moment, puis toutes les nouvelles du club." />
         <Link
           className="focus-ring premium-card mb-6 grid overflow-hidden rounded-lg bg-white lg:grid-cols-[1.1fr_0.9fr]"
-          href={`/actualites/${slugify(leadNews.title)}`}
+          href={`/actualites/${leadNews.slug}`}
         >
           <div className="relative h-72 w-full lg:h-full">
             <Image src={leadNews.image} alt={leadNews.title} fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
@@ -48,7 +49,7 @@ export default function NewsPage() {
         <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {otherNews.map((item) => (
             <StaggerItem key={item.title}>
-              <Link className="focus-ring premium-card block h-full overflow-hidden rounded-lg bg-white" href={`/actualites/${slugify(item.title)}`}>
+              <Link className="focus-ring premium-card block h-full overflow-hidden rounded-lg bg-white" href={`/actualites/${item.slug}`}>
                 <div className="relative h-48 w-full">
                   <Image src={item.image} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                 </div>

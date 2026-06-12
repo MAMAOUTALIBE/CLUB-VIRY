@@ -4,14 +4,17 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handsh
 import { ButtonLink } from "@/components/ButtonLink";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { clubStats, matches, news, partners, teams, values } from "@/lib/data";
+import { clubStats, matches, partners, teams, values } from "@/lib/data";
 import { images } from "@/lib/images";
+import { getPublicNews } from "@/lib/public-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata = {
   alternates: { canonical: "/" }
 };
+
+export const dynamic = "force-dynamic";
 
 // JSON-LD WebSite (uniquement sur l'accueil) : aide Google a afficher le nom du site.
 const websiteJsonLd = {
@@ -22,8 +25,10 @@ const websiteJsonLd = {
   inLanguage: "fr-FR"
 };
 
-export default function HomePage() {
-  const leadNews = news[0];
+export default async function HomePage() {
+  const allNews = await getPublicNews(5);
+  const leadNews = allNews[0];
+  const gridNews = allNews.slice(1, 5);
   const quickActions = [
     { label: "Inscriptions", href: "/inscriptions", icon: Users, text: "Rejoindre le club" },
     { label: "Détections", href: "/detections-recrutement", icon: Flag, text: "Montrer son talent" },
@@ -374,7 +379,7 @@ export default function HomePage() {
           </div>
         </div>
         <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {news.slice(1, 5).map((item) => (
+          {gridNews.map((item) => (
             <StaggerItem key={item.title}>
               <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href="/actualites">
                 <div className="relative h-40 w-full">

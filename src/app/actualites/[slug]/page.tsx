@@ -2,21 +2,23 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
-import { news } from "@/lib/data";
 import { buildBreadcrumb, buildNewsArticle } from "@/lib/jsonld";
-import { slugify } from "@/lib/slug";
+import { getPublicNews, getPublicNewsBySlug } from "@/lib/public-content";
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return news.map((item) => ({ slug: slugify(item.title) }));
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const all = await getPublicNews(50);
+  return all.map((item) => ({ slug: item.slug }));
 }
 
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = news.find((item) => slugify(item.title) === slug);
+  const article = await getPublicNewsBySlug(slug);
 
   if (!article) {
     return { title: "Actualité" };
@@ -37,7 +39,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = news.find((item) => slugify(item.title) === slug);
+  const article = await getPublicNewsBySlug(slug);
 
   if (!article) {
     notFound();
@@ -65,11 +67,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </p>
         <h1 className="mt-2 text-3xl font-black uppercase leading-tight text-[#002f1d] sm:text-4xl">{article.title}</h1>
         <div className="gold-divider mt-4" aria-hidden="true" />
-        <p className="mt-6 text-lg leading-8 text-slate-700">{article.excerpt}</p>
-        <p className="mt-4 leading-8 text-slate-600">
-          Le contenu complet de cette actualité sera bientôt disponible. En attendant, suivez le club sur ses réseaux et
-          contactez-nous pour toute information.
-        </p>
+        {article.excerpt ? <p className="mt-6 text-lg font-medium leading-8 text-slate-800">{article.excerpt}</p> : null}
+        {article.content ? (
+          <div className="mt-4 whitespace-pre-line leading-8 text-slate-700">{article.content}</div>
+        ) : (
+          <p className="mt-4 leading-8 text-slate-600">
+            Le contenu complet de cette actualité sera bientôt disponible. En attendant, suivez le club sur ses réseaux et
+            contactez-nous pour toute information.
+          </p>
+        )}
         <div className="official-card mt-10 rounded-lg bg-white p-6">
           <p className="text-xs font-black uppercase text-[#8a6d00]">Rester informé</p>
           <h2 className="mt-1 text-xl font-black uppercase text-[#002f1d]">Rejoignez la famille Viry</h2>
