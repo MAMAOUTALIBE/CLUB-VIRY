@@ -6,6 +6,7 @@ import {
   Handshake,
   LayoutDashboard,
   Mail,
+  Newspaper,
   Sparkles,
   ShieldCheck,
   Target,
@@ -19,6 +20,7 @@ import type { LucideIcon } from "lucide-react";
 
 const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: number }> = [
   { label: "Pilotage", href: "/admin", icon: LayoutDashboard },
+  { label: "Actualités", href: "/admin/actualites", icon: Newspaper },
   { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck, badge: 42 },
   { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
   { label: "Joueurs", href: "/admin/joueurs", icon: Users },
