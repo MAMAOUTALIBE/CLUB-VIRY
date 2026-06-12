@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CalendarDays, ChevronDown, Menu, ShoppingBag, Ticket, User, X } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronDown, Menu, User, X } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -193,16 +193,6 @@ export function Header() {
                   </span>
                 );
               })}
-            </div>
-            <div className="flex overflow-hidden rounded-md border border-[#f7c600]/35">
-              <Link className="focus-ring inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase hover:bg-white/10" href="/calendrier">
-                <Ticket size={16} aria-hidden="true" />
-                Matchs
-              </Link>
-              <Link className="focus-ring inline-flex items-center gap-2 border-l border-[#f7c600]/30 px-4 py-2 text-xs font-black uppercase text-[#f7c600] hover:bg-white/10" href="/boutique">
-                <ShoppingBag size={16} aria-hidden="true" />
-                Boutique
-              </Link>
             </div>
           </div>
         </div>
