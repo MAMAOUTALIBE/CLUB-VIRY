@@ -409,7 +409,7 @@ async function isTeamStaffMember(teamId: string, profileId: string): Promise<boo
   return Boolean(data);
 }
 
-async function canManageTeam(teamId: string | null, profileId: string, canManageAllTeams: boolean): Promise<boolean> {
+export async function canManageTeam(teamId: string | null, profileId: string, canManageAllTeams: boolean): Promise<boolean> {
   if (!teamId) {
     return canManageAllTeams;
   }
