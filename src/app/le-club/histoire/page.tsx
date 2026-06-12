@@ -2,45 +2,22 @@ import { PageHero } from "@/components/PageHero";
 import { PremiumCta } from "@/components/PremiumCta";
 import { SectionTitle } from "@/components/SectionTitle";
 import { Reveal } from "@/components/Motion";
+import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { Flag, GraduationCap, TrendingUp, HeartHandshake } from "lucide-react";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/histoire");
+export const dynamic = "force-dynamic";
 
-const timeline = [
-  {
-    year: "1958",
-    title: "Naissance du club",
-    text: "Fusion de l'US Viry et du FC Viry : naissance de l'ES Viry-Châtillon.",
-    Icon: Flag
-  },
-  {
-    year: "1980-90",
-    title: "L'essor de la formation",
-    text: "Développement de la formation et structuration des catégories jeunes.",
-    Icon: GraduationCap
-  },
-  {
-    year: "2000",
-    title: "Ancrage régional",
-    text: "Montée en exigences régionales et rayonnement local renforcé.",
-    Icon: TrendingUp
-  },
-  {
-    year: "Aujourd'hui",
-    title: "Tournés vers l'avenir",
-    text: "Un club familial, formateur et tourné vers l'avenir.",
-    Icon: HeartHandshake
-  }
-];
-
-export default function HistoryPage() {
+export default async function HistoryPage() {
+  const { histoire } = await getSiteSettings();
+  const timeline = histoire.timeline;
   return (
     <>
       <PageHero description="Un club historique de l'Essonne, porté par des bénévoles, des éducateurs et des familles." image={images.stadiumAerial} title="Notre histoire" />
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Notre parcours" title="Depuis 1958" text="L'ES Viry-Châtillon Football grandit avec sa ville. L'histoire du club est celle d'une transmission : former, rassembler et faire progresser." />
+        <SectionTitle eyebrow={histoire.eyebrow} title={histoire.title} text={histoire.intro} />
         <div className="relative mt-12">
           {/* Ligne verticale dorée en dégradé, reliant les noeuds */}
           <span
@@ -48,8 +25,10 @@ export default function HistoryPage() {
             className="absolute left-7 top-7 h-[calc(100%-3.5rem)] w-[2px] rounded-full bg-gradient-to-b from-[#f7c600] via-[#f7c600]/45 to-transparent"
           />
           <div className="grid gap-7">
-            {timeline.map(({ year, title, text, Icon }, index) => (
-              <Reveal key={year} delay={index * 0.08}>
+            {timeline.map(({ year, title, text, iconName }, index) => {
+              const Icon = iconByName(iconName);
+              return (
+              <Reveal key={`${year}-${index}`} delay={index * 0.08}>
                 <article className="group relative flex items-start gap-5 sm:gap-7">
                   {/* Noeud : carré arrondi vert foncé + icône dorée */}
                   <span className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00351f] to-[#00120b] text-[#f7c600] shadow-[0_12px_28px_rgba(0,31,19,0.4)] ring-4 ring-[#f7c600]/20 transition duration-300 group-hover:-translate-y-0.5 group-hover:ring-[#f7c600]/55">
@@ -67,7 +46,8 @@ export default function HistoryPage() {
                   </div>
                 </article>
               </Reveal>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

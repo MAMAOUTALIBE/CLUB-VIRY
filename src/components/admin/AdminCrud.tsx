@@ -45,6 +45,8 @@ type AdminCrudProps = {
   columns: CrudColumn[];
   idField?: string;
   newLabel?: string;
+  /** Actions supplémentaires par ligne, rendues avant le bouton « Éditer » (ex: lien vers un sous-écran). */
+  rowActions?: (row: Row) => React.ReactNode;
 };
 
 function camelToSnake(s: string): string {
@@ -60,7 +62,7 @@ function toInputValue(field: CrudField, row: Row): string {
   return String(raw);
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau" }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", rowActions }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -251,9 +253,12 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                 <tr key={String(row[idField] ?? i)} className="border-b border-slate-100 hover:bg-[#fbfcf8]">
                   {columns.map((c) => <td key={c.label} className="px-3 py-2.5 align-top text-slate-700">{c.render(row)}</td>)}
                   <td className="px-3 py-2.5 text-right">
-                    <button onClick={() => openEdit(row)} className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">
-                      <Pencil size={14} /> Éditer
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {rowActions ? rowActions(row) : null}
+                      <button onClick={() => openEdit(row)} className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">
+                        <Pencil size={14} /> Éditer
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -44,7 +44,7 @@ export function buildNewsArticle(article: { title: string; excerpt: string; imag
   };
 }
 
-export function buildSportsTeam(team: { name: string; slug: string; coach: string; players: string[] }) {
+export function buildSportsTeam(team: { name: string; slug: string; coach: string; players: Array<{ name: string }> }) {
   return {
     "@context": "https://schema.org",
     "@type": "SportsTeam",
@@ -53,6 +53,6 @@ export function buildSportsTeam(team: { name: string; slug: string; coach: strin
     url: `${SITE_URL}/equipes/${team.slug}`,
     memberOf: { "@type": "SportsOrganization", name: ORG_NAME },
     coach: { "@type": "Person", name: team.coach },
-    athlete: team.players.map((player) => ({ "@type": "Person", name: player }))
+    athlete: team.players.map((player) => ({ "@type": "Person", name: player.name }))
   };
 }

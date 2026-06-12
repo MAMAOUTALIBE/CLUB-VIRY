@@ -4,13 +4,18 @@ import { FeatureCards } from "@/components/FeatureCards";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { clubStats, values } from "@/lib/data";
+import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club");
+export const dynamic = "force-dynamic";
 
-export default function ClubPage() {
+export default async function ClubPage() {
+  const settings = await getSiteSettings();
+  const clubStats = settings.club_stats;
+  const values = settings.values;
   return (
     <>
       <PageHero
@@ -30,7 +35,7 @@ export default function ClubPage() {
         <SectionTitle title="Le club en chiffres" text="Des équipes de l'école de foot aux seniors, le club accompagne toutes les générations." />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {clubStats.map((stat) => {
-            const Icon = stat.icon;
+            const Icon = iconByName(stat.iconName);
             return (
               <article className="official-card rounded-lg bg-white p-6" key={stat.label}>
                 <Icon className="text-[#f7c600]" size={38} aria-hidden="true" />
@@ -62,7 +67,7 @@ export default function ClubPage() {
           <h2 className="text-3xl font-black uppercase text-[#f7c600]">Nos valeurs</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {values.map((value) => {
-              const Icon = value.icon;
+              const Icon = iconByName(value.iconName);
               return (
                 <article className="rounded-lg border border-white/15 p-5" key={value.title}>
                   <Icon className="text-[#f7c600]" size={34} aria-hidden="true" />

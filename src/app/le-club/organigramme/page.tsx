@@ -3,28 +3,24 @@ import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/organigramme");
+export const dynamic = "force-dynamic";
 
-const groups = [
-  ["Bureau", "Président, vice-présidents, trésorerie, secrétariat général"],
-  ["Direction sportive", "Responsable technique, coordinateurs catégories, référents gardiens"],
-  ["Éducateurs", "École de foot, jeunes, seniors, féminines, futsal"],
-  ["Administration", "Licences, inscriptions, communication, partenariats"]
-];
-
-export default function OrganizationPage() {
+export default async function OrganizationPage() {
+  const { organigramme } = await getSiteSettings();
   return (
     <>
       <PageHero description="Une organisation claire pour accompagner les licenciés, les familles et les éducateurs." image={images.training} title="Organigramme" />
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <SectionTitle title="Structure du club" text="Une organisation claire permet au club d'être lisible pour les familles, les éducateurs et les partenaires." />
+        <SectionTitle title={organigramme.title} text={organigramme.intro} />
         <div className="grid gap-4 md:grid-cols-2">
-          {groups.map(([title, text]) => (
-            <article className="official-card rounded-lg bg-white p-6" key={title}>
-              <h2 className="text-2xl font-black uppercase text-[#002f1d]">{title}</h2>
-              <p className="mt-3 text-slate-700">{text}</p>
+          {organigramme.groups.map((group) => (
+            <article className="official-card rounded-lg bg-white p-6" key={group.title}>
+              <h2 className="text-2xl font-black uppercase text-[#002f1d]">{group.title}</h2>
+              <p className="mt-3 text-slate-700">{group.text}</p>
             </article>
           ))}
         </div>
