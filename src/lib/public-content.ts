@@ -1,7 +1,10 @@
 import "server-only";
 
-import { news as mockNews, partners as mockPartners } from "@/lib/data";
+import type { LucideIcon } from "lucide-react";
+
+import { news as mockNews, partners as mockPartners, products as mockProducts } from "@/lib/data";
 import { listPartnersForAdmin, listPublishedNews } from "@/lib/db/content";
+import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import { images } from "@/lib/images";
 import { slugify } from "@/lib/slug";
@@ -92,4 +95,24 @@ export async function getPublicPartners(): Promise<DisplayPartner[]> {
     }
   }
   return mockPartners.map((name) => ({ name, logoUrl: null, websiteUrl: null, tier: null }));
+}
+
+export type DisplayProduct = { name: string; price: string; category: string; imageUrl: string | null; icon: LucideIcon | null };
+
+function priceFr(cents: number, currency: string): string {
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: currency || "EUR" }).format(cents / 100);
+}
+
+export async function getPublicProducts(): Promise<DisplayProduct[]> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const { products } = await listPublicProducts();
+      if (products.length > 0) {
+        return products.map((p) => ({ name: p.name, price: priceFr(p.price_cents, p.currency), category: "Boutique", imageUrl: p.image_url, icon: null }));
+      }
+    } catch {
+      // repli mock
+    }
+  }
+  return mockProducts.map((p) => ({ name: p.name, price: p.price, category: p.category, imageUrl: null, icon: p.icon }));
 }

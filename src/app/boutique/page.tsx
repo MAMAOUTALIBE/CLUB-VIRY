@@ -2,13 +2,15 @@ import { Package, Shirt, ShoppingBag, Star } from "lucide-react";
 import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { products } from "@/lib/data";
 import { images } from "@/lib/images";
+import { getPublicProducts } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/boutique");
+export const dynamic = "force-dynamic";
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const products = await getPublicProducts();
   return (
     <>
       <PageHero description="Portez les couleurs de Viry : textile, accessoires et packs supporters." image={images.football} title="Boutique officielle" />
@@ -26,8 +28,14 @@ export default function ShopPage() {
             const Icon = product.icon;
             return (
               <article className="official-card rounded-lg bg-white p-6" key={product.name}>
-                <div className="club-panel flex h-40 items-center justify-center rounded-md text-[#f7c600]">
-                  <Icon size={70} aria-hidden="true" />
+                <div className="club-panel flex h-40 items-center justify-center overflow-hidden rounded-md text-[#f7c600]">
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                  ) : Icon ? (
+                    <Icon size={70} aria-hidden="true" />
+                  ) : (
+                    <ShoppingBag size={70} aria-hidden="true" />
+                  )}
                 </div>
                 <p className="mt-5 text-xs font-black uppercase text-[#8a6d00]">{product.category}</p>
                 <h2 className="text-xl font-black uppercase text-[#002f1d]">{product.name}</h2>
