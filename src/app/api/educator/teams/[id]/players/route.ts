@@ -1,8 +1,10 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
-import { getEducatorTeamRoster } from "@/lib/db/teams";
+import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { validateAdminTeamPlayerPayload } from "@/lib/api/validation";
+import { recordActivity } from "@/lib/db/foundations";
+import { assignTeamPlayerForEducator, getEducatorTeamRoster } from "@/lib/db/teams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,5 +54,47 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return jsonOk({ team: roster.team, staff, matches, players });
   } catch (error) {
     return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur effectif educateur inconnue.");
+  }
+}
+
+export async function POST(request: NextRequest, context: RouteContext) {
+  const educator = await getEducatorContext(request);
+
+  if (!educator.ok) {
+    return educator.response;
+  }
+
+  const body = await readJsonBody(request);
+
+  if (body === undefined) {
+    return jsonError(400, "INVALID_JSON", "Le corps de la requete doit etre un JSON valide.");
+  }
+
+  const payload = validateAdminTeamPlayerPayload(body);
+
+  if (!payload.ok) {
+    return jsonError(400, "VALIDATION_ERROR", "Joueur equipe invalide.", payload.issues);
+  }
+
+  const { id } = await context.params;
+
+  try {
+    const assignment = await assignTeamPlayerForEducator(id, educator.context.user.id, educator.context.canManageAllTeams, payload.data);
+
+    if (!assignment) {
+      return jsonError(404, "NOT_FOUND", "Equipe introuvable ou non autorisee.");
+    }
+
+    await recordActivity({
+      actorId: educator.context.user.id,
+      action: "educator.player.assigned",
+      entityType: "team_players",
+      entityId: payload.data.playerId,
+      metadata: { teamId: id, playerId: payload.data.playerId, shirtNumber: assignment.shirt_number }
+    });
+
+    return jsonOk({ assignment }, 201);
+  } catch (error) {
+    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur affectation joueur educateur inconnue.");
   }
 }
