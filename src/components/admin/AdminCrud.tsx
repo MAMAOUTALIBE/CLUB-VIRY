@@ -20,6 +20,12 @@ export type CrudField = {
   fullWidth?: boolean;
   /** Clé correspondante dans la ligne retournée par l'API (snake_case). Défaut: snake_case de `name`. */
   rowKey?: string;
+  /** Clé envoyée dans le payload (camelCase) si différente de `name`. Défaut: `name`. */
+  payloadKey?: string;
+  /** Transforme la valeur saisie avant envoi (ex: euros -> centimes). */
+  toPayload?: (raw: string) => unknown;
+  /** Calcule la valeur initiale du champ lors de l'édition (ex: centimes -> euros). */
+  fromRowValue?: (row: Row) => string;
 };
 
 export type CrudColumn = { label: string; render: (row: Row) => React.ReactNode };
@@ -103,7 +109,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
 
   function openEdit(row: Row) {
     const next: Record<string, string> = {};
-    for (const f of fields) next[f.name] = toInputValue(f, row);
+    for (const f of fields) next[f.name] = f.fromRowValue ? f.fromRowValue(row) : toInputValue(f, row);
     setForm(next);
     setEditing(row);
     setFormError("");
@@ -115,13 +121,16 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     // payload : on n'envoie que les champs renseignés (les vides deviennent omis)
     const payload: Record<string, unknown> = {};
     for (const f of fields) {
+      const key = f.payloadKey ?? f.name;
       const raw = form[f.name];
       if (f.type === "boolean") {
-        payload[f.name] = raw === "true";
+        payload[key] = raw === "true";
         continue;
       }
       const v = raw?.trim?.() ?? raw;
-      if (v !== "" && v !== undefined) payload[f.name] = f.type === "number" ? Number(v) : v;
+      if (v !== "" && v !== undefined) {
+        payload[key] = f.toPayload ? f.toPayload(v) : f.type === "number" ? Number(v) : v;
+      }
     }
     const id = editing && editing[idField];
     const url = id ? `${endpoint}/${id}` : endpoint;

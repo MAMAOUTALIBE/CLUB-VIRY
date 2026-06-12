@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Mail,
   Newspaper,
+  ShoppingBag,
   Sparkles,
   ShieldCheck,
   Target,
@@ -30,6 +31,7 @@ const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: n
   { label: "Finances", href: "/admin/finances", icon: BadgeEuro, badge: 8 },
   { label: "Messages", href: "/admin/messages", icon: Mail },
   { label: "Partenaires", href: "/admin/partenaires", icon: Handshake, badge: 3 },
+  { label: "Boutique", href: "/admin/boutique", icon: ShoppingBag },
   { label: "Sportif", href: "/admin#modules", icon: Trophy },
   { label: "Automatisations", href: "/admin#modules", icon: Sparkles }
 ];
