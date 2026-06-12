@@ -167,7 +167,7 @@ export function Header() {
 
           <div className="flex items-center gap-5">
             <div className="hidden items-center gap-2 xl:flex">
-              <span className="text-white/82">Suivez-nous :</span>
+              <span className="whitespace-nowrap text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">Suivez-nous :</span>
               {socialItems.map((item) => {
                 const live = isLiveSocial(item);
                 const className = "inline-flex h-7 w-7 items-center justify-center rounded-full border transition hover:scale-105";
