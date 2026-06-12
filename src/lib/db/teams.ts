@@ -1,8 +1,30 @@
 import "server-only";
 
 import type { AdminMatchPayload, AdminTeamPayload, AdminTeamPlayerPayload, AdminTeamStaffPayload } from "@/lib/api/validation";
+import { hasPermission } from "@/lib/auth/permissions";
+import type { AppRole } from "@/lib/auth/roles";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { Match, Player, Team, TeamPlayer, TeamStaff } from "@/lib/db/types";
+
+/**
+ * Un membre du staff ne peut etre rattache qu'a un compte EXISTANT capable
+ * d'acceder a l'espace educateur (role avec educator:manage_own_teams ou teams:manage).
+ * Garde-fou serveur : l'isolation educateur repose sur team_staff.profile_id.
+ */
+export async function isLinkableEducatorProfile(profileId: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdminClient().from("profiles").select("role").eq("id", profileId).maybeSingle();
+
+  if (error) {
+    throw new Error(`Unable to verify staff profile: ${error.message}`);
+  }
+
+  if (!data) {
+    return false;
+  }
+
+  const role = (data as { role: AppRole }).role;
+  return hasPermission(role, "educator:manage_own_teams") || hasPermission(role, "teams:manage");
+}
 
 export type TeamDetail = {
   team: Team;

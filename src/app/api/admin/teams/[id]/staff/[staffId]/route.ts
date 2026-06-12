@@ -4,7 +4,7 @@ import { getAdminContext } from "@/lib/api/admin-auth";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminTeamStaffPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
-import { removeTeamStaff, updateTeamStaff } from "@/lib/db/teams";
+import { isLinkableEducatorProfile, removeTeamStaff, updateTeamStaff } from "@/lib/db/teams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +33,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   if (!payload.ok) {
     return jsonError(400, "VALIDATION_ERROR", "Staff equipe invalide.", payload.issues);
+  }
+
+  if (payload.data.profileId && !(await isLinkableEducatorProfile(payload.data.profileId))) {
+    return jsonError(400, "VALIDATION_ERROR", "Le compte a rattacher doit exister et avoir le role Educateur.", [
+      { field: "profileId", message: "Compte educateur introuvable." }
+    ]);
   }
 
   const { id, staffId } = await context.params;

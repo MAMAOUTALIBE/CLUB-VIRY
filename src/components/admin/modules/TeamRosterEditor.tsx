@@ -1,17 +1,23 @@
 "use client";
 
-import { ArrowLeft, Crown, Loader2, Plus, Save, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Crown, Link2 as LinkIcon, Loader2, Plus, Save, Trash2, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 
-type StaffRow = { id: string; display_name: string; role_title: string; is_head_coach: boolean };
+type StaffRow = { id: string; display_name: string; role_title: string; is_head_coach: boolean; profile_id: string | null };
 type PlayerLite = { id: string; first_name: string; last_name: string };
 type Assignment = { team_id: string; player_id: string; position: string | null; shirt_number: number | null };
 type RosterEntry = { assignment: Assignment; player: PlayerLite | null };
+type AccountLite = { id: string; label: string };
 
-const EMPTY_STAFF = { displayName: "", roleTitle: "", isHeadCoach: false };
+const EMPTY_STAFF = { displayName: "", roleTitle: "", isHeadCoach: false, profileId: "" };
 const EMPTY_PLAYER = { playerId: "", position: "", shirtNumber: "" };
+
+function accountLabel(u: { display_name?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null }): string {
+  const name = (u.display_name ?? `${u.first_name ?? ""} ${u.last_name ?? ""}`).trim();
+  return name && u.email ? `${name} (${u.email})` : name || u.email || "Compte sans nom";
+}
 
 export function TeamRosterEditor({ teamId }: { teamId: string }) {
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -20,6 +26,7 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
   const [staff, setStaff] = useState<StaffRow[]>([]);
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [allPlayers, setAllPlayers] = useState<PlayerLite[]>([]);
+  const [accounts, setAccounts] = useState<AccountLite[]>([]);
 
   // Formulaires
   const [newStaff, setNewStaff] = useState(EMPTY_STAFF);
@@ -52,6 +59,16 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
       setRoster(Array.isArray(playersJson.data?.players) ? playersJson.data.players : []);
       setStaff(Array.isArray(staffJson.data?.staff) ? staffJson.data.staff : []);
       setAllPlayers(Array.isArray(allJson.data?.players) ? allJson.data.players : []);
+      // Comptes educateurs (pour rattacher un membre du staff). Toléré si l'admin
+      // n'a pas la permission admin:manage_users : on continue sans la liste.
+      try {
+        const accRes = await fetch(`/api/admin/users?role=EDUCATEUR&limit=200`, { credentials: "same-origin" });
+        const accJson = await accRes.json().catch(() => null);
+        const list = accRes.ok && accJson?.ok && Array.isArray(accJson.data?.users) ? accJson.data.users : [];
+        setAccounts(list.map((u: { id: string }) => ({ id: u.id, label: accountLabel(u as Parameters<typeof accountLabel>[0]) })));
+      } catch {
+        setAccounts([]);
+      }
       setState("ready");
     } catch (error) {
       setState("error");
@@ -102,7 +119,8 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
     const ok = await call(`/api/admin/teams/${teamId}/staff`, "POST", {
       displayName: newStaff.displayName.trim(),
       roleTitle: newStaff.roleTitle.trim(),
-      isHeadCoach: newStaff.isHeadCoach
+      isHeadCoach: newStaff.isHeadCoach,
+      profileId: newStaff.profileId || null
     });
     if (ok) {
       setNewStaff(EMPTY_STAFF);
@@ -112,7 +130,7 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
 
   function startEditStaff(s: StaffRow) {
     setEditStaffId(s.id);
-    setEditStaff({ displayName: s.display_name, roleTitle: s.role_title, isHeadCoach: s.is_head_coach });
+    setEditStaff({ displayName: s.display_name, roleTitle: s.role_title, isHeadCoach: s.is_head_coach, profileId: s.profile_id ?? "" });
     setFormError("");
   }
 
@@ -124,7 +142,8 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
     const ok = await call(`/api/admin/teams/${teamId}/staff/${staffId}`, "PATCH", {
       displayName: editStaff.displayName.trim(),
       roleTitle: editStaff.roleTitle.trim(),
-      isHeadCoach: editStaff.isHeadCoach
+      isHeadCoach: editStaff.isHeadCoach,
+      profileId: editStaff.profileId || null
     });
     if (ok) {
       setEditStaffId(null);
@@ -204,21 +223,30 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
               {staff.length === 0 ? <li className="rounded-md border border-dashed border-slate-300 bg-[#fbfcf8] p-4 text-sm font-bold text-slate-500">Aucun membre du staff.</li> : null}
               {staff.map((s) =>
                 editStaffId === s.id ? (
-                  <li key={s.id} className="grid gap-3 rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] p-3 sm:grid-cols-[1fr_1fr_auto_auto]">
-                    <input value={editStaff.displayName} onChange={(e) => setEditStaff((f) => ({ ...f, displayName: e.target.value }))} placeholder="Nom" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
-                    <input value={editStaff.roleTitle} onChange={(e) => setEditStaff((f) => ({ ...f, roleTitle: e.target.value }))} placeholder="Rôle" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
-                    <label className="inline-flex items-center gap-2 text-xs font-black uppercase text-slate-700"><input type="checkbox" checked={editStaff.isHeadCoach} onChange={(e) => setEditStaff((f) => ({ ...f, isHeadCoach: e.target.checked }))} /> Coach principal</label>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => void saveStaff(s.id)} disabled={busy} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#f7c600] px-3 text-xs font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={14} /> OK</button>
-                      <button onClick={() => setEditStaffId(null)} className="focus-ring inline-flex min-h-11 items-center rounded-md border border-slate-300 px-2 text-slate-600" type="button" aria-label="Annuler"><X size={16} /></button>
+                  <li key={s.id} className="grid gap-3 rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] p-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input value={editStaff.displayName} onChange={(e) => setEditStaff((f) => ({ ...f, displayName: e.target.value }))} placeholder="Nom" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                      <input value={editStaff.roleTitle} onChange={(e) => setEditStaff((f) => ({ ...f, roleTitle: e.target.value }))} placeholder="Rôle" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                      <select value={editStaff.profileId} onChange={(e) => setEditStaff((f) => ({ ...f, profileId: e.target.value }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" aria-label="Compte éducateur lié">
+                        <option value="">— Aucun compte lié —</option>
+                        {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+                      </select>
+                      <label className="inline-flex items-center gap-2 text-xs font-black uppercase text-slate-700"><input type="checkbox" checked={editStaff.isHeadCoach} onChange={(e) => setEditStaff((f) => ({ ...f, isHeadCoach: e.target.checked }))} /> Coach principal</label>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => void saveStaff(s.id)} disabled={busy} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#f7c600] px-3 text-xs font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={14} /> OK</button>
+                        <button onClick={() => setEditStaffId(null)} className="focus-ring inline-flex min-h-11 items-center rounded-md border border-slate-300 px-2 text-slate-600" type="button" aria-label="Annuler"><X size={16} /></button>
+                      </div>
                     </div>
                   </li>
                 ) : (
                   <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-100 bg-[#fbfcf8] p-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {s.is_head_coach ? <Crown size={16} className="text-[#f7c600]" aria-label="Coach principal" /> : null}
                       <span className="font-black text-[#002f1d]">{s.display_name}</span>
                       <span className="text-sm text-slate-600">— {s.role_title}</span>
+                      {s.profile_id ? <span className="inline-flex items-center gap-1 rounded-full bg-[#07542f]/10 px-2 py-0.5 text-[10px] font-black uppercase text-[#07542f]"><LinkIcon size={11} /> compte lié</span> : null}
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => startEditStaff(s)} className="focus-ring rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">Éditer</button>
@@ -229,11 +257,20 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
               )}
             </ul>
             {/* Ajout staff */}
-            <div className="mt-4 grid gap-3 rounded-md border border-dashed border-[#002f1d]/20 p-3 sm:grid-cols-[1fr_1fr_auto_auto]">
-              <input value={newStaff.displayName} onChange={(e) => setNewStaff((f) => ({ ...f, displayName: e.target.value }))} placeholder="Nom (ex: Yanis B.)" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
-              <input value={newStaff.roleTitle} onChange={(e) => setNewStaff((f) => ({ ...f, roleTitle: e.target.value }))} placeholder="Rôle (ex: Entraîneur)" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
-              <label className="inline-flex items-center gap-2 text-xs font-black uppercase text-slate-700"><input type="checkbox" checked={newStaff.isHeadCoach} onChange={(e) => setNewStaff((f) => ({ ...f, isHeadCoach: e.target.checked }))} /> Coach principal</label>
-              <button onClick={() => void addStaff()} disabled={busy} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#002f1d] px-4 text-xs font-black uppercase text-white hover:bg-[#07542f] disabled:opacity-70" type="button"><Plus size={16} /> Ajouter</button>
+            <div className="mt-4 grid gap-3 rounded-md border border-dashed border-[#002f1d]/20 p-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input value={newStaff.displayName} onChange={(e) => setNewStaff((f) => ({ ...f, displayName: e.target.value }))} placeholder="Nom (ex: Yanis B.)" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                <input value={newStaff.roleTitle} onChange={(e) => setNewStaff((f) => ({ ...f, roleTitle: e.target.value }))} placeholder="Rôle (ex: Entraîneur)" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                <select value={newStaff.profileId} onChange={(e) => setNewStaff((f) => ({ ...f, profileId: e.target.value }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" aria-label="Compte éducateur lié">
+                  <option value="">— Aucun compte lié (staff non connecté) —</option>
+                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+                </select>
+                <label className="inline-flex items-center gap-2 text-xs font-black uppercase text-slate-700"><input type="checkbox" checked={newStaff.isHeadCoach} onChange={(e) => setNewStaff((f) => ({ ...f, isHeadCoach: e.target.checked }))} /> Coach principal</label>
+                <button onClick={() => void addStaff()} disabled={busy} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#002f1d] px-4 text-xs font-black uppercase text-white hover:bg-[#07542f] disabled:opacity-70" type="button"><Plus size={16} /> Ajouter</button>
+              </div>
+              <p className="text-xs font-medium text-slate-500">{accounts.length > 0 ? "« Compte lié » : rattache ce membre à un compte éducateur pour qu'il accède à son espace et gère cette équipe." : "Astuce : créez d'abord des comptes au rôle Éducateur dans le module Utilisateurs pour pouvoir les rattacher ici."}</p>
             </div>
           </section>
 
