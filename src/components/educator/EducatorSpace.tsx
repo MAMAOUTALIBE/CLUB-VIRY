@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Crown, Loader2, Plus, Save, ShieldAlert, Users, X } from "lucide-react";
+import { CalendarDays, Crown, Loader2, Plus, Save, ShieldAlert, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 
@@ -20,8 +20,10 @@ type MatchRow = {
   competition: string | null;
 };
 type Roster = { team: TeamLite; staff: StaffRow[]; matches: MatchRow[]; players: RosterEntry[] };
+type AssignablePlayer = { id: string; first_name: string; last_name: string; birth_year: number | null };
 
 const EMPTY_MATCH = { opponentName: "", startsAt: "", location: "HOME", competition: "" };
+const EMPTY_PLAYER = { playerId: "", position: "", shirtNumber: "" };
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "Date à confirmer";
@@ -50,6 +52,9 @@ export function EducatorSpace() {
   const [showMatchForm, setShowMatchForm] = useState(false);
   const [scoreFor, setScoreFor] = useState<string | null>(null);
   const [score, setScore] = useState({ us: "", them: "" });
+  const [allPlayers, setAllPlayers] = useState<AssignablePlayer[]>([]);
+  const [newPlayer, setNewPlayer] = useState(EMPTY_PLAYER);
+  const [showPlayerForm, setShowPlayerForm] = useState(false);
 
   const loadTeams = useCallback(async () => {
     setPhase("loading");
@@ -74,6 +79,14 @@ export function EducatorSpace() {
       const list: TeamLite[] = (Array.isArray(json.data?.teams) ? json.data.teams : []).map((d: { team: TeamLite }) => d.team).filter(Boolean);
       setTeams(list);
       setSelectedId((prev) => prev || (list[0]?.id ?? ""));
+      // Liste PII-minimisee des joueurs du club, pour le selecteur d'affectation
+      try {
+        const pr = await fetch("/api/educator/players", { credentials: "same-origin" });
+        const pj = await pr.json().catch(() => null);
+        setAllPlayers(pr.ok && pj?.ok && Array.isArray(pj.data?.players) ? pj.data.players : []);
+      } catch {
+        setAllPlayers([]);
+      }
       setPhase("ready");
     } catch (e) {
       setPhase("error");
@@ -197,6 +210,69 @@ export function EducatorSpace() {
     }
   }
 
+  async function addPlayer() {
+    if (!newPlayer.playerId) {
+      setFormError("Choisissez un joueur à affecter.");
+      return;
+    }
+    const shirt = newPlayer.shirtNumber.trim() === "" ? undefined : Number(newPlayer.shirtNumber);
+    if (shirt !== undefined && (!Number.isInteger(shirt) || shirt < 1 || shirt > 99)) {
+      setFormError("Numéro de maillot invalide (1 à 99).");
+      return;
+    }
+    setBusy(true);
+    setFormError("");
+    try {
+      const res = await fetch(`/api/educator/teams/${selectedId}/players`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerId: newPlayer.playerId,
+          ...(newPlayer.position.trim() ? { position: newPlayer.position.trim() } : {}),
+          ...(shirt !== undefined ? { shirtNumber: shirt } : {})
+        })
+      });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Affectation impossible.");
+        return;
+      }
+      setNewPlayer(EMPTY_PLAYER);
+      setShowPlayerForm(false);
+      await loadRoster(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removePlayer(playerId: string) {
+    setBusy(true);
+    setFormError("");
+    try {
+      const res = await fetch(`/api/educator/teams/${selectedId}/players/${playerId}`, { method: "DELETE", credentials: "same-origin" });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Retrait impossible.");
+        return;
+      }
+      await loadRoster(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const assignedIds = new Set(roster?.players.map((p) => p.assignment.player_id) ?? []);
+  const availablePlayers = allPlayers.filter((p) => !assignedIds.has(p.id));
+
   if (phase === "loading") {
     return <p className="flex items-center gap-2 py-10 text-sm font-bold text-slate-500"><Loader2 className="animate-spin" size={18} /> Chargement de votre espace…</p>;
   }
@@ -315,14 +391,34 @@ export function EducatorSpace() {
 
             {/* Effectif */}
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]"><Users size={18} /> Effectif ({roster.players.length})</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]"><Users size={18} /> Effectif ({roster.players.length})</h3>
+                <button onClick={() => { setShowPlayerForm((v) => !v); setFormError(""); }} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#002f1d] px-4 text-xs font-black uppercase text-white hover:bg-[#07542f]" type="button"><UserPlus size={16} /> Ajouter un joueur</button>
+              </div>
+
+              {showPlayerForm ? (
+                <div className="mt-4 grid gap-3 rounded-md border border-dashed border-[#002f1d]/20 p-3 sm:grid-cols-[2fr_1fr_auto_auto]">
+                  <select value={newPlayer.playerId} onChange={(e) => setNewPlayer((f) => ({ ...f, playerId: e.target.value }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold">
+                    <option value="">— Choisir un joueur —</option>
+                    {availablePlayers.map((p) => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}{p.birth_year ? ` (${p.birth_year})` : ""}</option>)}
+                  </select>
+                  <input value={newPlayer.position} onChange={(e) => setNewPlayer((f) => ({ ...f, position: e.target.value }))} placeholder="Poste" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                  <input value={newPlayer.shirtNumber} onChange={(e) => setNewPlayer((f) => ({ ...f, shirtNumber: e.target.value }))} placeholder="N°" inputMode="numeric" className="focus-ring min-h-11 w-20 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                  <button onClick={() => void addPlayer()} disabled={busy || availablePlayers.length === 0} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Plus size={16} /> Affecter</button>
+                  {availablePlayers.length === 0 ? <p className="text-xs font-medium text-slate-500 sm:col-span-4">{allPlayers.length === 0 ? "Aucun joueur dans la base du club." : "Tous les joueurs du club sont déjà dans cette équipe."}</p> : null}
+                </div>
+              ) : null}
+
               <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-                {roster.players.length === 0 ? <li className="rounded-md border border-dashed border-slate-300 bg-[#fbfcf8] p-4 text-sm font-bold text-slate-500">Aucun joueur. La direction sportive gère l'effectif depuis le CRM.</li> : null}
+                {roster.players.length === 0 ? <li className="rounded-md border border-dashed border-slate-300 bg-[#fbfcf8] p-4 text-sm font-bold text-slate-500">Aucun joueur. Ajoutez votre effectif ci-dessus.</li> : null}
                 {roster.players.map((p) => (
-                  <li key={p.assignment.player_id} className="flex items-center gap-3 rounded-md border border-slate-100 bg-[#fbfcf8] p-3">
-                    <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#002f1d] px-2 text-xs font-black text-[#f7c600]">{p.assignment.shirt_number ?? "—"}</span>
-                    <span className="font-black text-[#002f1d]">{p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur"}</span>
-                    {p.assignment.position ? <span className="text-sm text-slate-600">— {p.assignment.position}</span> : null}
+                  <li key={p.assignment.player_id} className="flex items-center justify-between gap-3 rounded-md border border-slate-100 bg-[#fbfcf8] p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#002f1d] px-2 text-xs font-black text-[#f7c600]">{p.assignment.shirt_number ?? "—"}</span>
+                      <span className="font-black text-[#002f1d]">{p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur"}</span>
+                      {p.assignment.position ? <span className="text-sm text-slate-600">— {p.assignment.position}</span> : null}
+                    </div>
+                    <button onClick={() => void removePlayer(p.assignment.player_id)} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /> Retirer</button>
                   </li>
                 ))}
               </ul>

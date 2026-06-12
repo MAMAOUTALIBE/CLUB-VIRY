@@ -242,6 +242,61 @@ export async function removeTeamPlayer(teamId: string, playerId: string): Promis
   }
 }
 
+export type AssignablePlayer = { id: string; first_name: string; last_name: string; birth_date: string | null };
+
+/**
+ * Liste PII-minimisee des joueurs du club, pour le selecteur d'affectation cote educateur.
+ * Ne projette QUE id + prenom + nom + date de naissance (la route convertit en annee) :
+ * jamais license_number / medical_notes / family_id / profile_id.
+ */
+export async function listAssignablePlayers(limit = 500): Promise<AssignablePlayer[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("players")
+    .select("id, first_name, last_name, birth_date")
+    .order("last_name", { ascending: true })
+    .order("first_name", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Unable to fetch assignable players: ${error.message}`);
+  }
+
+  return (data ?? []) as AssignablePlayer[];
+}
+
+/** Affecte un joueur a une equipe SI l'educateur gere cette equipe (sinon null). */
+export async function assignTeamPlayerForEducator(
+  teamId: string,
+  profileId: string,
+  canManageAllTeams: boolean,
+  input: AdminTeamPlayerPayload
+): Promise<TeamPlayer | null> {
+  const allowed = await canManageTeam(teamId, profileId, canManageAllTeams);
+
+  if (!allowed) {
+    return null;
+  }
+
+  return assignTeamPlayer(teamId, input);
+}
+
+/** Retire un joueur d'une equipe SI l'educateur gere cette equipe (renvoie false sinon). */
+export async function removeTeamPlayerForEducator(
+  teamId: string,
+  profileId: string,
+  canManageAllTeams: boolean,
+  playerId: string
+): Promise<boolean> {
+  const allowed = await canManageTeam(teamId, profileId, canManageAllTeams);
+
+  if (!allowed) {
+    return false;
+  }
+
+  await removeTeamPlayer(teamId, playerId);
+  return true;
+}
+
 /** Met à jour un membre du staff (identifié par son id propre). */
 export async function updateTeamStaff(staffId: string, input: AdminTeamStaffPayload): Promise<TeamStaff> {
   const { data, error } = await getSupabaseAdminClient()
