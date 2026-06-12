@@ -3,7 +3,7 @@
 import { ArrowLeft, FileText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminAccessControl, ADMIN_TOKEN_STORAGE_KEY } from "@/components/admin/AdminAccessControl";
+import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 
 type DetailKind = "family" | "player" | "registration";
 
@@ -70,11 +70,16 @@ function formatDate(value: unknown) {
     return "Non renseigne";
   }
 
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseigne";
+  }
+
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "short",
     year: "numeric"
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function formatMoney(cents: unknown, currency: unknown) {
@@ -212,10 +217,9 @@ function buildDetail(kind: DetailKind, payload: unknown): DetailView {
 }
 
 export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
-  const [token, setToken] = useState("");
   const [detail, setDetail] = useState<DetailView | null>(null);
   const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "error">("demo");
-  const [message, setMessage] = useState("Ajoutez un token admin pour charger la fiche 360.");
+  const [message, setMessage] = useState("Connectez-vous pour charger la fiche 360.");
   const [actionStatus, setActionStatus] = useState<"idle" | "loading" | "error">("idle");
   const [actionMessage, setActionMessage] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
@@ -225,16 +229,13 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
 
   const visibleSections = useMemo(() => detail?.sections.filter((section) => section.items.length > 0) ?? [], [detail]);
 
-  const loadDetail = useCallback(async (accessToken: string) => {
-    const normalizedToken = accessToken.trim();
-
+  const loadDetail = useCallback(async () => {
     setStatus("loading");
-    setMessage(normalizedToken ? "Chargement de la fiche 360..." : "Chargement via la session admin...");
+    setMessage("Chargement via la session admin...");
 
     try {
-      const response = await fetch(endpoint, {
-        headers: normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : undefined
-      });
+      // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
+      const response = await fetch(endpoint, { credentials: "same-origin" });
       const payload: unknown = await response.json();
       const failure = parseFailure(payload);
 
@@ -247,9 +248,6 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       }
 
       const nextDetail = buildDetail(kind, payload);
-      if (normalizedToken) {
-        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalizedToken);
-      }
       setDetail(nextDetail);
       setAdminNotes(nextDetail.adminNotes ?? "");
       setStatus("loaded");
@@ -263,16 +261,15 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
   }, [endpoint, kind]);
 
   const patchAdmin = useCallback(async (url: string, body: Record<string, unknown>) => {
-    const normalizedToken = token.trim();
-
     setActionStatus("loading");
     setActionMessage("");
 
     try {
       const response = await fetch(url, {
         body: JSON.stringify(body),
+        // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
+        credentials: "same-origin",
         headers: {
-          ...(normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}),
           "Content-Type": "application/json"
         },
         method: "PATCH"
@@ -288,12 +285,12 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
 
       setActionStatus("idle");
       setActionMessage("Action enregistree.");
-      await loadDetail(normalizedToken);
+      await loadDetail();
     } catch (error) {
       setActionStatus("error");
       setActionMessage(error instanceof Error ? error.message : "Erreur action inconnue.");
     }
-  }, [loadDetail, token]);
+  }, [loadDetail]);
 
   const reviewRegistration = useCallback((nextStatus: "IN_REVIEW" | "MISSING_DOCUMENTS" | "VALIDATED" | "REJECTED" | "CANCELLED") => {
     const trimmedNotes = adminNotes.trim();
@@ -321,17 +318,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
   }, [documentRejectionReason, patchAdmin]);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const storedToken = window.sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
-
-      if (storedToken) {
-        setToken(storedToken);
-        void loadDetail(storedToken);
-      } else {
-        void loadDetail("");
-      }
-    }, 0);
-
+    const timeout = window.setTimeout(() => void loadDetail(), 0);
     return () => window.clearTimeout(timeout);
   }, [loadDetail]);
 
@@ -349,7 +336,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{detail?.subtitle ?? message}</p>
         </div>
 
-        <AdminAccessControl loading={status === "loading"} onTokenSubmit={(nextToken) => void loadDetail(nextToken)} setToken={setToken} token={token} />
+        <AdminAccessControl loading={status === "loading"} onAuthenticated={() => void loadDetail()} />
       </div>
 
       <div className="mt-5 flex items-start gap-3 rounded-lg border border-slate-200 bg-[#fbfcf8] p-3">
@@ -467,7 +454,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
         <div className="mt-5 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-8 text-center">
           <FileText className="mx-auto text-[#07542f]" size={30} aria-hidden="true" />
           <p className="mt-3 text-sm font-black uppercase text-[#002f1d]">Fiche non chargee</p>
-          <p className="mt-2 text-sm text-slate-600">Chargez la fiche avec un token admin autorise.</p>
+          <p className="mt-2 text-sm text-slate-600">Connectez-vous avec un compte admin autorise pour charger la fiche.</p>
         </div>
       )}
     </section>

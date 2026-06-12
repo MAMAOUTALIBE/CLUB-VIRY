@@ -2,7 +2,7 @@
 
 import { Search, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { AdminAccessControl, ADMIN_TOKEN_STORAGE_KEY } from "@/components/admin/AdminAccessControl";
+import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { ProgressBar } from "@/components/admin/charts/ProgressBar";
 import { StatusBarChart } from "@/components/admin/charts/StatusBarChart";
 
@@ -109,10 +109,9 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
   const statusField = props.statusField ?? "status";
   const createdAtField = props.createdAtField ?? "created_at";
 
-  const [token, setToken] = useState("");
   const [rows, setRows] = useState<Row[]>(demo);
   const [state, setState] = useState<"demo" | "loading" | "connected" | "error">("demo");
-  const [message, setMessage] = useState("Mode démo : ajoutez un token admin pour charger les données réelles.");
+  const [message, setMessage] = useState("Mode démo : connectez-vous pour charger les données réelles.");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
@@ -122,14 +121,13 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
     return value || "—";
   };
 
-  async function load(accessToken: string) {
-    const normalized = accessToken.trim();
-
+  async function load() {
     setState("loading");
-    setMessage(normalized ? "Chargement des données..." : "Chargement via la session admin...");
+    setMessage("Chargement via la session admin...");
 
     try {
-      const response = await fetch(endpoint, { headers: normalized ? { Authorization: `Bearer ${normalized}` } : undefined });
+      // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
+      const response = await fetch(endpoint, { credentials: "same-origin" });
       const parsed = extractRows(await response.json(), dataKey);
 
       if (!parsed.ok) {
@@ -139,9 +137,6 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
         return;
       }
 
-      if (normalized) {
-        window.sessionStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, normalized);
-      }
       setRows(parsed.rows);
       setState("connected");
       setMessage(`${parsed.rows.length} enregistrement(s) chargé(s) depuis le backend.`);
@@ -153,15 +148,7 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
   }
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const stored = window.sessionStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
-      if (stored) {
-        setToken(stored);
-        void load(stored);
-      } else {
-        void load("");
-      }
-    }, 0);
+    const timeout = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -217,19 +204,7 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
           <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{title}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
-        <AdminAccessControl
-          loading={state === "loading"}
-          onClear={() => {
-            window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
-            setToken("");
-            setRows(demo);
-            setState("demo");
-            setMessage("Mode démo : ajoutez un token admin pour charger les données réelles.");
-          }}
-          onTokenSubmit={(next) => void load(next)}
-          setToken={setToken}
-          token={token}
-        />
+        <AdminAccessControl loading={state === "loading"} onAuthenticated={() => void load()} />
       </div>
 
       <div className="mt-4 flex items-center gap-2 rounded-md bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-700">

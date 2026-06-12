@@ -41,7 +41,10 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContextR
   const { data, error } = await getSupabaseClient().auth.getUser(token);
 
   if (error || !data.user) {
-    return { ok: false, status: 401, code: "AUTH_FAILED", message: error?.message ?? "Session invalide." };
+    if (error) {
+      console.error("auth.getUser error:", error.message);
+    }
+    return { ok: false, status: 401, code: "AUTH_FAILED", message: "Session invalide." };
   }
 
   let profile: Profile | null = null;
@@ -54,7 +57,8 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContextR
       .maybeSingle();
 
     if (profileError) {
-      return { ok: false, status: 500, code: "SUPABASE_ERROR", message: profileError.message };
+      console.error("profile lookup error:", profileError.message);
+      return { ok: false, status: 500, code: "SUPABASE_ERROR", message: "Erreur lors de la lecture du profil." };
     }
 
     profile = profileData as Profile | null;
