@@ -128,9 +128,9 @@ export default function HomePage() {
                   key={stat.label}
                 >
                   <Icon className="shrink-0 text-[#f7c600]" size={26} strokeWidth={1.9} aria-hidden="true" />
-                  <p className="flex min-w-0 items-baseline gap-1.5 whitespace-nowrap">
-                    <span className="text-xl font-black leading-none text-white lg:text-2xl">{stat.value}</span>
-                    <span className="truncate text-[11px] font-black uppercase tracking-wide text-white/80">{stat.label}</span>
+                  <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                    <span className="text-base font-black uppercase leading-none text-white lg:text-lg">{stat.value}</span>
+                    <span className="text-base font-black uppercase leading-none tracking-wide text-white/80 lg:text-lg">{stat.label}</span>
                   </p>
                 </StaggerItem>
               );
