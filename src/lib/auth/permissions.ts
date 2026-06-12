@@ -66,7 +66,10 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "partners:manage",
     "public:read"
   ],
-  EDUCATEUR: ["educator:manage_own_teams", "matches:manage", "player:view_own", "public:read"],
+  // Pas de "matches:manage" : sinon l'EDUCATEUR pourrait appeler /api/admin/matches*
+  // (non scopees par equipe) et contourner l'isolation. Il gere ses matchs via
+  // /api/educator/* (permission educator:manage_own_teams + controle canManageTeam).
+  EDUCATEUR: ["educator:manage_own_teams", "player:view_own", "public:read"],
   FAMILLE: ["family:manage_own", "player:view_own", "public:read"],
   JOUEUR: ["player:view_own", "public:read"],
   MEMBRE: ["public:read"],

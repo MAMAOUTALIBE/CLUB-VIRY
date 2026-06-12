@@ -203,7 +203,7 @@ export type AdminTeamPayload = {
 };
 
 export type AdminTeamStaffPayload = {
-  profileId?: string;
+  profileId?: string | null;
   displayName: string;
   roleTitle: string;
   isHeadCoach?: boolean;
@@ -1685,7 +1685,14 @@ export function validateAdminTeamStaffPayload(input: unknown): ValidationResult<
     return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
   }
 
-  const profileId = normalizeString(body.profileId);
+  const normalizedProfileId = normalizeString(body.profileId);
+  // Distingue 3 cas : cle absente (= ne pas toucher), null/"" (= delier), uuid (= lier).
+  let profileId: string | null | undefined;
+  if (body.profileId === null || (body.profileId !== undefined && !normalizedProfileId)) {
+    profileId = null;
+  } else {
+    profileId = normalizedProfileId;
+  }
   const displayName = normalizeString(body.displayName);
   const roleTitle = normalizeString(body.roleTitle);
   const isHeadCoach = typeof body.isHeadCoach === "boolean" ? body.isHeadCoach : undefined;
@@ -1709,7 +1716,7 @@ export function validateAdminTeamStaffPayload(input: unknown): ValidationResult<
   return {
     ok: true,
     data: {
-      ...(profileId ? { profileId } : {}),
+      ...(profileId !== undefined ? { profileId } : {}),
       displayName: displayName as string,
       roleTitle: roleTitle as string,
       ...(isHeadCoach !== undefined ? { isHeadCoach } : {})
