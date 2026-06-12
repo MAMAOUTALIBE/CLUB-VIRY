@@ -1,7 +1,7 @@
 import "server-only";
 
-import { news as mockNews } from "@/lib/data";
-import { listPublishedNews } from "@/lib/db/content";
+import { news as mockNews, partners as mockPartners } from "@/lib/data";
+import { listPartnersForAdmin, listPublishedNews } from "@/lib/db/content";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import { images } from "@/lib/images";
 import { slugify } from "@/lib/slug";
@@ -73,4 +73,23 @@ export async function getPublicNews(limit = 12): Promise<DisplayNews[]> {
 export async function getPublicNewsBySlug(slug: string): Promise<DisplayNews | null> {
   const all = await getPublicNews(50);
   return all.find((n) => n.slug === slug) ?? null;
+}
+
+export type DisplayPartner = { name: string; logoUrl: string | null; websiteUrl: string | null; tier: string | null };
+
+export async function getPublicPartners(): Promise<DisplayPartner[]> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const rows = await listPartnersForAdmin(100);
+      const active = rows
+        .filter((p) => p.is_active)
+        .sort((a, b) => a.order_index - b.order_index);
+      if (active.length > 0) {
+        return active.map((p) => ({ name: p.name, logoUrl: p.logo_url, websiteUrl: p.website_url, tier: p.tier }));
+      }
+    } catch {
+      // repli mock
+    }
+  }
+  return mockPartners.map((name) => ({ name, logoUrl: null, websiteUrl: null, tier: null }));
 }

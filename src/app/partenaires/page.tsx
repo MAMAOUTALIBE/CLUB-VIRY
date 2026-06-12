@@ -3,13 +3,15 @@ import { ButtonLink } from "@/components/ButtonLink";
 import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { partners } from "@/lib/data";
 import { images } from "@/lib/images";
+import { getPublicPartners } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/partenaires");
+export const dynamic = "force-dynamic";
 
-export default function PartnersPage() {
+export default async function PartnersPage() {
+  const partners = await getPublicPartners();
   return (
     <>
       <PageHero description="Associez votre image à un club formateur et populaire du territoire." image={images.supporters} title="Partenaires" />
@@ -24,11 +26,22 @@ export default function PartnersPage() {
         <div>
           <SectionTitle title="Ils nous font confiance" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {partners.map((partner) => (
-              <div className="official-card rounded-lg bg-white p-6 text-center text-xl font-black text-[#002f1d]" key={partner}>
-                {partner}
-              </div>
-            ))}
+            {partners.map((partner) => {
+              const inner = partner.logoUrl ? (
+                <img src={partner.logoUrl} alt={partner.name} className="mx-auto max-h-16 w-auto object-contain" />
+              ) : (
+                <span className="text-xl font-black text-[#002f1d]">{partner.name}</span>
+              );
+              return (
+                <div className="official-card flex min-h-[96px] items-center justify-center rounded-lg bg-white p-6 text-center" key={partner.name}>
+                  {partner.websiteUrl ? (
+                    <a href={partner.websiteUrl} target="_blank" rel="noopener noreferrer" className="focus-ring" title={partner.name}>{inner}</a>
+                  ) : (
+                    inner
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
