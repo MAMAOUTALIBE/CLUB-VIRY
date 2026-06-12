@@ -6,10 +6,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MotionDiv } from "@/components/Motion";
-import { isLiveSocial, socialItems } from "@/lib/socials";
+import { socialItems } from "@/lib/socials";
 
-const ANNOUNCEMENT =
+const DEFAULT_ANNOUNCEMENT =
   "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !";
+
+type HeaderProps = {
+  banner?: { text?: string; active?: boolean };
+  socials?: Record<string, string>;
+};
+
+// URL réelle d'un réseau (depuis les paramètres CRM) ; vide = icône décorative.
+function socialHref(socials: Record<string, string> | undefined, label: string): string {
+  return (socials?.[label.toLowerCase()] ?? "").trim();
+}
 
 const navItems = [
   { label: "Accueil", href: "/" },
@@ -42,7 +52,9 @@ const navItems = [
   { label: "Contact", href: "/contact" }
 ];
 
-export function Header() {
+export function Header({ banner, socials }: HeaderProps) {
+  const announcement = banner?.text?.trim() || DEFAULT_ANNOUNCEMENT;
+  const bannerActive = banner?.active !== false;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -149,27 +161,32 @@ export function Header() {
     >
       <div className="hidden border-b border-[#f7c600]/20 bg-black/30 text-xs font-bold lg:block">
         <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-1">
-          <div className="marquee min-w-0 flex-1 text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">
-            <span className="sr-only">{ANNOUNCEMENT}</span>
-            <div className="marquee__track" aria-hidden="true">
-              {[0, 1].map((half) => (
-                <div className="flex shrink-0 items-center" key={half}>
-                  {[0, 1, 2].map((index) => (
-                    <span className="inline-flex items-center gap-2 whitespace-nowrap px-8" key={index}>
-                      <CalendarDays className="shrink-0 text-[#f7c600]" size={20} aria-hidden="true" />
-                      {ANNOUNCEMENT}
-                    </span>
-                  ))}
-                </div>
-              ))}
+          {bannerActive ? (
+            <div className="marquee min-w-0 flex-1 text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">
+              <span className="sr-only">{announcement}</span>
+              <div className="marquee__track" aria-hidden="true">
+                {[0, 1].map((half) => (
+                  <div className="flex shrink-0 items-center" key={half}>
+                    {[0, 1, 2].map((index) => (
+                      <span className="inline-flex items-center gap-2 whitespace-nowrap px-8" key={index}>
+                        <CalendarDays className="shrink-0 text-[#f7c600]" size={20} aria-hidden="true" />
+                        {announcement}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="min-w-0 flex-1" />
+          )}
 
           <div className="flex items-center gap-5">
             <div className="hidden items-center gap-2 xl:flex">
               <span className="whitespace-nowrap text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">Suivez-nous :</span>
               {socialItems.map((item) => {
-                const live = isLiveSocial(item);
+                const href = socialHref(socials, item.label);
+                const live = /^(https?:|mailto:|tel:)/.test(href);
                 const className = "inline-flex h-7 w-7 items-center justify-center rounded-full border transition hover:scale-105";
                 const style = {
                   background: item.background,
@@ -184,7 +201,7 @@ export function Header() {
                 );
 
                 return live ? (
-                  <a aria-label={item.label} className={`focus-ring ${className}`} href={item.href} key={item.label} rel="noopener noreferrer" style={style} target="_blank" title={item.label}>
+                  <a aria-label={item.label} className={`focus-ring ${className}`} href={href} key={item.label} rel="noopener noreferrer" style={style} target="_blank" title={item.label}>
                     {icon}
                   </a>
                 ) : (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Kaushan_Script } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { getSiteSettings } from "@/lib/public-content";
 import "./globals.css";
 
 const scriptFont = Kaushan_Script({
@@ -61,7 +62,8 @@ const sportsClubJsonLd = {
   areaServed: "Viry-Châtillon"
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const settings = await getSiteSettings();
   return (
     <html data-scroll-behavior="smooth" lang="fr" className={scriptFont.variable}>
       <head>
@@ -75,11 +77,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Aller au contenu
         </a>
-        <Header />
+        <Header banner={settings.inscriptions_banner} socials={settings.socials} />
         <main id="contenu" tabIndex={-1}>
           {children}
         </main>
-        <Footer />
+        <Footer socials={settings.socials} contact={settings.contact} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsClubJsonLd) }} />
       </body>
     </html>
