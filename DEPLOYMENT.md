@@ -44,9 +44,14 @@ LEADS_DIR=/app/var/leads
 
 ```bash
 mkdir -p var/leads
-# Le réseau Traefik partagé existe déjà ; sinon le créer :
-docker network create traefik 2>/dev/null || true
+# Le conteneur tourne en uid 1001 : le dossier des leads doit lui appartenir,
+# sinon la capture fichier echoue silencieusement (le webhook reste OK).
+chown -R 1001:1001 var/leads
 ```
+
+> Le réseau Docker du site (`esviry-net`) est créé automatiquement par `docker compose`.
+> Traefik (déjà en service, partagé avec les autres sites du VPS) le détecte via le
+> label `traefik.docker.network` — rien à créer à la main.
 
 ## 4. Build & démarrage
 

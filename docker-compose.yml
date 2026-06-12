@@ -20,24 +20,19 @@ services:
     volumes:
       - ./var/leads:/app/var/leads
     networks:
-      - traefik
+      - esviry-net
     labels:
       - "traefik.enable=true"
-      # Domaine reel defini dans .env.local (SITE_DOMAIN). Valeur par defaut ci-dessous.
-      - "traefik.http.routers.esviry.rule=Host(`${SITE_DOMAIN:-esvirychatillonfootball.org}`)"
+      # Traefik tourne en reseau host : on lui indique le reseau du conteneur a joindre.
+      - "traefik.docker.network=esviry-net"
+      # Routage HTTPS (le redirect web->websecure est deja global au niveau de Traefik).
+      - "traefik.http.routers.esviry.rule=Host(`${SITE_DOMAIN:-esvirychatillonfootball.org}`) || Host(`www.${SITE_DOMAIN:-esvirychatillonfootball.org}`)"
       - "traefik.http.routers.esviry.entrypoints=websecure"
       - "traefik.http.routers.esviry.tls=true"
       - "traefik.http.routers.esviry.tls.certresolver=letsencrypt"
       - "traefik.http.services.esviry.loadbalancer.server.port=3000"
-      # Redirection HTTP -> HTTPS
-      - "traefik.http.routers.esviry-http.rule=Host(`${SITE_DOMAIN:-esvirychatillonfootball.org}`)"
-      - "traefik.http.routers.esviry-http.entrypoints=web"
-      - "traefik.http.routers.esviry-http.middlewares=esviry-redirect"
-      - "traefik.http.middlewares.esviry-redirect.redirectscheme.scheme=https"
 
-# Reseau Traefik partage (deja cree sur le VPS, comme pour e-formationgn).
-# Adapter le nom si votre reseau Traefik s'appelle autrement (ex: proxy, web).
+# Reseau dedie au site (convention du VPS : chaque stack a son reseau + traefik.docker.network).
 networks:
-  traefik:
-    external: true
-    name: ${TRAEFIK_NETWORK:-traefik}
+  esviry-net:
+    name: esviry-net
