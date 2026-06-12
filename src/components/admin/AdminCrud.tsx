@@ -6,7 +6,7 @@ import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 
 type Row = Record<string, unknown>;
 
-export type CrudFieldType = "text" | "textarea" | "url" | "date" | "datetime" | "number" | "select";
+export type CrudFieldType = "text" | "textarea" | "url" | "date" | "datetime" | "number" | "select" | "boolean";
 
 export type CrudField = {
   /** Clé du payload envoyé à l'API (camelCase). */
@@ -27,8 +27,10 @@ export type CrudColumn = { label: string; render: (row: Row) => React.ReactNode 
 type AdminCrudProps = {
   title: string;
   description?: string;
-  /** Endpoint liste/création, ex: /api/admin/news */
+  /** Endpoint création (POST) + base de l'édition (PATCH endpoint/[id]), ex: /api/admin/news */
   endpoint: string;
+  /** Endpoint de liste (GET) si différent de `endpoint`. Défaut: `endpoint`. */
+  listEndpoint?: string;
   /** Clé du tableau dans data (GET), ex: "news" */
   listKey: string;
   /** Clé de l'objet dans data (POST/PATCH), ex: "article" */
@@ -52,7 +54,8 @@ function toInputValue(field: CrudField, row: Row): string {
   return String(raw);
 }
 
-export function AdminCrud({ title, description, endpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau" }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau" }: AdminCrudProps) {
+  const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -64,7 +67,7 @@ export function AdminCrud({ title, description, endpoint, listKey, itemKey, fiel
   const load = useCallback(async () => {
     setState("loading");
     try {
-      const res = await fetch(endpoint, { credentials: "same-origin" });
+      const res = await fetch(getUrl, { credentials: "same-origin" });
       if (res.status === 401) {
         setState("auth");
         return;
@@ -83,7 +86,7 @@ export function AdminCrud({ title, description, endpoint, listKey, itemKey, fiel
       setState("error");
       setMessage(error instanceof Error ? error.message : "Erreur réseau.");
     }
-  }, [endpoint, listKey]);
+  }, [getUrl, listKey]);
 
   useEffect(() => {
     const t = window.setTimeout(() => void load(), 0);
@@ -92,7 +95,7 @@ export function AdminCrud({ title, description, endpoint, listKey, itemKey, fiel
 
   function openNew() {
     const blank: Record<string, string> = {};
-    for (const f of fields) blank[f.name] = f.type === "select" && f.options?.[0] ? f.options[0].value : "";
+    for (const f of fields) blank[f.name] = f.type === "boolean" ? "true" : f.type === "select" && f.options?.[0] ? f.options[0].value : "";
     setForm(blank);
     setEditing({});
     setFormError("");
@@ -112,7 +115,12 @@ export function AdminCrud({ title, description, endpoint, listKey, itemKey, fiel
     // payload : on n'envoie que les champs renseignés (les vides deviennent omis)
     const payload: Record<string, unknown> = {};
     for (const f of fields) {
-      const v = form[f.name]?.trim?.() ?? form[f.name];
+      const raw = form[f.name];
+      if (f.type === "boolean") {
+        payload[f.name] = raw === "true";
+        continue;
+      }
+      const v = raw?.trim?.() ?? raw;
       if (v !== "" && v !== undefined) payload[f.name] = f.type === "number" ? Number(v) : v;
     }
     const id = editing && editing[idField];
@@ -191,6 +199,11 @@ export function AdminCrud({ title, description, endpoint, listKey, itemKey, fiel
                   ) : f.type === "select" ? (
                     <select {...common}>
                       {(f.options ?? []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  ) : f.type === "boolean" ? (
+                    <select {...common}>
+                      <option value="true">Oui</option>
+                      <option value="false">Non</option>
                     </select>
                   ) : (
                     <input {...common} type={f.type === "datetime" ? "datetime-local" : f.type === "date" ? "date" : f.type === "url" ? "url" : f.type === "number" ? "number" : "text"} placeholder={f.placeholder} />
