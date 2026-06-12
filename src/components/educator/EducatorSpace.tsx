@@ -21,9 +21,26 @@ type MatchRow = {
 };
 type Roster = { team: TeamLite; staff: StaffRow[]; matches: MatchRow[]; players: RosterEntry[] };
 type AssignablePlayer = { id: string; first_name: string; last_name: string; birth_year: number | null };
+type TrainingSession = { id: string; starts_at: string; duration_min: number | null; location: string | null; theme: string | null; notes: string | null };
+type AttendanceStatus = "PRESENT" | "ABSENT" | "EXCUSE" | "BLESSE";
+type CallupStatus = "CONVOQUE" | "REMPLACANT" | "NON_CONVOQUE" | "BLESSE";
 
 const EMPTY_MATCH = { opponentName: "", startsAt: "", location: "HOME", competition: "" };
 const EMPTY_PLAYER = { playerId: "", position: "", shirtNumber: "" };
+const EMPTY_SESSION = { startsAt: "", durationMin: "", location: "", theme: "", notes: "" };
+
+const ATT_OPTIONS: Array<{ value: AttendanceStatus; label: string }> = [
+  { value: "PRESENT", label: "Présent" },
+  { value: "ABSENT", label: "Absent" },
+  { value: "EXCUSE", label: "Excusé" },
+  { value: "BLESSE", label: "Blessé" }
+];
+const CALLUP_OPTIONS: Array<{ value: CallupStatus; label: string }> = [
+  { value: "CONVOQUE", label: "Convoqué" },
+  { value: "REMPLACANT", label: "Remplaçant" },
+  { value: "NON_CONVOQUE", label: "Non convoqué" },
+  { value: "BLESSE", label: "Blessé" }
+];
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "Date à confirmer";
@@ -55,6 +72,13 @@ export function EducatorSpace() {
   const [allPlayers, setAllPlayers] = useState<AssignablePlayer[]>([]);
   const [newPlayer, setNewPlayer] = useState(EMPTY_PLAYER);
   const [showPlayerForm, setShowPlayerForm] = useState(false);
+  const [sessions, setSessions] = useState<TrainingSession[]>([]);
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  const [newSession, setNewSession] = useState(EMPTY_SESSION);
+  const [attendanceFor, setAttendanceFor] = useState<string | null>(null);
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceStatus>>({});
+  const [callupFor, setCallupFor] = useState<string | null>(null);
+  const [callupMap, setCallupMap] = useState<Record<string, CallupStatus>>({});
 
   const loadTeams = useCallback(async () => {
     setPhase("loading");
@@ -125,6 +149,16 @@ export function EducatorSpace() {
     }
   }, []);
 
+  const loadSessions = useCallback(async (teamId: string) => {
+    try {
+      const res = await fetch(`/api/educator/teams/${teamId}/sessions`, { credentials: "same-origin" });
+      const json = await res.json().catch(() => null);
+      setSessions(res.ok && json?.ok && Array.isArray(json.data?.sessions) ? json.data.sessions : []);
+    } catch {
+      setSessions([]);
+    }
+  }, []);
+
   useEffect(() => {
     const t = window.setTimeout(() => void loadTeams(), 0);
     return () => window.clearTimeout(t);
@@ -134,9 +168,14 @@ export function EducatorSpace() {
     if (phase !== "ready" || !selectedId) {
       return;
     }
-    const t = window.setTimeout(() => void loadRoster(selectedId), 0);
+    const t = window.setTimeout(() => {
+      void loadRoster(selectedId);
+      void loadSessions(selectedId);
+      setAttendanceFor(null);
+      setCallupFor(null);
+    }, 0);
     return () => window.clearTimeout(t);
-  }, [phase, selectedId, loadRoster]);
+  }, [phase, selectedId, loadRoster, loadSessions]);
 
   async function createMatch() {
     if (!newMatch.opponentName.trim() || !newMatch.startsAt) {
@@ -270,6 +309,178 @@ export function EducatorSpace() {
     }
   }
 
+  async function createSession() {
+    if (!newSession.startsAt) {
+      setFormError("La date de la séance est obligatoire.");
+      return;
+    }
+    setBusy(true);
+    setFormError("");
+    try {
+      const res = await fetch(`/api/educator/teams/${selectedId}/sessions`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startsAt: newSession.startsAt,
+          ...(newSession.durationMin.trim() ? { durationMin: Number(newSession.durationMin) } : {}),
+          ...(newSession.location.trim() ? { location: newSession.location.trim() } : {}),
+          ...(newSession.theme.trim() ? { theme: newSession.theme.trim() } : {}),
+          ...(newSession.notes.trim() ? { notes: newSession.notes.trim() } : {})
+        })
+      });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Création de la séance impossible.");
+        return;
+      }
+      setNewSession(EMPTY_SESSION);
+      setShowSessionForm(false);
+      await loadSessions(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteSession(sessionId: string) {
+    setBusy(true);
+    setFormError("");
+    try {
+      const res = await fetch(`/api/educator/sessions/${sessionId}`, { method: "DELETE", credentials: "same-origin" });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Suppression impossible.");
+        return;
+      }
+      if (attendanceFor === sessionId) {
+        setAttendanceFor(null);
+      }
+      await loadSessions(selectedId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openAttendance(sessionId: string) {
+    if (attendanceFor === sessionId) {
+      setAttendanceFor(null);
+      return;
+    }
+    setBusy(true);
+    setFormError("");
+    try {
+      const res = await fetch(`/api/educator/sessions/${sessionId}/attendance`, { credentials: "same-origin" });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Présences indisponibles.");
+        return;
+      }
+      const saved: Record<string, AttendanceStatus> = {};
+      for (const a of json.data?.attendance ?? []) saved[a.player_id] = a.status;
+      const map: Record<string, AttendanceStatus> = {};
+      for (const p of roster?.players ?? []) map[p.assignment.player_id] = saved[p.assignment.player_id] ?? "PRESENT";
+      setAttendanceMap(map);
+      setCallupFor(null);
+      setAttendanceFor(sessionId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveAttendance(sessionId: string) {
+    setBusy(true);
+    setFormError("");
+    try {
+      const entries = Object.entries(attendanceMap).map(([playerId, status]) => ({ playerId, status }));
+      const res = await fetch(`/api/educator/sessions/${sessionId}/attendance`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries })
+      });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Enregistrement des présences impossible.");
+        return;
+      }
+      setAttendanceFor(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openCallups(matchId: string) {
+    if (callupFor === matchId) {
+      setCallupFor(null);
+      return;
+    }
+    setBusy(true);
+    setFormError("");
+    try {
+      const res = await fetch(`/api/educator/matches/${matchId}/callups`, { credentials: "same-origin" });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Convocations indisponibles.");
+        return;
+      }
+      const saved: Record<string, CallupStatus> = {};
+      for (const c of json.data?.callups ?? []) saved[c.player_id] = c.status;
+      const map: Record<string, CallupStatus> = {};
+      for (const p of roster?.players ?? []) map[p.assignment.player_id] = saved[p.assignment.player_id] ?? "CONVOQUE";
+      setCallupMap(map);
+      setAttendanceFor(null);
+      setCallupFor(matchId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveCallups(matchId: string) {
+    setBusy(true);
+    setFormError("");
+    try {
+      const entries = Object.entries(callupMap).map(([playerId, status]) => ({ playerId, status }));
+      const res = await fetch(`/api/educator/matches/${matchId}/callups`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries })
+      });
+      if (res.status === 401) {
+        setPhase("auth");
+        return;
+      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setFormError(json?.error?.message ?? "Enregistrement des convocations impossible.");
+        return;
+      }
+      setCallupFor(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const assignedIds = new Set(roster?.players.map((p) => p.assignment.player_id) ?? []);
   const availablePlayers = allPlayers.filter((p) => !assignedIds.has(p.id));
 
@@ -369,12 +580,35 @@ export function EducatorSpace() {
                         <span className="text-sm font-black text-[#002f1d]">{m.location === "AWAY" ? "à" : "vs"} {m.opponent_name ?? "Adversaire"}</span>
                         <span className="ml-2 text-xs font-semibold text-slate-500">{fmtDate(m.starts_at)}{m.competition ? ` · ${m.competition}` : ""}</span>
                       </div>
-                      {ourScore(m) !== null && theirScore(m) !== null ? (
-                        <span className="rounded-full bg-[#002f1d] px-3 py-1 text-xs font-black text-[#f7c600]">{ourScore(m)} – {theirScore(m)}</span>
-                      ) : (
-                        <button onClick={() => { setScoreFor(scoreFor === m.id ? null : m.id); setScore({ us: "", them: "" }); setFormError(""); }} className="focus-ring rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">Saisir le résultat</button>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button onClick={() => void openCallups(m.id)} className={`focus-ring rounded-md border px-2.5 py-1.5 text-xs font-black uppercase ${callupFor === m.id ? "border-[#f7c600] bg-[#f7c600]/10 text-[#002f1d]" : "border-slate-300 text-[#002f1d] hover:border-[#f7c600]"}`} type="button">Convocations</button>
+                        {ourScore(m) !== null && theirScore(m) !== null ? (
+                          <span className="rounded-full bg-[#002f1d] px-3 py-1 text-xs font-black text-[#f7c600]">{ourScore(m)} – {theirScore(m)}</span>
+                        ) : (
+                          <button onClick={() => { setScoreFor(scoreFor === m.id ? null : m.id); setScore({ us: "", them: "" }); setFormError(""); }} className="focus-ring rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">Saisir le résultat</button>
+                        )}
+                      </div>
                     </div>
+                    {callupFor === m.id ? (
+                      <div className="mt-3 grid gap-2 rounded-md border border-[#002f1d]/15 bg-white p-3">
+                        <p className="text-xs font-black uppercase text-[#07542f]">Convocations ({roster.players.length} joueurs)</p>
+                        {roster.players.length === 0 ? <p className="text-sm font-bold text-slate-500">Ajoutez d'abord des joueurs à l'effectif.</p> : null}
+                        {roster.players.map((p) => (
+                          <div key={p.assignment.player_id} className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-bold text-[#002f1d]">{p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur"}</span>
+                            <select value={callupMap[p.assignment.player_id] ?? "CONVOQUE"} onChange={(e) => setCallupMap((s) => ({ ...s, [p.assignment.player_id]: e.target.value as CallupStatus }))} className="focus-ring min-h-9 rounded-md border border-slate-300 bg-white px-2 text-xs font-bold">
+                              {CALLUP_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                            </select>
+                          </div>
+                        ))}
+                        {roster.players.length > 0 ? (
+                          <div className="mt-1 flex gap-2">
+                            <button onClick={() => void saveCallups(m.id)} disabled={busy} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={14} /> Enregistrer</button>
+                            <button onClick={() => setCallupFor(null)} className="focus-ring inline-flex min-h-10 items-center rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-slate-600" type="button">Fermer</button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {scoreFor === m.id ? (
                       <div className="mt-3 flex flex-wrap items-end gap-3">
                         <label className="grid gap-1 text-xs font-black uppercase text-slate-600">Notre score<input type="number" min={0} value={score.us} onChange={(e) => setScore((s) => ({ ...s, us: e.target.value }))} className="focus-ring min-h-11 w-24 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" /></label>
@@ -419,6 +653,65 @@ export function EducatorSpace() {
                       {p.assignment.position ? <span className="text-sm text-slate-600">— {p.assignment.position}</span> : null}
                     </div>
                     <button onClick={() => void removePlayer(p.assignment.player_id)} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /> Retirer</button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Séances & présences */}
+            <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]"><CalendarDays size={18} /> Séances & présences ({sessions.length})</h3>
+                <button onClick={() => { setShowSessionForm((v) => !v); setFormError(""); }} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#002f1d] px-4 text-xs font-black uppercase text-white hover:bg-[#07542f]" type="button"><Plus size={16} /> Nouvelle séance</button>
+              </div>
+
+              {showSessionForm ? (
+                <div className="mt-4 grid gap-3 rounded-md border border-dashed border-[#002f1d]/20 p-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-xs font-black uppercase text-slate-600">Date & heure<input type="datetime-local" value={newSession.startsAt} onChange={(e) => setNewSession((f) => ({ ...f, startsAt: e.target.value }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" /></label>
+                  <label className="grid gap-1 text-xs font-black uppercase text-slate-600">Durée (min)<input type="number" min={1} value={newSession.durationMin} onChange={(e) => setNewSession((f) => ({ ...f, durationMin: e.target.value }))} placeholder="90" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" /></label>
+                  <input value={newSession.location} onChange={(e) => setNewSession((f) => ({ ...f, location: e.target.value }))} placeholder="Lieu (ex: Stade Henri Longuet)" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                  <input value={newSession.theme} onChange={(e) => setNewSession((f) => ({ ...f, theme: e.target.value }))} placeholder="Thème (ex: Travail technique)" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                  <textarea value={newSession.notes} onChange={(e) => setNewSession((f) => ({ ...f, notes: e.target.value }))} placeholder="Notes (optionnel)" rows={2} className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold sm:col-span-2" />
+                  <div className="sm:col-span-2">
+                    <button onClick={() => void createSession()} disabled={busy} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={16} /> Créer la séance</button>
+                  </div>
+                </div>
+              ) : null}
+
+              <ul className="mt-4 grid gap-2">
+                {sessions.length === 0 ? <li className="rounded-md border border-dashed border-slate-300 bg-[#fbfcf8] p-4 text-sm font-bold text-slate-500">Aucune séance. Créez votre première séance ci-dessus.</li> : null}
+                {sessions.map((s) => (
+                  <li key={s.id} className="rounded-md border border-slate-100 bg-[#fbfcf8] p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="text-sm font-black text-[#002f1d]">{fmtDate(s.starts_at)}</span>
+                        <span className="ml-2 text-xs font-semibold text-slate-500">{[s.theme, s.location, s.duration_min ? `${s.duration_min} min` : null].filter(Boolean).join(" · ")}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => void openAttendance(s.id)} className={`focus-ring rounded-md border px-2.5 py-1.5 text-xs font-black uppercase ${attendanceFor === s.id ? "border-[#f7c600] bg-[#f7c600]/10 text-[#002f1d]" : "border-slate-300 text-[#002f1d] hover:border-[#f7c600]"}`} type="button">Présences</button>
+                        <button onClick={() => void deleteSession(s.id)} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /></button>
+                      </div>
+                    </div>
+                    {attendanceFor === s.id ? (
+                      <div className="mt-3 grid gap-2 rounded-md border border-[#002f1d]/15 bg-white p-3">
+                        <p className="text-xs font-black uppercase text-[#07542f]">Présences ({roster.players.length} joueurs)</p>
+                        {roster.players.length === 0 ? <p className="text-sm font-bold text-slate-500">Ajoutez d'abord des joueurs à l'effectif.</p> : null}
+                        {roster.players.map((p) => (
+                          <div key={p.assignment.player_id} className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-bold text-[#002f1d]">{p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur"}</span>
+                            <select value={attendanceMap[p.assignment.player_id] ?? "PRESENT"} onChange={(e) => setAttendanceMap((m) => ({ ...m, [p.assignment.player_id]: e.target.value as AttendanceStatus }))} className="focus-ring min-h-9 rounded-md border border-slate-300 bg-white px-2 text-xs font-bold">
+                              {ATT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                            </select>
+                          </div>
+                        ))}
+                        {roster.players.length > 0 ? (
+                          <div className="mt-1 flex gap-2">
+                            <button onClick={() => void saveAttendance(s.id)} disabled={busy} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={14} /> Enregistrer</button>
+                            <button onClick={() => setAttendanceFor(null)} className="focus-ring inline-flex min-h-10 items-center rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-slate-600" type="button">Fermer</button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </li>
                 ))}
               </ul>
