@@ -5,8 +5,11 @@ import {
   CalendarDays,
   Camera,
   ClipboardCheck,
+  GraduationCap,
   Handshake,
+  Landmark,
   LayoutDashboard,
+  LogOut,
   Mail,
   Newspaper,
   Settings,
@@ -28,13 +31,15 @@ const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: n
   { label: "Actualités", href: "/admin/actualites", icon: Newspaper },
   { label: "Calendrier", href: "/admin/calendrier", icon: CalendarDays },
   { label: "Équipes", href: "/admin/equipes", icon: Shield },
-  { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck, badge: 42 },
+  { label: "Encadrement", href: "/admin/encadrement", icon: GraduationCap },
+  { label: "Direction", href: "/admin/direction", icon: Landmark },
+  { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck },
   { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
   { label: "Joueurs", href: "/admin/joueurs", icon: Users },
   { label: "Détections", href: "/admin/recrutement", icon: Target },
-  { label: "Finances", href: "/admin/finances", icon: BadgeEuro, badge: 8 },
+  { label: "Finances", href: "/admin/finances", icon: BadgeEuro },
   { label: "Messages", href: "/admin/messages", icon: Mail },
-  { label: "Partenaires", href: "/admin/partenaires", icon: Handshake, badge: 3 },
+  { label: "Partenaires", href: "/admin/partenaires", icon: Handshake },
   { label: "Boutique", href: "/admin/boutique", icon: ShoppingBag },
   { label: "Médias", href: "/admin/medias", icon: Camera },
   { label: "Paramètres", href: "/admin/parametres", icon: Settings },
@@ -44,6 +49,11 @@ const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: n
 
 export function AdminSidebar() {
   const pathname = usePathname();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
+    window.location.href = "/connexion";
+  }
 
   const isActive = (href: string) => {
     if (href.includes("#")) {
@@ -63,7 +73,7 @@ export function AdminSidebar() {
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">ES Viry-Chatillon</p>
-          <h1 className="text-lg font-black uppercase">CRM Club</h1>
+          <p className="text-lg font-black uppercase">CRM Club</p>
         </div>
       </Link>
 
@@ -104,6 +114,14 @@ export function AdminSidebar() {
         <p className="mt-1 text-2xl font-black">2025 / 2026</p>
         <p className="mt-2 text-sm leading-6 text-white/76">Pilotage centralise du club, des familles, des equipes et des flux financiers.</p>
       </div>
+
+      <button
+        className="focus-ring mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-white/20 px-3 py-2 text-sm font-black uppercase text-white/90 transition-colors hover:bg-white/10"
+        onClick={() => void handleLogout()}
+        type="button"
+      >
+        <LogOut size={18} aria-hidden="true" /> Se déconnecter
+      </button>
     </aside>
   );
 }

@@ -30,6 +30,24 @@ export type Profile = {
   email: string | null;
   avatar_url: string | null;
   birth_date: string | null;
+  public_profile: boolean;
+  public_title: string | null;
+  public_bio: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OfficialCategory = "BUREAU" | "DIRIGEANT";
+
+export type ClubOfficial = {
+  id: string;
+  category: OfficialCategory;
+  full_name: string;
+  position: string;
+  photo_url: string | null;
+  profile_id: string | null;
+  order_index: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -385,6 +403,8 @@ export type ContactMessage = {
   updated_at: string;
 };
 
+export type NotificationCategory = "convocation" | "session" | "media" | "news" | "event";
+
 export type NotificationLog = {
   id: string;
   recipient_profile_id: string | null;
@@ -397,6 +417,9 @@ export type NotificationLog = {
   provider_reference: string | null;
   error_message: string | null;
   sent_at: string | null;
+  category: NotificationCategory | null;
+  link: string | null;
+  read_at: string | null;
   created_at: string;
   updated_at: string;
 };

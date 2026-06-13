@@ -1,5 +1,6 @@
 import "server-only";
 
+import { notifyMatchCallups, notifyTeamSessionChange } from "@/lib/db/family-notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import { canManageTeam } from "@/lib/db/teams";
 
@@ -87,7 +88,9 @@ export async function createTrainingSessionForEducator(profileId: string, canMan
     throw new Error(`Unable to create training session: ${error.message}`);
   }
 
-  return data as TrainingSession;
+  const session = data as TrainingSession;
+  await notifyTeamSessionChange(session.team_id, "created", { startsAt: session.starts_at, location: session.location, theme: session.theme });
+  return session;
 }
 
 async function getSessionIfManaged(sessionId: string, profileId: string, canManageAllTeams: boolean): Promise<TrainingSession | null> {
@@ -119,6 +122,7 @@ export async function deleteTrainingSessionForEducator(sessionId: string, profil
     throw new Error(`Unable to delete training session: ${error.message}`);
   }
 
+  await notifyTeamSessionChange(session.team_id, "cancelled", { startsAt: session.starts_at, location: session.location, theme: session.theme });
   return true;
 }
 
@@ -220,12 +224,23 @@ export async function setMatchCallupsForEducator(
   const valid = rosterIds ? entries.filter((e) => rosterIds.has(e.playerId)) : entries;
 
   if (valid.length > 0) {
+    // État précédent, pour ne notifier QUE les nouvelles convocations (anti-spam à chaque enregistrement).
+    const { data: existingRows } = await getSupabaseAdminClient().from("match_callups").select("player_id, status").eq("match_id", matchId);
+    const previousStatus = new Map((existingRows ?? []).map((r) => [(r as { player_id: string }).player_id, (r as { status: CallupStatus }).status]));
+
     const rows = valid.map((e) => ({ match_id: matchId, player_id: e.playerId, status: e.status }));
     const { error } = await getSupabaseAdminClient().from("match_callups").upsert(rows, { onConflict: "match_id,player_id" });
 
     if (error) {
       throw new Error(`Unable to save match callups: ${error.message}`);
     }
+
+    // Prévient les tuteurs des joueurs qui PASSENT à convoqué (titulaire/remplaçant), pas ceux déjà convoqués.
+    const wasConvoked = (status?: CallupStatus) => status === "CONVOQUE" || status === "REMPLACANT";
+    const newlyConvoked = valid
+      .filter((e) => wasConvoked(e.status) && !wasConvoked(previousStatus.get(e.playerId)))
+      .map((e) => e.playerId);
+    await notifyMatchCallups(matchId, newlyConvoked);
   }
 
   return getMatchCallupsForEducator(matchId, profileId, canManageAllTeams);

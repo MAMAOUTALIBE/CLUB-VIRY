@@ -114,6 +114,7 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
   const [message, setMessage] = useState("Mode démo : connectez-vous pour charger les données réelles.");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const rowStatus = (row: Row) => asText(row[statusField]);
   const rowTitle = (row: Row) => {
@@ -144,6 +145,35 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
       setRows(demo);
       setState("error");
       setMessage(`${error instanceof Error ? error.message : "Erreur de chargement."} (affichage démo)`);
+    }
+  }
+
+  // Met à jour le statut d'un enregistrement (PATCH endpoint/[id]) et reflète le changement localement.
+  async function patchStatus(row: Row, newStatus: string) {
+    const id = typeof row.id === "string" ? row.id : null;
+    if (!id || newStatus === rowStatus(row)) {
+      return;
+    }
+    const base = endpoint.split("?")[0];
+    setSavingId(id);
+    try {
+      const response = await fetch(`${base}/${id}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [statusField]: newStatus })
+      });
+      const json = await response.json().catch(() => null);
+      if (response.ok && json?.ok) {
+        setRows((current) => current.map((item) => (item.id === id ? { ...item, [statusField]: newStatus } : item)));
+        setMessage("Statut mis à jour.");
+      } else {
+        setMessage(`Échec de la mise à jour : ${json?.error?.message ?? `HTTP ${response.status}`}`);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erreur réseau lors de la mise à jour.");
+    } finally {
+      setSavingId(null);
     }
   }
 
@@ -265,6 +295,22 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
                 {statusLabel(rowStatus(row))}
               </span>
               <span className="text-xs font-black uppercase text-slate-500">{formatDate(row[createdAtField])}</span>
+              {state === "connected" && typeof row.id === "string" && statuses.some((entry) => entry.status === rowStatus(row)) ? (
+                <label className="ml-auto inline-flex items-center gap-1.5 text-xs font-black uppercase text-slate-500">
+                  Statut
+                  <select
+                    aria-label="Changer le statut"
+                    className="focus-ring rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-800 disabled:opacity-60"
+                    value={rowStatus(row)}
+                    disabled={savingId === row.id}
+                    onChange={(event) => void patchStatus(row, event.target.value)}
+                  >
+                    {statuses.map((entry) => (
+                      <option key={entry.status} value={entry.status}>{entry.label}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
             </div>
             <h3 className="text-base font-black text-slate-950">{rowTitle(row)}</h3>
             <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">

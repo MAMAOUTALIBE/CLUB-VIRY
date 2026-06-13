@@ -1,19 +1,44 @@
 import { ClipboardList, GraduationCap, Landmark, Settings } from "lucide-react";
 import { FeatureCards } from "@/components/FeatureCards";
+import { OfficialCard } from "@/components/club/OfficialCard";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
-import { getSiteSettings } from "@/lib/public-content";
+import { getClubOfficials, getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/organigramme");
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function OrganizationPage() {
-  const { organigramme } = await getSiteSettings();
+  const [{ organigramme }, officials] = await Promise.all([getSiteSettings(), getClubOfficials()]);
+
   return (
     <>
       <PageHero description="Une organisation claire pour accompagner les licenciés, les familles et les éducateurs." image={images.training} title="Organigramme" />
+
+      {officials.bureau.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 lg:px-8">
+          <SectionTitle eyebrow="Gouvernance" title="Le bureau exécutif" text="Les femmes et les hommes qui fixent le cap du club et garantissent la cohérence du projet." />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {officials.bureau.map((official) => (
+              <OfficialCard featured key={official.id} official={official} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {officials.dirigeants.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+          <SectionTitle title="Les dirigeants" text="Des bénévoles engagés au quotidien pour faire vivre le club et accompagner les licenciés." />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {officials.dirigeants.map((official) => (
+              <OfficialCard key={official.id} official={official} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <SectionTitle title={organigramme.title} text={organigramme.intro} />
         <div className="grid gap-4 md:grid-cols-2">
@@ -25,6 +50,7 @@ export default async function OrganizationPage() {
           ))}
         </div>
       </section>
+
       <section className="club-shell px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionTitle inverse eyebrow="Fonctionnement" title="Une organisation au service du terrain" text="Chaque pôle doit soutenir la progression des joueurs et la qualité d'accueil des familles." />

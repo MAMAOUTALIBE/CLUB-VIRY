@@ -9,7 +9,7 @@ import { getPublicTeams } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/equipes");
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function TeamsPage() {
   const teams = await getPublicTeams();

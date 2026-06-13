@@ -12,7 +12,10 @@ function profilePayloadToRow(input: ProfileUpdatePayload) {
     ...(input.displayName !== undefined ? { display_name: input.displayName ?? null } : {}),
     ...(input.phone !== undefined ? { phone: input.phone ?? null } : {}),
     ...(input.avatarUrl !== undefined ? { avatar_url: input.avatarUrl ?? null } : {}),
-    ...(input.birthDate !== undefined ? { birth_date: input.birthDate ?? null } : {})
+    ...(input.birthDate !== undefined ? { birth_date: input.birthDate ?? null } : {}),
+    ...(input.publicProfile !== undefined ? { public_profile: input.publicProfile } : {}),
+    ...(input.publicTitle !== undefined ? { public_title: input.publicTitle ?? null } : {}),
+    ...(input.publicBio !== undefined ? { public_bio: input.publicBio ?? null } : {})
   };
 }
 

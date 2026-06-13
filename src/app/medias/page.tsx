@@ -9,7 +9,7 @@ import { getPublicAlbums } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/medias");
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function MediaPage() {
   const albums = await getPublicAlbums();

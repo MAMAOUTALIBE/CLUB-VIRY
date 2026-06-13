@@ -1,14 +1,18 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { LucideIcon } from "lucide-react";
 
 import { news as mockNews, partners as mockPartners, products as mockProducts, teams as mockTeams } from "@/lib/data";
-import { listPartnersForAdmin, listPublicMedia, listPublishedNews } from "@/lib/db/content";
+import { getPublishedNewsBySlug, listPartnersForAdmin, listPublicMedia, listPublishedNews } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { getAllSettings } from "@/lib/db/settings";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import { getPublicTeamRosterBySlug, listTeams } from "@/lib/db/teams";
-import type { Match } from "@/lib/db/types";
+import { listPublicEducators } from "@/lib/db/educators";
+import { listClubOfficials } from "@/lib/db/officials";
+import type { Match, NewsArticle } from "@/lib/db/types";
 import { images } from "@/lib/images";
 import { slugify } from "@/lib/slug";
 
@@ -50,24 +54,26 @@ function fromMock(): DisplayNews[] {
   }));
 }
 
+function mapNewsRow(a: NewsArticle): DisplayNews {
+  const iso = a.published_at ?? a.created_at;
+  return {
+    title: a.title,
+    slug: a.slug || slugify(a.title),
+    date: formatFr(iso),
+    isoDate: (iso ?? "").slice(0, 10),
+    category: "Actualité",
+    excerpt: a.excerpt ?? "",
+    image: a.cover_image_url || images.teamHuddle,
+    content: a.content
+  };
+}
+
 export async function getPublicNews(limit = 12): Promise<DisplayNews[]> {
   if (isSupabaseAdminConfigured) {
     try {
       const rows = await listPublishedNews(limit);
       if (rows.length > 0) {
-        return rows.map((a) => {
-          const iso = a.published_at ?? a.created_at;
-          return {
-            title: a.title,
-            slug: a.slug || slugify(a.title),
-            date: formatFr(iso),
-            isoDate: (iso ?? "").slice(0, 10),
-            category: "Actualité",
-            excerpt: a.excerpt ?? "",
-            image: a.cover_image_url || images.teamHuddle,
-            content: a.content
-          };
-        });
+        return rows.map(mapNewsRow);
       }
     } catch {
       // repli mock ci-dessous
@@ -76,10 +82,20 @@ export async function getPublicNews(limit = 12): Promise<DisplayNews[]> {
   return fromMock();
 }
 
-export async function getPublicNewsBySlug(slug: string): Promise<DisplayNews | null> {
-  const all = await getPublicNews(50);
-  return all.find((n) => n.slug === slug) ?? null;
-}
+// Fetch direct par slug (index) + cache() pour dédupliquer entre generateMetadata et le rendu.
+export const getPublicNewsBySlug = cache(async (slug: string): Promise<DisplayNews | null> => {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const row = await getPublishedNewsBySlug(slug);
+      if (row) {
+        return mapNewsRow(row);
+      }
+    } catch {
+      // repli mock ci-dessous
+    }
+  }
+  return fromMock().find((article) => article.slug === slug) ?? null;
+});
 
 export type DisplayPartner = { name: string; logoUrl: string | null; websiteUrl: string | null; tier: string | null };
 
@@ -355,4 +371,124 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
     players: mock.players.map((name) => ({ name, position: "", shirtNumber: null })),
     nextMatch: mock.nextMatch
   };
+}
+
+// --- Encadrement : annuaire public des éducateurs (opt-in) -------------------
+
+export type DisplayEducatorTeam = { name: string; slug: string; category: string; roleTitle: string; isHeadCoach: boolean };
+export type DisplayEducator = {
+  id: string;
+  name: string;
+  title: string;
+  avatar: string | null;
+  bio: string;
+  teams: DisplayEducatorTeam[];
+  stats: { teams: number; sessions: number; matches: number };
+};
+
+// Données vitrine affichées tant qu'aucun éducateur n'est publié depuis le CRM.
+const mockEducators: DisplayEducator[] = [
+  {
+    id: "mock-1",
+    name: "Karim Benali",
+    title: "Responsable technique",
+    avatar: null,
+    bio: "Éducateur diplômé, en charge de la coordination sportive et de la formation des jeunes catégories.",
+    teams: [
+      { name: "Seniors D1", slug: "seniors-r1", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true },
+      { name: "U18", slug: "u18", category: "U18", roleTitle: "Référent", isHeadCoach: false }
+    ],
+    stats: { teams: 2, sessions: 48, matches: 22 }
+  },
+  {
+    id: "mock-2",
+    name: "Awa Diallo",
+    title: "Éducatrice École de foot",
+    avatar: null,
+    bio: "Passionnée par l'apprentissage des plus jeunes, elle encadre l'école de foot avec exigence et bienveillance.",
+    teams: [{ name: "École de foot", slug: "ecole-de-foot", category: "U6 à U11", roleTitle: "Entraîneure principale", isHeadCoach: true }],
+    stats: { teams: 1, sessions: 30, matches: 12 }
+  },
+  {
+    id: "mock-3",
+    name: "Lucas Moreau",
+    title: "Entraîneur Futsal",
+    avatar: null,
+    bio: "Ancien joueur du club, il transmet sa connaissance du jeu rapide aux équipes futsal.",
+    teams: [{ name: "Futsal", slug: "futsal", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true }],
+    stats: { teams: 1, sessions: 26, matches: 15 }
+  },
+  {
+    id: "mock-4",
+    name: "Sophie Laurent",
+    title: "Éducatrice Féminines",
+    avatar: null,
+    bio: "Engagée pour le développement du football féminin au club, elle accompagne les joueuses tout au long de la saison.",
+    teams: [{ name: "Féminines", slug: "feminines", category: "Seniors", roleTitle: "Entraîneure principale", isHeadCoach: true }],
+    stats: { teams: 1, sessions: 28, matches: 14 }
+  }
+];
+
+export async function getPublicEducators(): Promise<DisplayEducator[]> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const rows = await listPublicEducators();
+      if (rows.length > 0) {
+        return rows.map((r) => {
+          const head = r.teams.find((t) => t.isHeadCoach);
+          return {
+            id: r.id,
+            name: r.name?.trim() || "Éducateur",
+            title: r.title?.trim() || head?.roleTitle || "Éducateur",
+            avatar: r.avatar_url,
+            bio: r.bio ?? "",
+            teams: r.teams,
+            stats: { teams: r.team_count, sessions: r.session_count, matches: r.match_count }
+          };
+        });
+      }
+    } catch {
+      // repli mock
+    }
+  }
+  return mockEducators;
+}
+
+// --- Direction : bureau exécutif + dirigeants (personnes) -------------------
+
+export type DisplayOfficial = { id: string; name: string; position: string; photo: string | null };
+export type ClubOfficialsContent = { bureau: DisplayOfficial[]; dirigeants: DisplayOfficial[] };
+
+// Données vitrine tant qu'aucun membre n'est saisi depuis le CRM.
+const mockOfficials: ClubOfficialsContent = {
+  bureau: [
+    { id: "b1", name: "Saglam Ferhat", position: "Président", photo: null },
+    { id: "b2", name: "A. Martin", position: "Vice-président", photo: null },
+    { id: "b3", name: "K. Sow", position: "Trésorier", photo: null },
+    { id: "b4", name: "M. Dubois", position: "Secrétaire général", photo: null }
+  ],
+  dirigeants: [
+    { id: "d1", name: "L. Petit", position: "Responsable des licences", photo: null },
+    { id: "d2", name: "R. Garcia", position: "Responsable communication", photo: null },
+    { id: "d3", name: "S. Bernard", position: "Responsable partenariats", photo: null },
+    { id: "d4", name: "N. Roux", position: "Responsable événementiel", photo: null }
+  ]
+};
+
+export async function getClubOfficials(): Promise<ClubOfficialsContent> {
+  if (isSupabaseAdminConfigured) {
+    try {
+      const rows = await listClubOfficials();
+      if (rows.length > 0) {
+        const toDisplay = (r: (typeof rows)[number]): DisplayOfficial => ({ id: r.id, name: r.full_name, position: r.position, photo: r.photo_url });
+        return {
+          bureau: rows.filter((r) => r.category === "BUREAU").map(toDisplay),
+          dirigeants: rows.filter((r) => r.category === "DIRIGEANT").map(toDisplay)
+        };
+      }
+    } catch {
+      // repli mock
+    }
+  }
+  return mockOfficials;
 }

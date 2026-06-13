@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Mail, MapPin } from "lucide-react";
+import { ArrowUpRight, Mail, MapPin, User } from "lucide-react";
 import { socialItems } from "@/lib/socials";
 
 type FooterProps = {
@@ -21,6 +21,7 @@ const columns = [
       ["Histoire", "/le-club/histoire"],
       ["Mot du président", "/le-club/mot-du-president"],
       ["Organigramme", "/le-club/organigramme"],
+      ["Encadrement", "/le-club/encadrement"],
       ["Stade", "/le-club/stade-henri-longuet"]
     ]
   },
@@ -170,6 +171,12 @@ export function Footer({ socials, contact }: FooterProps) {
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 text-xs text-white/60 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <p>© 2026 ES Viry-Châtillon Football — Tous droits réservés</p>
+          <div className="flex flex-wrap gap-5" aria-label="Accès réservés">
+            <Link className="focus-ring inline-flex items-center gap-1.5 transition hover:text-[#f7c600]" href="/espace-membre">
+              <User aria-hidden="true" size={14} />
+              Espace membre
+            </Link>
+          </div>
           <div className="flex flex-wrap gap-5">
             <Link className="focus-ring transition hover:text-[#f7c600]" href="/mentions-legales">
               Mentions légales

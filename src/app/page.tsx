@@ -4,10 +4,10 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handsh
 import { ButtonLink } from "@/components/ButtonLink";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { matches, partners, teams } from "@/lib/data";
+import { matches } from "@/lib/data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { getPublicNews, getSiteSettings } from "@/lib/public-content";
+import { getPublicNews, getPublicPartners, getPublicTeams, getSiteSettings } from "@/lib/public-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -15,7 +15,7 @@ export const metadata = {
   alternates: { canonical: "/" }
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 // JSON-LD WebSite (uniquement sur l'accueil) : aide Google a afficher le nom du site.
 const websiteJsonLd = {
@@ -27,7 +27,8 @@ const websiteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [allNews, settings] = await Promise.all([getPublicNews(5), getSiteSettings()]);
+  const [allNews, settings, featuredTeams, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicTeams(), getPublicPartners()]);
+  const partnerNames = featuredPartners.map((partner) => partner.name);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
   const clubStats = settings.club_stats;
@@ -308,7 +309,7 @@ export default async function HomePage() {
             </h3>
             <p className="mt-3 leading-7 text-slate-700">{leadNews.excerpt}</p>
             <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6">
-              <ButtonLink href="/actualites" variant="dark">Lire l'article</ButtonLink>
+              <ButtonLink href={`/actualites/${leadNews.slug}`} variant="dark">Lire l'article</ButtonLink>
               <Link
                 href="/actualites"
                 className="focus-ring inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#8a6d00] transition hover:text-[#002f1d]"
@@ -330,7 +331,7 @@ export default async function HomePage() {
             </div>
           </div>
           <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {teams.slice(0, 5).map((team) => (
+            {featuredTeams.slice(0, 5).map((team) => (
               <StaggerItem key={team.slug}>
                 <Link className="focus-ring premium-card group flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/equipes/${team.slug}`}>
                   <div className="relative h-36">
@@ -384,7 +385,7 @@ export default async function HomePage() {
         <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {gridNews.map((item) => (
             <StaggerItem key={item.title}>
-              <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href="/actualites">
+              <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/actualites/${item.slug}`}>
                 <div className="relative h-40 w-full">
                   <Image src={item.image} alt={item.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover" />
                 </div>
@@ -428,7 +429,7 @@ export default async function HomePage() {
           </div>
 
           <Stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-            {partners.slice(0, 8).map((partner, index) => {
+            {partnerNames.slice(0, 8).map((partner, index) => {
               const TIERS: Record<string, string> = {
                 "Essonne Département": "Institutionnel",
                 "Ville de Viry-Châtillon": "Institutionnel",

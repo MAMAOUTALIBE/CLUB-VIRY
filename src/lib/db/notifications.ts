@@ -1,15 +1,19 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
-import type { NotificationLog, NotificationStatus } from "@/lib/db/types";
+import type { NotificationCategory, NotificationLog, NotificationStatus } from "@/lib/db/types";
+
+export type NotificationChannel = "email" | "in_app" | "push";
 
 export type QueueNotificationInput = {
   recipientProfileId?: string | null;
   recipientEmail?: string | null;
-  channel?: "email";
+  channel?: NotificationChannel;
   template: string;
   subject?: string | null;
   payload?: Record<string, unknown>;
+  category?: NotificationCategory | null;
+  link?: string | null;
 };
 
 type SupabaseAdminClient = ReturnType<typeof getSupabaseAdminClient>;
@@ -34,16 +38,24 @@ export async function queueNotification(
   input: QueueNotificationInput,
   supabase: SupabaseAdminClient = getSupabaseAdminClient()
 ): Promise<NotificationLog> {
+  const channel = input.channel ?? "email";
+  // L'in-app EST l'entrée du feed : on le marque livré (SENT) immédiatement, sans passer
+  // par le dispatcher. Les autres canaux (email, push) restent en file (QUEUED).
+  const inApp = channel === "in_app";
+
   const { data, error } = await supabase
     .from("notification_logs")
     .insert({
       recipient_profile_id: input.recipientProfileId ?? null,
       recipient_email: input.recipientEmail ?? null,
-      channel: input.channel ?? "email",
+      channel,
       template: input.template,
       subject: input.subject ?? null,
-      status: "QUEUED",
-      payload: input.payload ?? {}
+      status: inApp ? "SENT" : "QUEUED",
+      payload: input.payload ?? {},
+      category: input.category ?? null,
+      link: input.link ?? null,
+      sent_at: inApp ? new Date().toISOString() : null
     })
     .select("*")
     .single();
