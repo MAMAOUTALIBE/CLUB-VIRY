@@ -4,6 +4,7 @@ import type { AdminDocumentReviewPayload, AdminRegistrationReviewPayload } from 
 import { getActiveSeason, recordActivity } from "@/lib/db/foundations";
 import { getFamilyDashboard, isProfileFamilyMember } from "@/lib/db/family";
 import { queueAdminNotification, queueNotification } from "@/lib/db/notifications";
+import { ensureSubscription } from "@/lib/db/subscriptions";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { Family, Payment, Player, Registration, RegistrationDocument } from "@/lib/db/types";
 
@@ -355,6 +356,15 @@ export async function reviewRegistration(id: string, input: AdminRegistrationRev
         adminNotes: data.admin_notes ?? null
       }
     });
+  }
+
+  // Phase 4 : à la validation, on provisionne automatiquement l'abonnement FAMILLE du parent.
+  if (input.status === "VALIDATED" && data.submitted_by) {
+    try {
+      await ensureSubscription(data.submitted_by as string, "FAMILLE", `registration:${data.id}`);
+    } catch {
+      // l'abonnement ne doit pas bloquer la validation du dossier
+    }
   }
 
   return data as Registration;

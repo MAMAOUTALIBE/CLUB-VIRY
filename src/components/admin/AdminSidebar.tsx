@@ -2,6 +2,7 @@
 
 import {
   BadgeEuro,
+  Bell,
   CalendarDays,
   Camera,
   ChevronDown,
@@ -58,7 +59,8 @@ const POLES: Pole[] = [
     icon: UserSquare2,
     items: [
       { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
-      { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck }
+      { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck },
+      { label: "Abonnements", href: "/admin/abonnements", icon: Bell }
     ]
   },
   {
