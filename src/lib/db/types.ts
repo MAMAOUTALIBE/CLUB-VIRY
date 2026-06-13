@@ -403,6 +403,8 @@ export type ContactMessage = {
   updated_at: string;
 };
 
+export type NotificationCategory = "convocation" | "session" | "media" | "news" | "event";
+
 export type NotificationLog = {
   id: string;
   recipient_profile_id: string | null;
@@ -415,6 +417,9 @@ export type NotificationLog = {
   provider_reference: string | null;
   error_message: string | null;
   sent_at: string | null;
+  category: NotificationCategory | null;
+  link: string | null;
+  read_at: string | null;
   created_at: string;
   updated_at: string;
 };
