@@ -45,6 +45,7 @@ const navItems = [
       ["Futsal", "/equipes/futsal"]
     ]
   },
+  { label: "Academy", href: "/academy" },
   {
     label: "Actu & Médias",
     href: "/actualites",

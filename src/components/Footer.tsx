@@ -38,6 +38,7 @@ const columns = [
     title: "Infos pratiques",
     links: [
       ["Inscriptions", "/inscriptions"],
+      ["Academy", "/academy"],
       ["Détections", "/detections-recrutement"],
       ["Calendrier", "/calendrier"],
       ["Contact", "/contact"]

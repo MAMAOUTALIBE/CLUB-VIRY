@@ -36,6 +36,10 @@ const PAGES: Record<string, PageSeo> = {
     title: "Stade Henri Longuet",
     description: "Le stade Henri Longuet a Viry-Chatillon (91170), antre de l'ES Viry-Chatillon Football : acces, infrastructures, terrains et informations pratiques."
   },
+  "/academy": {
+    title: "ES Viry-Chatillon Academy",
+    description: "L'ES Viry-Chatillon Academy : plateforme de formation ouverte a tous (joueurs, familles, externes) — scolaire, numerique, IA, sport, orientation et plus."
+  },
   "/equipes": {
     title: "Equipes",
     description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors en passant par les feminines et le futsal : effectifs, staff et categories."

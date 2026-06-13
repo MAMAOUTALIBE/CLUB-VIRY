@@ -23,6 +23,7 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
     title: "Sportif",
     links: [
       ["/equipes", "Équipes"],
+      ["/academy", "ES Viry-Châtillon Academy"],
       ["/actualites", "Actualités"],
       ["/calendrier", "Calendrier"],
       ["/medias", "Médias / Galerie"]

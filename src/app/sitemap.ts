@@ -12,6 +12,7 @@ const STATIC_ROUTES = [
   "/le-club/organigramme",
   "/le-club/encadrement",
   "/le-club/stade-henri-longuet",
+  "/academy",
   "/equipes",
   "/actualites",
   "/calendrier",
