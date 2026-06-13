@@ -22,7 +22,6 @@ function socialHref(socials: Record<string, string> | undefined, label: string):
 }
 
 const navItems = [
-  { label: "Accueil", href: "/" },
   {
     label: "Le Club",
     href: "/le-club",
@@ -30,7 +29,9 @@ const navItems = [
       ["Histoire", "/le-club/histoire"],
       ["Mot du Président", "/le-club/mot-du-president"],
       ["Organigramme", "/le-club/organigramme"],
-      ["Stade Henri Longuet", "/le-club/stade-henri-longuet"]
+      ["Encadrement", "/le-club/encadrement"],
+      ["Stade Henri Longuet", "/le-club/stade-henri-longuet"],
+      ["Partenaires", "/partenaires"]
     ]
   },
   {
@@ -44,12 +45,25 @@ const navItems = [
       ["Futsal", "/equipes/futsal"]
     ]
   },
-  { label: "Actualités", href: "/actualites" },
-  { label: "Calendrier", href: "/calendrier" },
-  { label: "Partenaires", href: "/partenaires" },
-  { label: "Médias", href: "/medias" },
+  {
+    label: "Actu & Médias",
+    href: "/actualites",
+    children: [
+      ["Actualités", "/actualites"],
+      ["Calendrier", "/calendrier"],
+      ["Médias", "/medias"]
+    ]
+  },
   { label: "Boutique", href: "/boutique" },
-  { label: "Contact", href: "/contact" }
+  {
+    label: "Nous rejoindre",
+    href: "/inscriptions",
+    children: [
+      ["Inscriptions", "/inscriptions"],
+      ["Détections / recrutement", "/detections-recrutement"],
+      ["Contact", "/contact"]
+    ]
+  }
 ];
 
 export function Header({ banner, socials }: HeaderProps) {
@@ -68,6 +82,11 @@ export function Header({ banner, socials }: HeaderProps) {
   // Surlignage de l'item actif : le parent reste actif sur ses sous-pages
   // (ex. « Le Club » sur /le-club/histoire). Logique partagee desktop + mobile.
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
+
+  // Un item parent reste surligné quand on visite l'une de ses sous-pages
+  // (ex. « Le Club » actif sur /partenaires, « Actu & Médias » sur /calendrier).
+  const isItemActive = (item: { href: string; children?: string[][] }) =>
+    isActive(item.href) || (item.children?.some(([, href]) => isActive(href)) ?? false);
 
   useEffect(() => {
     function onScroll() {
@@ -236,7 +255,7 @@ export function Header({ banner, socials }: HeaderProps) {
 
         <div ref={desktopNavRef} className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-white/12 bg-white/[0.045] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl min-[1280px]:flex">
           {navItems.map((item) => {
-            const active = isActive(item.href);
+            const active = isItemActive(item);
             const triggerClass = `focus-ring relative inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[12px] font-black uppercase transition min-[1500px]:px-4 min-[1500px]:text-[13px] ${
               active ? "bg-[#f7c600] text-[#001c10] shadow-[0_8px_22px_rgba(247,198,0,0.24)]" : "text-white/90 hover:bg-white/8 hover:text-[#f7c600]"
             }`;
@@ -310,9 +329,13 @@ export function Header({ banner, socials }: HeaderProps) {
         </div>
 
         <div className="ml-auto flex flex-none items-center gap-2">
-          <Link className="focus-ring hidden h-11 items-center gap-2 rounded-full border border-white/18 bg-white/5 px-4 text-xs font-black uppercase hover:border-[#f7c600]/65 hover:text-[#f7c600] min-[1800px]:inline-flex" href="/espace-membre">
+          <Link
+            className="focus-ring hidden h-11 items-center gap-2 rounded-full border border-white/18 bg-white/5 px-4 text-xs font-black uppercase hover:border-[#f7c600]/65 hover:text-[#f7c600] min-[1280px]:inline-flex"
+            href="/espace-membre"
+            title="Mon espace"
+          >
             <User size={18} aria-hidden="true" />
-            Mon espace
+            <span className="hidden min-[1500px]:inline">Mon espace</span>
           </Link>
           <Link
             className="focus-ring hidden h-11 items-center gap-2 rounded-full bg-[#f7c600] px-5 text-xs font-black uppercase text-[#001c10] shadow-[0_12px_28px_rgba(247,198,0,0.22)] transition hover:bg-white min-[1280px]:inline-flex"
@@ -348,9 +371,9 @@ export function Header({ banner, socials }: HeaderProps) {
             {navItems.map((item) => (
               <div key={item.href}>
                 <Link
-                  aria-current={isActive(item.href) ? "page" : undefined}
+                  aria-current={isItemActive(item) ? "page" : undefined}
                   className={`focus-ring flex items-center justify-between rounded-md px-3 py-3 text-sm font-black uppercase hover:bg-white/10 ${
-                    isActive(item.href) ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
+                    isItemActive(item) ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
                   }`}
                   href={item.href}
                   onClick={() => setOpen(false)}
@@ -368,6 +391,16 @@ export function Header({ banner, socials }: HeaderProps) {
                 ) : null}
               </div>
             ))}
+            <div className="mt-2 grid gap-2 border-t border-[#f7c600]/30 pt-3">
+              <Link
+                className="focus-ring flex items-center gap-2 rounded-md border border-white/18 px-3 py-3 text-sm font-black uppercase text-white hover:bg-white/10"
+                href="/espace-membre"
+                onClick={() => setOpen(false)}
+              >
+                <User size={18} aria-hidden="true" />
+                Mon espace
+              </Link>
+            </div>
             <Link
               className="focus-ring mt-2 rounded-md bg-[#f7c600] px-3 py-3 text-center text-sm font-black uppercase text-[#002f1d]"
               href="/inscriptions"
