@@ -88,7 +88,10 @@ const POLES: Pole[] = [
   {
     title: "Administration",
     icon: Settings,
-    items: [{ label: "Paramètres", href: "/admin/parametres", icon: Settings }]
+    items: [
+      { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
+      { label: "Paramètres", href: "/admin/parametres", icon: Settings }
+    ]
   }
 ];
 
