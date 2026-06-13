@@ -308,7 +308,7 @@ export default async function HomePage() {
             </h3>
             <p className="mt-3 leading-7 text-slate-700">{leadNews.excerpt}</p>
             <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6">
-              <ButtonLink href="/actualites" variant="dark">Lire l'article</ButtonLink>
+              <ButtonLink href={`/actualites/${leadNews.slug}`} variant="dark">Lire l'article</ButtonLink>
               <Link
                 href="/actualites"
                 className="focus-ring inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#8a6d00] transition hover:text-[#002f1d]"
@@ -384,7 +384,7 @@ export default async function HomePage() {
         <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {gridNews.map((item) => (
             <StaggerItem key={item.title}>
-              <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href="/actualites">
+              <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/actualites/${item.slug}`}>
                 <div className="relative h-40 w-full">
                   <Image src={item.image} alt={item.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover" />
                 </div>
