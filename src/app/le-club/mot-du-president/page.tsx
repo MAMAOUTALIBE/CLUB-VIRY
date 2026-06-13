@@ -6,7 +6,7 @@ import { images } from "@/lib/images";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/mot-du-president");
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function PresidentPage() {
   const { president } = await getSiteSettings();

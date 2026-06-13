@@ -4,10 +4,10 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handsh
 import { ButtonLink } from "@/components/ButtonLink";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { matches, partners } from "@/lib/data";
+import { matches } from "@/lib/data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { getPublicNews, getPublicTeams, getSiteSettings } from "@/lib/public-content";
+import { getPublicNews, getPublicPartners, getPublicTeams, getSiteSettings } from "@/lib/public-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -15,7 +15,7 @@ export const metadata = {
   alternates: { canonical: "/" }
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 // JSON-LD WebSite (uniquement sur l'accueil) : aide Google a afficher le nom du site.
 const websiteJsonLd = {
@@ -27,7 +27,8 @@ const websiteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [allNews, settings, featuredTeams] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicTeams()]);
+  const [allNews, settings, featuredTeams, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicTeams(), getPublicPartners()]);
+  const partnerNames = featuredPartners.map((partner) => partner.name);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
   const clubStats = settings.club_stats;
@@ -428,7 +429,7 @@ export default async function HomePage() {
           </div>
 
           <Stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-            {partners.slice(0, 8).map((partner, index) => {
+            {partnerNames.slice(0, 8).map((partner, index) => {
               const TIERS: Record<string, string> = {
                 "Essonne Département": "Institutionnel",
                 "Ville de Viry-Châtillon": "Institutionnel",

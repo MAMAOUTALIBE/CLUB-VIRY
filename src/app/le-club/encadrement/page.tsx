@@ -6,7 +6,7 @@ import { getPublicEducators } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/encadrement");
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function EncadrementPage() {
   const educators = await getPublicEducators();

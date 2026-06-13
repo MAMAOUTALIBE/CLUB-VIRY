@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Package, Shirt, ShoppingBag, Star } from "lucide-react";
 import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
@@ -7,7 +8,7 @@ import { getPublicProducts } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/boutique");
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function ShopPage() {
   const products = await getPublicProducts();
@@ -15,14 +16,10 @@ export default async function ShopPage() {
     <>
       <PageHero description="Portez les couleurs de Viry : textile, accessoires et packs supporters." image={images.football} title="Boutique officielle" />
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <SectionTitle title="Tous les produits" text="Portez fièrement les couleurs de l'ES Viry-Châtillon." />
-          <div className="mb-8 flex flex-wrap gap-2">
-            {["Tout", "Textile", "Accessoires", "Packs"].map((item) => (
-              <span className="rounded-full border border-[#002f1d]/15 bg-white px-3 py-2 text-xs font-black uppercase text-[#002f1d]" key={item}>{item}</span>
-            ))}
-          </div>
-        </div>
+        <SectionTitle
+          title="Tous les produits"
+          text="Boutique en vitrine : découvrez les produits aux couleurs du club et commandez directement auprès du club."
+        />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
             const Icon = product.icon;
@@ -40,9 +37,12 @@ export default async function ShopPage() {
                 <p className="mt-5 text-xs font-black uppercase text-[#8a6d00]">{product.category}</p>
                 <h2 className="text-xl font-black uppercase text-[#002f1d]">{product.name}</h2>
                 <p className="mt-2 text-lg font-black">{product.price}</p>
-                <button className="mt-4 cursor-not-allowed rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] px-4 py-3 text-sm font-black uppercase text-slate-400" type="button" disabled aria-disabled="true">
-                  Bientôt disponible
-                </button>
+                <Link
+                  className="focus-ring mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-[#002f1d] px-4 py-3 text-sm font-black uppercase text-white transition hover:bg-[#07542f]"
+                  href="/contact"
+                >
+                  <ShoppingBag size={16} aria-hidden="true" /> Commander au club
+                </Link>
               </article>
             );
           })}
