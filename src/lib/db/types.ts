@@ -237,6 +237,8 @@ export type NewsArticle = {
   status: PublicationStatus;
   published_at: string | null;
   author_id: string | null;
+  team_id: string | null;
+  notified_at: string | null;
   seo_title: string | null;
   seo_description: string | null;
   created_at: string;

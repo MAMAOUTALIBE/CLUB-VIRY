@@ -151,6 +151,7 @@ export type AdminNotificationUpdatePayload = {
 
 export type AdminNewsPayload = {
   title?: string;
+  teamId?: string;
   slug?: string;
   excerpt?: string;
   content?: string;
@@ -1353,6 +1354,7 @@ export function validateAdminNewsPayload(input: unknown, options: { partial?: bo
   }
 
   const title = normalizeString(body.title);
+  const teamId = normalizeString(body.teamId);
   const slug = normalizeString(body.slug);
   const excerpt = normalizeString(body.excerpt);
   const content = normalizeString(body.content);
@@ -1364,6 +1366,10 @@ export function validateAdminNewsPayload(input: unknown, options: { partial?: bo
 
   if (!options.partial && (!title || title.length < 3 || title.length > 180)) {
     issues.push({ field: "title", message: "Titre invalide." });
+  }
+
+  if (teamId && !isUuid(teamId)) {
+    issues.push({ field: "teamId", message: "Identifiant equipe invalide." });
   }
 
   if (title && (title.length < 3 || title.length > 180)) {
@@ -1414,6 +1420,7 @@ export function validateAdminNewsPayload(input: unknown, options: { partial?: bo
     ok: true,
     data: {
       ...(title ? { title } : {}),
+      ...(teamId ? { teamId } : {}),
       ...(slug ? { slug } : {}),
       ...(excerpt ? { excerpt } : {}),
       ...(content ? { content } : {}),

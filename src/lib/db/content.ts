@@ -7,7 +7,7 @@ import type {
   AdminPartnerPayload,
   AdminPartnershipRequestReviewPayload
 } from "@/lib/api/validation";
-import { notifyTeamMediaAdded } from "@/lib/db/family-notifications";
+import { notifyTeamMediaAdded, notifyTeamNews } from "@/lib/db/family-notifications";
 import { recordActivity } from "@/lib/db/foundations";
 import { queueAdminNotification } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
@@ -45,6 +45,7 @@ function newsPayloadToRow(input: AdminNewsPayload, authorId?: string) {
     ...(input.coverImageUrl !== undefined ? { cover_image_url: input.coverImageUrl ?? null } : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.publishedAt !== undefined ? { published_at: input.publishedAt ?? null } : {}),
+    ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
     ...(authorId ? { author_id: authorId } : {}),
     ...(input.seoTitle !== undefined ? { seo_title: input.seoTitle ?? null } : {}),
     ...(input.seoDescription !== undefined ? { seo_description: input.seoDescription ?? null } : {})
@@ -133,6 +134,19 @@ export async function getPublishedNewsBySlug(slug: string): Promise<NewsArticle 
   return data as NewsArticle | null;
 }
 
+// Diffusion ciblée : à la première publication d'un article rattaché à une équipe, notifie les familles.
+async function maybeNotifyPublishedNews(article: NewsArticle): Promise<void> {
+  if (article.status !== "PUBLISHED" || !article.team_id || article.notified_at) {
+    return;
+  }
+  try {
+    await notifyTeamNews(article.team_id, { title: article.title });
+    await getSupabaseAdminClient().from("news").update({ notified_at: new Date().toISOString() }).eq("id", article.id);
+  } catch {
+    // la diffusion ne doit jamais bloquer la publication
+  }
+}
+
 export async function createNewsArticle(input: AdminNewsPayload, authorId: string): Promise<NewsArticle> {
   const { data, error } = await getSupabaseAdminClient()
     .from("news")
@@ -147,7 +161,9 @@ export async function createNewsArticle(input: AdminNewsPayload, authorId: strin
     throw new Error(`Unable to create news article: ${error.message}`);
   }
 
-  return data as NewsArticle;
+  const article = data as NewsArticle;
+  await maybeNotifyPublishedNews(article);
+  return article;
 }
 
 export async function updateNewsArticle(id: string, input: AdminNewsPayload): Promise<NewsArticle> {
@@ -162,7 +178,9 @@ export async function updateNewsArticle(id: string, input: AdminNewsPayload): Pr
     throw new Error(`Unable to update news article: ${error.message}`);
   }
 
-  return data as NewsArticle;
+  const article = data as NewsArticle;
+  await maybeNotifyPublishedNews(article);
+  return article;
 }
 
 export async function listPublicMedia(): Promise<MediaPayload> {

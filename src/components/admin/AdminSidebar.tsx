@@ -19,6 +19,7 @@ import {
   Shield,
   ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Target,
   Trophy,
   UserSquare2,
@@ -90,6 +91,7 @@ const POLES: Pole[] = [
     icon: Settings,
     items: [
       { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
+      { label: "Automatisations", href: "/admin/automatisations", icon: Sparkles },
       { label: "Paramètres", href: "/admin/parametres", icon: Settings }
     ]
   }

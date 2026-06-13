@@ -181,3 +181,19 @@ export async function notifyTeamMediaAdded(teamId: string, media: { type: string
     // silencieux
   }
 }
+
+/** Actualité publiée et ciblée sur une équipe → prévient les familles de l'équipe (CRM intelligent). */
+export async function notifyTeamNews(teamId: string, article: { title: string }): Promise<void> {
+  try {
+    const recipients = await getTeamGuardianRecipients(teamId);
+    await fanOut(recipients, {
+      category: "news",
+      template: "news_published",
+      subject: `Actualité : ${article.title}`,
+      link: "/espace-membre",
+      payload: { title: article.title }
+    });
+  } catch {
+    // silencieux
+  }
+}
