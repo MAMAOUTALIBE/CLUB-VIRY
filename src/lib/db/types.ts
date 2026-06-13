@@ -258,6 +258,7 @@ export type MediaAlbum = {
 export type MediaAsset = {
   id: string;
   album_id: string | null;
+  team_id: string | null;
   type: MediaType;
   title: string;
   url: string;

@@ -164,3 +164,20 @@ export async function notifyMatchCallups(matchId: string, convokedPlayerIds: str
     // silencieux
   }
 }
+
+/** Nouveau média rattaché à une équipe → prévient les tuteurs des joueurs de l'équipe (CRM intelligent). */
+export async function notifyTeamMediaAdded(teamId: string, media: { type: string; title: string }): Promise<void> {
+  try {
+    const recipients = await getTeamGuardianRecipients(teamId);
+    const label = media.type === "VIDEO" ? "Nouvelle vidéo" : "Nouvelle photo";
+    await fanOut(recipients, {
+      category: "media",
+      template: "media_added",
+      subject: `${label} de l'équipe`,
+      link: "/espace-membre",
+      payload: { type: media.type, title: media.title }
+    });
+  } catch {
+    // silencieux
+  }
+}

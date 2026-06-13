@@ -237,6 +237,7 @@ export type AdminMediaAlbumPayload = {
 
 export type AdminMediaAssetPayload = {
   albumId?: string;
+  teamId?: string;
   type?: "PHOTO" | "VIDEO";
   title?: string;
   url?: string;
@@ -1931,6 +1932,7 @@ export function validateAdminMediaAssetPayload(
   }
 
   const albumId = normalizeString(body.albumId);
+  const teamId = normalizeString(body.teamId);
   const type = normalizeString(body.type) ?? "PHOTO";
   const title = normalizeString(body.title);
   const url = normalizeString(body.url);
@@ -1941,6 +1943,10 @@ export function validateAdminMediaAssetPayload(
 
   if (albumId && !isUuid(albumId)) {
     issues.push({ field: "albumId", message: "Identifiant album invalide." });
+  }
+
+  if (teamId && !isUuid(teamId)) {
+    issues.push({ field: "teamId", message: "Identifiant equipe invalide." });
   }
 
   if (type && !isMediaType(type)) {
@@ -1983,6 +1989,7 @@ export function validateAdminMediaAssetPayload(
     ok: true,
     data: {
       ...(albumId ? { albumId } : {}),
+      ...(teamId ? { teamId } : {}),
       ...(type ? { type: type as AdminMediaAssetPayload["type"] } : {}),
       ...(title ? { title } : {}),
       ...(url ? { url } : {}),

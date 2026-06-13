@@ -7,6 +7,7 @@ import type {
   AdminPartnerPayload,
   AdminPartnershipRequestReviewPayload
 } from "@/lib/api/validation";
+import { notifyTeamMediaAdded } from "@/lib/db/family-notifications";
 import { recordActivity } from "@/lib/db/foundations";
 import { queueAdminNotification } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
@@ -64,6 +65,7 @@ function mediaAlbumPayloadToRow(input: AdminMediaAlbumPayload) {
 function mediaAssetPayloadToRow(input: AdminMediaAssetPayload) {
   return {
     ...(input.albumId !== undefined ? { album_id: input.albumId ?? null } : {}),
+    ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
     ...(input.type ? { type: input.type } : {}),
     ...(input.title ? { title: input.title } : {}),
     ...(input.url ? { url: input.url } : {}),
@@ -252,7 +254,12 @@ export async function createMediaAsset(input: AdminMediaAssetPayload): Promise<M
     throw new Error(`Unable to create media asset: ${error.message}`);
   }
 
-  return data as MediaAsset;
+  const asset = data as MediaAsset;
+  // CRM intelligent : un média rattaché à une équipe prévient automatiquement les familles concernées.
+  if (asset.team_id) {
+    await notifyTeamMediaAdded(asset.team_id, { type: asset.type, title: asset.title });
+  }
+  return asset;
 }
 
 export async function updateMediaAsset(id: string, input: AdminMediaAssetPayload): Promise<MediaAsset> {
