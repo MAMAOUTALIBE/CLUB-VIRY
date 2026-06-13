@@ -1,6 +1,7 @@
 import { BadgeEuro, Eye, Handshake, Megaphone } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { FeatureCards } from "@/components/FeatureCards";
+import { PartnerForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -20,7 +21,7 @@ export default async function PartnersPage() {
           <h2 className="text-3xl font-black uppercase text-[#f7c600]">Devenez partenaire du club</h2>
           <p className="mt-4 text-white/80">Visibilité locale, visibilité stade, événements, textile, médias : construisons une offre adaptée.</p>
           <div className="mt-6">
-            <ButtonLink href="/contact">Découvrir nos offres</ButtonLink>
+            <ButtonLink href="#devenir-partenaire">Devenir partenaire</ButtonLink>
           </div>
         </div>
         <div>
@@ -55,6 +56,11 @@ export default async function PartnersPage() {
             { title: "Impact local", text: "Soutenir la jeunesse, le sport et la vie associative.", icon: BadgeEuro }
           ]}
         />
+      </section>
+      <section id="devenir-partenaire" className="mx-auto max-w-3xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="official-card rounded-2xl bg-white p-6 sm:p-8">
+          <PartnerForm />
+        </div>
       </section>
     </>
   );

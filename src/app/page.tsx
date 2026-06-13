@@ -4,10 +4,10 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handsh
 import { ButtonLink } from "@/components/ButtonLink";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { matches, partners, teams } from "@/lib/data";
+import { matches, partners } from "@/lib/data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { getPublicNews, getSiteSettings } from "@/lib/public-content";
+import { getPublicNews, getPublicTeams, getSiteSettings } from "@/lib/public-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -27,7 +27,7 @@ const websiteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [allNews, settings] = await Promise.all([getPublicNews(5), getSiteSettings()]);
+  const [allNews, settings, featuredTeams] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicTeams()]);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
   const clubStats = settings.club_stats;
@@ -330,7 +330,7 @@ export default async function HomePage() {
             </div>
           </div>
           <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {teams.slice(0, 5).map((team) => (
+            {featuredTeams.slice(0, 5).map((team) => (
               <StaggerItem key={team.slug}>
                 <Link className="focus-ring premium-card group flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/equipes/${team.slug}`}>
                   <div className="relative h-36">

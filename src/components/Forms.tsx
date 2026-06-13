@@ -333,3 +333,29 @@ export function RecruitmentForm() {
     />
   );
 }
+
+export function PartnerForm() {
+  return (
+    <FormShell
+      buildPayload={(values) => ({
+        companyName: values.companyName,
+        contactName: values.contactName,
+        email: values.email,
+        phone: values.phone || undefined,
+        message: values.message || undefined
+      })}
+      endpoint="/api/partners/requests"
+      fields={[
+        { name: "companyName", label: "Entreprise / structure", required: true, fullWidth: true, autoComplete: "organization", maxLength: 180 },
+        { name: "contactName", label: "Votre nom", required: true, autoComplete: "name", maxLength: 120 },
+        { name: "email", label: "Email", type: "email", required: true, autoComplete: "email", inputMode: "email", maxLength: 160 },
+        { name: "phone", label: "Téléphone", type: "tel", autoComplete: "tel", inputMode: "tel", maxLength: 32 }
+      ]}
+      messageLabel="Votre projet de partenariat (facultatif)"
+      messageRequired={false}
+      submitLabel="Envoyer ma demande"
+      successMessage="Votre demande de partenariat est bien envoyée. Le club vous recontacte rapidement."
+      title="Devenir partenaire"
+    />
+  );
+}
