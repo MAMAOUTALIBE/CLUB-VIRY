@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeEuro, Bell, BarChart3, ClipboardCheck, ShieldCheck, TrendingUp, Users } from "lucide-react";
+import { BadgeEuro, Bell, BarChart3, ClipboardCheck, Home, Shield, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
@@ -76,7 +76,7 @@ type ApiFailure = {
 };
 
 type MetricCard = {
-  key: "players" | "pendingRegistrations" | "payments" | "actions";
+  key: "players" | "pendingRegistrations" | "payments" | "actions" | "families" | "teams";
   label: string;
   value: string;
   trend: string;
@@ -96,7 +96,9 @@ const fallbackMetrics: MetricCard[] = [
   { key: "players", label: "Licencies suivis", value: "600+", trend: "Saison 2025 / 2026", icon: Users, tone: "green" },
   { key: "pendingRegistrations", label: "Dossiers a traiter", value: "42", trend: "Inscriptions, documents, paiements", icon: ClipboardCheck, tone: "yellow" },
   { key: "payments", label: "Paiements suivis", value: "84 k€", trend: "Cotisations, boutique, partenaires", icon: BadgeEuro, tone: "slate" },
-  { key: "actions", label: "Actions ouvertes", value: "18", trend: "Relances, messages, echeances", icon: Bell, tone: "green" }
+  { key: "actions", label: "Actions ouvertes", value: "18", trend: "Relances, messages, echeances", icon: Bell, tone: "green" },
+  { key: "families", label: "Familles", value: "380", trend: "Familles enregistrees", icon: Home, tone: "slate" },
+  { key: "teams", label: "Equipes", value: "30", trend: "Equipes actives au club", icon: Shield, tone: "green" }
 ];
 
 const fallbackWorkItems: WorkItem[] = [
@@ -330,6 +332,8 @@ function buildMetricCards(dashboard: AdminDashboard | null): MetricCard[] {
   const contactMessages = getMetricCount(dashboard, "contactMessages") ?? 0;
   const recruitmentApplications = getMetricCount(dashboard, "recruitmentApplications") ?? 0;
   const actions = contactMessages + recruitmentApplications + dashboard.queuedNotifications;
+  const families = getMetricCount(dashboard, "families");
+  const teams = getMetricCount(dashboard, "teams");
 
   return [
     {
@@ -351,6 +355,16 @@ function buildMetricCards(dashboard: AdminDashboard | null): MetricCard[] {
       ...fallbackMetrics[3],
       value: formatCount(actions),
       trend: "Contacts, detections et notifications"
+    },
+    {
+      ...fallbackMetrics[4],
+      value: families === undefined ? fallbackMetrics[4].value : formatCount(families),
+      trend: "Familles enregistrees"
+    },
+    {
+      ...fallbackMetrics[5],
+      value: teams === undefined ? fallbackMetrics[5].value : formatCount(teams),
+      trend: "Equipes actives au club"
     }
   ];
 }

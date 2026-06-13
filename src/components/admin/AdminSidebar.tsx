@@ -4,6 +4,7 @@ import {
   BadgeEuro,
   CalendarDays,
   Camera,
+  ChevronDown,
   ClipboardCheck,
   GraduationCap,
   Handshake,
@@ -14,9 +15,8 @@ import {
   Newspaper,
   Settings,
   Shield,
-  ShoppingBag,
-  Sparkles,
   ShieldCheck,
+  ShoppingBag,
   Target,
   Trophy,
   UserSquare2,
@@ -24,50 +24,102 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 
-const navItems: Array<{ label: string; href: string; icon: LucideIcon; badge?: number }> = [
-  { label: "Pilotage", href: "/admin", icon: LayoutDashboard },
-  { label: "Actualités", href: "/admin/actualites", icon: Newspaper },
-  { label: "Calendrier", href: "/admin/calendrier", icon: CalendarDays },
-  { label: "Équipes", href: "/admin/equipes", icon: Shield },
-  { label: "Encadrement", href: "/admin/encadrement", icon: GraduationCap },
-  { label: "Direction", href: "/admin/direction", icon: Landmark },
-  { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck },
-  { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
-  { label: "Joueurs", href: "/admin/joueurs", icon: Users },
-  { label: "Détections", href: "/admin/recrutement", icon: Target },
-  { label: "Finances", href: "/admin/finances", icon: BadgeEuro },
-  { label: "Messages", href: "/admin/messages", icon: Mail },
-  { label: "Partenaires", href: "/admin/partenaires", icon: Handshake },
-  { label: "Boutique", href: "/admin/boutique", icon: ShoppingBag },
-  { label: "Médias", href: "/admin/medias", icon: Camera },
-  { label: "Paramètres", href: "/admin/parametres", icon: Settings },
-  { label: "Sportif", href: "/admin#modules", icon: Trophy },
-  { label: "Automatisations", href: "/admin#modules", icon: Sparkles }
+type NavItem = { label: string; href: string; icon: LucideIcon };
+type Pole = { title: string; icon: LucideIcon; items: NavItem[] };
+
+// Navigation regroupée par pôles (cf. docs/REFONTE-CRM-2026.md). Tous les liens pointent vers
+// des pages existantes : ce regroupement est purement organisationnel (non destructif).
+const POLES: Pole[] = [
+  {
+    title: "Club & contenus",
+    icon: Newspaper,
+    items: [
+      { label: "Actualités", href: "/admin/actualites", icon: Newspaper },
+      { label: "Médias", href: "/admin/medias", icon: Camera }
+    ]
+  },
+  {
+    title: "Sportif",
+    icon: Trophy,
+    items: [
+      { label: "Équipes", href: "/admin/equipes", icon: Shield },
+      { label: "Joueurs", href: "/admin/joueurs", icon: Users },
+      { label: "Encadrement", href: "/admin/encadrement", icon: GraduationCap },
+      { label: "Direction", href: "/admin/direction", icon: Landmark },
+      { label: "Matchs & calendrier", href: "/admin/calendrier", icon: CalendarDays },
+      { label: "Détections", href: "/admin/recrutement", icon: Target }
+    ]
+  },
+  {
+    title: "Familles & licenciés",
+    icon: UserSquare2,
+    items: [
+      { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
+      { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck }
+    ]
+  },
+  {
+    title: "Partenaires",
+    icon: Handshake,
+    items: [{ label: "Partenaires", href: "/admin/partenaires", icon: Handshake }]
+  },
+  {
+    title: "Business",
+    icon: BadgeEuro,
+    items: [
+      { label: "Boutique", href: "/admin/boutique", icon: ShoppingBag },
+      { label: "Finances", href: "/admin/finances", icon: BadgeEuro }
+    ]
+  },
+  {
+    title: "Communication",
+    icon: Mail,
+    items: [{ label: "Messages", href: "/admin/messages", icon: Mail }]
+  },
+  {
+    title: "Administration",
+    icon: Settings,
+    items: [{ label: "Paramètres", href: "/admin/parametres", icon: Settings }]
+  }
 ];
+
+function isActiveHref(pathname: string, href: string): boolean {
+  if (href === "/admin") {
+    return pathname === "/admin";
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const activePole = POLES.find((pole) => pole.items.some((item) => isActiveHref(pathname, item.href)))?.title ?? null;
+  const [open, setOpen] = useState<Set<string>>(() => new Set(activePole ? [activePole] : []));
+
+  function togglePole(title: string) {
+    setOpen((current) => {
+      const next = new Set(current);
+      if (next.has(title)) {
+        next.delete(title);
+      } else {
+        next.add(title);
+      }
+      return next;
+    });
+  }
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
     window.location.href = "/connexion";
   }
 
-  const isActive = (href: string) => {
-    if (href.includes("#")) {
-      return false;
-    }
-    if (href === "/admin") {
-      return pathname === "/admin";
-    }
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
+  const pilotageActive = pathname === "/admin";
 
   return (
-    <aside className="border-b border-white/10 bg-[#002f1d] px-5 py-5 text-white lg:border-b-0 lg:border-r">
-      <Link className="focus-ring flex items-center gap-3 rounded-md" href="/admin">
+    <aside className="border-b border-white/10 bg-[#002f1d] px-4 py-5 text-white lg:border-b-0 lg:border-r">
+      <Link className="focus-ring flex items-center gap-3 rounded-md px-1" href="/admin">
         <div className="flex size-11 items-center justify-center rounded-md bg-[#f7c600] text-[#002f1d]">
           <ShieldCheck size={24} aria-hidden="true" />
         </div>
@@ -77,42 +129,67 @@ export function AdminSidebar() {
         </div>
       </Link>
 
-      <nav className="mt-8 grid gap-2" aria-label="Navigation CRM">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
+      <nav className="mt-7 grid gap-1" aria-label="Navigation CRM">
+        <Link
+          aria-current={pilotageActive ? "page" : undefined}
+          className={`focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-black uppercase transition-colors ${
+            pilotageActive ? "bg-[#f7c600] text-[#002f1d] shadow-sm" : "text-white hover:bg-white/10"
+          }`}
+          href="/admin"
+        >
+          <LayoutDashboard size={18} aria-hidden="true" /> Pilotage
+        </Link>
+
+        {POLES.map((pole) => {
+          const PoleIcon = pole.icon;
+          const isOpen = open.has(pole.title);
+          const hasActive = pole.items.some((item) => isActiveHref(pathname, item.href));
+          const panelId = `pole-${pole.title.replace(/\s+/g, "-").replace(/[^a-zA-Z-]/g, "")}`;
 
           return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={`focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                active
-                  ? "bg-[#f7c600] text-[#002f1d] shadow-sm"
-                  : "text-white/82 hover:bg-white/10 hover:text-white"
-              }`}
-              href={item.href}
-              key={item.label}
-            >
-              <Icon size={18} aria-hidden="true" />
-              <span>{item.label}</span>
-              {item.badge ? (
-                <span
-                  className={`ml-auto rounded-full px-2 py-0.5 text-xs font-black ${
-                    active ? "bg-[#002f1d] text-[#f7c600]" : "bg-[#f7c600] text-[#002f1d]"
-                  }`}
-                >
-                  {item.badge}
-                </span>
+            <div key={pole.title}>
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                onClick={() => togglePole(pole.title)}
+                className={`focus-ring mt-1 flex min-h-10 w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-black uppercase tracking-wide transition-colors ${
+                  hasActive ? "text-[#f7c600]" : "text-white/55 hover:text-white"
+                }`}
+              >
+                <PoleIcon size={15} aria-hidden="true" />
+                <span className="flex-1 text-left">{pole.title}</span>
+                <ChevronDown size={14} aria-hidden="true" className={`shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isOpen ? (
+                <div id={panelId} className="ml-2 grid gap-1 border-l border-white/10 pl-2">
+                  {pole.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActiveHref(pathname, item.href);
+                    return (
+                      <Link
+                        aria-current={active ? "page" : undefined}
+                        className={`focus-ring flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                          active ? "bg-[#f7c600] text-[#002f1d] shadow-sm" : "text-white/82 hover:bg-white/10 hover:text-white"
+                        }`}
+                        href={item.href}
+                        key={item.href}
+                      >
+                        <Icon size={17} aria-hidden="true" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               ) : null}
-            </Link>
+            </div>
           );
         })}
       </nav>
 
-      <div className="mt-8 rounded-lg border border-[#f7c600]/30 bg-white/8 p-4">
+      <div className="mt-6 rounded-lg border border-[#f7c600]/30 bg-white/8 p-4">
         <p className="text-xs font-black uppercase text-[#f7c600]">Saison active</p>
         <p className="mt-1 text-2xl font-black">2025 / 2026</p>
-        <p className="mt-2 text-sm leading-6 text-white/76">Pilotage centralise du club, des familles, des equipes et des flux financiers.</p>
       </div>
 
       <button
