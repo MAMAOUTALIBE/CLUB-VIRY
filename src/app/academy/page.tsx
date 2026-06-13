@@ -21,9 +21,26 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/academy");
 
-// La plateforme Academy est un service EXTERNE déjà déployé. Le site du club ne fait que
-// présenter et rediriger : aucune inscription/compte n'est gérée ici (plateformes distinctes).
-const ACADEMY_URL = process.env.ACADEMY_PLATFORM_URL || "https://gandal.org";
+// La plateforme Academy est un service EXTERNE déjà déployé. Le site du club ne fait que présenter
+// et rediriger : aucune inscription/compte n'est gérée ici. L'URL vient EXCLUSIVEMENT de la variable
+// d'environnement ACADEMY_PLATFORM_URL (aucune URL en dur). Tant qu'elle n'est pas définie, les
+// boutons d'accès sont désactivés (pas de lien mort).
+const ACADEMY_URL = process.env.ACADEMY_PLATFORM_URL?.trim() ?? "";
+
+function AcademyCta({ className, children }: { className: string; children: React.ReactNode }) {
+  if (ACADEMY_URL) {
+    return (
+      <a className={className} href={ACADEMY_URL} rel="noopener noreferrer" target="_blank">
+        {children}
+      </a>
+    );
+  }
+  return (
+    <span className={`${className} cursor-not-allowed opacity-60`} aria-disabled="true" title="Plateforme bientôt disponible">
+      {children}
+    </span>
+  );
+}
 
 type Formation = { icon: LucideIcon; title: string; description: string; audience: string };
 
@@ -63,6 +80,7 @@ const PRIMARY_BTN =
   "focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[#f7c600] px-7 py-3.5 text-sm font-black uppercase text-[#001c10] shadow-[0_14px_30px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white";
 const SECONDARY_BTN =
   "focus-ring inline-flex items-center justify-center gap-2 rounded-lg border border-white/70 bg-black/10 px-7 py-3.5 text-sm font-black uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]";
+const CARD_BTN = "focus-ring mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-[#002f1d] px-4 py-2.5 text-sm font-black uppercase text-white transition hover:bg-[#07542f]";
 
 export default function AcademyPage() {
   return (
@@ -77,9 +95,9 @@ export default function AcademyPage() {
           <a className={PRIMARY_BTN} href="#formations">
             Découvrir les formations
           </a>
-          <a className={SECONDARY_BTN} href={ACADEMY_URL} target="_blank" rel="noopener noreferrer">
+          <AcademyCta className={SECONDARY_BTN}>
             Accéder à la plateforme <ExternalLink size={18} aria-hidden="true" />
-          </a>
+          </AcademyCta>
         </div>
       </PageHero>
 
@@ -111,14 +129,9 @@ export default function AcademyPage() {
                   <h3 className="mt-4 text-lg font-black uppercase leading-tight">{formation.title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{formation.description}</p>
                   <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-black uppercase text-[#8a6d00]">{formation.audience}</p>
-                  <a
-                    className="focus-ring mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-[#002f1d] px-4 py-2.5 text-sm font-black uppercase text-white transition hover:bg-[#07542f]"
-                    href={ACADEMY_URL}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
+                  <AcademyCta className={CARD_BTN}>
                     Voir la formation <ArrowUpRight size={16} aria-hidden="true" />
-                  </a>
+                  </AcademyCta>
                 </article>
               );
             })}
@@ -164,9 +177,9 @@ export default function AcademyPage() {
           <h2 className="text-4xl font-black uppercase text-[#f7c600]">Prêt à commencer ?</h2>
           <p className="mt-4 text-lg text-white/85">Créez votre compte sur la plateforme Academy et accédez aux formations disponibles.</p>
           <div className="mt-8 flex justify-center">
-            <a className={PRIMARY_BTN} href={ACADEMY_URL} target="_blank" rel="noopener noreferrer">
+            <AcademyCta className={PRIMARY_BTN}>
               Accéder à la plateforme Academy <ExternalLink size={18} aria-hidden="true" />
-            </a>
+            </AcademyCta>
           </div>
         </div>
       </section>
