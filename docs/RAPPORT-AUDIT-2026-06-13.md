@@ -65,9 +65,24 @@ read-only du code réel, puis correction autonome et vérification.
 14. **[MAJEUR#7] CRM actionnable** — `AdminModuleBoard` permet de changer le statut des Messages / Détections / Demandes de partenariat (sélecteur → `PATCH endpoint/[id]`). **Vérifié E2E** (statut → CONTACTED persisté).
 15. **[MAJEUR#6 partiel] Accueil branché au CRM** — la section « équipes » lit `getPublicTeams` (contenu CRM). *Reste : partenaires (branding en dur) et prochain match (structure riche + dates ISO manquantes) — voir backlog.*
 
+## 3 ter. Corrections complémentaires (lot 3, vérifiées)
+
+16. **[MAJEUR#21] Performance / caching** — 13 pages vitrine passées de `force-dynamic` à **`revalidate = 300`** (ISR) : rendu statique régénéré toutes les 5 min au lieu d'un SSR + aller-retour Supabase à chaque requête.
+17. **[MAJEUR#4/#17] Boutique** — parti pris **vitrine assumée** : CTA « Commander au club » (au lieu des boutons désactivés « Bientôt disponible »), chips de filtre non fonctionnelles retirées.
+18. **[MAJEUR#6 suite] Accueil partenaires** — section partenaires branchée au CRM (`getPublicPartners`). *Reste le « prochain match » : dépend de données (dates/horaires ISO des matchs) à saisir côté club.*
+19. **[MAJEUR#12] Plan du site** — réécrit avec la structure réelle et complète (zones privées exclues) ; fin de la `navItems` périmée de `lib/data`.
+
+**Bilan corrections : 1 CRITIQUE + ~17 MAJEUR traités et vérifiés (typecheck/lint/build verts).**
+
 ## 4. Reste à traiter (priorisé, avec estimations)
 
-> Aucun n'est bloquant pour un déploiement ; ce sont des améliorations fonctionnelles/qualité.
+> Aucun n'est bloquant pour un déploiement. Après les lots 1-3, **ce qui reste est surtout dépendant de données que seul le club fournit, ou cosmétique** :
+> - **Prochain match dynamique sur l'accueil + SportsEvent JSON-LD** → nécessite la saisie des **dates/horaires ISO des matchs** dans le CRM (donnée manquante).
+> - **`sameAs` (réseaux sociaux) + GPS du stade** → nécessite les **URLs sociales et coordonnées** réelles (l'infra `isLiveSocial()` est déjà prête).
+> - **Flux de refresh de session** (route + déclencheur client) ; **revalidatePath** dans les mutations admin (fraîcheur < 5 min).
+> - **Unification des tokens couleur CSS** (cosmétique) ; a11y CRM résiduelle ; MOYEN/MINEUR de polish.
+>
+> Le tableau ci-dessous liste le périmètre initial (les lignes traitées sont reprises en §3/3bis/3ter).
 
 | # | Sujet | Sévérité | Effort |
 |---|---|---|---|
