@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { checkRateLimit } from "@/lib/api/rate-limit";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateChildPayload } from "@/lib/api/validation";
 import { getAuthContext } from "@/lib/auth/session";
 import { createFamilyForProfile, createPlayer, isProfileFamilyMember } from "@/lib/db/family";
@@ -65,6 +65,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ player }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur enfant inconnue.");
+    return handleDbError("family/children", error);
   }
 }

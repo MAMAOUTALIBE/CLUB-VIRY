@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { recordActivity } from "@/lib/db/foundations";
 import { removeTeamPlayerForEducator } from "@/lib/db/teams";
 
@@ -41,6 +41,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ removed: true });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur retrait joueur educateur inconnue.");
+    return handleDbError("educator/teams/[id]/players/[playerId]", error);
   }
 }

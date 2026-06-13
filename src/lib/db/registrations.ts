@@ -274,6 +274,8 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
     .select("*");
 
   if (documentsError) {
+    // Compensation : pas de dossier d'inscription sans ses pièces justificatives.
+    await supabase.from("registrations").delete().eq("id", registration.id);
     throw new Error(`Unable to create registration documents: ${documentsError.message}`);
   }
 

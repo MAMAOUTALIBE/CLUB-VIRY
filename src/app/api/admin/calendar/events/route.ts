@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminEventPayload } from "@/lib/api/validation";
 import { createEvent, listEventsForAdmin } from "@/lib/db/calendar";
 import { recordActivity } from "@/lib/db/foundations";
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const events = await listEventsForAdmin({ limit, from, to });
     return jsonOk({ events });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur evenements admin inconnue.");
+    return handleDbError("admin/calendar/events", error);
   }
 }
 
@@ -71,6 +71,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ event }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation evenement inconnue.");
+    return handleDbError("admin/calendar/events", error);
   }
 }

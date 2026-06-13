@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminProductVariantPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { updateProductVariant } from "@/lib/db/recruitment-shop";
@@ -48,6 +48,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ variant });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour variante produit inconnue.");
+    return handleDbError("admin/shop/variants/[id]", error);
   }
 }

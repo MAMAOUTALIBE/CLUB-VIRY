@@ -60,6 +60,7 @@ type AdminDashboard = {
   breakdowns: DashboardBreakdowns;
   latestLogs: ActivityLog[];
   queuedNotifications: number;
+  revenueCents: number;
 };
 
 type ApiSuccess = {
@@ -284,7 +285,8 @@ function parseDashboardResponse(value: unknown): ApiSuccess | ApiFailure {
       metrics: dashboard.metrics.filter(isDashboardMetric),
       breakdowns: parseBreakdowns(dashboard.breakdowns) ?? fallbackBreakdowns,
       latestLogs: dashboard.latestLogs.filter(isActivityLog),
-      queuedNotifications: dashboard.queuedNotifications
+      queuedNotifications: dashboard.queuedNotifications,
+      revenueCents: typeof dashboard.revenueCents === "number" ? dashboard.revenueCents : 0
     }
   };
 }
@@ -317,6 +319,10 @@ function formatCount(count: number) {
   return new Intl.NumberFormat("fr-FR").format(count);
 }
 
+function formatEuros(cents: number) {
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format((cents ?? 0) / 100);
+}
+
 function getMetricCount(dashboard: AdminDashboard | null, key: DashboardMetricKey) {
   return dashboard?.metrics.find((metric) => metric.key === key)?.count;
 }
@@ -328,7 +334,6 @@ function buildMetricCards(dashboard: AdminDashboard | null): MetricCard[] {
 
   const players = getMetricCount(dashboard, "players");
   const pendingRegistrations = getMetricCount(dashboard, "pendingRegistrations");
-  const payments = getMetricCount(dashboard, "payments");
   const contactMessages = getMetricCount(dashboard, "contactMessages") ?? 0;
   const recruitmentApplications = getMetricCount(dashboard, "recruitmentApplications") ?? 0;
   const actions = contactMessages + recruitmentApplications + dashboard.queuedNotifications;
@@ -348,8 +353,8 @@ function buildMetricCards(dashboard: AdminDashboard | null): MetricCard[] {
     },
     {
       ...fallbackMetrics[2],
-      value: payments === undefined ? fallbackMetrics[2].value : formatCount(payments),
-      trend: "Paiements enregistres"
+      value: formatEuros(dashboard.revenueCents),
+      trend: "Encaisse (paiements reussis)"
     },
     {
       ...fallbackMetrics[3],

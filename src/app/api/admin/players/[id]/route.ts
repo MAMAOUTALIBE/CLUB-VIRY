@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { getPlayerDetailForAdmin } from "@/lib/db/family";
 
 export const runtime = "nodejs";
@@ -31,6 +31,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return jsonOk(player);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur detail joueur inconnue.");
+    return handleDbError("admin/players/[id]", error);
   }
 }

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminOfficialPayload } from "@/lib/api/validation";
 import { createOfficial, listOfficialsForAdmin } from "@/lib/db/officials";
 import { recordActivity } from "@/lib/db/foundations";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const officials = await listOfficialsForAdmin(limit);
     return jsonOk({ officials });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur dirigeants admin inconnue.");
+    return handleDbError("admin/officials", error);
   }
 }
 
@@ -57,6 +57,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ official }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation dirigeant inconnue.");
+    return handleDbError("admin/officials", error);
   }
 }

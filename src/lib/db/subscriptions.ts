@@ -65,13 +65,17 @@ export async function listSubscriptionsForAdmin(limit = 200): Promise<AdminSubsc
   });
 }
 
-export async function updateSubscriptionStatus(id: string, status: SubscriptionStatus): Promise<void> {
-  const { error } = await getSupabaseAdminClient()
+/** Renvoie false si aucun abonnement ne correspond à l'id (permet un 404 propre côté route). */
+export async function updateSubscriptionStatus(id: string, status: SubscriptionStatus): Promise<boolean> {
+  const { data, error } = await getSupabaseAdminClient()
     .from("subscriptions")
     .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
 
   if (error) {
     throw new Error(`Unable to update subscription: ${error.message}`);
   }
+
+  return (data ?? []).length > 0;
 }

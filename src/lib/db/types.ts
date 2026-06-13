@@ -17,7 +17,7 @@ export type ApplicationStatus = "PENDING" | "CONTACTED" | "TRIAL_SCHEDULED" | "A
 export type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 export type OrderStatus = "PENDING" | "PAID" | "PREPARING" | "READY" | "DELIVERED" | "CANCELLED" | "REFUNDED";
 export type PaymentStatus = "PENDING" | "SUCCEEDED" | "FAILED" | "CANCELLED" | "REFUNDED";
-export type NotificationStatus = "QUEUED" | "SENT" | "FAILED" | "CANCELLED";
+export type NotificationStatus = "QUEUED" | "SENDING" | "SENT" | "FAILED" | "CANCELLED";
 
 export type Profile = {
   id: string;

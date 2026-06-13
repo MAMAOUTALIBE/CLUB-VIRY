@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateCheckoutPayload } from "@/lib/api/validation";
 import { getAuthContext } from "@/lib/auth";
@@ -91,6 +91,6 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur paiement inconnue.");
+    return handleDbError("payments/checkout", error);
   }
 }

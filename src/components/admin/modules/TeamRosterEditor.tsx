@@ -151,7 +151,8 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
     }
   }
 
-  async function deleteStaff(staffId: string) {
+  async function deleteStaff(staffId: string, label: string) {
+    if (!window.confirm(`Retirer ${label} du staff de cette équipe ?`)) return;
     const ok = await call(`/api/admin/teams/${teamId}/staff/${staffId}`, "DELETE");
     if (ok) await load();
   }
@@ -181,7 +182,8 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
     }
   }
 
-  async function removePlayer(playerId: string) {
+  async function removePlayer(playerId: string, label: string) {
+    if (!window.confirm(`Retirer ${label} de l'effectif ? (le joueur reste en base et peut être réaffecté)`)) return;
     const ok = await call(`/api/admin/teams/${teamId}/players/${playerId}`, "DELETE");
     if (ok) await load();
   }
@@ -250,7 +252,7 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => startEditStaff(s)} className="focus-ring rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">Éditer</button>
-                      <button onClick={() => void deleteStaff(s.id)} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /> Retirer</button>
+                      <button onClick={() => void deleteStaff(s.id, s.display_name)} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /> Retirer</button>
                     </div>
                   </li>
                 )
@@ -286,7 +288,7 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
                     <span className="font-black text-[#002f1d]">{r.player ? `${r.player.first_name} ${r.player.last_name}` : "Joueur inconnu"}</span>
                     {r.assignment.position ? <span className="text-sm text-slate-600">— {r.assignment.position}</span> : null}
                   </div>
-                  <button onClick={() => void removePlayer(r.assignment.player_id)} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /> Retirer</button>
+                  <button onClick={() => void removePlayer(r.assignment.player_id, r.player ? `${r.player.first_name} ${r.player.last_name}` : "ce joueur")} disabled={busy} className="focus-ring inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:opacity-70" type="button"><Trash2 size={13} /> Retirer</button>
                 </li>
               ))}
             </ul>

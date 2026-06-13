@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateDocumentUploadPayload } from "@/lib/api/validation";
 import { getAuthContext } from "@/lib/auth/session";
@@ -129,6 +129,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ document }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur upload inconnue.");
+    return handleDbError("documents/upload", error);
   }
 }

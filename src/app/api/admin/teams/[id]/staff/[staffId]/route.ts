@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminTeamStaffPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { isLinkableEducatorProfile, removeTeamStaff, updateTeamStaff } from "@/lib/db/teams";
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ staff });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour staff equipe inconnue.");
+    return handleDbError("admin/teams/[id]/staff/[staffId]", error);
   }
 }
 
@@ -80,6 +80,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ removed: true });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur suppression staff equipe inconnue.");
+    return handleDbError("admin/teams/[id]/staff/[staffId]", error);
   }
 }

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAuthContext } from "@/lib/auth/session";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateProfileUpdatePayload } from "@/lib/api/validation";
 import { updateOwnProfile } from "@/lib/db/profiles";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
@@ -52,6 +52,6 @@ export async function PATCH(request: NextRequest) {
     const profile = await updateOwnProfile(auth.context.user.id, payload.data);
     return jsonOk({ profile });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour profil inconnue.");
+    return handleDbError("me", error);
   }
 }

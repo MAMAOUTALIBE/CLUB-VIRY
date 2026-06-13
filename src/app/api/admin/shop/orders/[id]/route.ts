@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminOrderStatusPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { getOrderBundleForAdmin, updateOrderStatus } from "@/lib/db/recruitment-shop";
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return jsonOk(order);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur detail commande admin inconnue.");
+    return handleDbError("admin/shop/orders/[id]", error);
   }
 }
 
@@ -70,6 +70,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ order });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour commande inconnue.");
+    return handleDbError("admin/shop/orders/[id]", error);
   }
 }

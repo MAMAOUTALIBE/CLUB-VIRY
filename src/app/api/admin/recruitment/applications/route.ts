@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listRecruitmentApplicationsForAdmin } from "@/lib/db/recruitment-shop";
 
 export const runtime = "nodejs";
@@ -20,6 +20,6 @@ export async function GET(request: NextRequest) {
     const applications = await listRecruitmentApplicationsForAdmin(limit);
     return jsonOk({ applications });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur candidatures detection inconnue.");
+    return handleDbError("admin/recruitment/applications", error);
   }
 }

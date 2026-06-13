@@ -59,6 +59,8 @@ export type AdminDashboard = {
   breakdowns: DashboardBreakdowns;
   latestLogs: ActivityLog[];
   queuedNotifications: number;
+  /** Chiffre d'affaires encaissé (somme des paiements SUCCEEDED), en centimes. */
+  revenueCents: number;
 };
 
 export async function createContactMessage(input: CreateContactMessageInput): Promise<ContactMessage> {
@@ -96,13 +98,14 @@ export async function createContactMessage(input: CreateContactMessageInput): Pr
     supabase
   );
 
+  // RGPD : on ne duplique PAS la PII (nom/email) dans activity_logs (rétention longue,
+  // hors droit à l'effacement). entityId référence le contact_message, qui porte ces données
+  // et reste, lui, soumis à l'effacement.
   await recordActivity({
     action: "contact.message_created",
     entityType: "contact_message",
     entityId: data.id,
     metadata: {
-      fullName: input.fullName,
-      email: input.email,
       subject: input.subject,
       source: input.source ?? "contact_page"
     }
@@ -165,6 +168,20 @@ async function countRowsByEq(table: string, column: string, value: string): Prom
   }
 
   return count ?? 0;
+}
+
+/** Somme des montants (en centimes) des paiements encaissés (status SUCCEEDED). */
+async function sumSucceededPaymentCents(): Promise<number> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("payments")
+    .select("amount_cents")
+    .eq("status", "SUCCEEDED");
+
+  if (error) {
+    throw new Error(`Unable to sum payments: ${error.message}`);
+  }
+
+  return (data ?? []).reduce((sum, row) => sum + ((row as { amount_cents: number }).amount_cents ?? 0), 0);
 }
 
 async function countRowsByIn(table: string, column: string, values: readonly string[]): Promise<number> {
@@ -275,6 +292,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     contactMessages,
     recruitmentApplications,
     queuedNotifications,
+    revenueCents,
     latestLogs
   ] = await Promise.all([
     countRows("profiles"),
@@ -289,6 +307,7 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     countRowsByEq("contact_messages", "status", "PENDING"),
     countRowsByEq("recruitment_applications", "status", "PENDING"),
     countRowsByEq("notification_logs", "status", "QUEUED"),
+    sumSucceededPaymentCents(),
     listActivityLogs(8)
   ]);
 
@@ -328,7 +347,8 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
       monthlyRegistrations
     },
     latestLogs,
-    queuedNotifications
+    queuedNotifications,
+    revenueCents
   };
 }
 

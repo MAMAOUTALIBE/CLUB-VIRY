@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminRegistrationReviewPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { getRegistrationDetailForAdmin, reviewRegistration } from "@/lib/db/registrations";
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return jsonOk(registration);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur dossier admin inconnue.");
+    return handleDbError("admin/registrations/[id]", error);
   }
 }
 
@@ -70,6 +70,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ registration });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur revue inscription inconnue.");
+    return handleDbError("admin/registrations/[id]", error);
   }
 }

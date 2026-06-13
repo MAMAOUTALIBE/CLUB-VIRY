@@ -31,6 +31,7 @@ export default function AdminRecrutementPage() {
             title="Détections / Recrutement"
             description="Suivi des candidatures de détection : qualification, prise de contact, essais et décisions."
             endpoint="/api/admin/recruitment/applications?limit=100"
+            exportHref="/api/admin/exports/recruitment"
             dataKey="applications"
             statuses={statuses}
             titleFields={["first_name", "last_name"]}

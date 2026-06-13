@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import type { CallupStatus } from "@/lib/db/sessions";
 import { getMatchCallupsForEducator, setMatchCallupsForEducator } from "@/lib/db/sessions";
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ callups });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur convocations inconnue.");
+    return handleDbError("educator/matches/[id]/callups", error);
   }
 }
 
@@ -70,6 +70,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ callups });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur enregistrement convocations inconnue.");
+    return handleDbError("educator/matches/[id]/callups", error);
   }
 }

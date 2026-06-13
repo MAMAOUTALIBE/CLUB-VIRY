@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { hasPermission } from "@/lib/auth";
 import { getAuthContext } from "@/lib/auth/session";
 import { recordActivity } from "@/lib/db/foundations";
@@ -66,6 +66,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
       expiresIn: document.expiresIn
     });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur lien document inconnue.");
+    return handleDbError("documents/[id]/signed-url", error);
   }
 }

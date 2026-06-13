@@ -58,6 +58,7 @@ export default function AdminFinancesPage() {
             title="Commandes boutique"
             description="Commandes de la boutique du club et leur état de traitement."
             endpoint="/api/admin/shop/orders?limit=100"
+            exportHref="/api/admin/exports/orders"
             dataKey="orders"
             statuses={orderStatuses}
             titleFields={["customer_name"]}
@@ -77,6 +78,7 @@ export default function AdminFinancesPage() {
             title="Paiements"
             description="Paiements enregistrés (cotisations, boutique) et taux d'encaissement."
             endpoint="/api/admin/payments?limit=100"
+            exportHref="/api/admin/exports/payments"
             dataKey="payments"
             statuses={paymentStatuses}
             titleFields={["provider", "provider_reference"]}

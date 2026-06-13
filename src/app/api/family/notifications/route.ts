@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { getAuthContext } from "@/lib/auth/session";
 import { countUnreadNotifications, listInAppNotifications, markNotificationsRead } from "@/lib/db/notification-center";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     ]);
     return jsonOk({ notifications, unread });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur notifications inconnue.");
+    return handleDbError("family/notifications", error);
   }
 }
 
@@ -50,6 +50,6 @@ export async function PATCH(request: NextRequest) {
     await markNotificationsRead(auth.context.user.id, ids);
     return jsonOk({ updated: true });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur notifications inconnue.");
+    return handleDbError("family/notifications", error);
   }
 }

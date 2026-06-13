@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { recordActivity } from "@/lib/db/foundations";
 import { dispatchQueuedNotifications } from "@/lib/db/notifications";
 
@@ -36,6 +36,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk(dispatch);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur traitement notifications inconnue.");
+    return handleDbError("admin/notifications/process", error);
   }
 }

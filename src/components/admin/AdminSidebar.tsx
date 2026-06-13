@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  Menu,
   Newspaper,
   Send,
   Settings,
@@ -23,7 +24,8 @@ import {
   Target,
   Trophy,
   UserSquare2,
-  Users
+  Users,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -108,6 +110,8 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const activePole = POLES.find((pole) => pole.items.some((item) => isActiveHref(pathname, item.href)))?.title ?? null;
   const [open, setOpen] = useState<Set<string>>(() => new Set(activePole ? [activePole] : []));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobile = () => setMobileOpen(false);
 
   function togglePole(title: string) {
     setOpen((current) => {
@@ -129,8 +133,29 @@ export function AdminSidebar() {
   const pilotageActive = pathname === "/admin";
 
   return (
-    <aside className="border-b border-white/10 bg-[#002f1d] px-4 py-5 text-white lg:border-b-0 lg:border-r">
-      <Link className="focus-ring flex items-center gap-3 rounded-md px-1" href="/admin">
+    <aside className="border-b border-white/10 bg-[#002f1d] px-4 py-4 text-white lg:border-b-0 lg:border-r lg:py-5">
+      {/* Barre mobile : logo compact + bouton menu (la nav devient un drawer repliable) */}
+      <div className="flex items-center justify-between lg:hidden">
+        <Link className="focus-ring flex items-center gap-2 rounded-md px-1" href="/admin" onClick={closeMobile}>
+          <div className="flex size-9 items-center justify-center rounded-md bg-[#f7c600] text-[#002f1d]">
+            <ShieldCheck size={20} aria-hidden="true" />
+          </div>
+          <span className="text-base font-black uppercase">CRM Club</span>
+        </Link>
+        <button
+          type="button"
+          aria-expanded={mobileOpen}
+          aria-controls="admin-nav-panel"
+          onClick={() => setMobileOpen((value) => !value)}
+          className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 px-3 py-2 text-xs font-black uppercase text-white/90 hover:bg-white/10"
+        >
+          {mobileOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
+          {mobileOpen ? "Fermer" : "Menu"}
+        </button>
+      </div>
+
+      {/* Logo (desktop uniquement) */}
+      <Link className="focus-ring hidden items-center gap-3 rounded-md px-1 lg:flex" href="/admin">
         <div className="flex size-11 items-center justify-center rounded-md bg-[#f7c600] text-[#002f1d]">
           <ShieldCheck size={24} aria-hidden="true" />
         </div>
@@ -140,9 +165,12 @@ export function AdminSidebar() {
         </div>
       </Link>
 
-      <nav className="mt-7 grid gap-1" aria-label="Navigation CRM">
+      {/* Panneau de navigation : drawer sur mobile, toujours visible en lg+ */}
+      <div id="admin-nav-panel" className={`${mobileOpen ? "block" : "hidden"} lg:block`}>
+      <nav className="mt-5 grid gap-1 lg:mt-7" aria-label="Navigation CRM">
         <Link
           aria-current={pilotageActive ? "page" : undefined}
+          onClick={closeMobile}
           className={`focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-black uppercase transition-colors ${
             pilotageActive ? "bg-[#f7c600] text-[#002f1d] shadow-sm" : "text-white hover:bg-white/10"
           }`}
@@ -180,6 +208,7 @@ export function AdminSidebar() {
                     return (
                       <Link
                         aria-current={active ? "page" : undefined}
+                        onClick={closeMobile}
                         className={`focus-ring flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-colors ${
                           active ? "bg-[#f7c600] text-[#002f1d] shadow-sm" : "text-white/82 hover:bg-white/10 hover:text-white"
                         }`}
@@ -210,6 +239,7 @@ export function AdminSidebar() {
       >
         <LogOut size={18} aria-hidden="true" /> Se déconnecter
       </button>
+      </div>
     </aside>
   );
 }

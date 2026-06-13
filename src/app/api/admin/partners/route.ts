@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminPartnerPayload } from "@/lib/api/validation";
 import { createPartner, listPartnersForAdmin } from "@/lib/db/content";
 import { recordActivity } from "@/lib/db/foundations";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const partners = await listPartnersForAdmin(limit);
     return jsonOk({ partners });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur partenaires admin inconnue.");
+    return handleDbError("admin/partners", error);
   }
 }
 
@@ -57,6 +57,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ partner }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation partenaire inconnue.");
+    return handleDbError("admin/partners", error);
   }
 }

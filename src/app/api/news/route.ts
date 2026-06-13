@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listPublishedNews } from "@/lib/db/content";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
@@ -18,6 +18,6 @@ export async function GET(request: NextRequest) {
     const news = await listPublishedNews(limit);
     return jsonOk({ news });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur actualites inconnue.");
+    return handleDbError("news", error);
   }
 }

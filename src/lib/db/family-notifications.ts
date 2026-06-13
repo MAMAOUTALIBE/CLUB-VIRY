@@ -1,6 +1,6 @@
 import "server-only";
 
-import { queueNotification } from "@/lib/db/notifications";
+import { queueNotificationsBatch, type QueueNotificationInput } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { NotificationCategory } from "@/lib/db/types";
 
@@ -25,15 +25,18 @@ function formatFrDateTime(iso: string | null | undefined): string {
 async function getTeamGuardianRecipients(teamId: string): Promise<Recipient[]> {
   const supabase = getSupabaseAdminClient();
 
-  const { data: roster } = await supabase.from("team_players").select("player_id").eq("team_id", teamId);
+  const { data: roster, error: rosterError } = await supabase.from("team_players").select("player_id").eq("team_id", teamId);
+  if (rosterError) console.error("getTeamGuardianRecipients: team_players", rosterError);
   const playerIds = (roster ?? []).map((r) => (r as { player_id: string }).player_id);
   if (playerIds.length === 0) return [];
 
-  const { data: guardians } = await supabase.from("player_guardians").select("profile_id").in("player_id", playerIds);
+  const { data: guardians, error: guardiansError } = await supabase.from("player_guardians").select("profile_id").in("player_id", playerIds);
+  if (guardiansError) console.error("getTeamGuardianRecipients: player_guardians", guardiansError);
   const profileIds = Array.from(new Set((guardians ?? []).map((g) => (g as { profile_id: string }).profile_id)));
   if (profileIds.length === 0) return [];
 
-  const { data: profiles } = await supabase.from("profiles").select("id, email").in("id", profileIds);
+  const { data: profiles, error: profilesError } = await supabase.from("profiles").select("id, email").in("id", profileIds);
+  if (profilesError) console.error("getTeamGuardianRecipients: profiles", profilesError);
   return (profiles ?? []).map((p) => ({ profileId: (p as { id: string }).id, email: (p as { email: string | null }).email }));
 }
 
@@ -42,15 +45,18 @@ async function getPlayersGuardianRecipients(playerIds: string[]): Promise<Recipi
   if (playerIds.length === 0) return [];
   const supabase = getSupabaseAdminClient();
 
-  const { data: players } = await supabase.from("players").select("id, first_name").in("id", playerIds);
+  const { data: players, error: playersError } = await supabase.from("players").select("id, first_name").in("id", playerIds);
+  if (playersError) console.error("getPlayersGuardianRecipients: players", playersError);
   const firstNameById = new Map((players ?? []).map((p) => [(p as { id: string }).id, (p as { first_name: string }).first_name]));
 
-  const { data: guardians } = await supabase.from("player_guardians").select("player_id, profile_id").in("player_id", playerIds);
+  const { data: guardians, error: guardiansError } = await supabase.from("player_guardians").select("player_id, profile_id").in("player_id", playerIds);
+  if (guardiansError) console.error("getPlayersGuardianRecipients: player_guardians", guardiansError);
   const guardianRows = (guardians ?? []) as Array<{ player_id: string; profile_id: string }>;
   const profileIds = Array.from(new Set(guardianRows.map((g) => g.profile_id)));
   if (profileIds.length === 0) return [];
 
-  const { data: profiles } = await supabase.from("profiles").select("id, email").in("id", profileIds);
+  const { data: profiles, error: profilesError } = await supabase.from("profiles").select("id, email").in("id", profileIds);
+  if (profilesError) console.error("getPlayersGuardianRecipients: profiles", profilesError);
   const emailById = new Map((profiles ?? []).map((p) => [(p as { id: string }).id, (p as { email: string | null }).email]));
 
   return guardianRows.map((g) => ({
@@ -65,11 +71,12 @@ async function getPreferenceMap(profileIds: string[], category: NotificationCate
   const map = new Map<string, { email: boolean; push: boolean }>();
   if (profileIds.length === 0) return map;
 
-  const { data } = await getSupabaseAdminClient()
+  const { data, error } = await getSupabaseAdminClient()
     .from("notification_preferences")
     .select("profile_id, email, push")
     .eq("category", category)
     .in("profile_id", profileIds);
+  if (error) console.error("getPreferenceMap: notification_preferences", error);
 
   for (const row of (data ?? []) as Array<{ profile_id: string; email: boolean; push: boolean }>) {
     map.set(row.profile_id, { email: row.email, push: row.push });
@@ -85,17 +92,18 @@ type NotifyInput = {
   payload?: Record<string, unknown>;
 };
 
-/** Met en file in-app (toujours) + email (si opt-in & email connu) pour chaque destinataire. */
+/** Met en file in-app (toujours) + email (si opt-in & email connu) pour chaque destinataire, en UN seul insert. */
 async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void> {
   if (recipients.length === 0) return;
   const profileIds = Array.from(new Set(recipients.map((r) => r.profileId)));
   const prefs = await getPreferenceMap(profileIds, input.category);
 
+  const rows: QueueNotificationInput[] = [];
   for (const recipient of recipients) {
     const pref = prefs.get(recipient.profileId) ?? { email: true, push: true };
     const payload = { ...(input.payload ?? {}), ...(recipient.childFirstName ? { childFirstName: recipient.childFirstName } : {}) };
 
-    await queueNotification({
+    rows.push({
       recipientProfileId: recipient.profileId,
       channel: "in_app",
       template: input.template,
@@ -106,7 +114,7 @@ async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void
     });
 
     if (pref.email && recipient.email) {
-      await queueNotification({
+      rows.push({
         recipientProfileId: recipient.profileId,
         recipientEmail: recipient.email,
         channel: "email",
@@ -119,6 +127,8 @@ async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void
     }
     // Push (L3) : l'enqueue push sera ajouté ici quand le dispatcher push sera livré.
   }
+
+  await queueNotificationsBatch(rows);
 }
 
 /** Séance d'entraînement créée ou annulée → prévient les tuteurs de l'équipe. */
@@ -138,8 +148,9 @@ export async function notifyTeamSessionChange(
       link: "/espace-membre",
       payload: { kind, startsAt: session.startsAt, location: session.location ?? null, theme: session.theme ?? null, dateLabel }
     });
-  } catch {
-    // Une notif ne doit jamais casser l'action métier.
+  } catch (error) {
+    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
+    console.error("notifyTeamSessionChange failed", error);
   }
 }
 
@@ -160,8 +171,9 @@ export async function notifyMatchCallups(matchId: string, convokedPlayerIds: str
       link: "/espace-membre",
       payload: { startsAt, opponentName, dateLabel }
     });
-  } catch {
-    // silencieux
+  } catch (error) {
+    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
+    console.error("family notification fan-out failed", error);
   }
 }
 
@@ -177,8 +189,9 @@ export async function notifyTeamMediaAdded(teamId: string, media: { type: string
       link: "/espace-membre",
       payload: { type: media.type, title: media.title }
     });
-  } catch {
-    // silencieux
+  } catch (error) {
+    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
+    console.error("family notification fan-out failed", error);
   }
 }
 
@@ -193,7 +206,8 @@ export async function notifyTeamNews(teamId: string, article: { title: string })
       link: "/espace-membre",
       payload: { title: article.title }
     });
-  } catch {
-    // silencieux
+  } catch (error) {
+    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
+    console.error("family notification fan-out failed", error);
   }
 }

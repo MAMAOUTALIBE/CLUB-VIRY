@@ -1,4 +1,4 @@
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listActivePartners } from "@/lib/db/content";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
@@ -14,6 +14,6 @@ export async function GET() {
     const partners = await listActivePartners();
     return jsonOk({ partners });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur partenaires inconnue.");
+    return handleDbError("partners", error);
   }
 }

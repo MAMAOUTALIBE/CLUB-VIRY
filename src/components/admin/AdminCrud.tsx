@@ -188,7 +188,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         </div>
       ) : null}
 
-      {message ? <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{message}</p> : null}
+      {message ? <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{message}</p> : null}
 
       {/* Formulaire créer / éditer */}
       {editing ? (
@@ -228,7 +228,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               );
             })}
           </div>
-          {formError ? <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{formError}</p> : null}
+          {formError ? <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{formError}</p> : null}
           <div className="mt-4 flex gap-2">
             <button onClick={() => void submit()} disabled={saving} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:cursor-wait disabled:opacity-70" type="button">
               {saving ? <Loader2 className="animate-spin" size={18} /> : null} Enregistrer

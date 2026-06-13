@@ -1,4 +1,4 @@
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listTeams } from "@/lib/db/teams";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
@@ -14,6 +14,6 @@ export async function GET() {
     const teams = await listTeams();
     return jsonOk({ teams });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur equipes inconnue.");
+    return handleDbError("teams", error);
   }
 }

@@ -36,6 +36,25 @@ export function jsonError(status: number, code: ApiErrorCode, message: string, d
   );
 }
 
+/**
+ * Convertit une erreur interne (souvent Supabase/Postgres) en réponse 500 GÉNÉRIQUE.
+ * Le détail est journalisé côté serveur et JAMAIS renvoyé au client — évite la fuite
+ * de schéma/contraintes (noms de tables/colonnes), notamment sur les routes publiques.
+ */
+export function handleDbError(context: string, error: unknown) {
+  console.error(`[api] ${context}`, error);
+  return jsonError(500, "SUPABASE_ERROR", "Une erreur interne est survenue. Réessayez plus tard.");
+}
+
+/** Borne un paramètre de limite à un entier dans [1, max] ; retombe sur `def` si invalide (négatif, flottant, NaN). */
+export function parseLimit(raw: string | null, def: number, max: number): number {
+  const n = Math.trunc(Number(raw));
+  if (!Number.isFinite(n) || n < 1) {
+    return def;
+  }
+  return Math.min(n, max);
+}
+
 export async function readJsonBody(request: NextRequest): Promise<unknown> {
   try {
     return await request.json();

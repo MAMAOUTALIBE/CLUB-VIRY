@@ -313,6 +313,9 @@ export async function createFamilyForProfile(profile: Profile | null, profileId:
   });
 
   if (memberError) {
+    // Compensation : éviter une famille orpheline (sans membre) qui rendrait
+    // isProfileFamilyMember=false et verrouillerait le parcours d'inscription.
+    await supabase.from("families").delete().eq("id", family.id);
     throw new Error(`Unable to create family member: ${memberError.message}`);
   }
 

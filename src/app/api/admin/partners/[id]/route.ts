@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminPartnerPayload } from "@/lib/api/validation";
 import { updatePartner } from "@/lib/db/content";
 import { recordActivity } from "@/lib/db/foundations";
@@ -48,6 +48,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ partner });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour partenaire inconnue.");
+    return handleDbError("admin/partners/[id]", error);
   }
 }

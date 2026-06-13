@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminUserUpdatePayload } from "@/lib/api/validation";
 import { canAdminUpdateProfile } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/foundations";
@@ -79,6 +79,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ profile });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour utilisateur inconnue.");
+    return handleDbError("admin/users/[id]", error);
   }
 }

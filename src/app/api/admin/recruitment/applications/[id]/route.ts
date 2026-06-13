@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminRecruitmentReviewPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { reviewRecruitmentApplication } from "@/lib/db/recruitment-shop";
@@ -51,6 +51,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ application });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur traitement candidature detection inconnue.");
+    return handleDbError("admin/recruitment/applications/[id]", error);
   }
 }

@@ -80,6 +80,41 @@ export async function queueAdminNotification(
   );
 }
 
+/**
+ * Met en file plusieurs notifications en UN SEUL insert (évite le N+1 du fan-out).
+ * L'in-app est marqué SENT immédiatement, les autres canaux restent QUEUED.
+ */
+export async function queueNotificationsBatch(
+  inputs: QueueNotificationInput[],
+  supabase: SupabaseAdminClient = getSupabaseAdminClient()
+): Promise<void> {
+  if (inputs.length === 0) {
+    return;
+  }
+  const nowIso = new Date().toISOString();
+  const rows = inputs.map((input) => {
+    const channel = input.channel ?? "email";
+    const inApp = channel === "in_app";
+    return {
+      recipient_profile_id: input.recipientProfileId ?? null,
+      recipient_email: input.recipientEmail ?? null,
+      channel,
+      template: input.template,
+      subject: input.subject ?? null,
+      status: inApp ? "SENT" : "QUEUED",
+      payload: input.payload ?? {},
+      category: input.category ?? null,
+      link: input.link ?? null,
+      sent_at: inApp ? nowIso : null
+    };
+  });
+
+  const { error } = await supabase.from("notification_logs").insert(rows);
+  if (error) {
+    throw new Error(`Unable to queue notifications batch: ${error.message}`);
+  }
+}
+
 export async function listQueuedNotifications(limit = 20, supabase: SupabaseAdminClient = getSupabaseAdminClient()): Promise<NotificationLog[]> {
   const { data, error } = await supabase
     .from("notification_logs")
@@ -131,6 +166,26 @@ async function readProviderResponse(response: Response): Promise<unknown> {
   }
 }
 
+/**
+ * Réserve atomiquement une notification pour envoi : QUEUED -> SENDING.
+ * Renvoie true si CE run a obtenu la ligne, false si un run concurrent l'a déjà prise.
+ * Empêche le double-envoi (l'appel au provider ne se fait qu'après réservation).
+ */
+async function claimNotificationForSending(id: string, supabase: SupabaseAdminClient): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("notification_logs")
+    .update({ status: "SENDING" })
+    .eq("id", id)
+    .eq("status", "QUEUED")
+    .select("id");
+
+  if (error) {
+    throw new Error(`Unable to claim notification for sending: ${error.message}`);
+  }
+
+  return (data ?? []).length > 0;
+}
+
 async function updateNotificationDispatchStatus(
   id: string,
   status: NotificationStatus,
@@ -150,7 +205,8 @@ async function updateNotificationDispatchStatus(
       sent_at: input.sentAt ?? null
     })
     .eq("id", id)
-    .eq("status", "QUEUED");
+    // La ligne a déjà été réservée en SENDING par claimNotificationForSending.
+    .eq("status", "SENDING");
 
   if (error) {
     throw new Error(`Unable to update notification dispatch status: ${error.message}`);
@@ -295,6 +351,13 @@ export async function dispatchQueuedNotifications(
   const results: NotificationDispatchResult[] = [];
 
   for (const notification of queuedNotifications) {
+    // Réservation atomique avant tout appel provider : si un autre run a déjà pris
+    // la ligne (QUEUED -> SENDING), on la saute pour ne jamais envoyer deux fois.
+    const claimed = await claimNotificationForSending(notification.id, supabase);
+    if (!claimed) {
+      continue;
+    }
+
     if (notification.channel !== "email") {
       const errorMessage = `Unsupported notification channel: ${notification.channel}.`;
       await updateNotificationDispatchStatus(notification.id, "FAILED", { errorMessage }, supabase);

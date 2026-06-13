@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ShieldCheck } from "lucide-react";
+import { Download, Search, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { ProgressBar } from "@/components/admin/charts/ProgressBar";
@@ -30,6 +30,8 @@ type AdminModuleBoardProps = {
   createdAtField?: string;
   demo: Row[];
   kpis?: ModuleKpi[];
+  /** Si défini, affiche un bouton « Exporter CSV » pointant vers cet endpoint d'export. */
+  exportHref?: string;
 };
 
 function euro(cents: number): string {
@@ -105,7 +107,7 @@ function extractRows(json: unknown, dataKey: string): { ok: true; rows: Row[] } 
 }
 
 export function AdminModuleBoard(props: AdminModuleBoardProps) {
-  const { title, description, endpoint, dataKey, statuses, columns, titleFields, demo, kpis } = props;
+  const { title, description, endpoint, dataKey, statuses, columns, titleFields, demo, kpis, exportHref } = props;
   const statusField = props.statusField ?? "status";
   const createdAtField = props.createdAtField ?? "created_at";
 
@@ -234,10 +236,20 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
           <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{title}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
-        <AdminAccessControl loading={state === "loading"} onAuthenticated={() => void load()} />
+        <div className="flex flex-col items-stretch gap-2 xl:items-end">
+          {exportHref ? (
+            <a
+              href={exportHref}
+              className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#002f1d]/20 px-4 py-2 text-xs font-black uppercase text-[#002f1d] transition-colors hover:border-[#f7c600]"
+            >
+              <Download size={16} aria-hidden="true" /> Exporter CSV
+            </a>
+          ) : null}
+          <AdminAccessControl loading={state === "loading"} onAuthenticated={() => void load()} />
+        </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-2 rounded-md bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-700">
+      <div className="mt-4 flex items-center gap-2 rounded-md bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-700" role="status" aria-live="polite">
         <ShieldCheck className="text-[#07542f]" size={18} aria-hidden="true" />
         <span>{message}</span>
       </div>
@@ -257,6 +269,7 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
         </div>
         <div className="flex flex-col gap-3">
           <label className="relative block">
+            <span className="sr-only">Rechercher dans le module</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
             <input
               className="focus-ring min-h-11 w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm font-bold text-slate-900"

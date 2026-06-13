@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { rowsToCsv } from "@/lib/api/csv";
-import { jsonError } from "@/lib/api/http";
+import { handleDbError, jsonError } from "@/lib/api/http";
 import { listRecruitmentApplicationsForAdmin } from "@/lib/db/recruitment-shop";
 import type { RecruitmentApplication } from "@/lib/db/types";
 
@@ -46,6 +46,6 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur export detections inconnue.");
+    return handleDbError("admin/exports/recruitment", error);
   }
 }

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminNewsPayload } from "@/lib/api/validation";
 import { createNewsArticle, listNewsForAdmin } from "@/lib/db/content";
 import { recordActivity } from "@/lib/db/foundations";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const news = await listNewsForAdmin(limit);
     return jsonOk({ news });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur actualites admin inconnue.");
+    return handleDbError("admin/news", error);
   }
 }
 
@@ -57,6 +57,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ article }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation actualite inconnue.");
+    return handleDbError("admin/news", error);
   }
 }

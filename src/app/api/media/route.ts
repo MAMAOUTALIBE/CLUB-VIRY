@@ -1,4 +1,4 @@
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listPublicMedia } from "@/lib/db/content";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
@@ -14,6 +14,6 @@ export async function GET() {
     const media = await listPublicMedia();
     return jsonOk(media);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur medias inconnue.");
+    return handleDbError("media", error);
   }
 }

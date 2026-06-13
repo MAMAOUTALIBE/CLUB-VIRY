@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { recordActivity } from "@/lib/db/foundations";
 import { deleteTrainingSessionForEducator } from "@/lib/db/sessions";
 
@@ -36,6 +36,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ removed: true });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur suppression seance inconnue.");
+    return handleDbError("educator/sessions/[sessionId]", error);
   }
 }

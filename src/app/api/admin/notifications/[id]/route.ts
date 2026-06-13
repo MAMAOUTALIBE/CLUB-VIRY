@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminNotificationUpdatePayload } from "@/lib/api/validation";
 import { updateNotificationLog } from "@/lib/db/contact-admin";
 
@@ -39,6 +39,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const notification = await updateNotificationLog(id, payload.data);
     return jsonOk({ notification });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour notification inconnue.");
+    return handleDbError("admin/notifications/[id]", error);
   }
 }

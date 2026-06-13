@@ -1,4 +1,4 @@
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
@@ -14,6 +14,6 @@ export async function GET() {
     const products = await listPublicProducts();
     return jsonOk(products);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur produits inconnue.");
+    return handleDbError("products", error);
   }
 }

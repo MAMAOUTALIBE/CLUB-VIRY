@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminProductPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { updateProduct } from "@/lib/db/recruitment-shop";
@@ -48,6 +48,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ product });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour produit inconnue.");
+    return handleDbError("admin/shop/products/[id]", error);
   }
 }

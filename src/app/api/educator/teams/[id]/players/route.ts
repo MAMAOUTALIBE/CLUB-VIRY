@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminTeamPlayerPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { assignTeamPlayerForEducator, getEducatorTeamRoster } from "@/lib/db/teams";
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ team: roster.team, staff, matches, players });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur effectif educateur inconnue.");
+    return handleDbError("educator/teams/[id]/players", error);
   }
 }
 
@@ -95,6 +95,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ assignment }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur affectation joueur educateur inconnue.");
+    return handleDbError("educator/teams/[id]/players", error);
   }
 }

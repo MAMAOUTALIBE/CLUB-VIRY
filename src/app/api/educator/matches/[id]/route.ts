@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminMatchPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { updateMatchForEducator } from "@/lib/db/teams";
@@ -57,6 +57,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ match });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour match educateur inconnue.");
+    return handleDbError("educator/matches/[id]", error);
   }
 }

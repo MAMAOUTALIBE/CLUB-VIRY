@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { getAuthContext } from "@/lib/auth/session";
 import { getFamilyDashboard } from "@/lib/db/family";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
@@ -23,6 +23,6 @@ export async function GET(request: NextRequest) {
     const dashboard = await getFamilyDashboard(auth.context.user.id);
     return jsonOk(dashboard);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur famille inconnue.");
+    return handleDbError("family", error);
   }
 }

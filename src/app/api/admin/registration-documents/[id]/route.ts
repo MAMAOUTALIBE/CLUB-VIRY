@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminDocumentReviewPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { reviewRegistrationDocument } from "@/lib/db/registrations";
@@ -48,6 +48,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     return jsonOk({ document });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur revue document inconnue.");
+    return handleDbError("admin/registration-documents/[id]", error);
   }
 }

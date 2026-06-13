@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminTeamPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { createTeam, listTeamsForAdmin } from "@/lib/db/teams";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const teams = await listTeamsForAdmin(limit);
     return jsonOk({ teams });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur equipes admin inconnue.");
+    return handleDbError("admin/teams", error);
   }
 }
 
@@ -57,6 +57,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ team }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation equipe inconnue.");
+    return handleDbError("admin/teams", error);
   }
 }

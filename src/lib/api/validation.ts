@@ -349,7 +349,7 @@ function isPublicRegistrationRole(value: unknown): value is PublicRegistrationRo
   return typeof value === "string" && PUBLIC_REGISTRATION_ROLES.includes(value as PublicRegistrationRole);
 }
 
-function isUuid(value: string): boolean {
+export function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 

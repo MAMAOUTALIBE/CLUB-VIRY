@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminMediaAlbumPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { createMediaAlbum } from "@/lib/db/content";
@@ -40,6 +40,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ album }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation album media inconnue.");
+    return handleDbError("admin/media/albums", error);
   }
 }

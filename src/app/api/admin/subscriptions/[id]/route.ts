@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { isUuid } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { updateSubscriptionStatus } from "@/lib/db/subscriptions";
 
@@ -32,8 +33,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
 
+  if (!isUuid(id)) {
+    return jsonError(400, "VALIDATION_ERROR", "Identifiant d'abonnement invalide.");
+  }
+
   try {
-    await updateSubscriptionStatus(id, status as (typeof STATUSES)[number]);
+    const updated = await updateSubscriptionStatus(id, status as (typeof STATUSES)[number]);
+    if (!updated) {
+      return jsonError(404, "NOT_FOUND", "Abonnement introuvable.");
+    }
     await recordActivity({
       actorId: admin.context.user.id,
       action: "subscription.updated",
@@ -43,6 +51,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     });
     return jsonOk({ updated: true });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur mise a jour abonnement inconnue.");
+    return handleDbError("admin/subscriptions/[id]", error);
   }
 }

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { getBearerToken, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { getBearerToken, handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateOrderPayload } from "@/lib/api/validation";
 import { getAuthContext } from "@/lib/auth/session";
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const orders = await listOrdersForProfile(auth.context.user.id);
     return jsonOk({ orders });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur commandes inconnue.");
+    return handleDbError("orders", error);
   }
 }
 
@@ -68,6 +68,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk(order, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation commande inconnue.");
+    return handleDbError("orders", error);
   }
 }

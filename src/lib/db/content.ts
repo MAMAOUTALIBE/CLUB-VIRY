@@ -140,10 +140,25 @@ async function maybeNotifyPublishedNews(article: NewsArticle): Promise<void> {
     return;
   }
   try {
+    // Réservation atomique AVANT diffusion : notified_at passe de null à maintenant.
+    // Un seul appel concurrent gagne -> pas de double fan-out aux familles.
+    const { data: claimed, error } = await getSupabaseAdminClient()
+      .from("news")
+      .update({ notified_at: new Date().toISOString() })
+      .eq("id", article.id)
+      .is("notified_at", null)
+      .select("id");
+    if (error) {
+      console.error("maybeNotifyPublishedNews: claim failed", error);
+      return;
+    }
+    if (!claimed || claimed.length === 0) {
+      return; // déjà notifié par un autre appel concurrent
+    }
     await notifyTeamNews(article.team_id, { title: article.title });
-    await getSupabaseAdminClient().from("news").update({ notified_at: new Date().toISOString() }).eq("id", article.id);
-  } catch {
+  } catch (error) {
     // la diffusion ne doit jamais bloquer la publication
+    console.error("maybeNotifyPublishedNews failed", error);
   }
 }
 

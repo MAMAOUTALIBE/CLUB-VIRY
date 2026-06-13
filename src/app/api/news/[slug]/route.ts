@@ -1,4 +1,4 @@
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { getPublishedNewsBySlug } from "@/lib/db/content";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
@@ -27,6 +27,6 @@ export async function GET(_: Request, context: RouteContext) {
 
     return jsonOk({ article });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur actualite inconnue.");
+    return handleDbError("news/[slug]", error);
   }
 }

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { getAuthContext } from "@/lib/auth/session";
 import { getOrderBundleForProfile } from "@/lib/db/recruitment-shop";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
@@ -42,6 +42,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return jsonOk(order);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur commande inconnue.");
+    return handleDbError("orders/[id]", error);
   }
 }

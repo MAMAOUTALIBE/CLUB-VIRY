@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { recordActivity } from "@/lib/db/foundations";
 import { upsertSetting } from "@/lib/db/settings";
 
@@ -41,6 +41,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
     return jsonOk({ key });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur enregistrement parametre.");
+    return handleDbError("admin/settings/[key]", error);
   }
 }

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminProductCategoryPayload } from "@/lib/api/validation";
 import { createProductCategory } from "@/lib/db/recruitment-shop";
 import { recordActivity } from "@/lib/db/foundations";
@@ -40,6 +40,6 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ category }, 201);
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur creation categorie produit inconnue.");
+    return handleDbError("admin/shop/categories", error);
   }
 }

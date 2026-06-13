@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getEducatorContext } from "@/lib/api/educator-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listAssignablePlayers } from "@/lib/db/teams";
 
 export const runtime = "nodejs";
@@ -27,6 +27,6 @@ export async function GET(request: NextRequest) {
     }));
     return jsonOk({ players });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur joueurs educateur inconnue.");
+    return handleDbError("educator/players", error);
   }
 }

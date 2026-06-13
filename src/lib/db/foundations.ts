@@ -49,6 +49,8 @@ export async function recordActivity(input: CreateActivityLogInput): Promise<voi
   });
 
   if (error) {
-    throw new Error(`Unable to record activity: ${error.message}`);
+    // Le journal d'audit ne doit JAMAIS faire échouer l'action métier déjà committée
+    // (sinon réponse 500 trompeuse + risque de doublons si le client réessaie). On trace.
+    console.error("recordActivity failed", { action: input.action, entityType: input.entityType, error });
   }
 }

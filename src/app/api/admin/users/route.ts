@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import type { AppRole } from "@/lib/auth/roles";
 import type { ProfileStatus } from "@/lib/db/types";
 import { listProfilesForAdmin } from "@/lib/db/profiles";
@@ -46,6 +46,6 @@ export async function GET(request: NextRequest) {
     const users = await listProfilesForAdmin({ limit, role, status });
     return jsonOk({ users });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur utilisateurs admin inconnue.");
+    return handleDbError("admin/users", error);
   }
 }

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
 import { listRegistrationsForAdmin } from "@/lib/db/registrations";
 import type { RegistrationStatus } from "@/lib/db/types";
 
@@ -36,6 +36,6 @@ export async function GET(request: NextRequest) {
     const registrations = await listRegistrationsForAdmin(limit, status);
     return jsonOk({ registrations });
   } catch (error) {
-    return jsonError(500, "SUPABASE_ERROR", error instanceof Error ? error.message : "Erreur inscriptions admin inconnue.");
+    return handleDbError("admin/registrations", error);
   }
 }
