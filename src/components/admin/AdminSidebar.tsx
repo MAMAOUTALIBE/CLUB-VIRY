@@ -14,6 +14,7 @@ import {
   LogOut,
   Mail,
   Newspaper,
+  Send,
   Settings,
   Shield,
   ShieldCheck,
@@ -79,7 +80,10 @@ const POLES: Pole[] = [
   {
     title: "Communication",
     icon: Mail,
-    items: [{ label: "Messages", href: "/admin/messages", icon: Mail }]
+    items: [
+      { label: "Messages", href: "/admin/messages", icon: Mail },
+      { label: "File d'envoi", href: "/admin/communication", icon: Send }
+    ]
   },
   {
     title: "Administration",

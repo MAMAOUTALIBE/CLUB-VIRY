@@ -198,15 +198,86 @@ async function sendNotificationToWebhook(notification: NotificationLog, webhookU
   };
 }
 
+// Provider email transactionnel (Brevo par défaut). Renvoie null si non configuré.
+function readEmailProviderConfig() {
+  const apiKey = process.env.BREVO_API_KEY || process.env.EMAIL_API_KEY || null;
+  const fromEmail = process.env.EMAIL_FROM || process.env.ADMIN_NOTIFICATIONS_EMAIL || null;
+  if (!apiKey || !fromEmail) {
+    return null;
+  }
+  return { apiKey, fromEmail, fromName: process.env.EMAIL_FROM_NAME || "ES Viry-Châtillon Football" };
+}
+
+function escapeHtml(value: string): string {
+  const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return value.replace(/[&<>"']/g, (char) => map[char] ?? char);
+}
+
+/** Rendu HTML simple et autonome d'un email de notification à partir du template + payload. */
+function renderNotificationEmailHtml(notification: NotificationLog): string {
+  const subject = escapeHtml(notification.subject ?? "Notification ES Viry-Châtillon Football");
+  const payload = notification.payload ?? {};
+  const lines: string[] = [];
+  const addLine = (label: string, key: string) => {
+    const value = payload[key];
+    if (typeof value === "string" && value.trim()) {
+      lines.push(`<p style="margin:4px 0;color:#334155"><strong>${escapeHtml(label)} :</strong> ${escapeHtml(value)}</p>`);
+    }
+  };
+  addLine("Pour", "childFirstName");
+  addLine("Quand", "dateLabel");
+  addLine("Lieu", "location");
+  addLine("Adversaire", "opponentName");
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://esvirychatillonfootball.org";
+  const link = typeof notification.link === "string" && notification.link ? `${siteUrl}${notification.link}` : siteUrl;
+
+  return `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto">
+  <div style="background:#002f1d;color:#f7c600;padding:16px 20px;font-weight:bold;font-size:18px">ES Viry-Châtillon Football</div>
+  <div style="padding:20px;border:1px solid #e2e8f0;border-top:0">
+    <h1 style="font-size:18px;color:#002f1d;margin:0 0 12px">${subject}</h1>
+    ${lines.join("\n    ")}
+    <p style="margin:20px 0 0"><a href="${escapeHtml(link)}" style="background:#f7c600;color:#002f1d;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:6px;display:inline-block">Voir dans mon espace</a></p>
+  </div>
+  <p style="color:#94a3b8;font-size:12px;text-align:center;margin-top:12px">Vous recevez cet email car vous êtes abonné aux communications du club. Gérez vos préférences dans votre espace membre.</p>
+</div>`;
+}
+
+async function sendNotificationViaProvider(notification: NotificationLog, config: { apiKey: string; fromEmail: string; fromName: string }) {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": config.apiKey, "Content-Type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      sender: { email: config.fromEmail, name: config.fromName },
+      to: [{ email: notification.recipient_email }],
+      subject: notification.subject ?? "Notification ES Viry-Châtillon Football",
+      htmlContent: renderNotificationEmailHtml(notification)
+    })
+  });
+
+  const providerResponse = await readProviderResponse(response);
+
+  if (!response.ok) {
+    return {
+      ok: false as const,
+      errorMessage:
+        typeof providerResponse === "string" && providerResponse.trim() ? providerResponse.slice(0, 500) : `Email provider returned HTTP ${response.status}.`
+    };
+  }
+
+  return { ok: true as const, providerReference: getReferenceFromProviderResponse(providerResponse) };
+}
+
 export async function dispatchQueuedNotifications(
   limit = 20,
   supabase: SupabaseAdminClient = getSupabaseAdminClient()
 ): Promise<NotificationDispatchSummary> {
   const boundedLimit = Math.min(Math.max(limit, 1), 50);
   const queuedNotifications = await listQueuedNotifications(boundedLimit, supabase);
+  const provider = readEmailProviderConfig();
   const webhook = readWebhookConfig();
 
-  if (!webhook.url) {
+  if (!provider && !webhook.url) {
     return {
       providerConfigured: false,
       processed: 0,
@@ -216,7 +287,7 @@ export async function dispatchQueuedNotifications(
       results: queuedNotifications.map((notification) => ({
         id: notification.id,
         status: "SKIPPED",
-        errorMessage: "Notification provider is not configured."
+        errorMessage: "Aucun provider email ni webhook configuré."
       }))
     };
   }
@@ -239,7 +310,9 @@ export async function dispatchQueuedNotifications(
     }
 
     try {
-      const delivery = await sendNotificationToWebhook(notification, webhook.url, webhook.secret);
+      const delivery = provider
+        ? await sendNotificationViaProvider(notification, provider)
+        : await sendNotificationToWebhook(notification, webhook.url as string, webhook.secret);
 
       if (!delivery.ok) {
         await updateNotificationDispatchStatus(notification.id, "FAILED", { errorMessage: delivery.errorMessage }, supabase);
