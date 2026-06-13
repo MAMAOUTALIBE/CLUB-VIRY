@@ -23,7 +23,7 @@ export const metadata = pageMetadata("/academy");
 
 // La plateforme Academy est un service EXTERNE déjà déployé. Le site du club ne fait que
 // présenter et rediriger : aucune inscription/compte n'est gérée ici (plateformes distinctes).
-const ACADEMY_URL = process.env.ACADEMY_PLATFORM_URL || "https://academy.esvirychatillonfootball.org";
+const ACADEMY_URL = process.env.ACADEMY_PLATFORM_URL || "https://gandal.org";
 
 type Formation = { icon: LucideIcon; title: string; description: string; audience: string };
 
