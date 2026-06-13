@@ -1,3 +1,4 @@
+import { PlayCircle } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ButtonLink";
 import { PremiumCta } from "@/components/PremiumCta";
@@ -112,6 +113,32 @@ export default async function TeamPage({ params }: TeamPageProps) {
           </div>
         </aside>
       </section>
+      {team.media.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-black uppercase text-[#002f1d]">Médias de l'équipe</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {team.media.map((item) => (
+              <a
+                className="focus-ring official-card group block overflow-hidden rounded-lg bg-white"
+                href={item.url}
+                key={item.url}
+                rel="noopener noreferrer"
+                target="_blank"
+                title={item.title}
+              >
+                <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-[#002f1d]">
+                  {item.type === "VIDEO" && !item.thumbnail ? (
+                    <PlayCircle className="text-[#f7c600]" size={48} aria-hidden="true" />
+                  ) : (
+                    <img alt={item.title} className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" src={item.thumbnail || item.url} />
+                  )}
+                </div>
+                <p className="p-3 text-sm font-black uppercase text-[#002f1d]">{item.title}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <PremiumCta
         primaryHref="/equipes"
         primaryLabel="Toutes les équipes"

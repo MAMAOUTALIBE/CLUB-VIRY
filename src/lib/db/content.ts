@@ -183,6 +183,23 @@ export async function updateNewsArticle(id: string, input: AdminNewsPayload): Pr
   return article;
 }
 
+/** Médias publiés rattachés à une équipe (pour la galerie de la page équipe). */
+export async function listTeamMedia(teamId: string, limit = 12): Promise<MediaAsset[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("media_assets")
+    .select("*")
+    .eq("team_id", teamId)
+    .not("published_at", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Unable to fetch team media: ${error.message}`);
+  }
+
+  return (data ?? []) as MediaAsset[];
+}
+
 export async function listPublicMedia(): Promise<MediaPayload> {
   const supabase = getSupabaseAdminClient();
   const [{ data: albums, error: albumsError }, { data: assets, error: assetsError }] = await Promise.all([

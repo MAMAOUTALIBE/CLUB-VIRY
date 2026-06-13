@@ -5,7 +5,7 @@ import { cache } from "react";
 import type { LucideIcon } from "lucide-react";
 
 import { news as mockNews, partners as mockPartners, products as mockProducts, teams as mockTeams } from "@/lib/data";
-import { getPublishedNewsBySlug, listPartnersForAdmin, listPublicMedia, listPublishedNews } from "@/lib/db/content";
+import { getPublishedNewsBySlug, listPartnersForAdmin, listPublicMedia, listPublishedNews, listTeamMedia } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { getAllSettings } from "@/lib/db/settings";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
@@ -278,11 +278,13 @@ export async function getPublicAlbums(): Promise<DisplayAlbum[]> {
 export type DisplayTeam = { slug: string; name: string; category: string; season: string; description: string; image: string };
 export type DisplayTeamStaff = { name: string; role: string; isHeadCoach: boolean };
 export type DisplayTeamPlayer = { name: string; position: string; shirtNumber: number | null };
+export type DisplayTeamMedia = { type: string; url: string; thumbnail: string | null; title: string };
 export type DisplayTeamDetail = DisplayTeam & {
   coach: string;
   staff: DisplayTeamStaff[];
   players: DisplayTeamPlayer[];
   nextMatch: string;
+  media: DisplayTeamMedia[];
 };
 
 const DEFAULT_SEASON = "2025 / 2026";
@@ -344,7 +346,8 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
             position: p.assignment.position ?? "",
             shirtNumber: p.assignment.shirt_number
           })),
-          nextMatch: formatNextMatch(roster.matches)
+          nextMatch: formatNextMatch(roster.matches),
+          media: (await listTeamMedia(roster.team.id)).map((asset) => ({ type: asset.type, url: asset.url, thumbnail: asset.thumbnail_url, title: asset.title }))
         };
       }
       // slug absent en base → on retombe sur les données mock ci-dessous (les fiches vitrine restent visibles).
@@ -369,7 +372,8 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
       { name: mock.assistant, role: "Adjoint", isHeadCoach: false }
     ],
     players: mock.players.map((name) => ({ name, position: "", shirtNumber: null })),
-    nextMatch: mock.nextMatch
+    nextMatch: mock.nextMatch,
+    media: []
   };
 }
 
