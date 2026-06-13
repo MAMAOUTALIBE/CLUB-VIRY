@@ -261,6 +261,15 @@ export type AdminPartnershipRequestReviewPayload = {
   status?: "PENDING" | "CONTACTED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
 };
 
+export type AdminOfficialPayload = {
+  category?: "BUREAU" | "DIRIGEANT";
+  fullName?: string;
+  position?: string;
+  photoUrl?: string;
+  orderIndex?: number;
+  isActive?: boolean;
+};
+
 export type AdminRecruitmentReviewPayload = {
   status?: "PENDING" | "CONTACTED" | "TRIAL_SCHEDULED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
 };
@@ -278,6 +287,9 @@ export type ProfileUpdatePayload = {
   phone?: string;
   avatarUrl?: string;
   birthDate?: string;
+  publicProfile?: boolean;
+  publicTitle?: string;
+  publicBio?: string;
 };
 
 export type AdminUserUpdatePayload = ProfileUpdatePayload & {
@@ -1982,6 +1994,67 @@ export function validateAdminMediaAssetPayload(
   };
 }
 
+export function validateAdminOfficialPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminOfficialPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const categoryRaw = normalizeString(body.category);
+  const category = categoryRaw === "BUREAU" || categoryRaw === "DIRIGEANT" ? categoryRaw : undefined;
+  const fullName = normalizeString(body.fullName);
+  const position = normalizeString(body.position);
+  const photoUrl = normalizeString(body.photoUrl);
+  const orderIndex = typeof body.orderIndex === "number" ? body.orderIndex : undefined;
+  const isActive = typeof body.isActive === "boolean" ? body.isActive : undefined;
+
+  if (categoryRaw && !category) {
+    issues.push({ field: "category", message: "Categorie invalide (BUREAU ou DIRIGEANT)." });
+  }
+
+  if (!options.partial && (!fullName || fullName.length < 2 || fullName.length > 120)) {
+    issues.push({ field: "fullName", message: "Nom invalide." });
+  }
+
+  if (fullName && (fullName.length < 2 || fullName.length > 120)) {
+    issues.push({ field: "fullName", message: "Nom invalide." });
+  }
+
+  if (!options.partial && (!position || position.length < 2 || position.length > 120)) {
+    issues.push({ field: "position", message: "Fonction invalide." });
+  }
+
+  if (position && (position.length < 2 || position.length > 120)) {
+    issues.push({ field: "position", message: "Fonction invalide." });
+  }
+
+  if (orderIndex !== undefined && (!Number.isInteger(orderIndex) || orderIndex < -1000 || orderIndex > 1000)) {
+    issues.push({ field: "orderIndex", message: "Ordre invalide." });
+  }
+
+  if (options.partial && Object.keys(body).length === 0) {
+    issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      ...(category ? { category } : {}),
+      ...(fullName ? { fullName } : {}),
+      ...(position ? { position } : {}),
+      ...(photoUrl ? { photoUrl } : {}),
+      ...(orderIndex !== undefined ? { orderIndex } : {}),
+      ...(isActive !== undefined ? { isActive } : {})
+    }
+  };
+}
+
 export function validateAdminPartnerPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminPartnerPayload> {
   const body = asRecord(input);
   const issues: ValidationIssue[] = [];
@@ -2126,9 +2199,20 @@ export function validateProfileUpdatePayload(input: unknown): ValidationResult<P
   const phone = normalizeString(body.phone);
   const avatarUrl = normalizeString(body.avatarUrl);
   const birthDate = normalizeString(body.birthDate);
+  const publicProfile = typeof body.publicProfile === "boolean" ? body.publicProfile : undefined;
+  const publicTitle = normalizeString(body.publicTitle);
+  const publicBio = normalizeString(body.publicBio);
 
-  if (!firstName && !lastName && !displayName && !phone && !avatarUrl && !birthDate) {
+  if (!firstName && !lastName && !displayName && !phone && !avatarUrl && !birthDate && publicProfile === undefined && !publicTitle && !publicBio) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (publicTitle && publicTitle.length > 120) {
+    issues.push({ field: "publicTitle", message: "Titre public trop long (120 caracteres max)." });
+  }
+
+  if (publicBio && publicBio.length > 600) {
+    issues.push({ field: "publicBio", message: "Biographie publique trop longue (600 caracteres max)." });
   }
 
   if (firstName && (firstName.length < 2 || firstName.length > 80)) {
@@ -2163,7 +2247,10 @@ export function validateProfileUpdatePayload(input: unknown): ValidationResult<P
       ...(displayName ? { displayName } : {}),
       ...(phone ? { phone } : {}),
       ...(avatarUrl ? { avatarUrl } : {}),
-      ...(birthDate ? { birthDate } : {})
+      ...(birthDate ? { birthDate } : {}),
+      ...(publicProfile !== undefined ? { publicProfile } : {}),
+      ...(publicTitle ? { publicTitle } : {}),
+      ...(publicBio ? { publicBio } : {})
     }
   };
 }
@@ -2185,7 +2272,10 @@ export function validateAdminUserUpdatePayload(input: unknown): ValidationResult
     body.displayName !== undefined ||
     body.phone !== undefined ||
     body.avatarUrl !== undefined ||
-    body.birthDate !== undefined;
+    body.birthDate !== undefined ||
+    body.publicProfile !== undefined ||
+    body.publicTitle !== undefined ||
+    body.publicBio !== undefined;
   const base = hasProfileFields ? validateProfileUpdatePayload(body) : ({ ok: true, data: {} } as const);
 
   if (!role && !status && !email && !hasProfileFields) {

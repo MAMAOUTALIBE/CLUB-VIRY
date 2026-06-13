@@ -28,6 +28,10 @@ const PAGES: Record<string, PageSeo> = {
     title: "Organigramme",
     description: "L'organigramme de l'ES Viry-Chatillon Football : dirigeants, encadrement sportif et referents par categorie."
   },
+  "/le-club/encadrement": {
+    title: "Encadrement",
+    description: "L'encadrement sportif de l'ES Viry-Chatillon Football : educateurs et entraineurs diplomes, leurs equipes et leur activite."
+  },
   "/le-club/stade-henri-longuet": {
     title: "Stade Henri Longuet",
     description: "Le stade Henri Longuet, antre de l'ES Viry-Chatillon Football a Viry-Chatillon : acces, infrastructures et informations pratiques."

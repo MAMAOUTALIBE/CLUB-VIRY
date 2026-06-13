@@ -45,6 +45,8 @@ type AdminCrudProps = {
   columns: CrudColumn[];
   idField?: string;
   newLabel?: string;
+  /** Masque le bouton de création (mode édition seule, ex: profils existants non créables ici). */
+  disableCreate?: boolean;
   /** Actions supplémentaires par ligne, rendues avant le bouton « Éditer » (ex: lien vers un sous-écran). */
   rowActions?: (row: Row) => React.ReactNode;
 };
@@ -62,7 +64,7 @@ function toInputValue(field: CrudField, row: Row): string {
   return String(raw);
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", rowActions }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -171,9 +173,11 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           <button onClick={() => void load()} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 px-3 text-sm font-black uppercase text-slate-700 hover:border-[#f7c600]" type="button">
             <RefreshCw size={16} aria-hidden="true" /> Actualiser
           </button>
-          <button onClick={openNew} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#002f1d] px-4 text-sm font-black uppercase text-white hover:bg-[#07542f]" type="button">
-            <Plus size={18} aria-hidden="true" /> {newLabel}
-          </button>
+          {!disableCreate ? (
+            <button onClick={openNew} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#002f1d] px-4 text-sm font-black uppercase text-white hover:bg-[#07542f]" type="button">
+              <Plus size={18} aria-hidden="true" /> {newLabel}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -239,7 +243,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         {state === "loading" ? (
           <p className="flex items-center gap-2 px-1 py-6 text-sm font-bold text-slate-500"><Loader2 className="animate-spin" size={18} /> Chargement…</p>
         ) : state === "ready" && rows.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-6 text-center text-sm font-bold text-slate-500">Aucun élément. Cliquez sur « {newLabel} » pour en ajouter.</p>
+          <p className="rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-6 text-center text-sm font-bold text-slate-500">Aucun élément{disableCreate ? "." : ` — cliquez sur « ${newLabel} » pour en ajouter.`}</p>
         ) : (
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
