@@ -57,6 +57,14 @@ read-only du code réel, puis correction autonome et vérification.
     fan-out via `player_guardians`, APIs `/api/family/notifications(+/preferences)`, déclencheurs sur
     séances (création/annulation) et convocations. **Validé E2E** (séance créée → notification reçue).
 
+## 3 bis. Corrections complémentaires (lot 2, vérifiées)
+
+11. **[MAJEUR#2] SEO** — les 20 descriptions de pages sont désormais toutes dans la plage 120-160 caractères (mots-clés locaux : Essonne, 91170, catégories).
+12. **[MAJEUR#15] Perf page article** — `getPublicNewsBySlug` utilise un fetch indexé direct (`getPublishedNewsBySlug`) + `React cache()` ; fini le double sur-fetch de 50 lignes.
+13. **[MAJEUR#8] Formulaire de demande de partenariat** — `PartnerForm` branché sur `/api/partners/requests`, sur la page `/partenaires`. **Vérifié** (POST 201).
+14. **[MAJEUR#7] CRM actionnable** — `AdminModuleBoard` permet de changer le statut des Messages / Détections / Demandes de partenariat (sélecteur → `PATCH endpoint/[id]`). **Vérifié E2E** (statut → CONTACTED persisté).
+15. **[MAJEUR#6 partiel] Accueil branché au CRM** — la section « équipes » lit `getPublicTeams` (contenu CRM). *Reste : partenaires (branding en dur) et prochain match (structure riche + dates ISO manquantes) — voir backlog.*
+
 ## 4. Reste à traiter (priorisé, avec estimations)
 
 > Aucun n'est bloquant pour un déploiement ; ce sont des améliorations fonctionnelles/qualité.
