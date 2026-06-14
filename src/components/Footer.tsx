@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, Mail, MapPin, User } from "lucide-react";
@@ -143,18 +144,30 @@ export function Footer({ socials, contact }: FooterProps) {
 
           {/* Bloc contact + CTA */}
           <div>
-            <div className="club-panel rounded-2xl p-6">
-              <p className="font-script text-4xl leading-none text-[#f7c600]">Jaune et Vert</p>
-              <p className="mt-1 text-lg font-bold italic text-white/90">pour toujours !</p>
-              <div className="mt-5 space-y-3 text-sm text-white/75">
-                <p className="flex items-start gap-3">
-                  <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-[#f7c600]" size={18} />
-                  <span>{contact?.address?.trim() || "Stade Henri Longuet · Avenue de l'Armée Leclerc · 91170 Viry-Châtillon"}</span>
-                </p>
-                <Link className="focus-ring flex items-center gap-3 transition hover:text-[#f7c600]" href="/contact">
-                  <Mail aria-hidden="true" className="shrink-0 text-[#f7c600]" size={18} />
-                  <span>Nous contacter</span>
-                </Link>
+            <div className="club-panel relative isolate overflow-hidden rounded-2xl p-6">
+              {/* Fond : photo de stade HD (nette) + voile vert qui la teinte aux couleurs du club */}
+              <Image
+                src="https://images.unsplash.com/photo-1540379708242-14a809bef941?auto=format&fit=crop&w=2000&q=80"
+                alt=""
+                fill
+                sizes="(max-width: 1024px) 100vw, 480px"
+                className="object-cover object-center"
+                style={{ zIndex: 0 }}
+              />
+              <div className="absolute inset-0 z-[1] bg-gradient-to-br from-[#001c10]/88 via-[#00351f]/76 to-[#001c10]/90" aria-hidden="true" />
+              <div className="relative z-[2]">
+                <p className="font-script text-4xl leading-none text-[#f7c600]">Jaune et Vert</p>
+                <p className="mt-1 text-lg font-bold italic text-white/90">pour toujours !</p>
+                <div className="mt-5 space-y-3 text-sm text-white/80">
+                  <p className="flex items-start gap-3">
+                    <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-[#f7c600]" size={18} />
+                    <span>{contact?.address?.trim() || "Stade Henri Longuet · Avenue de l'Armée Leclerc · 91170 Viry-Châtillon"}</span>
+                  </p>
+                  <Link className="focus-ring flex items-center gap-3 transition hover:text-[#f7c600]" href="/contact">
+                    <Mail aria-hidden="true" className="shrink-0 text-[#f7c600]" size={18} />
+                    <span>Nous contacter</span>
+                  </Link>
+                </div>
               </div>
             </div>
             <Link
