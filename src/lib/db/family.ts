@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { AdminPlayerUpdatePayload } from "@/lib/api/validation";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { Family, FamilyMember, Payment, Player, Profile, Registration, RegistrationDocument } from "@/lib/db/types";
 
@@ -320,6 +321,31 @@ export async function createFamilyForProfile(profile: Profile | null, profileId:
   }
 
   return family as Family;
+}
+
+/** Mise à jour admin d'une fiche joueur. Renvoie null si l'id n'existe pas (-> 404 côté route). */
+export async function updatePlayerForAdmin(id: string, input: AdminPlayerUpdatePayload): Promise<Player | null> {
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (input.firstName !== undefined) row.first_name = input.firstName;
+  if (input.lastName !== undefined) row.last_name = input.lastName;
+  if (input.birthDate !== undefined) row.birth_date = input.birthDate;
+  if (input.gender !== undefined) row.gender = input.gender;
+  if (input.licenseNumber !== undefined) row.license_number = input.licenseNumber;
+  if (input.medicalNotes !== undefined) row.medical_notes = input.medicalNotes;
+  if (input.categoryId !== undefined) row.category_id = input.categoryId;
+
+  const { data, error } = await getSupabaseAdminClient()
+    .from("players")
+    .update(row)
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Unable to update player: ${error.message}`);
+  }
+
+  return (data as Player) ?? null;
 }
 
 export async function createPlayer(input: CreatePlayerInput): Promise<Player> {

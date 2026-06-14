@@ -11,6 +11,8 @@ export function OfficialsAdmin() {
       listKey="officials"
       itemKey="official"
       newLabel="Nouveau membre"
+      allowDelete
+      rowLabel={(r) => `« ${String(r.full_name ?? "ce membre")} »`}
       fields={[
         {
           name: "category",

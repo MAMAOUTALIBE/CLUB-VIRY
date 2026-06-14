@@ -75,3 +75,18 @@ export async function updateOfficial(id: string, input: AdminOfficialPayload): P
 
   return data as ClubOfficial;
 }
+
+/** Supprime un dirigeant. Renvoie false si l'id n'existe pas (-> 404 côté route). */
+export async function deleteOfficial(id: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("club_officials")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
+  if (error) {
+    throw new Error(`Unable to delete official: ${error.message}`);
+  }
+
+  return (data ?? []).length > 0;
+}

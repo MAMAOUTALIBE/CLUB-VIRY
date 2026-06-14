@@ -22,6 +22,15 @@ type DetailItem = {
   type?: "registration" | "document" | "payment" | "player";
 };
 
+type PlayerForm = {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  gender: "MASCULIN" | "FEMININ" | "NON_RENSEIGNE";
+  licenseNumber: string;
+  medicalNotes: string;
+};
+
 type DetailView = {
   adminNotes?: string;
   title: string;
@@ -29,6 +38,7 @@ type DetailView = {
   status: string;
   stats: Array<{ label: string; value: string }>;
   sections: Array<{ title: string; items: DetailItem[] }>;
+  player?: PlayerForm;
 };
 
 type ApiFailure = {
@@ -171,6 +181,7 @@ function buildDetail(kind: DetailKind, payload: unknown): DetailView {
     const player = isObject(data.player) ? data.player : {};
     const family = isObject(data.family) ? data.family : null;
 
+    const genderRaw = optionalString(player.gender);
     return {
       title: `${optionalString(player.first_name) ?? ""} ${optionalString(player.last_name) ?? ""}`.trim() || "Joueur",
       subtitle: family ? `Famille : ${optionalString(family.name) ?? "non renseignee"}` : "Famille non rattachee",
@@ -185,7 +196,15 @@ function buildDetail(kind: DetailKind, payload: unknown): DetailView {
         { title: "Dossiers", items: buildRegistrationItems(registrations) },
         { title: "Documents", items: buildDocumentItems(documents) },
         { title: "Paiements", items: buildPaymentItems(payments) }
-      ]
+      ],
+      player: {
+        firstName: optionalString(player.first_name) ?? "",
+        lastName: optionalString(player.last_name) ?? "",
+        birthDate: optionalString(player.birth_date) ?? "",
+        gender: genderRaw === "MASCULIN" || genderRaw === "FEMININ" ? genderRaw : "NON_RENSEIGNE",
+        licenseNumber: optionalString(player.license_number) ?? "",
+        medicalNotes: optionalString(player.medical_notes) ?? ""
+      }
     };
   }
 
@@ -226,6 +245,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
   const [documentRejectionReason, setDocumentRejectionReason] = useState(
     "Document a corriger. Merci de deposer une version conforme."
   );
+  const [playerForm, setPlayerForm] = useState<PlayerForm | null>(null);
 
   const visibleSections = useMemo(() => detail?.sections.filter((section) => section.items.length > 0) ?? [], [detail]);
 
@@ -250,6 +270,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       const nextDetail = buildDetail(kind, payload);
       setDetail(nextDetail);
       setAdminNotes(nextDetail.adminNotes ?? "");
+      setPlayerForm(nextDetail.player ?? null);
       setStatus("loaded");
       setMessage("Fiche 360 chargee depuis le backend.");
     } catch (error) {
@@ -299,6 +320,18 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       ...(trimmedNotes ? { adminNotes: trimmedNotes } : {})
     });
   }, [adminNotes, endpoint, patchAdmin]);
+
+  const savePlayer = useCallback(() => {
+    if (!playerForm) return;
+    void patchAdmin(endpoint, {
+      firstName: playerForm.firstName.trim(),
+      lastName: playerForm.lastName.trim(),
+      birthDate: playerForm.birthDate,
+      gender: playerForm.gender,
+      licenseNumber: playerForm.licenseNumber.trim() ? playerForm.licenseNumber.trim() : null,
+      medicalNotes: playerForm.medicalNotes.trim() ? playerForm.medicalNotes.trim() : null
+    });
+  }, [playerForm, endpoint, patchAdmin]);
 
   const reviewDocument = useCallback((documentId: string, nextStatus: "VALIDATED" | "REJECTED") => {
     const trimmedReason = documentRejectionReason.trim();
@@ -392,8 +425,86 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
             />
           </label>
           {actionMessage ? (
-            <p className={`mt-3 text-sm font-bold ${actionStatus === "error" ? "text-red-700" : "text-[#07542f]"}`}>{actionMessage}</p>
+            <p role="status" aria-live="polite" className={`mt-3 text-sm font-bold ${actionStatus === "error" ? "text-red-700" : "text-[#07542f]"}`}>{actionMessage}</p>
           ) : null}
+        </section>
+      ) : null}
+
+      {kind === "player" && playerForm ? (
+        <section className="mt-5 rounded-lg border border-slate-200 bg-[#fbfcf8] p-4">
+          <p className="text-xs font-black uppercase text-[#07542f]">Édition fiche joueur</p>
+          <h3 className="mt-1 text-xl font-black uppercase text-[#002f1d]">Identité & licence</h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-xs font-black uppercase text-slate-500">Prénom</span>
+              <input
+                className="focus-ring mt-1 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold text-slate-900"
+                value={playerForm.firstName}
+                onChange={(event) => setPlayerForm((form) => (form ? { ...form, firstName: event.target.value } : form))}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-slate-500">Nom</span>
+              <input
+                className="focus-ring mt-1 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold text-slate-900"
+                value={playerForm.lastName}
+                onChange={(event) => setPlayerForm((form) => (form ? { ...form, lastName: event.target.value } : form))}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-slate-500">Date de naissance</span>
+              <input
+                type="date"
+                className="focus-ring mt-1 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold text-slate-900"
+                value={playerForm.birthDate}
+                onChange={(event) => setPlayerForm((form) => (form ? { ...form, birthDate: event.target.value } : form))}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-slate-500">Genre</span>
+              <select
+                className="focus-ring mt-1 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold text-slate-900"
+                value={playerForm.gender}
+                onChange={(event) => setPlayerForm((form) => (form ? { ...form, gender: event.target.value as PlayerForm["gender"] } : form))}
+              >
+                <option value="MASCULIN">Masculin</option>
+                <option value="FEMININ">Féminin</option>
+                <option value="NON_RENSEIGNE">Non renseigné</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-black uppercase text-slate-500">Numéro de licence</span>
+              <input
+                className="focus-ring mt-1 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold text-slate-900"
+                value={playerForm.licenseNumber}
+                onChange={(event) => setPlayerForm((form) => (form ? { ...form, licenseNumber: event.target.value } : form))}
+                placeholder="Optionnel"
+              />
+            </label>
+          </div>
+          <label className="mt-3 block">
+            <span className="text-xs font-black uppercase text-slate-500">Notes médicales</span>
+            <textarea
+              className="focus-ring mt-1 min-h-20 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold leading-6 text-slate-900"
+              maxLength={2000}
+              value={playerForm.medicalNotes}
+              onChange={(event) => setPlayerForm((form) => (form ? { ...form, medicalNotes: event.target.value } : form))}
+              placeholder="Optionnel — allergies, contre-indications..."
+            />
+          </label>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:cursor-wait disabled:opacity-70"
+              disabled={actionStatus === "loading"}
+              onClick={savePlayer}
+              type="button"
+            >
+              Enregistrer la fiche
+            </button>
+            {actionMessage ? (
+              <p role="status" aria-live="polite" className={`text-sm font-bold ${actionStatus === "error" ? "text-red-700" : "text-[#07542f]"}`}>{actionMessage}</p>
+            ) : null}
+          </div>
         </section>
       ) : null}
 

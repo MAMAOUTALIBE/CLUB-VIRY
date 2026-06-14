@@ -181,16 +181,20 @@ export async function createNewsArticle(input: AdminNewsPayload, authorId: strin
   return article;
 }
 
-export async function updateNewsArticle(id: string, input: AdminNewsPayload): Promise<NewsArticle> {
+export async function updateNewsArticle(id: string, input: AdminNewsPayload): Promise<NewsArticle | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("news")
     .update(newsPayloadToRow(input))
     .eq("id", id)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to update news article: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
   }
 
   const article = data as NewsArticle;
@@ -327,6 +331,21 @@ export async function updateMediaAsset(id: string, input: AdminMediaAssetPayload
   return data as MediaAsset;
 }
 
+/** Supprime un média. Renvoie false si l'id n'existe pas (-> 404 côté route). */
+export async function deleteMediaAsset(id: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("media_assets")
+    .delete()
+    .eq("id", id)
+    .select("id");
+
+  if (error) {
+    throw new Error(`Unable to delete media asset: ${error.message}`);
+  }
+
+  return (data ?? []).length > 0;
+}
+
 export async function listActivePartners(): Promise<Partner[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("partners")
@@ -373,14 +392,14 @@ export async function createPartner(input: AdminPartnerPayload): Promise<Partner
   return data as Partner;
 }
 
-export async function updatePartner(id: string, input: AdminPartnerPayload): Promise<Partner> {
-  const { data, error } = await getSupabaseAdminClient().from("partners").update(partnerPayloadToRow(input)).eq("id", id).select("*").single();
+export async function updatePartner(id: string, input: AdminPartnerPayload): Promise<Partner | null> {
+  const { data, error } = await getSupabaseAdminClient().from("partners").update(partnerPayloadToRow(input)).eq("id", id).select("*").maybeSingle();
 
   if (error) {
     throw new Error(`Unable to update partner: ${error.message}`);
   }
 
-  return data as Partner;
+  return (data as Partner) ?? null;
 }
 
 export async function createPartnershipRequest(input: CreatePartnershipRequestInput): Promise<PartnershipRequest> {

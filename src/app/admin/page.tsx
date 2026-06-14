@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   Mail,
   Megaphone,
-  Search,
   Shirt,
   Sparkles,
   Target,
@@ -96,31 +95,23 @@ export default function AdminPage() {
       <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
         <AdminSidebar />
 
-        <section className="px-4 py-5 sm:px-6 lg:px-8">
+        <main id="contenu" className="px-4 py-5 sm:px-6 lg:px-8">
           <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <p className="text-xs font-black uppercase text-[#07542f]">Centre de pilotage</p>
               <h2 className="mt-1 text-3xl font-black uppercase text-[#002f1d] sm:text-4xl">Tableau de bord CRM</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Vision operationnelle pour piloter le site, les inscriptions, les equipes, les finances, la boutique et les partenaires.
+                Vision opérationnelle pour piloter le site, les inscriptions, les équipes, les finances, la boutique et les partenaires.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <label className="relative block min-w-0 sm:w-80">
-                <span className="sr-only">Recherche globale</span>
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
-                <input
-                  className="focus-ring min-h-11 w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm font-bold text-slate-900"
-                  placeholder="Rechercher famille, joueur, equipe..."
-                  type="search"
-                />
-              </label>
-              <button className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#f7c600] px-4 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white">
-                <Bell size={18} aria-hidden="true" />
-                Priorites
-              </button>
-            </div>
+            <Link
+              className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-md bg-[#f7c600] px-4 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white"
+              href="/admin/inscriptions"
+            >
+              <Bell size={18} aria-hidden="true" />
+              Dossiers à traiter
+            </Link>
           </header>
 
           <AdminDashboardLive />
@@ -253,7 +244,7 @@ export default function AdminPage() {
               </div>
             </div>
           </section>
-        </section>
+        </main>
       </div>
     </div>
   );

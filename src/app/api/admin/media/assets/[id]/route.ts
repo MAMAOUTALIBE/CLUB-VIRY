@@ -2,8 +2,8 @@ import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
-import { validateAdminMediaAssetPayload } from "@/lib/api/validation";
-import { updateMediaAsset } from "@/lib/db/content";
+import { isUuid, validateAdminMediaAssetPayload } from "@/lib/api/validation";
+import { deleteMediaAsset, updateMediaAsset } from "@/lib/db/content";
 import { recordActivity } from "@/lib/db/foundations";
 
 export const runtime = "nodejs";
@@ -47,6 +47,39 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     });
 
     return jsonOk({ asset });
+  } catch (error) {
+    return handleDbError("admin/media/assets/[id]", error);
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const admin = await getAdminContext(request, "content:manage");
+
+  if (!admin.ok) {
+    return admin.response;
+  }
+
+  const { id } = await context.params;
+
+  if (!isUuid(id)) {
+    return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
+  }
+
+  try {
+    const deleted = await deleteMediaAsset(id);
+
+    if (!deleted) {
+      return jsonError(404, "NOT_FOUND", "Média introuvable.");
+    }
+
+    await recordActivity({
+      actorId: admin.context.user.id,
+      action: "media.asset.deleted",
+      entityType: "media_assets",
+      entityId: id
+    });
+
+    return jsonOk({ deleted: true });
   } catch (error) {
     return handleDbError("admin/media/assets/[id]", error);
   }

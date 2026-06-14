@@ -38,6 +38,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const partner = await updatePartner(id, payload.data);
+
+    if (!partner) {
+      return jsonError(404, "NOT_FOUND", "Partenaire introuvable.");
+    }
+
     await recordActivity({
       actorId: admin.context.user.id,
       action: "partner.updated",

@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2, Pencil, Plus, RefreshCw, X } from "lucide-react";
+import { Loader2, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { showToast } from "@/components/admin/Toast";
 
 type Row = Record<string, unknown>;
 
@@ -49,6 +50,10 @@ type AdminCrudProps = {
   disableCreate?: boolean;
   /** Actions supplémentaires par ligne, rendues avant le bouton « Éditer » (ex: lien vers un sous-écran). */
   rowActions?: (row: Row) => React.ReactNode;
+  /** Active un bouton « Supprimer » par ligne (DELETE endpoint/[id], avec confirmation). */
+  allowDelete?: boolean;
+  /** Libellé d'une ligne pour la confirmation de suppression (défaut: première colonne). */
+  rowLabel?: (row: Row) => string;
 };
 
 function camelToSnake(s: string): string {
@@ -64,7 +69,7 @@ function toInputValue(field: CrudField, row: Row): string {
   return String(raw);
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, rowLabel }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -119,6 +124,26 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     setFormError("");
   }
 
+  async function deleteRow(row: Row) {
+    const id = row[idField];
+    if (!id) return;
+    const label = rowLabel ? rowLabel(row) : "cet élément";
+    if (!window.confirm(`Supprimer ${label} ? Cette action est définitive.`)) return;
+    try {
+      const res = await fetch(`${endpoint}/${id}`, { method: "DELETE", credentials: "same-origin" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setMessage(`${json?.error?.message ?? "Suppression impossible."}`);
+        showToast(json?.error?.message ?? "Suppression impossible.", "error");
+        return;
+      }
+      await load();
+      showToast("Supprimé.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erreur réseau.");
+    }
+  }
+
   async function submit() {
     setSaving(true);
     setFormError("");
@@ -154,6 +179,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
       }
       setEditing(null);
       await load();
+      showToast("Enregistré.");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Erreur réseau.");
     } finally {
@@ -262,6 +288,11 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                       <button onClick={() => openEdit(row)} className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">
                         <Pencil size={14} /> Éditer
                       </button>
+                      {allowDelete ? (
+                        <button onClick={() => void deleteRow(row)} className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-black uppercase text-red-700 hover:bg-red-50" type="button">
+                          <Trash2 size={14} /> Supprimer
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

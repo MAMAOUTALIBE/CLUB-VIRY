@@ -216,6 +216,16 @@ export type AdminTeamPlayerPayload = {
   shirtNumber?: number;
 };
 
+export type AdminPlayerUpdatePayload = {
+  firstName?: string;
+  lastName?: string;
+  birthDate?: string;
+  gender?: ChildPayload["gender"];
+  licenseNumber?: string | null;
+  medicalNotes?: string | null;
+  categoryId?: string | null;
+};
+
 export type AdminRegistrationReviewPayload = {
   status?: "DRAFT" | "SUBMITTED" | "IN_REVIEW" | "MISSING_DOCUMENTS" | "VALIDATED" | "REJECTED" | "CANCELLED";
   adminNotes?: string;
@@ -1778,6 +1788,75 @@ export function validateAdminTeamPlayerPayload(input: unknown): ValidationResult
       playerId: playerId as string,
       ...(position ? { position } : {}),
       ...(shirtNumber !== undefined ? { shirtNumber } : {})
+    }
+  };
+}
+
+export function validateAdminPlayerUpdatePayload(input: unknown): ValidationResult<AdminPlayerUpdatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+  const birthDate = normalizeString(body.birthDate);
+  const gender = body.gender;
+  const licenseNumber = body.licenseNumber === null ? null : normalizeString(body.licenseNumber);
+  const medicalNotes = body.medicalNotes === null ? null : normalizeString(body.medicalNotes);
+  const categoryId = body.categoryId === null ? null : normalizeString(body.categoryId);
+
+  if (firstName !== undefined && (firstName.length < 2 || firstName.length > 80)) {
+    issues.push({ field: "firstName", message: "Le prenom doit faire entre 2 et 80 caracteres." });
+  }
+  if (lastName !== undefined && (lastName.length < 2 || lastName.length > 80)) {
+    issues.push({ field: "lastName", message: "Le nom doit faire entre 2 et 80 caracteres." });
+  }
+  if (birthDate !== undefined && !isValidBirthDate(birthDate)) {
+    issues.push({ field: "birthDate", message: "Date de naissance invalide." });
+  }
+  if (gender !== undefined && !isPersonGender(gender)) {
+    issues.push({ field: "gender", message: "Genre invalide." });
+  }
+  if (typeof licenseNumber === "string" && licenseNumber.length > 40) {
+    issues.push({ field: "licenseNumber", message: "Numero de licence trop long." });
+  }
+  if (typeof medicalNotes === "string" && medicalNotes.length > 2000) {
+    issues.push({ field: "medicalNotes", message: "Notes medicales trop longues." });
+  }
+  if (typeof categoryId === "string" && !isUuid(categoryId)) {
+    issues.push({ field: "categoryId", message: "Categorie invalide." });
+  }
+
+  const hasField =
+    firstName !== undefined ||
+    lastName !== undefined ||
+    birthDate !== undefined ||
+    gender !== undefined ||
+    body.licenseNumber !== undefined ||
+    body.medicalNotes !== undefined ||
+    body.categoryId !== undefined;
+
+  if (!hasField) {
+    issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      ...(firstName !== undefined ? { firstName } : {}),
+      ...(lastName !== undefined ? { lastName } : {}),
+      ...(birthDate !== undefined ? { birthDate } : {}),
+      ...(gender !== undefined ? { gender: gender as ChildPayload["gender"] } : {}),
+      ...(body.licenseNumber !== undefined ? { licenseNumber: licenseNumber ?? null } : {}),
+      ...(body.medicalNotes !== undefined ? { medicalNotes: medicalNotes ?? null } : {}),
+      ...(body.categoryId !== undefined ? { categoryId: categoryId ?? null } : {})
     }
   };
 }

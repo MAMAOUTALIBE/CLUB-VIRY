@@ -63,6 +63,8 @@ export function MediaAssetsAdmin() {
       listKey="assets"
       itemKey="asset"
       newLabel="Nouveau média"
+      allowDelete
+      rowLabel={(r) => `« ${String(r.title ?? "ce média")} »`}
       fields={fields}
       columns={[
         { label: "Titre", render: (r) => <span className="font-bold text-[#002f1d]">{String(r.title ?? "—")}</span> },

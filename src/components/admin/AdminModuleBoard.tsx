@@ -3,6 +3,7 @@
 import { Download, Search, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { showToast } from "@/components/admin/Toast";
 import { ProgressBar } from "@/components/admin/charts/ProgressBar";
 import { StatusBarChart } from "@/components/admin/charts/StatusBarChart";
 
@@ -169,8 +170,11 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
       if (response.ok && json?.ok) {
         setRows((current) => current.map((item) => (item.id === id ? { ...item, [statusField]: newStatus } : item)));
         setMessage("Statut mis à jour.");
+        showToast("Statut mis à jour.");
       } else {
-        setMessage(`Échec de la mise à jour : ${json?.error?.message ?? `HTTP ${response.status}`}`);
+        const failMessage = `Échec de la mise à jour : ${json?.error?.message ?? `HTTP ${response.status}`}`;
+        setMessage(failMessage);
+        showToast(failMessage, "error");
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Erreur réseau lors de la mise à jour.");

@@ -38,6 +38,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const article = await updateNewsArticle(id, payload.data);
+
+    if (!article) {
+      return jsonError(404, "NOT_FOUND", "Actualité introuvable.");
+    }
+
     await recordActivity({
       actorId: admin.context.user.id,
       action: "news.updated",

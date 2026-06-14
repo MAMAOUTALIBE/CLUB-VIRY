@@ -137,12 +137,12 @@ function parseFailure(value: unknown): ApiFailure | null {
 
 function formatDate(value: string | null) {
   if (!value) {
-    return "Non renseigne";
+    return "Non renseigné";
   }
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Non renseigne";
+    return "Non renseigné";
   }
 
   return new Intl.DateTimeFormat("fr-FR", {
@@ -171,8 +171,8 @@ function buildCards(kind: ResourceKind, payload: unknown): CardRecord[] {
         href: `/admin/familles/${family.id}`,
         title: family.name,
         status: "Famille",
-        meta: `Creee le ${formatDate(family.created_at)}`,
-        detail: family.primary_contact_id ? `Contact principal : ${family.primary_contact_id.slice(0, 8)}` : "Contact principal non renseigne",
+        meta: `Créée le ${formatDate(family.created_at)}`,
+        detail: family.primary_contact_id ? `Contact principal : ${family.primary_contact_id.slice(0, 8)}` : "Contact principal non renseigné",
         stats: [`${familyPlayers.length} joueur(s)`, `${familyMembers.length} membre(s)`, "Documents", "Paiements"]
       };
     });
@@ -188,7 +188,7 @@ function buildCards(kind: ResourceKind, payload: unknown): CardRecord[] {
       status: player.license_number ? `Licence ${player.license_number}` : "Sans licence",
       meta: `Naissance : ${formatDate(player.birth_date)} · ${player.gender}`,
       detail: player.family_id ? `Famille : ${player.family_id.slice(0, 8)}` : "Aucune famille rattachee",
-      stats: ["Equipe", "Documents", "Paiements", "Presences"]
+      stats: ["Équipe", "Documents", "Paiements", "Présences"]
     }));
   }
 
@@ -201,14 +201,14 @@ function buildCards(kind: ResourceKind, payload: unknown): CardRecord[] {
     status: registration.status,
     meta: `Soumis : ${formatDate(registration.submitted_at ?? registration.created_at)}`,
     detail: `Joueur ${registration.player_id.slice(0, 8)} · Famille ${registration.family_id.slice(0, 8)}`,
-    stats: ["Documents", "Paiement", "Validation", "Equipe"]
+    stats: ["Documents", "Paiement", "Validation", "Équipe"]
   }));
 }
 
 export function Admin360Explorer({ kind, endpoint, title, description }: ExplorerProps) {
   const [records, setRecords] = useState<CardRecord[]>([]);
   const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "error">("demo");
-  const [message, setMessage] = useState("Connectez-vous pour charger les donnees reelles.");
+  const [message, setMessage] = useState("Connectez-vous pour charger les données réelles.");
   const [query, setQuery] = useState("");
 
   const filteredRecords = useMemo(() => {
@@ -241,7 +241,7 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       const nextRecords = buildCards(kind, payload);
       setRecords(nextRecords);
       setStatus("loaded");
-      setMessage(`${nextRecords.length} fiche(s) chargee(s).`);
+      setMessage(`${nextRecords.length} fiche(s) chargée(s).`);
     } catch (error) {
       setRecords([]);
       setStatus("error");
@@ -309,7 +309,7 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       {status !== "loading" && filteredRecords.length === 0 ? (
         <div className="mt-5 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-8 text-center">
           <p className="text-sm font-black uppercase text-[#002f1d]">Aucune fiche a afficher</p>
-          <p className="mt-2 text-sm text-slate-600">Chargez les donnees backend ou ajustez le filtre de recherche.</p>
+          <p className="mt-2 text-sm text-slate-600">Chargez les données backend ou ajustez le filtre de recherche.</p>
         </div>
       ) : null}
     </section>
