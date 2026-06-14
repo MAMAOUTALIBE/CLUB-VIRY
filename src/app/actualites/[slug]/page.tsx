@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
-import { buildBreadcrumb, buildNewsArticle } from "@/lib/jsonld";
+import { buildBreadcrumb, buildNewsArticle, jsonLdScript } from "@/lib/jsonld";
 import { getPublicNews, getPublicNewsBySlug } from "@/lib/public-content";
 
 type ArticlePageProps = {
@@ -54,8 +54,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd) }} />
       <PageHero description={article.excerpt} eyebrow={`${article.category} · ${article.date}`} image={article.image} title={article.title} />
       <article className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
         <Link className="focus-ring inline-flex items-center gap-2 text-sm font-black uppercase text-[#002f1d] hover:text-[#8a6d00]" href="/actualites">

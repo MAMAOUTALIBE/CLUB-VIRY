@@ -8,6 +8,7 @@ import { matches } from "@/lib/data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getPublicNews, getPublicPartners, getSiteSettings } from "@/lib/public-content";
+import { jsonLdScript } from "@/lib/jsonld";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -80,7 +81,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }} />
       <section className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
         {/* LCP : hero en next/image (priority -> preload auto + AVIF/WebP). zIndex:0 inline
             pour rester sous le contenu (z-[2]) ; .hero-stadium::before neutralise le voile. */}

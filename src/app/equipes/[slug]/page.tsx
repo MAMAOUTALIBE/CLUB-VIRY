@@ -6,7 +6,7 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { getPublicEducators, getPublicTeamBySlug } from "@/lib/public-content";
-import { buildBreadcrumb, buildSportsTeam } from "@/lib/jsonld";
+import { buildBreadcrumb, buildSportsTeam, jsonLdScript } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -55,8 +55,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(teamJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(teamJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd) }} />
       <PageHero description={team.description} eyebrow={team.season} image={team.image} title={team.name}>
         <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
       </PageHero>

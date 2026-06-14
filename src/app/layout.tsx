@@ -3,6 +3,7 @@ import { Kaushan_Script } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getSiteSettings } from "@/lib/public-content";
+import { jsonLdScript } from "@/lib/jsonld";
 import "./globals.css";
 
 const scriptFont = Kaushan_Script({
@@ -82,7 +83,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           {children}
         </main>
         <Footer socials={settings.socials} contact={settings.contact} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsClubJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(sportsClubJsonLd) }} />
       </body>
     </html>
   );
