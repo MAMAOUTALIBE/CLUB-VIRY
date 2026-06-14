@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, parseLimit } from "@/lib/api/http";
 import { listSubscriptionsForAdmin } from "@/lib/db/subscriptions";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 200) || 200, 500);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 200, 2000);
 
   try {
     const subscriptions = await listSubscriptionsForAdmin(limit);

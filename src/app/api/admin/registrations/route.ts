@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, parseLimit } from "@/lib/api/http";
 import { listRegistrationsForAdmin } from "@/lib/db/registrations";
 import type { RegistrationStatus } from "@/lib/db/types";
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 100) || 100, 500);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 100, 2000);
   const status = parseStatus(request.nextUrl.searchParams.get("status"));
 
   try {

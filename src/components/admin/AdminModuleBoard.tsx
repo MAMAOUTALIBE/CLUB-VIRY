@@ -39,6 +39,16 @@ function euro(cents: number): string {
   return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
 }
 
+/** Force le paramètre `limit` d'un endpoint (en préservant les autres query params). */
+function withLimit(endpoint: string, limit: number): string {
+  const [path, query = ""] = endpoint.split("?");
+  const params = new URLSearchParams(query);
+  params.set("limit", String(limit));
+  return `${path}?${params.toString()}`;
+}
+
+const PAGE_SIZE = 100;
+
 function formatDate(value: unknown): string {
   if (typeof value !== "string") {
     return "—";
@@ -118,6 +128,8 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(false);
 
   const rowStatus = (row: Row) => asText(row[statusField]);
   const rowTitle = (row: Row) => {
@@ -125,30 +137,40 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
     return value || "—";
   };
 
-  async function load() {
+  async function load(targetLimit = limit) {
     setState("loading");
     setMessage("Chargement via la session admin...");
 
     try {
       // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
-      const response = await fetch(endpoint, { credentials: "same-origin" });
+      const response = await fetch(withLimit(endpoint, targetLimit), { credentials: "same-origin" });
       const parsed = extractRows(await response.json(), dataKey);
 
       if (!parsed.ok) {
         setRows(demo);
         setState("error");
+        setHasMore(false);
         setMessage(`${parsed.message} (affichage démo)`);
         return;
       }
 
       setRows(parsed.rows);
       setState("connected");
+      // Heuristique : si on reçoit exactement la limite demandée, il y a probablement plus à charger.
+      setHasMore(parsed.rows.length >= targetLimit);
       setMessage(`${parsed.rows.length} enregistrement(s) chargé(s) depuis le backend.`);
     } catch (error) {
       setRows(demo);
       setState("error");
+      setHasMore(false);
       setMessage(`${error instanceof Error ? error.message : "Erreur de chargement."} (affichage démo)`);
     }
+  }
+
+  function loadMore() {
+    const next = limit + PAGE_SIZE;
+    setLimit(next);
+    void load(next);
   }
 
   // Met à jour le statut d'un enregistrement (PATCH endpoint/[id]) et reflète le changement localement.
@@ -346,6 +368,20 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
           </p>
         ) : null}
       </div>
+
+      {state === "connected" && hasMore ? (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <span className="text-xs font-bold text-slate-500">{rows.length} chargés</span>
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={state !== "connected"}
+            className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md border border-[#002f1d]/20 px-4 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600] disabled:opacity-70"
+          >
+            Charger plus
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

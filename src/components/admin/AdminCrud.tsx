@@ -69,6 +69,16 @@ function toInputValue(field: CrudField, row: Row): string {
   return String(raw);
 }
 
+const PAGE_SIZE = 100;
+
+/** Force le paramètre `limit` d'un endpoint (en préservant les autres query params). */
+function withLimit(endpoint: string, limit: number): string {
+  const [path, query = ""] = endpoint.split("?");
+  const params = new URLSearchParams(query);
+  params.set("limit", String(limit));
+  return `${path}?${params.toString()}`;
+}
+
 export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, rowLabel }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
@@ -78,11 +88,13 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(false);
 
   const load = useCallback(async () => {
     setState("loading");
     try {
-      const res = await fetch(getUrl, { credentials: "same-origin" });
+      const res = await fetch(withLimit(getUrl, limit), { credentials: "same-origin" });
       if (res.status === 401) {
         setState("auth");
         return;
@@ -94,14 +106,16 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         return;
       }
       const list = json.data?.[listKey];
-      setRows(Array.isArray(list) ? list : []);
+      const nextRows = Array.isArray(list) ? list : [];
+      setRows(nextRows);
+      setHasMore(nextRows.length >= limit);
       setState("ready");
       setMessage("");
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "Erreur réseau.");
     }
-  }, [getUrl, listKey]);
+  }, [getUrl, listKey, limit]);
 
   useEffect(() => {
     const t = window.setTimeout(() => void load(), 0);
@@ -301,6 +315,19 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           </table>
         )}
       </div>
+
+      {state === "ready" && hasMore ? (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <span className="text-xs font-bold text-slate-500">{rows.length} chargés</span>
+          <button
+            type="button"
+            onClick={() => setLimit((value) => value + PAGE_SIZE)}
+            className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md border border-[#002f1d]/20 px-4 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]"
+          >
+            Charger plus
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

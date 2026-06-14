@@ -205,11 +205,23 @@ function buildCards(kind: ResourceKind, payload: unknown): CardRecord[] {
   }));
 }
 
+const PAGE_SIZE = 100;
+
+/** Force le paramètre `limit` d'un endpoint (en préservant les autres query params). */
+function withLimit(endpoint: string, limit: number): string {
+  const [path, queryString = ""] = endpoint.split("?");
+  const params = new URLSearchParams(queryString);
+  params.set("limit", String(limit));
+  return `${path}?${params.toString()}`;
+}
+
 export function Admin360Explorer({ kind, endpoint, title, description }: ExplorerProps) {
   const [records, setRecords] = useState<CardRecord[]>([]);
   const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "error">("demo");
   const [message, setMessage] = useState("Connectez-vous pour charger les données réelles.");
   const [query, setQuery] = useState("");
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(false);
 
   const filteredRecords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -227,13 +239,14 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
 
     try {
       // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
-      const response = await fetch(endpoint, { credentials: "same-origin" });
+      const response = await fetch(withLimit(endpoint, limit), { credentials: "same-origin" });
       const payload: unknown = await response.json();
       const failure = parseFailure(payload);
 
       if (failure) {
         setRecords([]);
         setStatus("error");
+        setHasMore(false);
         setMessage(`${failure.error.code} : ${failure.error.message}`);
         return;
       }
@@ -241,13 +254,16 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       const nextRecords = buildCards(kind, payload);
       setRecords(nextRecords);
       setStatus("loaded");
+      // Heuristique : si on reçoit exactement la limite, il y a probablement plus à charger.
+      setHasMore(nextRecords.length >= limit);
       setMessage(`${nextRecords.length} fiche(s) chargée(s).`);
     } catch (error) {
       setRecords([]);
       setStatus("error");
+      setHasMore(false);
       setMessage(error instanceof Error ? error.message : "Erreur de chargement CRM.");
     }
-  }, [endpoint, kind]);
+  }, [endpoint, kind, limit]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => void loadRecords(), 0);
@@ -310,6 +326,19 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
         <div className="mt-5 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-8 text-center">
           <p className="text-sm font-black uppercase text-[#002f1d]">Aucune fiche a afficher</p>
           <p className="mt-2 text-sm text-slate-600">Chargez les données backend ou ajustez le filtre de recherche.</p>
+        </div>
+      ) : null}
+
+      {status === "loaded" && hasMore ? (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <span className="text-xs font-bold text-slate-500">{records.length} chargées</span>
+          <button
+            type="button"
+            onClick={() => setLimit((value) => value + PAGE_SIZE)}
+            className="focus-ring inline-flex min-h-10 items-center justify-center rounded-md border border-[#002f1d]/20 px-4 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]"
+          >
+            Charger plus
+          </button>
         </div>
       ) : null}
     </section>
