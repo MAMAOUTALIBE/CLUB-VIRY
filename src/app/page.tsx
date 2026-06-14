@@ -53,23 +53,25 @@ export default async function HomePage() {
       .slice(0, 3)
       .toUpperCase();
   const shortTeam = (name: string) => (isClub(name) ? "ES Viry" : name);
+  // Écusson : UNE coquille commune (verre sombre + cerclage or fin) pour les deux camps.
+  // Le logo club entre en object-contain ; l'adversaire sans logo affiche son monogramme
+  // en LETTRES OR sur le même fond — jamais un disque jaune plein (équilibre garanti).
   const crest = (name: string, size: "sm" | "lg") => {
     const dim = size === "lg" ? "h-16 w-16 sm:h-[84px] sm:w-[84px]" : "h-9 w-9";
+    const shell = `${dim} shrink-0 rounded-full bg-[#001c10]/65 backdrop-blur-sm ring-1 ring-[#f7c600]/55 [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12),0_8px_24px_-8px_rgba(0,0,0,0.55)]`;
     return isClub(name) ? (
       <img
         src="/club-logo.svg"
         alt=""
         aria-hidden="true"
-        className={`${dim} shrink-0 rounded-full object-contain ring-2 ring-[#f7c600]/40`}
+        className={`${shell} object-contain ${size === "lg" ? "p-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]" : "p-1"}`}
         width={84}
         height={84}
       />
     ) : (
       <span
         aria-hidden="true"
-        className={`${dim} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f7c600] to-[#ffd84d] font-black text-[#002f1d] ring-2 ring-white/15 ${
-          size === "lg" ? "text-lg sm:text-2xl" : "text-[11px]"
-        }`}
+        className={`${shell} flex items-center justify-center font-black tracking-tight text-[#ffd84d] ${size === "lg" ? "text-xl sm:text-3xl" : "text-[11px]"}`}
       >
         {teamInitials(name)}
       </span>
@@ -205,22 +207,23 @@ export default async function HomePage() {
                 <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-4">
                   <div className="flex flex-col items-center gap-3 text-center">
                     <div className="relative">
-                      <span className="absolute inset-0 -z-10 rounded-full bg-[#f7c600]/25 blur-xl" aria-hidden="true" />
+                      <span className="absolute inset-0 -z-10 rounded-full bg-[#f7c600]/18 blur-2xl" aria-hidden="true" />
                       {crest(nextMatch.home, "lg")}
                     </div>
                     <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.home)}</span>
                   </div>
                   <div className="flex flex-col items-center gap-2 pt-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f7c600] text-xs font-black text-[#002f1d] shadow-[0_0_30px_rgba(247,198,0,0.6)]">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-[11px] font-black text-[#f7c600] ring-1 ring-[#f7c600]/45 backdrop-blur">
                       VS
                     </span>
-                    <span className="rounded-full bg-black/30 px-2.5 py-1 text-base font-black tabular-nums tracking-tight text-[#f7c600]">
+                    <span className="h-7 w-px bg-gradient-to-b from-transparent via-[#f7c600]/50 to-transparent" aria-hidden="true" />
+                    <span className="rounded-full bg-black/35 px-2.5 py-1 text-base font-black tabular-nums tracking-tight text-[#ffd84d] ring-1 ring-white/10">
                       {nextMatch.time}
                     </span>
                   </div>
                   <div className="flex flex-col items-center gap-3 text-center">
                     <div className="relative">
-                      <span className="absolute inset-0 -z-10 rounded-full bg-white/10 blur-xl" aria-hidden="true" />
+                      <span className="absolute inset-0 -z-10 rounded-full bg-white/5 blur-xl" aria-hidden="true" />
                       {crest(nextMatch.away, "lg")}
                     </div>
                     <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.away)}</span>
