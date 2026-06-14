@@ -16,6 +16,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # ici, sinon le SEO / sitemap / liens canoniques tomberaient sur http://localhost:3000.
 ARG NEXT_PUBLIC_SITE_URL=https://esvirychatillonfootball.org
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+# Supabase (mode CRM) : Next.js INLINE les NEXT_PUBLIC_* dans le bundle AU BUILD.
+# Ces deux variables doivent donc etre presentes ici, sinon l'app reste en mode
+# vitrine meme si .env.local les definit au runtime. Vides par defaut = vitrine.
+ARG NEXT_PUBLIC_SUPABASE_URL=
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 RUN npm run build
 
 # ---- Runner (image finale, legere) ----

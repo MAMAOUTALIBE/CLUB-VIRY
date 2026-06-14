@@ -6,6 +6,10 @@ services:
       args:
         # URL publique injectee au BUILD (inline par Next.js dans le SEO/sitemap/canonical).
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://esvirychatillonfootball.org}
+        # Supabase (mode CRM) : inlines au BUILD par Next.js. Vides = mode vitrine.
+        # Valeurs fournies via /opt/esviry/.env sur le VPS (hors git).
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     image: es-viry-football:latest
     container_name: es-viry-football
     restart: unless-stopped
@@ -20,7 +24,10 @@ services:
     volumes:
       - ./var/leads:/app/var/leads
     networks:
+      # esviry-net : joint par Traefik (HTTPS public). supabase-esviry : reseau
+      # PRIVE pour joindre le Supabase auto-heberge interne (sb-esviry-kong:8000).
       - esviry-net
+      - supabase-esviry
     labels:
       - "traefik.enable=true"
       # Traefik tourne en reseau host : on lui indique le reseau du conteneur a joindre.
@@ -36,3 +43,7 @@ services:
 networks:
   esviry-net:
     name: esviry-net
+  # Reseau du Supabase auto-heberge (cree par sa propre stack docker-compose).
+  # En mode vitrine (sans Supabase) ce reseau peut etre absent : voir note deploiement.
+  supabase-esviry:
+    external: true
