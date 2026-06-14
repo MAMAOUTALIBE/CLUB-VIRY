@@ -7,7 +7,7 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { matches } from "@/lib/data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { getPublicNews, getPublicPartners, getPublicTeams, getSiteSettings } from "@/lib/public-content";
+import { getPublicNews, getPublicPartners, getSiteSettings } from "@/lib/public-content";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -27,7 +27,7 @@ const websiteJsonLd = {
 };
 
 export default async function HomePage() {
-  const [allNews, settings, featuredTeams, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicTeams(), getPublicPartners()]);
+  const [allNews, settings, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners()]);
   const partnerNames = featuredPartners.map((partner) => partner.name);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
@@ -129,19 +129,22 @@ export default async function HomePage() {
         <div className="relative z-[2] mx-auto w-full max-w-[1560px] shrink-0 px-4 pb-4 sm:px-6 lg:px-8 lg:pb-5">
           <Stagger
             aria-label="Chiffres clés du club"
+            role="group"
             className="grid overflow-hidden rounded-xl border border-white/15 bg-[#00150d]/75 shadow-[0_22px_55px_rgba(0,18,11,0.5)] ring-1 ring-[#f7c600]/10 backdrop-blur-xl sm:grid-cols-2 lg:grid-cols-5"
           >
             {clubStats.map((stat) => {
               const Icon = iconByName(stat.iconName);
               return (
                 <StaggerItem
-                  className="flex items-center gap-2.5 border-b border-white/10 px-4 py-2.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 lg:py-3"
+                  className="group flex items-center gap-3 border-b border-white/10 px-4 py-3 transition last:border-b-0 hover:bg-white/[0.05] sm:border-b-0 sm:border-r sm:last:border-r-0"
                   key={stat.label}
                 >
-                  <Icon className="shrink-0 text-[#f7c600]" size={26} strokeWidth={1.9} aria-hidden="true" />
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f7c600]/12 text-[#f7c600] ring-1 ring-[#f7c600]/25 transition group-hover:bg-[#f7c600]/20" aria-hidden="true">
+                    <Icon size={19} strokeWidth={2} />
+                  </span>
                   <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                    <span className="text-base font-black uppercase leading-none text-white lg:text-lg">{stat.value}</span>
-                    <span className="text-base font-black uppercase leading-none tracking-wide text-white/80 lg:text-lg">{stat.label}</span>
+                    <span className="text-lg font-black uppercase leading-none text-white">{stat.value}</span>
+                    <span className="text-[13px] font-black uppercase leading-none tracking-wide text-white/70">{stat.label}</span>
                   </p>
                 </StaggerItem>
               );
@@ -150,29 +153,34 @@ export default async function HomePage() {
         </div>
       </section>
 
-	      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
-	        <Stagger className="grid overflow-hidden rounded-2xl border border-[#002f1d]/10 bg-white shadow-[0_20px_55px_rgba(0,31,19,0.12)] md:grid-cols-2 xl:grid-cols-4">
-	          {quickActions.map((action) => {
-	            const Icon = action.icon;
-	            return (
-	              <StaggerItem key={action.label}>
-	                <Link className="focus-ring flex min-h-28 items-center gap-4 border-b border-[#002f1d]/10 p-5 transition hover:bg-[#f7c600]/10 md:border-r xl:border-b-0" href={action.href}>
-	                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#002f1d] text-[#f7c600]">
-	                    <Icon size={25} aria-hidden="true" />
-	                  </div>
-	                  <div>
-	                    <p className="text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Accès rapide</p>
-	                    <h2 className="mt-1 text-xl font-black uppercase leading-none text-[#002f1d]">{action.label}</h2>
-	                    <p className="mt-2 text-sm font-bold text-slate-600">{action.text}</p>
-	                  </div>
-	                </Link>
-	              </StaggerItem>
-	            );
-	          })}
-	        </Stagger>
-	      </section>
+      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <StaggerItem key={action.label}>
+                <Link
+                  href={action.href}
+                  className="focus-ring premium-card group relative flex h-full items-center gap-4 overflow-hidden rounded-2xl bg-white p-5"
+                >
+                  <span className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-[#f7c600] transition-transform duration-300 group-hover:scale-x-100" aria-hidden="true" />
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00351f] to-[#001c10] text-[#f7c600] ring-1 ring-[#f7c600]/30 transition duration-300 group-hover:scale-105 group-hover:ring-[#f7c600]" aria-hidden="true">
+                    <Icon size={24} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Accès rapide</p>
+                    <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{action.label}</h2>
+                    <p className="mt-1 text-sm font-bold text-slate-600">{action.text}</p>
+                  </div>
+                  <ArrowUpRight size={18} className="shrink-0 text-[#002f1d]/30 transition duration-300 group-hover:translate-x-0.5 group-hover:text-[#f7c600]" aria-hidden="true" />
+                </Link>
+              </StaggerItem>
+            );
+          })}
+        </Stagger>
+      </section>
 
-      <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
+      <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
         {/* ── Prochain match : carte premium type tableau d'affichage ── */}
         <div className="club-panel relative overflow-hidden rounded-3xl text-white">
           <div className="stadium-grid pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
@@ -183,7 +191,7 @@ export default async function HomePage() {
               <div className="flex items-center justify-between gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#f7c600]/30 bg-[#f7c600]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[#f7c600]">
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f7c600]/70" />
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-[#f7c600]/70 motion-safe:animate-ping" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f7c600]" />
                   </span>
                   Matchday
@@ -204,16 +212,16 @@ export default async function HomePage() {
               </p>
 
               <div className="light-sweep relative mt-6 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-b from-white/[0.09] to-black/25 p-6 sm:p-7">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-4">
-                  <div className="flex flex-col items-center gap-3 text-center">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 sm:gap-4">
+                  <div className="flex min-w-0 flex-col items-center gap-3 text-center">
                     <div className="relative">
                       <span className="absolute inset-0 -z-10 rounded-full bg-[#f7c600]/18 blur-2xl" aria-hidden="true" />
                       {crest(nextMatch.home, "lg")}
                     </div>
-                    <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.home)}</span>
+                    <span className="max-w-full break-words text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.home)}</span>
                   </div>
                   <div className="flex flex-col items-center gap-2 pt-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.07] text-[11px] font-black text-[#f7c600] ring-1 ring-[#f7c600]/45 backdrop-blur">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-[11px] font-black text-[#f7c600] ring-1 ring-[#f7c600]/45 backdrop-blur">
                       VS
                     </span>
                     <span className="h-7 w-px bg-gradient-to-b from-transparent via-[#f7c600]/50 to-transparent" aria-hidden="true" />
@@ -221,12 +229,12 @@ export default async function HomePage() {
                       {nextMatch.time}
                     </span>
                   </div>
-                  <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="flex min-w-0 flex-col items-center gap-3 text-center">
                     <div className="relative">
                       <span className="absolute inset-0 -z-10 rounded-full bg-white/5 blur-xl" aria-hidden="true" />
                       {crest(nextMatch.away, "lg")}
                     </div>
-                    <span className="text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.away)}</span>
+                    <span className="max-w-full break-words text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.away)}</span>
                   </div>
                 </div>
               </div>
@@ -258,17 +266,23 @@ export default async function HomePage() {
                 </span>
               </div>
               <div className="mt-4 space-y-3">
+                {otherMatches.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-4 text-center text-xs font-bold text-white/75">
+                    Aucun autre match programmé pour le moment.
+                  </p>
+                ) : null}
                 {otherMatches.map((match) => (
                   <article
                     className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] p-3.5 transition duration-200 hover:-translate-y-0.5 hover:border-[#f7c600]/45 hover:bg-white/[0.09]"
                     key={match.team + "-" + match.away}
+                    aria-label={`${match.team} : ${shortTeam(match.home)} contre ${shortTeam(match.away)} — ${match.date}`}
                   >
                     <span className="absolute inset-y-0 left-0 w-1 origin-top scale-y-0 bg-[#f7c600] transition-transform duration-200 group-hover:scale-y-100" aria-hidden="true" />
                     <div className="flex items-center justify-between gap-2">
                       <span className="rounded-md bg-[#f7c600]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#f7c600]">
                         {match.team}
                       </span>
-                      <span className="text-[10px] font-black uppercase text-white/55">{match.time}</span>
+                      <span className="text-[10px] font-black uppercase text-white/75">{match.time}</span>
                     </div>
                     <div className="mt-3 flex items-center gap-2 text-sm font-bold">
                       {crest(match.home, "sm")}
@@ -277,19 +291,25 @@ export default async function HomePage() {
                       <span className="min-w-0 flex-1 truncate text-right">{shortTeam(match.away)}</span>
                       {crest(match.away, "sm")}
                     </div>
-                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-white/55">
+                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-white/75">
                       <CalendarDays className="shrink-0 text-[#f7c600]/80" size={12} aria-hidden="true" />
                       {match.date} · {match.place}
                     </p>
                   </article>
                 ))}
               </div>
+              <Link
+                href="/calendrier"
+                className="focus-ring mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.04] py-2.5 text-xs font-black uppercase tracking-wide text-white/85 transition hover:-translate-y-0.5 hover:border-[#f7c600]/50 hover:text-[#f7c600]"
+              >
+                Voir tous les matchs <ArrowUpRight size={14} aria-hidden="true" />
+              </Link>
             </div>
           </div>
         </div>
 
         {/* ── Actualité à la une : carte éditoriale premium ── */}
-        <article className="official-card group flex flex-col overflow-hidden rounded-3xl bg-white">
+        <article className="premium-card group flex flex-col overflow-hidden rounded-3xl bg-white">
           <div className="relative h-60 overflow-hidden sm:h-80">
             <Image
               src={leadNews.image}
@@ -307,7 +327,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="flex flex-1 flex-col p-6 sm:p-7">
-            <h3 className="text-2xl font-black uppercase leading-tight text-[#002f1d] transition-colors group-hover:text-[#064b2d] sm:text-[1.7rem]">
+            <h3 className="text-2xl font-black uppercase leading-tight text-[#002f1d] transition-colors group-hover:text-[#064b2d] sm:text-3xl">
               {leadNews.title}
             </h3>
             <p className="mt-3 leading-7 text-slate-700">{leadNews.excerpt}</p>
@@ -325,84 +345,96 @@ export default async function HomePage() {
         </article>
       </section>
 
-      <section className="bg-[#f7f8f4] py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <SectionTitle eyebrow="Équipes" title="Une famille, plusieurs ambitions" text="De l'école de foot aux Seniors : chaque catégorie porte le même blason, avec un accompagnement adapté." />
-            <div className="pb-2">
-              <ButtonLink href="/equipes" variant="dark">Voir toutes les équipes</ButtonLink>
-            </div>
-          </div>
-          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {featuredTeams.slice(0, 5).map((team) => (
-              <StaggerItem key={team.slug}>
-                <Link className="focus-ring premium-card group flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/equipes/${team.slug}`}>
-                  <div className="relative h-36">
-                    <Image src={team.image} alt={team.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 20vw" className="object-cover" />
-                    <span className="absolute left-3 top-3 z-[1] rounded-full bg-[#002f1d]/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] backdrop-blur">{team.category}</span>
-                  </div>
-                  <div className="flex flex-1 items-center justify-between gap-2 p-4">
-                    <h3 className="text-base font-black uppercase leading-tight text-[#002f1d]">{team.name}</h3>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f7c600] text-[#002f1d] transition group-hover:translate-x-0.5">
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </span>
-                  </div>
-                </Link>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="image-tint grid min-h-[380px] overflow-hidden rounded-lg text-white lg:grid-cols-[1fr_0.85fr]">
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="relative isolate overflow-hidden rounded-3xl border border-[#f7c600]/20 text-white shadow-[0_30px_70px_rgba(0,18,11,0.45)]">
           <Image src={images.youthTeam} alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
-          <div className="flex flex-col justify-end p-6 sm:p-8">
-            <p className="text-sm font-black uppercase text-[#f7c600]">Inscriptions 2025 / 2026</p>
-            <h2 className="mt-2 max-w-2xl text-4xl font-black uppercase leading-tight sm:text-5xl">Rejoignez la famille Viry !</h2>
-            <p className="mt-4 max-w-xl text-lg text-white/85">École de foot, préformation, formation, compétitions : il y a une place pour chacun.</p>
-            <div className="mt-6 flex flex-wrap gap-4">
-              <ButtonLink href="/inscriptions">Je m'inscris en ligne</ButtonLink>
-              <ButtonLink href="/detections-recrutement" variant="outline">
-                Détections
-              </ButtonLink>
+          {/* Overlays : profondeur + lisibilité */}
+          <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#001c10]/92 via-[#001c10]/70 to-[#001c10]/20" aria-hidden="true" />
+          <div className="absolute inset-0 z-[1] bg-gradient-to-t from-[#001c10]/80 to-transparent" aria-hidden="true" />
+          <div className="stadium-grid pointer-events-none absolute inset-0 z-[1] opacity-40" aria-hidden="true" />
+          <div className="relative z-[2] grid gap-8 p-7 sm:p-10 lg:grid-cols-[1.4fr_0.9fr] lg:items-center">
+            <div>
+              <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[#f7c600]/12 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#f7c600] ring-1 ring-[#f7c600]/30">
+                Inscriptions 2025 / 2026
+              </p>
+              <h2 className="mt-4 max-w-2xl text-4xl font-black uppercase leading-[0.95] sm:text-5xl">
+                Rejoignez la <span className="text-[#f7c600]">famille Viry</span>
+              </h2>
+              <p className="mt-4 max-w-xl text-lg leading-7 text-white/85">École de foot, préformation, formation, compétitions : il y a une place pour chacun.</p>
+              <div className="mt-7 flex flex-wrap gap-4">
+                <ButtonLink href="/inscriptions">Je m'inscris en ligne</ButtonLink>
+                <ButtonLink href="/detections-recrutement" variant="outline">Détections</ButtonLink>
+              </div>
             </div>
-          </div>
-          <div className="hidden items-end justify-center p-8 lg:flex">
-            <div className="rounded-lg border border-[#f7c600]/35 bg-[#001c10]/65 p-5 text-center backdrop-blur">
-              <Trophy className="mx-auto text-[#f7c600]" size={54} aria-hidden="true" />
-              <p className="mt-3 text-xl font-black uppercase">Former aujourd'hui</p>
-              <p className="text-sm text-white/75">Préparer demain</p>
+            <div className="relative overflow-hidden rounded-2xl border border-[#f7c600]/35 bg-[#001c10]/70 p-6 backdrop-blur-md sm:p-7">
+              <span className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#f7c600]/15 blur-3xl" aria-hidden="true" />
+              <Trophy className="text-[#f7c600]" size={42} aria-hidden="true" />
+              <p className="mt-4 text-2xl font-black uppercase leading-tight">Former aujourd'hui</p>
+              <p className="text-2xl font-black uppercase leading-tight text-[#f7c600]">Préparer demain</p>
+              <p className="mt-3 text-sm leading-6 text-white/80">Un encadrement diplômé et un vrai projet de jeu, de l'école de foot aux seniors.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <SectionTitle eyebrow="Actualités" title="Dernières actualités" text="Résultats, stages, détections et temps forts : toute la vie du club." />
-          <div className="pb-2">
-            <ButtonLink href="/actualites" variant="dark">Voir toutes les actualités</ButtonLink>
+      {gridNews.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <SectionTitle eyebrow="Actualités" title="Dernières actualités" text="Résultats, stages, détections et temps forts : toute la vie du club." />
+            <div className="pb-2">
+              <ButtonLink href="/actualites" variant="dark">Voir toutes les actualités</ButtonLink>
+            </div>
           </div>
-        </div>
-        <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {gridNews.map((item) => (
-            <StaggerItem key={item.title}>
-              <Link className="focus-ring premium-card flex h-full flex-col overflow-hidden rounded-xl bg-white" href={`/actualites/${item.slug}`}>
-                <div className="relative h-40 w-full">
-                  <Image src={item.image} alt={item.title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover" />
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <p className="text-[11px] font-black uppercase text-[#8a6d00]">{item.category} · {item.date}</p>
-                  <h3 className="mt-1.5 text-lg font-black uppercase leading-tight text-[#002f1d]">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{item.excerpt}</p>
-                  <p className="mt-auto pt-4 text-xs font-black uppercase text-[#002f1d]">Lire l'article →</p>
-                </div>
-              </Link>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+          <div className={`grid gap-6 ${gridNews.length > 1 ? "lg:grid-cols-[1.45fr_1fr]" : ""}`}>
+            {/* Actu phare */}
+            <Link
+              href={`/actualites/${gridNews[0].slug}`}
+              className="focus-ring premium-card group relative flex min-h-[20rem] flex-col justify-end overflow-hidden rounded-2xl"
+            >
+              <Image
+                src={gridNews[0].image}
+                alt={gridNews[0].title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 55vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/92 via-[#001c10]/35 to-transparent" aria-hidden="true" />
+              <div className="relative p-6 sm:p-8">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#f7c600]">{gridNews[0].category} · {gridNews[0].date}</p>
+                <h3 className="mt-2 text-2xl font-black uppercase leading-tight text-white sm:text-3xl">{gridNews[0].title}</h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-white/80 line-clamp-2">{gridNews[0].excerpt}</p>
+                <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black uppercase text-[#f7c600]">
+                  Lire l'article <ArrowUpRight size={14} aria-hidden="true" />
+                </span>
+              </div>
+            </Link>
+
+            {/* Actus secondaires */}
+            {gridNews.length > 1 ? (
+              <div className="grid content-start gap-4">
+                {gridNews.slice(1, 4).map((item) => (
+                  <Link
+                    key={item.title}
+                    href={`/actualites/${item.slug}`}
+                    className="focus-ring premium-card group flex gap-4 overflow-hidden rounded-2xl bg-white p-3"
+                  >
+                    <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-xl">
+                      <Image src={item.image} alt={item.title} fill sizes="160px" className="object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
+                    </div>
+                    <div className="min-w-0 flex-1 py-1">
+                      <p className="text-[10px] font-black uppercase text-[#8a6d00]">{item.category} · {item.date}</p>
+                      <h3 className="mt-1 text-base font-black uppercase leading-tight text-[#002f1d] line-clamp-2">{item.title}</h3>
+                      <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-black uppercase text-[#002f1d] transition group-hover:text-[#07542f]">
+                        Lire <ArrowUpRight size={12} aria-hidden="true" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="bg-white py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -465,7 +497,7 @@ export default async function HomePage() {
               return (
                 <StaggerItem key={partner}>
                   <article
-                    className="premium-card group relative flex h-full flex-col items-center justify-center overflow-hidden rounded-xl px-5 py-7 text-center"
+                    className="premium-card group relative flex h-full flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-7 text-center"
                     title={partner}
                   >
                     <span
@@ -526,7 +558,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="club-shell py-12 text-white">
+      <section className="club-shell py-14 text-white sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionTitle
             eyebrow="Nos valeurs"
@@ -534,18 +566,24 @@ export default async function HomePage() {
             text="Des repères simples pour grandir ensemble, sur le terrain et autour du terrain."
             title="L'esprit du club"
           />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {values.map((value) => {
               const Icon = iconByName(value.iconName);
               return (
-                <article className="rounded-lg border border-[#f7c600]/35 bg-white/5 p-5" key={value.title}>
-                  <Icon className="text-[#f7c600]" size={38} aria-hidden="true" />
-                  <h3 className="mt-4 text-lg font-black uppercase text-white">{value.title}</h3>
-                  <p className="mt-2 text-sm text-white/75">{value.text}</p>
-                </article>
+                <StaggerItem key={value.title} className="h-full">
+                  <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#f7c600]/25 bg-white/[0.05] p-6 shadow-[0_14px_34px_rgba(0,0,0,0.25)] transition duration-300 hover:-translate-y-1 hover:border-[#f7c600]/60 hover:bg-white/[0.08] hover:shadow-[0_20px_44px_rgba(0,0,0,0.35)]">
+                    <span className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#f7c600]/0 blur-2xl transition-all duration-300 group-hover:bg-[#f7c600]/15" aria-hidden="true" />
+                    <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f7c600]/12 text-[#f7c600] ring-1 ring-[#f7c600]/30 transition duration-300 group-hover:scale-105" aria-hidden="true">
+                      <Icon size={28} />
+                    </span>
+                    <h3 className="mt-5 text-lg font-black uppercase text-white">{value.title}</h3>
+                    <p className="mt-2 flex-1 text-sm leading-6 text-white/85">{value.text}</p>
+                    <span className="mt-5 block h-0.5 w-8 rounded-full bg-[#f7c600]/40 transition-all duration-300 group-hover:w-14 group-hover:bg-[#f7c600]" aria-hidden="true" />
+                  </article>
+                </StaggerItem>
               );
             })}
-          </div>
+          </Stagger>
         </div>
       </section>
     </>
