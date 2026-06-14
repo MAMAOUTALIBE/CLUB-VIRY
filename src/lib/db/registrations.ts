@@ -454,11 +454,14 @@ export async function reviewRegistrationDocument(id: string, input: AdminDocumen
   return data as RegistrationDocument;
 }
 
-export async function createRegistrationDocumentSignedUrl(
+// Charge un document de dossier APRÈS contrôle d'accès (relecteur autorisé ou
+// membre de la famille propriétaire). Renvoie le document avec son file_path,
+// ou null si introuvable / non autorisé. Partagé par l'URL de service et le proxy.
+async function loadRegistrationDocumentForUser(
   profileId: string,
   documentId: string,
   canReviewDocuments = false
-): Promise<RegistrationDocumentDownload | null> {
+): Promise<RegistrationDocument | null> {
   const supabase = getSupabaseAdminClient();
   const { data: document, error: documentError } = await supabase
     .from("registration_documents")
@@ -500,21 +503,53 @@ export async function createRegistrationDocumentSignedUrl(
     }
   }
 
-  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-    .from(DOCUMENTS_BUCKET)
-    .createSignedUrl(document.file_path as string, SIGNED_URL_EXPIRES_IN_SECONDS);
+  return document as RegistrationDocument;
+}
 
-  if (signedUrlError) {
-    throw new Error(`Unable to create document signed URL: ${signedUrlError.message}`);
+export async function createRegistrationDocumentSignedUrl(
+  profileId: string,
+  documentId: string,
+  canReviewDocuments = false
+): Promise<RegistrationDocumentDownload | null> {
+  const document = await loadRegistrationDocumentForUser(profileId, documentId, canReviewDocuments);
+
+  if (!document) {
+    return null;
   }
 
-  if (!signedUrlData?.signedUrl) {
-    throw new Error("Signed URL generation failed.");
-  }
-
+  // Supabase est hébergé en interne (non exposé à internet) : une URL signée
+  // Supabase pointerait vers un hôte injoignable depuis le navigateur. On sert
+  // donc le fichier via un proxy applicatif authentifié (route ci-dessous).
   return {
-    document: document as RegistrationDocument,
-    signedUrl: signedUrlData.signedUrl,
+    document,
+    signedUrl: `/api/documents/${documentId}/download`,
     expiresIn: SIGNED_URL_EXPIRES_IN_SECONDS
   };
+}
+
+// Télécharge le binaire du document depuis le storage interne, après le même
+// contrôle d'accès que l'URL de service. Utilisé par le proxy de téléchargement.
+export async function downloadRegistrationDocumentFile(
+  profileId: string,
+  documentId: string,
+  canReviewDocuments = false
+): Promise<{ document: RegistrationDocument; blob: Blob } | null> {
+  const document = await loadRegistrationDocumentForUser(profileId, documentId, canReviewDocuments);
+
+  if (!document) {
+    return null;
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.storage.from(DOCUMENTS_BUCKET).download(document.file_path as string);
+
+  if (error) {
+    throw new Error(`Unable to download registration document: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Document file is empty.");
+  }
+
+  return { document, blob: data };
 }
