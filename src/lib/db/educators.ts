@@ -15,6 +15,11 @@ export type PublicEducatorRow = {
   name: string;
   avatar_url: string | null;
   title: string | null;
+  diploma: string | null;
+  joined_year: number | null;
+  diplomas: string[];
+  specialties: string[];
+  quote: string | null;
   bio: string | null;
   teams: PublicEducatorTeam[];
   team_count: number;

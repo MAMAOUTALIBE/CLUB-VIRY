@@ -383,12 +383,24 @@ export type DisplayEducatorTeam = { name: string; slug: string; category: string
 export type DisplayEducator = {
   id: string;
   name: string;
+  slug: string;
   title: string;
+  diploma: string | null;
+  joinedYear: number | null;
+  diplomas: string[];
+  specialties: string[];
+  quote: string | null;
   avatar: string | null;
   bio: string;
   teams: DisplayEducatorTeam[];
   stats: { teams: number; sessions: number; matches: number };
 };
+
+// Slug unique et déterministe par éducateur (évite les collisions d'homonymes :
+// deux "Mohamed Diallo" ont des slugs distincts ; un nom vide reste routable).
+export function educatorSlug(name: string, id: string): string {
+  return `${slugify(name) || "educateur"}-${id.slice(0, 8)}`;
+}
 
 // Données vitrine affichées tant qu'aucun éducateur n'est publié depuis le CRM.
 const mockEducators: DisplayEducator[] = [
@@ -396,6 +408,12 @@ const mockEducators: DisplayEducator[] = [
     id: "mock-1",
     name: "Karim Benali",
     title: "Responsable technique",
+    diploma: "UEFA B",
+    slug: educatorSlug("Karim Benali", "mock-1"),
+    joinedYear: 2017,
+    diplomas: ["UEFA B (2021)", "PSC1 (2019)"],
+    specialties: ["Technique", "Coordination"],
+    quote: "Former des joueurs, c'est d'abord former des personnes.",
     avatar: null,
     bio: "Éducateur diplômé, en charge de la coordination sportive et de la formation des jeunes catégories.",
     teams: [
@@ -408,6 +426,12 @@ const mockEducators: DisplayEducator[] = [
     id: "mock-2",
     name: "Awa Diallo",
     title: "Éducatrice École de foot",
+    diploma: "CFF1",
+    slug: educatorSlug("Awa Diallo", "mock-2"),
+    joinedYear: 2020,
+    diplomas: ["CFF1 (2020)"],
+    specialties: ["École de foot", "Motricité"],
+    quote: "Donner le goût du jeu dès le plus jeune âge.",
     avatar: null,
     bio: "Passionnée par l'apprentissage des plus jeunes, elle encadre l'école de foot avec exigence et bienveillance.",
     teams: [{ name: "École de foot", slug: "ecole-de-foot", category: "U6 à U11", roleTitle: "Entraîneure principale", isHeadCoach: true }],
@@ -417,6 +441,12 @@ const mockEducators: DisplayEducator[] = [
     id: "mock-3",
     name: "Lucas Moreau",
     title: "Entraîneur Futsal",
+    diploma: "CFF Futsal",
+    slug: educatorSlug("Lucas Moreau", "mock-3"),
+    joinedYear: 2015,
+    diplomas: ["CFF Futsal (2022)", "CFF3 (2018)"],
+    specialties: ["Futsal", "Jeu rapide"],
+    quote: "Le futsal aiguise la technique et la prise de décision.",
     avatar: null,
     bio: "Ancien joueur du club, il transmet sa connaissance du jeu rapide aux équipes futsal.",
     teams: [{ name: "Futsal", slug: "futsal", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true }],
@@ -426,6 +456,12 @@ const mockEducators: DisplayEducator[] = [
     id: "mock-4",
     name: "Sophie Laurent",
     title: "Éducatrice Féminines",
+    diploma: "UEFA C",
+    slug: educatorSlug("Sophie Laurent", "mock-4"),
+    joinedYear: 2019,
+    diplomas: ["UEFA C (2023)"],
+    specialties: ["Football féminin", "Mental"],
+    quote: "Faire grandir le football féminin, match après match.",
     avatar: null,
     bio: "Engagée pour le développement du football féminin au club, elle accompagne les joueuses tout au long de la saison.",
     teams: [{ name: "Féminines", slug: "feminines", category: "Seniors", roleTitle: "Entraîneure principale", isHeadCoach: true }],
@@ -440,10 +476,17 @@ export async function getPublicEducators(): Promise<DisplayEducator[]> {
       if (rows.length > 0) {
         return rows.map((r) => {
           const head = r.teams.find((t) => t.isHeadCoach);
+          const name = r.name?.trim() || "Éducateur";
           return {
             id: r.id,
-            name: r.name?.trim() || "Éducateur",
+            name,
+            slug: educatorSlug(name, r.id),
             title: r.title?.trim() || head?.roleTitle || "Éducateur",
+            diploma: r.diploma?.trim() || null,
+            joinedYear: r.joined_year ?? null,
+            diplomas: Array.isArray(r.diplomas) ? r.diplomas : [],
+            specialties: Array.isArray(r.specialties) ? r.specialties : [],
+            quote: r.quote?.trim() || null,
             avatar: r.avatar_url,
             bio: r.bio ?? "",
             teams: r.teams,
@@ -456,6 +499,12 @@ export async function getPublicEducators(): Promise<DisplayEducator[]> {
     }
   }
   return mockEducators;
+}
+
+// Fiche éducateur par slug (page détail). Réutilise getPublicEducators (cache léger).
+export async function getPublicEducatorBySlug(slug: string): Promise<DisplayEducator | null> {
+  const all = await getPublicEducators();
+  return all.find((educator) => educator.slug === slug) ?? null;
 }
 
 // --- Direction : bureau exécutif + dirigeants (personnes) -------------------

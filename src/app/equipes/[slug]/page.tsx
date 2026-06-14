@@ -1,10 +1,11 @@
-import { PlayCircle } from "lucide-react";
+import { ArrowRight, PlayCircle } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ButtonLink";
 import { PremiumCta } from "@/components/PremiumCta";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
-import { getPublicTeamBySlug } from "@/lib/public-content";
+import { getPublicEducators, getPublicTeamBySlug } from "@/lib/public-content";
 import { buildBreadcrumb, buildSportsTeam } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,9 @@ export default async function TeamPage({ params }: TeamPageProps) {
   if (!team) {
     notFound();
   }
+
+  // Éducateurs publics rattachés à cette équipe (lien croisé vers leurs fiches).
+  const teamEducators = (await getPublicEducators()).filter((educator) => educator.teams.some((t) => t.slug === slug));
 
   const teamJsonLd = buildSportsTeam(team);
   const breadcrumbJsonLd = buildBreadcrumb([
@@ -86,6 +90,24 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 ))}
               </ul>
             </>
+          ) : null}
+
+          {teamEducators.length > 0 ? (
+            <div className="mt-5">
+              <p className="text-xs font-black uppercase text-slate-500">Fiches des éducateurs</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {teamEducators.map((educator) => (
+                  <Link
+                    key={educator.id}
+                    href={`/le-club/encadrement/${educator.slug}`}
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-full bg-[#07542f]/[0.08] px-3 py-1.5 text-xs font-black uppercase text-[#07542f] transition hover:bg-[#f7c600] hover:text-[#001c10]"
+                  >
+                    {educator.name}
+                    <ArrowRight size={13} aria-hidden="true" />
+                  </Link>
+                ))}
+              </div>
+            </div>
           ) : null}
 
           <h3 className="mt-8 text-xl font-black uppercase text-[#002f1d]">Joueurs</h3>

@@ -301,6 +301,11 @@ export type ProfileUpdatePayload = {
   birthDate?: string;
   publicProfile?: boolean;
   publicTitle?: string;
+  publicDiploma?: string;
+  publicJoinedYear?: number;
+  publicDiplomas?: string[];
+  publicSpecialties?: string[];
+  publicQuote?: string;
   publicBio?: string;
 };
 
@@ -2278,6 +2283,29 @@ export function validateAdminContactMessageReviewPayload(input: unknown): Valida
   };
 }
 
+// Normalise une liste (tableau OU texte séparé par virgules/retours-ligne) en
+// tableau de chaînes propres, borné en nombre et longueur.
+function normalizeStringList(value: unknown, maxItems: number, maxLen: number): string[] | undefined {
+  let parts: string[];
+  if (Array.isArray(value)) {
+    parts = value.map((v) => (typeof v === "string" ? v : String(v ?? "")));
+  } else if (typeof value === "string") {
+    parts = value.split(/[\n,]/);
+  } else {
+    return undefined;
+  }
+  return parts
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0 && p.length <= maxLen)
+    .slice(0, maxItems);
+}
+
+function normalizeYear(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const n = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export function validateProfileUpdatePayload(input: unknown): ValidationResult<ProfileUpdatePayload> {
   const body = asRecord(input);
   const issues: ValidationIssue[] = [];
@@ -2294,14 +2322,46 @@ export function validateProfileUpdatePayload(input: unknown): ValidationResult<P
   const birthDate = normalizeString(body.birthDate);
   const publicProfile = typeof body.publicProfile === "boolean" ? body.publicProfile : undefined;
   const publicTitle = normalizeString(body.publicTitle);
+  const publicDiploma = normalizeString(body.publicDiploma);
+  const publicJoinedYear = normalizeYear(body.publicJoinedYear);
+  const publicDiplomas = normalizeStringList(body.publicDiplomas, 12, 80);
+  const publicSpecialties = normalizeStringList(body.publicSpecialties, 12, 40);
+  const publicQuote = normalizeString(body.publicQuote);
   const publicBio = normalizeString(body.publicBio);
 
-  if (!firstName && !lastName && !displayName && !phone && !avatarUrl && !birthDate && publicProfile === undefined && !publicTitle && !publicBio) {
+  if (
+    !firstName &&
+    !lastName &&
+    !displayName &&
+    !phone &&
+    !avatarUrl &&
+    !birthDate &&
+    publicProfile === undefined &&
+    !publicTitle &&
+    !publicDiploma &&
+    publicJoinedYear === undefined &&
+    publicDiplomas === undefined &&
+    publicSpecialties === undefined &&
+    !publicQuote &&
+    !publicBio
+  ) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
   }
 
   if (publicTitle && publicTitle.length > 120) {
     issues.push({ field: "publicTitle", message: "Titre public trop long (120 caracteres max)." });
+  }
+
+  if (publicDiploma && publicDiploma.length > 60) {
+    issues.push({ field: "publicDiploma", message: "Diplome trop long (60 caracteres max)." });
+  }
+
+  if (publicQuote && publicQuote.length > 280) {
+    issues.push({ field: "publicQuote", message: "Citation trop longue (280 caracteres max)." });
+  }
+
+  if (publicJoinedYear !== undefined && (publicJoinedYear < 1900 || publicJoinedYear > new Date().getFullYear() + 1)) {
+    issues.push({ field: "publicJoinedYear", message: "Annee d'arrivee invalide." });
   }
 
   if (publicBio && publicBio.length > 600) {
@@ -2343,6 +2403,86 @@ export function validateProfileUpdatePayload(input: unknown): ValidationResult<P
       ...(birthDate ? { birthDate } : {}),
       ...(publicProfile !== undefined ? { publicProfile } : {}),
       ...(publicTitle ? { publicTitle } : {}),
+      ...(publicDiploma ? { publicDiploma } : {}),
+      ...(publicJoinedYear !== undefined ? { publicJoinedYear } : {}),
+      ...(publicDiplomas !== undefined ? { publicDiplomas } : {}),
+      ...(publicSpecialties !== undefined ? { publicSpecialties } : {}),
+      ...(publicQuote ? { publicQuote } : {}),
+      ...(publicBio ? { publicBio } : {})
+    }
+  };
+}
+
+// Validateur RESTREINT pour l'auto-gestion éducateur : n'accepte QUE les champs
+// publics éditables par l'éducateur lui-même. Exclut volontairement avatarUrl
+// (réglé uniquement par la route d'upload, valeur interne sûre) et toute PII
+// (firstName/lastName/phone/birthDate) + role/status (anti-escalade / anti-XSS).
+export function validateEducatorPublicProfilePayload(input: unknown): ValidationResult<ProfileUpdatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const displayName = normalizeString(body.displayName);
+  const publicProfile = typeof body.publicProfile === "boolean" ? body.publicProfile : undefined;
+  const publicTitle = normalizeString(body.publicTitle);
+  const publicDiploma = normalizeString(body.publicDiploma);
+  const publicJoinedYear = normalizeYear(body.publicJoinedYear);
+  const publicDiplomas = normalizeStringList(body.publicDiplomas, 12, 80);
+  const publicSpecialties = normalizeStringList(body.publicSpecialties, 12, 40);
+  const publicQuote = normalizeString(body.publicQuote);
+  const publicBio = normalizeString(body.publicBio);
+
+  if (
+    displayName === undefined &&
+    publicProfile === undefined &&
+    !publicTitle &&
+    !publicDiploma &&
+    publicJoinedYear === undefined &&
+    publicDiplomas === undefined &&
+    publicSpecialties === undefined &&
+    !publicQuote &&
+    !publicBio
+  ) {
+    issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (displayName && (displayName.length < 2 || displayName.length > 160)) {
+    issues.push({ field: "displayName", message: "Nom affiche invalide." });
+  }
+  if (publicTitle && publicTitle.length > 120) {
+    issues.push({ field: "publicTitle", message: "Titre public trop long (120 caracteres max)." });
+  }
+  if (publicDiploma && publicDiploma.length > 60) {
+    issues.push({ field: "publicDiploma", message: "Diplome trop long (60 caracteres max)." });
+  }
+  if (publicQuote && publicQuote.length > 280) {
+    issues.push({ field: "publicQuote", message: "Citation trop longue (280 caracteres max)." });
+  }
+  if (publicJoinedYear !== undefined && (publicJoinedYear < 1900 || publicJoinedYear > new Date().getFullYear() + 1)) {
+    issues.push({ field: "publicJoinedYear", message: "Annee d'arrivee invalide." });
+  }
+  if (publicBio && publicBio.length > 600) {
+    issues.push({ field: "publicBio", message: "Biographie publique trop longue (600 caracteres max)." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      ...(displayName ? { displayName } : {}),
+      ...(publicProfile !== undefined ? { publicProfile } : {}),
+      ...(publicTitle ? { publicTitle } : {}),
+      ...(publicDiploma ? { publicDiploma } : {}),
+      ...(publicJoinedYear !== undefined ? { publicJoinedYear } : {}),
+      ...(publicDiplomas !== undefined ? { publicDiplomas } : {}),
+      ...(publicSpecialties !== undefined ? { publicSpecialties } : {}),
+      ...(publicQuote ? { publicQuote } : {}),
       ...(publicBio ? { publicBio } : {})
     }
   };
@@ -2368,6 +2508,11 @@ export function validateAdminUserUpdatePayload(input: unknown): ValidationResult
     body.birthDate !== undefined ||
     body.publicProfile !== undefined ||
     body.publicTitle !== undefined ||
+    body.publicDiploma !== undefined ||
+    body.publicJoinedYear !== undefined ||
+    body.publicDiplomas !== undefined ||
+    body.publicSpecialties !== undefined ||
+    body.publicQuote !== undefined ||
     body.publicBio !== undefined;
   const base = hasProfileFields ? validateProfileUpdatePayload(body) : ({ ok: true, data: {} } as const);
 

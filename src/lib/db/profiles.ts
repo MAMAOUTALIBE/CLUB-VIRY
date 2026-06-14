@@ -15,6 +15,11 @@ function profilePayloadToRow(input: ProfileUpdatePayload) {
     ...(input.birthDate !== undefined ? { birth_date: input.birthDate ?? null } : {}),
     ...(input.publicProfile !== undefined ? { public_profile: input.publicProfile } : {}),
     ...(input.publicTitle !== undefined ? { public_title: input.publicTitle ?? null } : {}),
+    ...(input.publicDiploma !== undefined ? { public_diploma: input.publicDiploma ?? null } : {}),
+    ...(input.publicJoinedYear !== undefined ? { public_joined_year: input.publicJoinedYear ?? null } : {}),
+    ...(input.publicDiplomas !== undefined ? { public_diplomas: input.publicDiplomas ?? [] } : {}),
+    ...(input.publicSpecialties !== undefined ? { public_specialties: input.publicSpecialties ?? [] } : {}),
+    ...(input.publicQuote !== undefined ? { public_quote: input.publicQuote ?? null } : {}),
     ...(input.publicBio !== undefined ? { public_bio: input.publicBio ?? null } : {})
   };
 }

@@ -24,6 +24,7 @@ export function EducatorsPublicAdmin() {
         { name: "publicProfile", label: "Afficher sur le site", type: "boolean", rowKey: "public_profile", help: "Rend cet éducateur visible sur la page publique Encadrement." },
         { name: "displayName", label: "Nom affiché (public)", rowKey: "display_name", placeholder: "Prénom Nom", fullWidth: true },
         { name: "publicTitle", label: "Titre / rôle public", rowKey: "public_title", placeholder: "Responsable technique, Éducateur U13…", fullWidth: true },
+        { name: "publicDiploma", label: "Diplôme / licence", rowKey: "public_diploma", placeholder: "UEFA C, BEF, CFF3…" },
         { name: "avatarUrl", label: "Photo (URL)", type: "url", rowKey: "avatar_url", placeholder: "https://…" },
         { name: "publicBio", label: "Biographie publique", type: "textarea", rowKey: "public_bio", placeholder: "Quelques lignes de présentation (600 caractères max)." }
       ]}

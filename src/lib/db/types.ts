@@ -32,7 +32,13 @@ export type Profile = {
   birth_date: string | null;
   public_profile: boolean;
   public_title: string | null;
+  public_diploma: string | null;
+  public_joined_year: number | null;
+  public_diplomas: string[];
+  public_specialties: string[];
+  public_quote: string | null;
   public_bio: string | null;
+  avatar_path: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -3,6 +3,7 @@
 import { CalendarDays, Crown, Loader2, Plus, Save, ShieldAlert, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { EducatorPublicProfileEditor } from "@/components/educator/EducatorPublicProfileEditor";
 
 type TeamLite = { id: string; name: string; slug: string; age_range: string | null; level: string | null };
 type StaffRow = { id: string; display_name: string; role_title: string; is_head_coach: boolean };
@@ -514,6 +515,9 @@ export function EducatorSpace() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+      <div className="lg:col-span-2">
+        <EducatorPublicProfileEditor />
+      </div>
       {/* Mes équipes */}
       <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:self-start">
         <p className="text-xs font-black uppercase text-[#07542f]">Mes équipes</p>

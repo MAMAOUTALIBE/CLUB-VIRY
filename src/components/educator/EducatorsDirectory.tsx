@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowRight,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
@@ -10,25 +12,28 @@ import {
   GraduationCap,
   Loader2,
   Mail,
+  Quote,
   Search,
   Send,
   Shield,
+  ShieldCheck,
   Star,
   Trophy,
+  User,
   Users,
   X
 } from "lucide-react";
 
 import type { DisplayEducator } from "@/lib/public-content";
 
-function initials(name: string): string {
+export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const first = parts[0]?.charAt(0) ?? "";
   const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : "";
   return (first + last).toUpperCase() || "?";
 }
 
-function firstName(name: string): string {
+export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] || name;
 }
 
@@ -40,22 +45,36 @@ function normalize(value: string): string {
     .toLowerCase();
 }
 
-function Avatar({ educator, size }: { educator: DisplayEducator; size: "md" | "xl" }) {
-  const cls = size === "xl" ? "h-24 w-24 text-2xl ring-4" : "h-16 w-16 text-lg ring-2";
-  if (educator.avatar) {
-    return <img src={educator.avatar} alt={educator.name} className={`${cls} shrink-0 rounded-full object-cover ring-[#f7c600]`} />;
-  }
+export function DiplomaBadge({ diploma, className }: { diploma: string; className?: string }) {
   return (
     <span
-      className={`${cls} flex shrink-0 items-center justify-center rounded-full bg-[#07542f] font-black uppercase text-[#f7c600] ring-[#f7c600]`}
-      aria-hidden="true"
+      className={`inline-flex items-center gap-1.5 rounded-full bg-[#07542f] px-3 py-1 text-xs font-black uppercase text-white shadow-lg ring-1 ring-[#f7c600]/40 ${className ?? ""}`}
     >
-      {initials(educator.name)}
+      <ShieldCheck size={13} className="text-[#f7c600]" aria-hidden="true" />
+      {diploma}
     </span>
   );
 }
 
-function StatBlock({ icon: Icon, value, label, compact }: { icon: LucideIcon; value: number; label: string; compact?: boolean }) {
+// Bannière : photo de l'éducateur, ou repli pelouse + monogramme doré.
+export function EducatorBanner({ educator, className, showBadge = true }: { educator: DisplayEducator; className: string; showBadge?: boolean }) {
+  return (
+    <div className={`relative w-full overflow-hidden ${className}`}>
+      {educator.avatar ? (
+        <img src={educator.avatar} alt={educator.name} className="h-full w-full object-cover" />
+      ) : (
+        <div className="ac-pitch flex h-full w-full items-center justify-center">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#001c10]/50 text-3xl font-black uppercase text-[#f7c600] ring-2 ring-[#f7c600]/60 backdrop-blur-sm">
+            {initials(educator.name)}
+          </span>
+        </div>
+      )}
+      {showBadge && educator.diploma ? <DiplomaBadge diploma={educator.diploma} className="absolute right-3 top-3" /> : null}
+    </div>
+  );
+}
+
+export function StatBlock({ icon: Icon, value, label, compact }: { icon: LucideIcon; value: number; label: string; compact?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <Icon size={compact ? 16 : 20} className="text-[#07542f]" aria-hidden="true" />
@@ -65,7 +84,7 @@ function StatBlock({ icon: Icon, value, label, compact }: { icon: LucideIcon; va
   );
 }
 
-function TeamChip({ team }: { team: DisplayEducator["teams"][number] }) {
+export function TeamChip({ team }: { team: DisplayEducator["teams"][number] }) {
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full bg-[#07542f]/[0.08] px-2.5 py-1 text-[11px] font-black uppercase text-[#07542f]"
@@ -78,57 +97,79 @@ function TeamChip({ team }: { team: DisplayEducator["teams"][number] }) {
   );
 }
 
-// ---- Carte (carrousel) : agrandie, cliquable ----
-function EducatorCardLarge({ educator, onOpen }: { educator: DisplayEducator; onOpen: () => void }) {
-  const visibleTeams = educator.teams.slice(0, 2);
-  const extra = educator.teams.length - visibleTeams.length;
+function StatsRow({ educator, compact }: { educator: DisplayEducator; compact?: boolean }) {
+  return (
+    <>
+      <StatBlock icon={Users} value={educator.stats.teams} label={educator.stats.teams > 1 ? "Équipes" : "Équipe"} compact={compact} />
+      <StatBlock icon={CalendarDays} value={educator.stats.sessions} label="Séances" compact={compact} />
+      <StatBlock icon={Trophy} value={educator.stats.matches} label="Matchs" compact={compact} />
+    </>
+  );
+}
 
+function TeamChips({ educator }: { educator: DisplayEducator }) {
+  const visible = educator.teams.slice(0, 2);
+  const extra = educator.teams.length - visible.length;
+  if (educator.teams.length === 0) {
+    return <span className="text-[11px] font-semibold uppercase tracking-wide text-black/35">Encadrement</span>;
+  }
+  return (
+    <>
+      {visible.map((team) => (
+        <TeamChip key={`${team.slug}-${team.roleTitle}`} team={team} />
+      ))}
+      {extra > 0 ? (
+        <span className="inline-flex items-center rounded-full bg-black/5 px-2 py-1 text-[11px] font-black uppercase text-black/50">+{extra}</span>
+      ) : null}
+    </>
+  );
+}
+
+// ---- Carte (carrousel) : bannière photo + badge diplôme + CTA or ----
+function EducatorCardLarge({ educator, onOpen }: { educator: DisplayEducator; onOpen: () => void }) {
   return (
     <button
       type="button"
       onClick={onOpen}
       aria-label={`Voir la fiche de ${educator.name} et le contacter`}
-      className="official-card focus-ring group flex h-full w-[18rem] flex-col rounded-2xl bg-white p-5 text-left text-[#002f1d] shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl"
+      className="official-card focus-ring group flex h-full w-[85vw] max-w-[20rem] flex-col overflow-hidden rounded-2xl bg-white text-left text-[#002f1d] shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl sm:w-[20rem]"
     >
-      <div className="flex items-center gap-3.5">
-        <Avatar educator={educator} size="md" />
-        <div className="min-w-0">
-          <h3 className="truncate text-base font-black uppercase leading-tight">{educator.name}</h3>
-          <p className="mt-0.5 flex items-center gap-1 truncate text-xs font-bold text-[#07542f]">
-            <GraduationCap size={13} aria-hidden="true" />
-            <span className="truncate">{educator.title}</span>
-          </p>
+      <EducatorBanner educator={educator} className="h-40" />
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="text-lg font-black uppercase leading-tight">{educator.name}</h3>
+        <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-black/55">{educator.title}</p>
+        <span className="mt-2 h-1 w-12 rounded-full bg-[#f7c600]" aria-hidden="true" />
+
+        {educator.specialties.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {educator.specialties.slice(0, 2).map((s) => (
+              <span key={s} className="rounded-full bg-[#002f1d]/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#002f1d]/70">
+                {s}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex min-h-[1.75rem] flex-wrap content-start gap-1.5">
+          <TeamChips educator={educator} />
         </div>
-      </div>
 
-      <div className="mt-3 flex min-h-[1.75rem] flex-wrap content-start gap-1.5">
-        {visibleTeams.map((team) => (
-          <TeamChip key={`${team.slug}-${team.roleTitle}`} team={team} />
-        ))}
-        {extra > 0 ? (
-          <span className="inline-flex items-center rounded-full bg-black/5 px-2 py-1 text-[11px] font-black uppercase text-black/50">+{extra}</span>
-        ) : null}
-        {educator.teams.length === 0 ? (
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-black/35">Encadrement</span>
-        ) : null}
-      </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-black/5 pt-4 text-center">
+          <StatsRow educator={educator} compact />
+        </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-black/5 pt-4 text-center">
-        <StatBlock icon={Users} value={educator.stats.teams} label={educator.stats.teams > 1 ? "Équipes" : "Équipe"} compact />
-        <StatBlock icon={CalendarDays} value={educator.stats.sessions} label="Séances" compact />
-        <StatBlock icon={Trophy} value={educator.stats.matches} label="Matchs" compact />
+        <span className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-[#f7c600] py-3 text-sm font-black uppercase tracking-wide text-[#001c10] shadow-[0_10px_22px_-12px_rgba(247,198,0,0.8)] transition group-hover:bg-[#ffd84d]">
+          <User size={15} aria-hidden="true" />
+          Voir la fiche &amp; contacter
+          <ArrowRight size={15} className="transition group-hover:translate-x-0.5" aria-hidden="true" />
+        </span>
       </div>
-
-      <span className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#07542f]/[0.06] py-2 text-xs font-black uppercase tracking-wide text-[#07542f] transition group-hover:bg-[#f7c600] group-hover:text-[#001c10]">
-        <Mail size={14} aria-hidden="true" />
-        Voir la fiche & contacter
-      </span>
     </button>
   );
 }
 
 // ---- Formulaire de contact (dans la fiche) ----
-function ContactForm({ educator }: { educator: DisplayEducator }) {
+export function ContactForm({ educator }: { educator: DisplayEducator }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -171,7 +212,7 @@ function ContactForm({ educator }: { educator: DisplayEducator }) {
 
   if (status === "success") {
     return (
-      <div className="rounded-2xl border border-[#07542f]/20 bg-[#07542f]/[0.06] p-6 text-center">
+      <div role="status" className="rounded-2xl border border-[#07542f]/20 bg-[#07542f]/[0.06] p-6 text-center">
         <CheckCircle2 size={36} className="mx-auto text-[#07542f]" aria-hidden="true" />
         <p className="mt-3 text-sm font-bold text-[#002f1d]">Message envoyé !</p>
         <p className="mt-1 text-sm text-black/60">
@@ -203,18 +244,20 @@ function ContactForm({ educator }: { educator: DisplayEducator }) {
         Écrivez à <span className="font-bold text-[#002f1d]">{firstName(educator.name)}</span> : votre message est transmis au club, qui le relaie. Son adresse e-mail reste privée.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <input className={inputCls} placeholder="Votre nom *" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
-        <input className={inputCls} type="email" placeholder="Votre e-mail *" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+        <input className={inputCls} placeholder="Votre nom *" aria-label="Votre nom" aria-required="true" value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
+        <input className={inputCls} type="email" placeholder="Votre e-mail *" aria-label="Votre e-mail" aria-required="true" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       </div>
-      <input className={inputCls} placeholder="Téléphone (optionnel)" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+      <input className={inputCls} placeholder="Téléphone (optionnel)" aria-label="Téléphone (optionnel)" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
       <textarea
         className={`${inputCls} min-h-[110px] resize-y`}
         placeholder="Votre message *"
+        aria-label="Votre message"
+        aria-required="true"
         value={message}
         maxLength={1500}
         onChange={(e) => setMessage(e.target.value)}
       />
-      {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm font-semibold text-red-600">{error}</p> : null}
       <button
         type="submit"
         disabled={!canSubmit}
@@ -230,18 +273,43 @@ function ContactForm({ educator }: { educator: DisplayEducator }) {
 // ---- Fiche détaillée (modale) ----
 function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Mémorise l'élément déclencheur (la carte) pour lui rendre le focus à la fermeture.
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Focus trap : garde la tabulation à l'intérieur de la modale.
+      if (e.key === "Tab" && panelRef.current) {
+        const focusables = panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
+
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      previouslyFocused?.focus();
     };
   }, [onClose]);
 
@@ -254,6 +322,7 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
       onClick={onClose}
     >
       <div
+        ref={panelRef}
         className="relative flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white text-[#002f1d] shadow-2xl ring-1 ring-black/5"
         onClick={(e) => e.stopPropagation()}
       >
@@ -262,38 +331,29 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
           type="button"
           onClick={onClose}
           aria-label="Fermer la fiche"
-          className="focus-ring absolute right-3 top-3 z-20 rounded-full bg-white/15 p-2 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/30"
+          className="focus-ring absolute right-3 top-3 z-20 rounded-full bg-black/35 p-2 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-black/55"
         >
           <X size={18} aria-hidden="true" />
         </button>
 
-        {/* En-tête premium (figé) */}
-        <div className="club-shell relative shrink-0 overflow-hidden px-6 py-7 sm:px-8">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#f7c600]/12 blur-3xl" />
-          <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-10 h-44 w-44 rounded-full bg-[#07542f]/40 blur-3xl" />
-          <div className="relative flex items-center gap-5 pr-10">
-            <div className="relative shrink-0">
-              <span aria-hidden="true" className="absolute -inset-2 rounded-full bg-[#f7c600]/25 blur-xl" />
-              <span className="relative inline-flex">
-                <Avatar educator={educator} size="xl" />
-              </span>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#f7c600]/90">Éducateur du club</p>
-              <h2 className="mt-1 truncate text-xl font-black uppercase leading-tight text-white sm:text-2xl">{educator.name}</h2>
-              <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-bold text-[#f7c600]">
-                <GraduationCap size={15} aria-hidden="true" />
-                {educator.title}
-              </p>
-            </div>
+        {/* Bannière (figée) */}
+        <div className="relative shrink-0">
+          <EducatorBanner educator={educator} className="h-48 sm:h-56" showBadge={false} />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" aria-hidden="true" />
+          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+            {educator.diploma ? <DiplomaBadge diploma={educator.diploma} className="mb-2" /> : null}
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#f7c600]">Éducateur du club</p>
+            <h2 className="mt-1 text-2xl font-black uppercase leading-tight text-white">{educator.name}</h2>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-[#f7c600]">
+              <GraduationCap size={15} aria-hidden="true" />
+              {educator.title}
+            </p>
           </div>
         </div>
-        {/* Filet or */}
         <div aria-hidden="true" className="h-1 w-full shrink-0 bg-gradient-to-r from-[#f7c600] via-[#ffd84d] to-[#f7c600]" />
 
         {/* Corps (défilant) */}
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             {[
               { icon: Users, value: educator.stats.teams, label: educator.stats.teams > 1 ? "Équipes" : "Équipe" },
@@ -309,7 +369,52 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
             ))}
           </div>
 
-          {/* Bio */}
+          {educator.quote ? (
+            <figure className="rounded-2xl border-l-4 border-[#f7c600] bg-[#f7f7f5] p-4">
+              <Quote size={18} className="text-[#f7c600]" aria-hidden="true" />
+              <blockquote className="mt-1 text-sm italic leading-6 text-[#002f1d]">« {educator.quote} »</blockquote>
+            </figure>
+          ) : null}
+
+          {educator.joinedYear || educator.diplomas.length > 0 ? (
+            <div>
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-black/45">
+                <span className="h-3 w-1 rounded-full bg-[#f7c600]" aria-hidden="true" />
+                Diplômes &amp; parcours
+              </h3>
+              {educator.joinedYear ? (
+                <p className="mt-2 text-sm text-black/60">
+                  Au club depuis <span className="font-bold text-[#002f1d]">{educator.joinedYear}</span>
+                </p>
+              ) : null}
+              {educator.diplomas.length > 0 ? (
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {educator.diplomas.map((d) => (
+                    <li key={d}>
+                      <DiplomaBadge diploma={d} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+
+          {educator.specialties.length > 0 ? (
+            <div>
+              <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-black/45">
+                <span className="h-3 w-1 rounded-full bg-[#f7c600]" aria-hidden="true" />
+                Spécialités
+              </h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {educator.specialties.map((s) => (
+                  <span key={s} className="rounded-full bg-[#07542f]/[0.08] px-3 py-1 text-xs font-black uppercase text-[#07542f]">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {educator.bio ? (
             <div>
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-black/45">
@@ -320,7 +425,6 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
             </div>
           ) : null}
 
-          {/* Équipes */}
           {educator.teams.length > 0 ? (
             <div>
               <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-black/45">
@@ -335,7 +439,6 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
             </div>
           ) : null}
 
-          {/* Contact */}
           <div className="rounded-2xl border border-black/5 bg-[#f7f7f5] p-5">
             <h3 className="flex items-center gap-2 text-sm font-black uppercase text-[#002f1d]">
               <Mail size={16} className="text-[#07542f]" aria-hidden="true" />
@@ -345,6 +448,14 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
               <ContactForm educator={educator} />
             </div>
           </div>
+
+          <Link
+            href={`/le-club/encadrement/${educator.slug}`}
+            className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#07542f]/25 bg-white px-5 py-3 text-sm font-black uppercase tracking-wide text-[#07542f] transition hover:-translate-y-0.5 hover:border-[#07542f] hover:bg-[#07542f] hover:text-white"
+          >
+            Voir toute la page
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </div>
@@ -376,7 +487,7 @@ export function EducatorsDirectory({ educators }: { educators: DisplayEducator[]
         return true;
       }
       const haystack = normalize(
-        [educator.name, educator.title, ...educator.teams.flatMap((team) => [team.name, team.category, team.roleTitle])].join(" ")
+        [educator.name, educator.title, educator.diploma ?? "", ...educator.teams.flatMap((team) => [team.name, team.category, team.roleTitle])].join(" ")
       );
       return haystack.includes(q);
     });
@@ -395,13 +506,23 @@ export function EducatorsDirectory({ educators }: { educators: DisplayEducator[]
       el.scrollLeft = 0;
     }
     updateArrows();
+    const raf = requestAnimationFrame(updateArrows);
+    return () => cancelAnimationFrame(raf);
   }, [filtered]);
 
   useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
     updateArrows();
-    const onResize = () => updateArrows();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    // rAF + ResizeObserver : recalcule l'état des flèches après le layout et au
+    // moindre changement de taille (viewport, chargement des bannières).
+    const raf = requestAnimationFrame(updateArrows);
+    const observer = new ResizeObserver(() => updateArrows());
+    observer.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
   }, []);
 
   const scrollByPage = (direction: number) => {
@@ -486,7 +607,8 @@ export function EducatorsDirectory({ educators }: { educators: DisplayEducator[]
           <div
             ref={trackRef}
             onScroll={updateArrows}
-            className="grid snap-x snap-mandatory grid-flow-col grid-rows-2 gap-4 overflow-x-auto scroll-smooth pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ gridTemplateRows: `repeat(${filtered.length <= 2 ? 1 : 2}, minmax(0, 1fr))` }}
+            className="grid snap-x snap-mandatory grid-flow-col gap-4 overflow-x-auto scroll-smooth pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {filtered.map((educator) => (
               <div key={educator.id} className="snap-start">
