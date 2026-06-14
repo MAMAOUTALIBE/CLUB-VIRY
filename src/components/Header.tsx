@@ -298,7 +298,7 @@ export function Header({ banner, socials }: HeaderProps) {
                 <div
                   id={`submenu-${item.href}`}
                   inert={!expanded}
-                  className={`absolute left-0 top-[calc(100%+16px)] w-72 transition duration-200 ${
+                  className={`absolute left-0 top-full w-72 pt-4 transition duration-200 ${
                     expanded ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
                   }`}
                 >
