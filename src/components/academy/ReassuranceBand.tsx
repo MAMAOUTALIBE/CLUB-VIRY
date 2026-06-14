@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ATOUTS, type Atout } from "@/lib/academy-data";
 
-// Bande de réassurance premium : compteurs animés (count-up) au scroll, anneaux
-// fins (pas d'aplats), chiffres mis en valeur, séparateurs apaisés.
-// Respecte prefers-reduced-motion : affiche directement la valeur finale.
+// Bande « Chiffres clés » premium (fond vert sombre, bordure or) avec compteurs
+// animés (count-up) déclenchés au scroll. Respecte prefers-reduced-motion.
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -16,7 +15,7 @@ function CountStat({ count, unit, active }: { count: number; unit?: string; acti
 
   useEffect(() => {
     if (!active) return;
-    // rAF n'est PAS couvert par la neutralisation CSS reduced-motion : ce garde JS
+    // rAF non couvert par la neutralisation CSS reduced-motion : ce garde JS
     // est le seul respect réel du réglage pour le count-up. Ne pas supprimer.
     if (prefersReducedMotion()) {
       const id = window.setTimeout(() => setN(count), 0);
@@ -37,7 +36,7 @@ function CountStat({ count, unit, active }: { count: number; unit?: string; acti
   }, [count, active]);
 
   return (
-    <p className="text-xl font-black uppercase leading-tight tabular-nums text-[#002f1d] sm:text-2xl">
+    <p className="text-2xl font-black uppercase leading-tight tabular-nums text-white">
       {n}
       {unit ? ` ${unit}` : null}
     </p>
@@ -65,31 +64,32 @@ export function ReassuranceBand() {
   }, []);
 
   return (
-    <section ref={ref} className="border-y border-[#002f1d]/10 bg-[linear-gradient(180deg,#ffffff,#fbfcf9)]">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-[#002f1d]/8 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
-        {ATOUTS.map((atout: Atout) => {
-          const Icon = atout.icon;
-          return (
-            <div className="flex items-center gap-3.5 px-4 py-8" key={atout.label}>
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border"
-                style={{ background: `${atout.accent}0d`, borderColor: `${atout.accent}33`, color: atout.accent }}
-                aria-hidden="true"
-              >
-                <Icon size={22} />
-              </span>
-              <div className="min-w-0">
-                {typeof atout.count === "number" ? (
-                  <CountStat count={atout.count} unit={atout.unit} active={visible} />
-                ) : (
-                  <p className="text-xl font-black uppercase leading-tight text-[#002f1d] sm:text-2xl">{atout.value}</p>
-                )}
-                <span className="ac-rule-gold mt-1.5 block max-w-[2.5rem]" aria-hidden="true" />
-                <p className="mt-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-slate-500">{atout.label}</p>
+    <section ref={ref} className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-[#f7c600]/45 bg-[#f7c600]/40 shadow-[0_24px_60px_-20px_rgba(0,18,11,0.55)] min-[380px]:grid-cols-2 lg:grid-cols-4">
+          {ATOUTS.map((atout: Atout) => {
+            const Icon = atout.icon;
+            return (
+              <div className="flex items-center gap-3.5 bg-[#001c10] px-5 py-7" key={atout.label}>
+                <span
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-[#f7c600] ring-1 ring-[#f7c600]/45"
+                  style={{ background: "rgba(247,198,0,0.14)" }}
+                  aria-hidden="true"
+                >
+                  <Icon size={24} />
+                </span>
+                <div className="min-w-0">
+                  {typeof atout.count === "number" ? (
+                    <CountStat count={atout.count} unit={atout.unit} active={visible} />
+                  ) : (
+                    <p className="text-2xl font-black uppercase leading-tight text-white">{atout.value}</p>
+                  )}
+                  <p className="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-white/65">{atout.label}</p>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
   );

@@ -1,237 +1,194 @@
-import { ArrowRight, CheckCircle2, ChevronDown, ExternalLink, GraduationCap } from "lucide-react";
-import { PageHero } from "@/components/PageHero";
+import Image from "next/image";
+import {
+  ArrowRight,
+  Dumbbell,
+  ExternalLink,
+  GraduationCap,
+  Handshake,
+  Rocket,
+  User,
+  UserPlus,
+  Users
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { SectionTitle } from "@/components/SectionTitle";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { AcademyCta } from "@/components/academy/AcademyCta";
-import { FormationsExplorer } from "@/components/academy/FormationsExplorer";
-import { OrientationQuiz } from "@/components/academy/OrientationQuiz";
 import { ReassuranceBand } from "@/components/academy/ReassuranceBand";
-import { ShareButton } from "@/components/academy/ShareButton";
 import { StickyAcademyCta } from "@/components/academy/StickyAcademyCta";
-import { FAQ, PROFILES, PUBLICS, STEPS, THEMES, TOTAL_FORMATIONS } from "@/lib/academy-data";
-import { images } from "@/lib/images";
+import { FEATURED_FORMATIONS, PUBLICS } from "@/lib/academy-data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/academy");
 
-// Plateforme Academy = service EXTERNE. Le site ne fait que présenter et rediriger via
-// ACADEMY_PLATFORM_URL (aucune URL en dur). Sans URL, les boutons d'accès sont désactivés.
+// Plateforme Academy = service EXTERNE déjà développé. La page ne fait que présenter
+// et rediriger via ACADEMY_PLATFORM_URL (aucune URL en dur). Sans URL, les CTA sont désactivés.
 const ACADEMY_URL = process.env.ACADEMY_PLATFORM_URL?.trim() ?? "";
 
-const HERO_PILLS = ["100% en ligne", "Ouvert à tous", "À ton rythme", `${TOTAL_FORMATIONS} formations`];
+const PUBLIC_ICON: Record<string, LucideIcon> = {
+  Joueurs: Dumbbell,
+  Parents: Users,
+  Familles: Users,
+  Étudiants: GraduationCap,
+  Adultes: User,
+  Partenaires: Handshake,
+  "Personnes extérieures": UserPlus
+};
+
+// Image du hero. Pour la scène Academy immersive (licencié + laptops + ballon),
+// dépose l'image dans public/ et remplace la valeur ci-dessous, ex. "/academy-hero.jpg".
+const HERO_IMAGE = "/stade/aerien.jpg";
+
+const PILLARS: Array<{ icon: LucideIcon; title: string; text: string }> = [
+  { icon: Dumbbell, title: "Former le joueur", text: "Développe ton potentiel sur le terrain." },
+  { icon: GraduationCap, title: "Accompagner l'élève", text: "Construis ton parcours scolaire et personnel." },
+  { icon: Rocket, title: "Préparer l'avenir", text: "Maîtrise les compétences d'aujourd'hui et de demain." }
+];
 
 const PRIMARY_BTN =
-  "ac-btn-gold focus-ring inline-flex w-full items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-sm font-black uppercase tracking-[0.04em] transition hover:-translate-y-0.5 sm:w-auto";
+  "ac-btn-gold focus-ring inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-sm font-black uppercase tracking-[0.04em] transition hover:-translate-y-0.5";
 const SECONDARY_BTN =
-  "focus-ring inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/70 bg-black/10 px-7 py-3.5 text-sm font-black uppercase tracking-[0.04em] text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600] sm:w-auto";
-const SOLID_GREEN_BTN =
-  "focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[#002f1d] px-7 py-3.5 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_-14px_rgba(0,31,19,0.6)] transition hover:-translate-y-0.5 hover:bg-[#07542f]";
-const GHOST_DARK_BTN =
-  "focus-ring inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 px-6 py-3.5 text-sm font-black uppercase tracking-[0.04em] text-white transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]";
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a }
-  }))
-};
+  "focus-ring inline-flex items-center justify-center gap-2 rounded-lg border border-white/70 bg-black/10 px-7 py-3.5 text-sm font-black uppercase tracking-[0.04em] text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]";
+const DARK_BTN =
+  "focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[#002f1d] px-6 py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_-14px_rgba(0,31,19,0.6)] transition hover:-translate-y-0.5 hover:bg-[#07542f]";
 
 export default function AcademyPage() {
   return (
     <>
-      <PageHero
-        eyebrow="Progresse sur le terrain ET en dehors"
-        description="Ton terrain pour progresser : sport, école, taf, numérique & IA. Des formations en ligne, à suivre à ton rythme."
-        image={images.training}
-        title="ES Viry-Châtillon Academy"
-      >
-        <div className="flex flex-col gap-5">
-          <span className="ac-eyebrow-dot w-fit rounded-full bg-[#001c10]/35 px-4 py-1.5 text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#ffd84d] ring-1 ring-[#f7c600]/35 backdrop-blur">
-            <GraduationCap size={14} aria-hidden="true" /> Plateforme de formation 100% en ligne
-          </span>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a className={PRIMARY_BTN} href="#formations">
-              Voir les formations
-            </a>
-            <AcademyCta url={ACADEMY_URL} className={SECONDARY_BTN}>
-              Je me lance <ExternalLink size={18} aria-hidden="true" />
-            </AcademyCta>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {HERO_PILLS.map((pill) => (
-              <span
-                key={pill}
-                className="rounded-full border border-white/20 bg-black/20 px-3.5 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-white/90 backdrop-blur [text-shadow:0_1px_6px_rgba(0,0,0,0.5)]"
-              >
-                {pill}
-              </span>
-            ))}
+      {/* ── SECTION 1 — Hero premium immersif ── */}
+      <section className="image-tint stadium-grid relative isolate overflow-hidden border-b-4 border-[#f7c600] text-white">
+        <Image src={HERO_IMAGE} alt="" fill priority sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
+        {/* Overlay cinématographique : sombre à gauche (lisibilité du texte), respire à droite (scène) + fond chaud bas */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#001c10]/95 via-[#001c10]/80 to-[#001c10]/35" aria-hidden="true" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-t from-[#001c10]/75 via-transparent to-[#001c10]/30" aria-hidden="true" />
+        <div className="relative z-[2] mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <div className="max-w-2xl">
+            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#f7c600] [text-shadow:0_2px_8px_rgba(0,0,0,0.55)]">Forme-toi. Progresse. Réussis.</p>
+            <h1 className="mt-4 [text-shadow:0_3px_16px_rgba(0,0,0,0.6)]">
+              <span className="block text-2xl font-black uppercase tracking-wide text-white sm:text-3xl">ES Viry-Châtillon</span>
+              <span className="block text-5xl font-black uppercase leading-[0.85] text-[#f7c600] sm:text-7xl lg:text-8xl">Academy</span>
+            </h1>
+            <p className="mt-5 text-xl font-black uppercase tracking-wide text-white sm:text-2xl [text-shadow:0_2px_10px_rgba(0,0,0,0.6)]">Sport. École. Métier. Numérique.</p>
+            <div className="gold-divider mt-5" aria-hidden="true" />
+
+            {/* 3 piliers en mini-cartes verre */}
+            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+              {PILLARS.map((pillar) => {
+                const Icon = pillar.icon;
+                return (
+                  <div
+                    key={pillar.title}
+                    className="rounded-xl border border-white/15 bg-[#001c10]/55 p-4 backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#f7c600]/45 hover:bg-[#001c10]/65"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f7c600]/15 text-[#f7c600] ring-1 ring-[#f7c600]/30" aria-hidden="true">
+                      <Icon size={20} />
+                    </span>
+                    <p className="mt-3 text-sm font-black uppercase leading-tight text-white">{pillar.title}</p>
+                    <p className="mt-1 text-xs leading-5 text-white/75">{pillar.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <AcademyCta url={ACADEMY_URL} className={PRIMARY_BTN}>
+                Accéder à la plateforme <ExternalLink size={18} aria-hidden="true" />
+              </AcademyCta>
+              <a className={SECONDARY_BTN} href="#formations">
+                Découvrir les formations <ArrowRight size={18} aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </div>
-      </PageHero>
+      </section>
 
-      {/* Bande de réassurance (compteurs animés) */}
+      {/* ── Chiffres clés (bande premium, juste sous le hero) ── */}
       <ReassuranceBand />
 
-      {/* Comment ça fonctionne — parcours timeline */}
-      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8">
+      {/* ── SECTION — Formations phares ── */}
+      <section id="formations" className="scroll-mt-[var(--header-h)] bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <SectionTitle eyebrow="C'est simple" title="Ton parcours en 5 min chrono" text="Du clic à ta première formation : 5 étapes, zéro galère." />
-          <Stagger className="relative mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
-            {/* Ligne de progression (desktop) */}
-            <span
-              className="absolute left-[8%] right-[8%] top-8 hidden h-[3px] rounded-full bg-gradient-to-r from-[#07542f] via-[#f7c600] to-[#07542f] shadow-[0_0_16px_rgba(247,198,0,0.35)] lg:block"
-              aria-hidden="true"
-            />
-            {STEPS.map((step, index) => {
-              const Icon = step.icon;
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <SectionTitle eyebrow="Catalogue" title="Nos formations phares" />
+            <AcademyCta url={ACADEMY_URL} className={DARK_BTN}>
+              Voir toutes les formations <ArrowRight size={16} aria-hidden="true" />
+            </AcademyCta>
+          </div>
+          <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURED_FORMATIONS.map((formation) => {
+              const Icon = formation.icon;
               return (
-                <StaggerItem key={step.label} className="relative flex flex-col items-center text-center">
-                  <span className="relative z-[1] flex h-16 w-16 items-center justify-center rounded-full bg-[#002f1d] text-[#f7c600] shadow-[0_12px_28px_-10px_rgba(0,31,19,0.6)] ring-[3px] ring-white">
-                    <Icon size={26} aria-hidden="true" />
-                    <span className="absolute -right-1.5 -top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-b from-[#ffd84d] to-[#f7c600] text-sm font-black text-[#001c10] ring-2 ring-white">
-                      {index + 1}
-                    </span>
-                  </span>
-                  <p className="mt-5 text-sm font-bold leading-7 text-[#102018]">{step.label}</p>
+                <StaggerItem key={formation.title} className="h-full">
+                  <article className="premium-card group flex h-full flex-col overflow-hidden rounded-2xl bg-white">
+                    <div className="relative h-44 overflow-hidden">
+                      <Image src={formation.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/80 via-[#001c10]/15 to-transparent" aria-hidden="true" />
+                      <span className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-lg ring-1 ring-white/20" style={{ background: formation.accent }} aria-hidden="true">
+                        <Icon size={22} />
+                      </span>
+                      <span className="absolute right-4 top-4 rounded-full bg-[#001c10]/80 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] ring-1 ring-[#f7c600]/30 backdrop-blur">
+                        {formation.level}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-lg font-black uppercase leading-tight text-[#002f1d]">{formation.title}</h3>
+                      <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{formation.description}</p>
+                      <AcademyCta url={ACADEMY_URL} className="focus-ring -ml-1 mt-3 inline-flex w-fit items-center gap-1.5 px-1 py-1.5 text-xs font-black uppercase">
+                        <span style={{ color: formation.accentText }}>Découvrir</span>
+                        <ArrowRight size={14} style={{ color: formation.accentText }} aria-hidden="true" />
+                      </AcademyCta>
+                    </div>
+                  </article>
                 </StaggerItem>
               );
             })}
           </Stagger>
-          <div className="mt-12 flex justify-center">
-            <AcademyCta url={ACADEMY_URL} className={SOLID_GREEN_BTN}>
-              Je me lance maintenant <ArrowRight size={18} aria-hidden="true" />
-            </AcademyCta>
-          </div>
         </div>
       </section>
 
-      {/* Quiz d'orientation */}
-      <section className="bg-[#f5f7f4] px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionTitle centered eyebrow="Pas sûr de ton choix ?" title="Quelle formation est faite pour toi ?" text="Réponds à 3 questions, on te dit par où commencer." />
-          <OrientationQuiz academyUrl={ACADEMY_URL} />
-        </div>
-      </section>
-
-      {/* Formations groupées par thème + filtres */}
-      <section className="ac-pitch scroll-mt-[var(--header-h)] px-4 py-20 text-white sm:px-6 lg:px-8" id="formations">
-        <div className="mx-auto max-w-7xl">
-          <SectionTitle
-            inverse
-            eyebrow={`${TOTAL_FORMATIONS} formations · ${THEMES.length} univers`}
-            title="Choisis ton terrain de jeu"
-            text="Sport, école, pro, numérique : filtre par univers et trouve la formation faite pour toi."
-          />
-          <FormationsExplorer academyUrl={ACADEMY_URL} />
-        </div>
-      </section>
-
-      {/* Pour qui : profils + publics */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Pour qui ?" title="Licencié ou pas, c'est pour toi" text="Pas besoin d'avoir une licence : tout le monde peut créer un compte et se former." />
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {PROFILES.map((profile) => {
-            const Icon = profile.icon;
-            const styleVars = { "--ac-accent": profile.accent } as React.CSSProperties;
-            return (
-              <div className="ac-frame ac-corner relative flex flex-col overflow-hidden p-6" key={profile.label} style={styleVars}>
-                <span className="ac-accent-bar" aria-hidden="true" />
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ background: `${profile.accent}1a`, color: profile.accent, borderColor: `${profile.accent}33` }} aria-hidden="true">
-                  <Icon size={24} />
-                </span>
-                <h3 className="mt-4 text-base font-black uppercase leading-tight tracking-[-0.005em] text-[#002f1d]">{profile.label}</h3>
-                <p className="mt-2 text-sm leading-7 text-slate-600">{profile.text}</p>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          {PUBLICS.map((item) => (
-            <span
-              className={`rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.04em] ${
-                item.highlight
-                  ? "bg-gradient-to-b from-[#ffd84d] to-[#f7c600] text-[#001c10] shadow-[0_8px_18px_-8px_rgba(247,198,0,0.6)]"
-                  : "border border-[#002f1d]/15 bg-white text-[#002f1d]"
-              }`}
-              key={item.label}
-            >
-              {item.label}
-            </span>
-          ))}
-        </div>
-
-        <p className="mt-6 flex items-start gap-3 rounded-2xl border-l-4 border-[#f7c600] bg-[#fffdf3] p-5 text-sm font-semibold leading-7 text-[#002f1d] shadow-[0_14px_34px_-18px_rgba(0,31,19,0.22)]">
-          <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-[#07542f]" aria-hidden="true" />
-          <span>
-            Tu n'es pas au club ? <strong>Aucun problème.</strong> Tu crées ton compte et tu te formes, comme tout le monde.
-          </span>
-        </p>
-      </section>
-
-      {/* Séparation des plateformes */}
-      <section className="mx-auto max-w-5xl px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="ac-frame relative overflow-hidden p-7">
-            <span className="ac-accent-bar" style={{ "--ac-accent": "#f7c600" } as React.CSSProperties} aria-hidden="true" />
-            <span className="ac-eyebrow-dot text-xs font-black uppercase tracking-[0.12em] text-[#8a6d00]">Vitrine</span>
-            <h2 className="mt-2 text-xl font-black uppercase text-[#002f1d]">Le site du club</h2>
-            <p className="mt-3 text-sm leading-7 text-slate-600">Présente le projet, les formations et le fonctionnement de l'Academy. C'est la vitrine d'information.</p>
-          </div>
-          <div className="ac-frame relative overflow-hidden p-7">
-            <span className="ac-accent-bar" style={{ "--ac-accent": "#f7c600" } as React.CSSProperties} aria-hidden="true" />
-            <span className="ac-eyebrow-dot text-xs font-black uppercase tracking-[0.12em] text-[#8a6d00]">Plateforme</span>
-            <h2 className="mt-2 text-xl font-black uppercase text-[#002f1d]">La plateforme Academy</h2>
-            <p className="mt-3 text-sm leading-7 text-slate-600">Espace distinct où tu crées ton compte, tu te connectes, tu suis les formations et tu gères ton parcours.</p>
-          </div>
-        </div>
-        <p className="mt-4 text-center text-sm font-semibold italic text-slate-500">
-          Deux espaces indépendants : la création de compte et les formations se font uniquement sur la plateforme Academy.
-        </p>
-      </section>
-
-      {/* FAQ */}
-      <section className="mx-auto max-w-3xl px-4 pb-20 sm:px-6 lg:px-8">
-        <SectionTitle centered eyebrow="Questions fréquentes" title="Tout ce que tu veux savoir" />
-        <div className="grid gap-4">
-          {FAQ.map((item) => (
-            <details className="ac-frame group relative overflow-hidden" key={item.q}>
-              <summary className="focus-ring flex cursor-pointer list-none items-center justify-between gap-3 p-6 text-base font-black uppercase tracking-[0.01em] text-[#002f1d] [&::-webkit-details-marker]:hidden">
-                {item.q}
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#07542f]/8 text-[#07542f] transition group-open:bg-[#f7c600]/20 group-open:text-[#8a6d00]">
-                  <ChevronDown size={18} className="transition group-open:rotate-180" aria-hidden="true" />
-                </span>
-              </summary>
-              <span className="ac-accent-bar opacity-0 transition group-open:opacity-100" style={{ "--ac-accent": "#f7c600" } as React.CSSProperties} aria-hidden="true" />
-              <p className="px-6 pb-6 text-sm leading-7 text-slate-600">{item.a}</p>
-            </details>
-          ))}
-        </div>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-      </section>
-
-      {/* CTA final */}
-      <section className="club-shell light-sweep relative overflow-hidden px-4 py-24 text-center text-white sm:px-6 lg:px-8">
+      {/* ── SECTION FINALE — Pour qui + CTA (carte premium sur photo stade retravaillée) ── */}
+      <section className="light-sweep relative isolate overflow-hidden px-4 py-20 text-white sm:px-6 lg:px-8">
+        <Image src="/stade/aerien.jpg" alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
+        {/* Voile léger : la photo du stade reste bien visible (la carte gère la lisibilité du texte). */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-br from-[#001c10]/55 via-[#001c10]/30 to-[#001c10]/55" aria-hidden="true" />
         <span
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(247,198,0,0.16), transparent 70%)" }}
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(247,198,0,0.18), transparent 70%)" }}
           aria-hidden="true"
         />
-        <div className="ac-corner relative z-[1] mx-auto max-w-3xl">
-          <h2 className="text-gradient-gold text-4xl font-black uppercase tracking-[-0.01em] sm:text-6xl">Allez, on s'y met.</h2>
-          <div className="ac-rule-gold mx-auto mt-5 max-w-[10rem]" aria-hidden="true" />
-          <p className="mt-5 text-lg leading-8 text-white/85">Crée ton compte sur la plateforme Academy et lance ta première formation.</p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <AcademyCta url={ACADEMY_URL} className={PRIMARY_BTN}>
-              Je commence maintenant <ExternalLink size={18} aria-hidden="true" />
-            </AcademyCta>
-            <ShareButton className={GHOST_DARK_BTN} title="ES Viry-Châtillon Academy" text="Découvre les formations en ligne de l'ES Viry-Châtillon Academy 👇" />
+        <div className="relative z-[2] mx-auto max-w-4xl">
+          <div className="relative overflow-hidden rounded-3xl border border-[#f7c600]/30 bg-[#001c10]/55 p-8 text-center shadow-[0_30px_70px_-20px_rgba(0,18,11,0.6)] backdrop-blur-md sm:p-12">
+            <span className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#f7c600]/15 blur-3xl" aria-hidden="true" />
+            <p className="relative text-xs font-black uppercase tracking-[0.22em] text-[#f7c600]">Pour qui ?</p>
+            <h2 className="relative mt-3 text-4xl font-black uppercase leading-[0.95] tracking-[-0.01em] sm:text-5xl">
+              Ouvert à <span className="text-gradient-gold">tous</span>
+            </h2>
+            <p className="relative mx-auto mt-4 max-w-xl text-base leading-7 text-white/80">
+              Pas besoin d'être licencié : l'Academy est faite pour tout le monde, licenciés comme personnes extérieures.
+            </p>
+            <div className="relative mt-7 flex flex-wrap justify-center gap-2.5">
+              {PUBLICS.map((item) => {
+                const Icon = PUBLIC_ICON[item.label] ?? Users;
+                return (
+                  <span
+                    key={item.label}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#f7c600]/25 bg-white/[0.06] px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-white/90 transition hover:border-[#f7c600]/60 hover:bg-white/[0.1]"
+                  >
+                    <Icon size={15} className="text-[#f7c600]" aria-hidden="true" />
+                    {item.label}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="relative mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <AcademyCta url={ACADEMY_URL} className={PRIMARY_BTN}>
+                Je commence maintenant <ExternalLink size={18} aria-hidden="true" />
+              </AcademyCta>
+              <a className={SECONDARY_BTN} href="#formations">
+                Voir les formations <ArrowRight size={18} aria-hidden="true" />
+              </a>
+            </div>
           </div>
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.15em] text-white/70">Ouvert à tous · 100% en ligne · À ton rythme</p>
         </div>
       </section>
 

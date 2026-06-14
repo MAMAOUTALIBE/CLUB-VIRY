@@ -6,23 +6,23 @@ import {
   Compass,
   Cpu,
   Dumbbell,
-  ExternalLink,
   FileText,
   Flag,
   GraduationCap,
   Laptop,
-  Layers,
-  MousePointerClick,
   Rocket,
   UserPlus,
+  Users,
   Video,
   Wifi
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-// Données partagées de la page /academy. Module sans "use client" : importable
-// aussi bien par le composant serveur (page.tsx) que par les composants client
-// (quiz, filtres). Aucune donnée n'invente de prix, de chiffre ou de témoignage.
+// Données partagées de la page /academy (vitrine de présentation : la plateforme
+// de formation est un service EXTERNE déjà développé). Aucune donnée n'invente de
+// prix, de chiffre ou de témoignage.
+
+const UNSPLASH = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=80`;
 
 export type ThemeKey = "sport" | "scolaire" | "pro" | "numerique";
 
@@ -38,6 +38,10 @@ export type Theme = {
   key: ThemeKey;
   label: string;
   tagline: string;
+  /** Description courte affichée sur la carte d'univers. */
+  blurb: string;
+  /** Image d'illustration de l'univers. */
+  image: string;
   /** Couleur d'accent vive : fonds teintés, icônes, liserés. */
   accent: string;
   /** Variante assombrie pour le TEXTE (contraste AA sur fond clair). */
@@ -50,6 +54,8 @@ export const THEMES: Theme[] = [
     key: "sport",
     label: "Sport & performance",
     tagline: "Deviens plus fort, plus malin, plus complet.",
+    blurb: "Entraîne ton corps et ton mental pour performer sur le terrain au quotidien.",
+    image: UNSPLASH("1579952363873-27f3bade9f55"),
     accent: "#16a34a",
     accentText: "#15803d",
     formations: [
@@ -63,6 +69,8 @@ export const THEMES: Theme[] = [
     key: "scolaire",
     label: "École & avenir",
     tagline: "Cartonne en cours et choisis ta voie.",
+    blurb: "Travaille, apprends et construis ton projet d'études sereinement.",
+    image: UNSPLASH("1503676260728-1c00da094a0b"),
     accent: "#f59e0b",
     accentText: "#b45309",
     formations: [
@@ -72,8 +80,10 @@ export const THEMES: Theme[] = [
   },
   {
     key: "pro",
-    label: "Taf & projets",
+    label: "Emploi & entrepreneuriat",
     tagline: "Décroche ton job et lance tes projets.",
+    blurb: "Prépare ton entrée dans le monde professionnel ou lance tes projets.",
+    image: UNSPLASH("1521791136064-7986c2920216"),
     accent: "#6366f1",
     accentText: "#4f46e5",
     formations: [
@@ -85,6 +95,8 @@ export const THEMES: Theme[] = [
     key: "numerique",
     label: "Numérique & IA",
     tagline: "Prends de l'avance sur la tech.",
+    blurb: "Maîtrise les outils d'aujourd'hui et de demain, à ton rythme.",
+    image: UNSPLASH("1518770660439-4636190af475"),
     accent: "#06b6d4",
     accentText: "#0e7490",
     formations: [
@@ -97,6 +109,26 @@ export const THEMES: Theme[] = [
 
 export const TOTAL_FORMATIONS = THEMES.reduce((sum, theme) => sum + theme.formations.length, 0);
 
+// Formations « phares » mises en avant sur la home Academy (6 max).
+export type FeaturedFormation = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  image: string;
+  level: string;
+  accent: string;
+  accentText: string;
+};
+
+export const FEATURED_FORMATIONS: FeaturedFormation[] = [
+  { icon: Dumbbell, title: "Préparation sportive", description: "Développe ta condition physique et tes qualités athlétiques.", image: UNSPLASH("1551958219-acbc608c6377"), level: "Tous niveaux", accent: "#16a34a", accentText: "#15803d" },
+  { icon: Apple, title: "Nutrition", description: "Mieux manger pour mieux jouer et mieux récupérer.", image: UNSPLASH("1490645935967-10de6ba17061"), level: "Tous niveaux", accent: "#16a34a", accentText: "#15803d" },
+  { icon: Compass, title: "Orientation", description: "Construis ton projet d'études et trouve ta voie.", image: UNSPLASH("1488190211105-8b0e65b80b4e"), level: "Tous niveaux", accent: "#f59e0b", accentText: "#b45309" },
+  { icon: Briefcase, title: "CV / Entretien", description: "Rédige un CV efficace et réussis tes entretiens.", image: UNSPLASH("1521737604893-d14cc237f11d"), level: "Tous niveaux", accent: "#6366f1", accentText: "#4f46e5" },
+  { icon: Cpu, title: "Intelligence artificielle", description: "Utilise l'IA comme un pro pour tes études et tes projets.", image: UNSPLASH("1531297484001-80022131f5a1"), level: "Tous niveaux", accent: "#06b6d4", accentText: "#0e7490" },
+  { icon: FileText, title: "Bureautique", description: "Excel, Word, PowerPoint : les bases pour gagner en efficacité.", image: UNSPLASH("1517245386807-bb43f82c33c4"), level: "Tous niveaux", accent: "#06b6d4", accentText: "#0e7490" }
+];
+
 export type Atout = {
   icon: LucideIcon;
   count?: number;
@@ -107,103 +139,46 @@ export type Atout = {
 };
 
 export const ATOUTS: Atout[] = [
-  { icon: GraduationCap, count: TOTAL_FORMATIONS, unit: "formations", label: "Sport · école · pro · numérique", accent: "#16a34a" },
-  { icon: Layers, count: THEMES.length, unit: "univers", label: "Pour tous les profils", accent: "#6366f1" },
+  { icon: GraduationCap, count: TOTAL_FORMATIONS, unit: "formations", label: "Pour tous les objectifs", accent: "#16a34a" },
   { icon: Wifi, value: "100% en ligne", label: "Depuis ton téléphone", accent: "#06b6d4" },
+  { icon: Users, value: "Ouvert à tous", label: "Sans prérequis", accent: "#6366f1" },
   { icon: Clock, value: "À ton rythme", label: "Quand tu veux, où tu veux", accent: "#f59e0b" }
 ];
 
-export type Step = { icon: LucideIcon; label: string };
+export type Step = { icon: LucideIcon; label: string; text: string };
 
 export const STEPS: Step[] = [
-  { icon: Compass, label: "Tu découvres les formations sur le site du club." },
-  { icon: MousePointerClick, label: "Tu cliques sur « Je me lance »." },
-  { icon: ExternalLink, label: "Tu arrives sur la plateforme Academy." },
-  { icon: UserPlus, label: "Tu crées ton compte en quelques clics." },
-  { icon: Rocket, label: "Tu choisis ta formation et c'est parti !" }
+  { icon: Compass, label: "Découvre", text: "Explore les formations et choisis ton univers." },
+  { icon: UserPlus, label: "Crée ton compte", text: "Inscription rapide et sans engagement, sur la plateforme Academy." },
+  { icon: Rocket, label: "Commence ta formation", text: "Apprends à ton rythme, où tu veux, quand tu veux." }
 ];
 
-export type Profile = { icon: LucideIcon; label: string; text: string; accent: string };
-
-// Cartes "profils" aspirationnelles (PAS des témoignages : aucun nom ni chiffre inventé).
-export const PROFILES: Profile[] = [
-  { icon: Dumbbell, label: "Joueur / sportif", text: "Gagne en explosivité, soigne ta récup et analyse ton jeu comme un pro.", accent: "#16a34a" },
-  { icon: BookOpen, label: "Collégien / lycéen", text: "Rattrape ton retard, gagne en méthode et choisis ton orientation sereinement.", accent: "#f59e0b" },
-  { icon: Briefcase, label: "En recherche d'emploi", text: "Un CV qui sort du lot, des entretiens maîtrisés et ton premier job en ligne de mire.", accent: "#6366f1" },
-  { icon: Cpu, label: "Curieux du numérique", text: "Apprivoise l'IA et les outils numériques pour étudier, créer et bosser.", accent: "#06b6d4" }
-];
-
-export type Public = { label: string; highlight?: boolean };
+export type Public = { label: string };
 
 export const PUBLICS: Public[] = [
-  { label: "Joueurs du club" },
+  { label: "Joueurs" },
   { label: "Parents" },
   { label: "Familles" },
-  { label: "Jeunes de Viry-Châtillon", highlight: true },
-  { label: "Personnes externes au club" },
+  { label: "Étudiants" },
+  { label: "Adultes" },
   { label: "Partenaires" },
-  { label: "Adultes en reconversion" }
+  { label: "Personnes extérieures" }
 ];
 
 export type FaqItem = { q: string; a: string };
 
-// FAQ factuelle : uniquement des réponses vérifiables (pas de prix, pas de diplôme inventé).
+// FAQ courte et factuelle (3 questions).
 export const FAQ: FaqItem[] = [
   {
-    q: "Faut-il être licencié au club pour s'inscrire ?",
-    a: "Non. La plateforme est ouverte à tout le monde : licenciés, familles, jeunes de Viry-Châtillon et personnes extérieures au club."
+    q: "Faut-il être licencié au club ?",
+    a: "Non. La plateforme est ouverte à tout le monde : licenciés comme personnes extérieures au club."
   },
   {
-    q: "Où se passent les formations ?",
-    a: "100% en ligne. Tu peux suivre les formations depuis ton téléphone, ta tablette ou ton ordinateur, où que tu sois."
+    q: "Comment s'inscrire ?",
+    a: "Clique sur « Accéder à la plateforme » : tu es redirigé vers la plateforme Academy où tu crées ton compte en quelques clics."
   },
   {
-    q: "Je peux avancer à mon rythme ?",
-    a: "Oui. Tu te connectes quand tu veux et tu progresses à ton rythme, sans contrainte d'horaire."
-  },
-  {
-    q: "Comment je m'inscris ?",
-    a: "Tu cliques sur « Je me lance », tu es redirigé vers la plateforme Academy et tu y crées ton compte en quelques clics."
-  },
-  {
-    q: "Le compte du site et celui de la plateforme, c'est pareil ?",
-    a: "Non, ce sont deux espaces indépendants. Le site du club présente les formations ; la création de compte et le suivi se font uniquement sur la plateforme Academy."
-  },
-  {
-    q: "Il y a quoi comme formations ?",
-    a: `${TOTAL_FORMATIONS} formations réparties en ${THEMES.length} univers : sport & performance, école & avenir, taf & projets, et numérique & IA.`
-  }
-];
-
-export type QuizOption = { label: string; theme: ThemeKey };
-export type QuizQuestion = { question: string; options: QuizOption[] };
-
-export const QUIZ: QuizQuestion[] = [
-  {
-    question: "Ton objectif n°1 en ce moment ?",
-    options: [
-      { label: "Performer sur le terrain", theme: "sport" },
-      { label: "Réussir à l'école", theme: "scolaire" },
-      { label: "Décrocher un job ou un stage", theme: "pro" },
-      { label: "Maîtriser le numérique & l'IA", theme: "numerique" }
-    ]
-  },
-  {
-    question: "Tu préfères apprendre comment ?",
-    options: [
-      { label: "En bougeant, du concret", theme: "sport" },
-      { label: "Avec de la méthode et des cours", theme: "scolaire" },
-      { label: "Sur des projets réels", theme: "pro" },
-      { label: "Sur écran, avec des outils", theme: "numerique" }
-    ]
-  },
-  {
-    question: "Ce qui te motive le plus ?",
-    options: [
-      { label: "Progresser physiquement", theme: "sport" },
-      { label: "Avoir de meilleures notes", theme: "scolaire" },
-      { label: "Préparer mon avenir pro", theme: "pro" },
-      { label: "Créer avec la technologie", theme: "numerique" }
-    ]
+    q: "Où se déroulent les formations ?",
+    a: "100% en ligne : depuis ton téléphone, ta tablette ou ton ordinateur, où que tu sois."
   }
 ];

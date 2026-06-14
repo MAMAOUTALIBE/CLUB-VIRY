@@ -20,8 +20,15 @@ export function AcademyCta({ url, className, children }: AcademyCtaProps) {
     );
   }
   return (
-    <span className={`${className} cursor-not-allowed opacity-60`} aria-disabled="true" title="Plateforme bientôt disponible">
+    <span
+      className={`${className} cursor-not-allowed opacity-60`}
+      role="link"
+      aria-disabled="true"
+      tabIndex={0}
+      title="Plateforme bientôt disponible"
+    >
       {children}
+      <span className="sr-only"> (bientôt disponible)</span>
     </span>
   );
 }
