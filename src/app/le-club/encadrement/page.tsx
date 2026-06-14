@@ -1,6 +1,6 @@
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
-import { EducatorCard } from "@/components/educator/EducatorCard";
+import { EducatorsDirectory } from "@/components/educator/EducatorsDirectory";
 import { images } from "@/lib/images";
 import { getPublicEducators } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
@@ -22,16 +22,12 @@ export default async function EncadrementPage() {
         <SectionTitle
           eyebrow="Nos éducateurs"
           title="L'encadrement sportif du club"
-          text="Derrière chaque équipe, des femmes et des hommes engagés. Découvrez celles et ceux qui font progresser nos licenciés, leurs équipes et leur activité au quotidien."
+          text="Derrière chaque équipe, des femmes et des hommes engagés. Recherchez un éducateur par son nom ou son équipe, et parcourez l'effectif au fil des flèches."
         />
         {educators.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {educators.map((educator) => (
-              <EducatorCard educator={educator} key={educator.id} />
-            ))}
-          </div>
+          <EducatorsDirectory educators={educators} />
         ) : (
-          <p className="club-panel rounded-lg p-8 text-center text-white/80">
+          <p className="club-panel mt-8 rounded-lg p-8 text-center text-white/80">
             L'encadrement sportif sera présenté ici prochainement.
           </p>
         )}
