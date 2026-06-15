@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { getPublicNews, getPublicTeams } from "@/lib/public-content";
+import { getClubOfficials, getPublicNews, getPublicTeams } from "@/lib/public-content";
 
 // Pages publiques indexables. Les zones privées (/admin, /espace-membre, /espace-educateur)
 // sont volontairement EXCLUES : elles ne doivent pas être indexées.
@@ -9,10 +9,18 @@ const STATIC_ROUTES = [
   "/le-club",
   "/le-club/histoire",
   "/le-club/mot-du-president",
+  "/le-club/bureau",
+  "/le-club/dirigeants",
   "/le-club/organigramme",
   "/le-club/encadrement",
+  "/le-club/installations",
+  "/le-club/codes-de-conduite",
   "/le-club/stade-henri-longuet",
   "/academy",
+  "/formation/ecole-de-foot",
+  "/formation/football-a-11",
+  "/formation/projet-ecole-de-foot",
+  "/formation/stages",
   "/equipes",
   "/actualites",
   "/calendrier",
@@ -42,7 +50,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let dynamicEntries: MetadataRoute.Sitemap = [];
   try {
-    const [news, teams] = await Promise.all([getPublicNews(50), getPublicTeams()]);
+    const [news, teams, officials] = await Promise.all([getPublicNews(50), getPublicTeams(), getClubOfficials()]);
+    const allOfficials = [...officials.bureau, ...officials.dirigeants];
     dynamicEntries = [
       ...news.map((article) => ({
         url: `${baseUrl}/actualites/${article.slug}`,
@@ -55,6 +64,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: "monthly" as const,
         priority: 0.6
+      })),
+      ...allOfficials.map((official) => ({
+        url: `${baseUrl}/le-club/organigramme/${official.slug}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.5
       }))
     ];
   } catch {

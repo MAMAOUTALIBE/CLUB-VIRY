@@ -81,6 +81,24 @@ export function hasPermission(role: AppRole, permission: Permission): boolean {
   return ROLE_PERMISSIONS[role].includes(permission);
 }
 
+const EDUCATOR_CRM_PATHS = ["/admin/convocations"] as const;
+
+export function isEducatorCrmPath(pathname: string): boolean {
+  return EDUCATOR_CRM_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
+
+export function canAccessCrmPath(role: AppRole, pathname: string): boolean {
+  if (hasPermission(role, "admin:access")) {
+    return true;
+  }
+
+  if (!isEducatorCrmPath(pathname)) {
+    return false;
+  }
+
+  return hasPermission(role, "educator:manage_own_teams") || hasPermission(role, "teams:manage");
+}
+
 export function hasAnyPermission(role: AppRole, permissions: readonly Permission[]): boolean {
   return permissions.some((permission) => hasPermission(role, permission));
 }

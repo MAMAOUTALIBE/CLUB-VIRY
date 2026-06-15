@@ -24,9 +24,25 @@ const PAGES: Record<string, PageSeo> = {
     title: "Mot du President",
     description: "Le mot du president de l'ES Viry-Chatillon Football : la vision, les ambitions sportives et les valeurs humaines qui animent le club et ses licencies."
   },
+  "/le-club/bureau": {
+    title: "Le Bureau",
+    description: "Le bureau de l'ES Viry-Chatillon Football : gouvernance associative, finances, secretariat, decisions structurantes et pilotage du projet club."
+  },
+  "/le-club/dirigeants": {
+    title: "Les Dirigeants",
+    description: "Les dirigeants de l'ES Viry-Chatillon Football : administration, logistique, communication, partenariats et accompagnement quotidien du club."
+  },
   "/le-club/organigramme": {
     title: "Organigramme",
     description: "L'organigramme de l'ES Viry-Chatillon Football : bureau executif, dirigeants, encadrement sportif et referents par categorie, de l'ecole de foot aux Seniors."
+  },
+  "/le-club/installations": {
+    title: "Installations",
+    description: "Les installations de l'ES Viry-Chatillon Football : stade Henri Longuet, terrains, club-house, lieux d'accueil et informations pratiques."
+  },
+  "/le-club/codes-de-conduite": {
+    title: "Codes de conduite",
+    description: "Codes de conduite et reglement interieur de l'ES Viry-Chatillon Football : respect, ponctualite, responsabilite et cadre collectif."
   },
   "/le-club/encadrement": {
     title: "Encadrement",
@@ -43,6 +59,22 @@ const PAGES: Record<string, PageSeo> = {
   "/equipes": {
     title: "Equipes",
     description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors en passant par les feminines et le futsal : effectifs, staff et categories."
+  },
+  "/formation/ecole-de-foot": {
+    title: "Educateurs de l'ecole de foot",
+    description: "Les educateurs de l'ecole de foot de l'ES Viry-Chatillon Football : categories U6 a U13, roles, poles et reperes pour les familles."
+  },
+  "/formation/football-a-11": {
+    title: "Educateurs du football a 11",
+    description: "Les educateurs du football a 11 de l'ES Viry-Chatillon Football : encadrement U14 a Seniors, projet de jeu, suivi joueur et performance."
+  },
+  "/formation/projet-ecole-de-foot": {
+    title: "Projet ecole de foot",
+    description: "Le projet ecole de foot de l'ES Viry-Chatillon Football : accueil, progression, respect, parcours joueur et feuille de route de formation."
+  },
+  "/formation/stages": {
+    title: "Stages",
+    description: "Les stages de l'ES Viry-Chatillon Football : vacances, perfectionnement, gardiens, football feminin, dates indicatives et demandes d'information."
   },
   "/actualites": {
     title: "Actualites",

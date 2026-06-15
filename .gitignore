@@ -1,6 +1,7 @@
 node_modules
 .next
 .playwright-mcp
+test-results
 out
 dist
 .env

@@ -94,94 +94,20 @@ type WorkItem = {
 };
 
 const fallbackMetrics: MetricCard[] = [
-  { key: "players", label: "Licencies suivis", value: "600+", trend: "Saison 2025 / 2026", icon: Users, tone: "green" },
-  { key: "pendingRegistrations", label: "Dossiers a traiter", value: "42", trend: "Inscriptions, documents, paiements", icon: ClipboardCheck, tone: "yellow" },
-  { key: "payments", label: "Paiements suivis", value: "84 k€", trend: "Cotisations, boutique, partenaires", icon: BadgeEuro, tone: "slate" },
-  { key: "actions", label: "Actions ouvertes", value: "18", trend: "Relances, messages, echeances", icon: Bell, tone: "green" },
-  { key: "families", label: "Familles", value: "380", trend: "Familles enregistrees", icon: Home, tone: "slate" },
-  { key: "teams", label: "Equipes", value: "30", trend: "Equipes actives au club", icon: Shield, tone: "green" }
+  { key: "players", label: "Licencies suivis", value: "—", trend: "En attente des donnees backend", icon: Users, tone: "green" },
+  { key: "pendingRegistrations", label: "Dossiers a traiter", value: "—", trend: "En attente des donnees backend", icon: ClipboardCheck, tone: "yellow" },
+  { key: "payments", label: "Paiements suivis", value: "—", trend: "En attente des donnees backend", icon: BadgeEuro, tone: "slate" },
+  { key: "actions", label: "Actions ouvertes", value: "—", trend: "En attente des donnees backend", icon: Bell, tone: "green" },
+  { key: "families", label: "Familles", value: "—", trend: "En attente des donnees backend", icon: Home, tone: "slate" },
+  { key: "teams", label: "Equipes", value: "—", trend: "En attente des donnees backend", icon: Shield, tone: "green" }
 ];
 
-const fallbackWorkItems: WorkItem[] = [
-  {
-    label: "Valider les dossiers avec documents complets",
-    meta: "12 inscriptions pretes pour controle final",
-    owner: "Secretariat",
-    priority: "Urgent",
-    href: "/admin/inscriptions"
-  },
-  {
-    label: "Relancer les paiements de cotisation en attente",
-    meta: "8 familles avec paiement incomplet",
-    owner: "Tresorerie",
-    priority: "Aujourd'hui",
-    href: "/admin/familles"
-  },
-  {
-    label: "Publier les resultats du week-end",
-    meta: "5 matchs termines sans resume public",
-    owner: "Communication",
-    priority: "Aujourd'hui",
-    href: "/admin#modules"
-  },
-  {
-    label: "Preparer les convocations U15 et U18",
-    meta: "2 rencontres dans les 72 prochaines heures",
-    owner: "Sportif",
-    priority: "Cette semaine",
-    href: "/admin/joueurs"
-  },
-  {
-    label: "Renouveler les partenaires en fin de contrat",
-    meta: "3 echeances avant fin de mois",
-    owner: "Partenariats",
-    priority: "Cette semaine",
-    href: "/admin#modules"
-  }
-];
-
-const fallbackBreakdowns: DashboardBreakdowns = {
-  registrations: [
-    { status: "DRAFT", label: "Brouillon", count: 14 },
-    { status: "SUBMITTED", label: "Soumis", count: 38 },
-    { status: "IN_REVIEW", label: "En revue", count: 21 },
-    { status: "MISSING_DOCUMENTS", label: "Documents manquants", count: 17 },
-    { status: "VALIDATED", label: "Validé", count: 286 },
-    { status: "REJECTED", label: "Rejeté", count: 6 },
-    { status: "CANCELLED", label: "Annulé", count: 9 }
-  ],
-  orders: [
-    { status: "PENDING", label: "En attente", count: 7 },
-    { status: "PAID", label: "Payée", count: 23 },
-    { status: "PREPARING", label: "En préparation", count: 11 },
-    { status: "READY", label: "Prête", count: 5 },
-    { status: "DELIVERED", label: "Livrée", count: 64 },
-    { status: "CANCELLED", label: "Annulée", count: 3 },
-    { status: "REFUNDED", label: "Remboursée", count: 2 }
-  ],
-  payments: [
-    { status: "PENDING", label: "En attente", count: 19 },
-    { status: "SUCCEEDED", label: "Encaissé", count: 248 },
-    { status: "FAILED", label: "Échoué", count: 8 },
-    { status: "CANCELLED", label: "Annulé", count: 4 },
-    { status: "REFUNDED", label: "Remboursé", count: 3 }
-  ],
-  recruitment: [
-    { status: "PENDING", label: "En attente", count: 12 },
-    { status: "CONTACTED", label: "Contacté", count: 7 },
-    { status: "TRIAL_SCHEDULED", label: "Essai planifié", count: 4 },
-    { status: "ACCEPTED", label: "Accepté", count: 3 },
-    { status: "REJECTED", label: "Refusé", count: 5 },
-    { status: "ARCHIVED", label: "Archivé", count: 6 }
-  ],
-  monthlyRegistrations: [
-    { label: "janv.", count: 18 },
-    { label: "févr.", count: 24 },
-    { label: "mars", count: 31 },
-    { label: "avr.", count: 47 },
-    { label: "mai", count: 62 },
-    { label: "juin", count: 39 }
-  ]
+const emptyBreakdowns: DashboardBreakdowns = {
+  registrations: [],
+  orders: [],
+  payments: [],
+  recruitment: [],
+  monthlyRegistrations: []
 };
 
 function isStatusCount(value: unknown): value is StatusCount {
@@ -283,7 +209,7 @@ function parseDashboardResponse(value: unknown): ApiSuccess | ApiFailure {
     ok: true,
     data: {
       metrics: dashboard.metrics.filter(isDashboardMetric),
-      breakdowns: parseBreakdowns(dashboard.breakdowns) ?? fallbackBreakdowns,
+      breakdowns: parseBreakdowns(dashboard.breakdowns) ?? emptyBreakdowns,
       latestLogs: dashboard.latestLogs.filter(isActivityLog),
       queuedNotifications: dashboard.queuedNotifications,
       revenueCents: typeof dashboard.revenueCents === "number" ? dashboard.revenueCents : 0
@@ -376,7 +302,7 @@ function buildMetricCards(dashboard: AdminDashboard | null): MetricCard[] {
 
 function buildWorkItems(dashboard: AdminDashboard | null): WorkItem[] {
   if (!dashboard) {
-    return fallbackWorkItems;
+    return [];
   }
 
   const pendingRegistrations = getMetricCount(dashboard, "pendingRegistrations") ?? 0;
@@ -437,12 +363,12 @@ function ratio(part: number, total: number): number {
 
 export function AdminDashboardLive() {
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
-  const [status, setStatus] = useState<"demo" | "loading" | "connected" | "error">("demo");
-  const [message, setMessage] = useState("Mode demo : connectez-vous pour charger les compteurs backend.");
+  const [status, setStatus] = useState<"loading" | "connected" | "error">("loading");
+  const [message, setMessage] = useState("Chargement via la session admin...");
 
   const metricCards = useMemo(() => buildMetricCards(dashboard), [dashboard]);
   const workItems = useMemo(() => buildWorkItems(dashboard), [dashboard]);
-  const breakdowns = useMemo(() => dashboard?.breakdowns ?? fallbackBreakdowns, [dashboard]);
+  const breakdowns = useMemo(() => dashboard?.breakdowns ?? emptyBreakdowns, [dashboard]);
 
   const kpiBars = useMemo(() => {
     const registrationsTotal = sumStatus(breakdowns.registrations);
@@ -632,6 +558,11 @@ export function AdminDashboardLive() {
               </Link>
             </article>
           ))}
+          {workItems.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-5 text-sm font-bold text-slate-500">
+              Aucune action prioritaire chargée depuis le backend.
+            </p>
+          ) : null}
         </div>
       </section>
     </>

@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 // CSP volontairement compatible avec le rendu statique (sans nonce) :
 // protège contre le clickjacking, l'injection d'objets et de base href,
 // tout en autorisant ce dont Next.js / next-font / la carte Google ont besoin.
+const scriptSrc =
+  process.env.NODE_ENV === "production"
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -10,7 +15,7 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "img-src 'self' data: blob: https://images.unsplash.com https://maps.gstatic.com https://*.googleusercontent.com https://*.supabase.co",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "connect-src 'self' https://images.unsplash.com https://*.supabase.co",

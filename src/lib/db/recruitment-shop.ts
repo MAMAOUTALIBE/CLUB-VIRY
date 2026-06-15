@@ -60,6 +60,13 @@ export type OrderBundle = {
   payments: Payment[];
 };
 
+export class OrderValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "OrderValidationError";
+  }
+}
+
 function slugify(value: string): string {
   return value
     .normalize("NFD")
@@ -622,16 +629,24 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderBundle>
     const product = productsById.get(item.productId);
 
     if (!product) {
-      throw new Error(`Product ${item.productId} is not available.`);
+      throw new OrderValidationError("Produit indisponible.");
     }
 
     const variant = item.variantId ? variantsById.get(item.variantId) : null;
 
     if (item.variantId && !variant) {
-      throw new Error(`Variant ${item.variantId} is not available.`);
+      throw new OrderValidationError("Variante indisponible.");
+    }
+
+    if (variant && variant.product_id !== product.id) {
+      throw new OrderValidationError("La variante ne correspond pas au produit selectionne.");
     }
 
     const unitPrice = product.price_cents + (variant?.price_delta_cents ?? 0);
+
+    if (!Number.isInteger(unitPrice) || unitPrice < 1) {
+      throw new OrderValidationError("Prix produit invalide.");
+    }
 
     return {
       product_id: product.id,

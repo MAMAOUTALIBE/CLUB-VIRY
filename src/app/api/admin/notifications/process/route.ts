@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, parseLimit } from "@/lib/api/http";
 import { recordActivity } from "@/lib/db/foundations";
 import { dispatchQueuedNotifications } from "@/lib/db/notifications";
 
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = Math.min(Math.max(Number(request.nextUrl.searchParams.get("limit") ?? 20) || 20, 1), 50);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 20, 50);
 
   try {
     const dispatch = await dispatchQueuedNotifications(limit);

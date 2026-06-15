@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { rowsToCsv } from "@/lib/api/csv";
-import { handleDbError, jsonError } from "@/lib/api/http";
+import { handleDbError, jsonError, parseLimit } from "@/lib/api/http";
 import { listRecruitmentApplicationsForAdmin } from "@/lib/db/recruitment-shop";
 import type { RecruitmentApplication } from "@/lib/db/types";
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 1000) || 1000, 5000);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 1000, 5000);
 
   try {
     const applications = await listRecruitmentApplicationsForAdmin(limit);

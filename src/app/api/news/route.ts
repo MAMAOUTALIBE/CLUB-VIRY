@@ -1,20 +1,22 @@
 import type { NextRequest } from "next/server";
 
-import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonOk, parseLimit } from "@/lib/api/http";
 import { listPublishedNews } from "@/lib/db/content";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
+import { getPublicNews } from "@/lib/public-content";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  if (!isSupabaseAdminConfigured) {
-    return jsonError(503, "CONFIGURATION_ERROR", "Supabase service role n'est pas encore configure.");
-  }
-
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 12) || 12, 50);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 12, 50);
 
   try {
+    if (!isSupabaseAdminConfigured) {
+      const news = await getPublicNews(limit);
+      return jsonOk({ news: news.slice(0, limit) });
+    }
+
     const news = await listPublishedNews(limit);
     return jsonOk({ news });
   } catch (error) {

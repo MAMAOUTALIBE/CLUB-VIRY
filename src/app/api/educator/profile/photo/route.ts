@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
     upsert: false
   });
   if (uploadError) {
-    return jsonError(500, "SUPABASE_ERROR", uploadError.message);
+    console.error("[api] educator/profile/photo storage upload", uploadError);
+    return jsonError(500, "SUPABASE_ERROR", "Une erreur interne est survenue. Réessayez plus tard.");
   }
 
   const previousPath = ctx.context.profile?.avatar_path ?? null;
@@ -86,7 +87,8 @@ export async function POST(request: NextRequest) {
     .update({ avatar_url: avatarUrl, avatar_path: path })
     .eq("id", userId);
   if (updateError) {
-    return jsonError(500, "SUPABASE_ERROR", updateError.message);
+    console.error("[api] educator/profile/photo profile update", updateError);
+    return jsonError(500, "SUPABASE_ERROR", "Une erreur interne est survenue. Réessayez plus tard.");
   }
 
   if (previousPath && previousPath !== path) {

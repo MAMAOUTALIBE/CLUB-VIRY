@@ -14,9 +14,22 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
       ["/le-club", "Le Club"],
       ["/le-club/histoire", "Histoire"],
       ["/le-club/mot-du-president", "Mot du Président"],
+      ["/le-club/bureau", "Le Bureau"],
+      ["/le-club/dirigeants", "Les Dirigeants"],
       ["/le-club/organigramme", "Organigramme & direction"],
       ["/le-club/encadrement", "Encadrement"],
+      ["/le-club/installations", "Installations"],
+      ["/le-club/codes-de-conduite", "Codes de conduite"],
       ["/le-club/stade-henri-longuet", "Stade Henri Longuet"]
+    ]
+  },
+  {
+    title: "Formation",
+    links: [
+      ["/formation/ecole-de-foot", "École de Foot"],
+      ["/formation/football-a-11", "Football à 11"],
+      ["/formation/projet-ecole-de-foot", "Projet École de Foot"],
+      ["/formation/stages", "Stages"]
     ]
   },
   {

@@ -8,9 +8,10 @@
   "packageManager": "npm@10.9.7",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && node scripts/prepare-standalone.mjs",
+    "start": "node scripts/start-standalone.mjs",
     "lint": "eslint src --ext .ts,.tsx",
+    "seed:test-users": "node scripts/seed-local-test-users.mjs",
     "test": "node --test --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"tests/**/*.test.mjs\"",
     "typecheck": "tsc --noEmit"
   },
@@ -21,6 +22,9 @@
     "next": "16.2.7",
     "react": "19.2.7",
     "react-dom": "19.2.7"
+  },
+  "overrides": {
+    "postcss": "8.5.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.0",

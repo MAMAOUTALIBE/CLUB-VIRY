@@ -1,18 +1,15 @@
-import { PageHero } from "@/components/PageHero";
-import { EducatorSpace } from "@/components/educator/EducatorSpace";
-import { images } from "@/lib/images";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Espace éducateur"
+export const metadata: Metadata = {
+  title: "Espace éducateur",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true
+  }
 };
 
 export default function EducatorSpacePage() {
-  return (
-    <>
-      <PageHero description="Gérez vos équipes, votre effectif et vos matchs." image={images.pitch} title="Espace éducateur" />
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <EducatorSpace />
-      </section>
-    </>
-  );
+  redirect("/admin/convocations");
 }

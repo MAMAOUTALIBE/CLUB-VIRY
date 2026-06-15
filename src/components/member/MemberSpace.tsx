@@ -10,6 +10,7 @@ type Notif = {
   id: string;
   subject: string | null;
   category: string | null;
+  template: string;
   link: string | null;
   payload: Record<string, unknown>;
   read_at: string | null;
@@ -46,6 +47,31 @@ function notifLine(notif: Notif): string {
   if (opponent) parts.push(`contre ${opponent}`);
   if (location) parts.push(`Lieu : ${location}`);
   return parts.join(" · ");
+}
+
+function payloadText(payload: Record<string, unknown>, key: string): string | null {
+  const value = payload[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function convocationRows(notif: Notif): Array<{ label: string; value: string }> {
+  return [
+    ["Joueur", payloadText(notif.payload, "childFirstName")],
+    ["Type", payloadText(notif.payload, "eventTypeName")],
+    ["Match", payloadText(notif.payload, "dateLabel")],
+    ["Adversaire", payloadText(notif.payload, "opponentName")],
+    ["Rendez-vous", payloadText(notif.payload, "meetingLabel")],
+    ["Lieu RDV", payloadText(notif.payload, "meetingLocation")],
+    ["Lieu", payloadText(notif.payload, "location")],
+    ["Retour estimé", payloadText(notif.payload, "returnLabel")],
+    ["Tenue", payloadText(notif.payload, "outfit")],
+    ["Transport", payloadText(notif.payload, "transport")],
+    ["Consignes", payloadText(notif.payload, "instructions")],
+    ["Message éducateur", payloadText(notif.payload, "coachComment")],
+    ["Empêchement", payloadText(notif.payload, "impedimentContact")]
+  ]
+    .filter((row): row is [string, string] => Boolean(row[1]))
+    .map(([label, value]) => ({ label, value }));
 }
 
 export function MemberSpace() {
@@ -222,6 +248,8 @@ export function MemberSpace() {
     );
   }
 
+  const convocations = notifs.filter((notif) => notif.category === "convocation" || notif.template === "match_callup");
+
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -230,6 +258,47 @@ export function MemberSpace() {
           <LogOut size={16} aria-hidden="true" /> Déconnexion
         </button>
       </div>
+
+      {/* Convocations */}
+      <section className="official-card rounded-2xl bg-white p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]">
+            <Trophy size={18} aria-hidden="true" /> Mes convocations
+          </h3>
+          {convocations.length > 0 ? <span className="rounded-full bg-[#f7c600] px-2.5 py-1 text-xs font-black uppercase text-[#002f1d]">{convocations.length}</span> : null}
+        </div>
+        <div className="mt-4 grid gap-3">
+          {convocations.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-5 text-center text-sm font-semibold text-slate-500">Aucune convocation reçue pour le moment.</p>
+          ) : (
+            convocations.map((notif) => {
+              const rows = convocationRows(notif);
+              return (
+                <article key={notif.id} className="rounded-lg border border-[#f7c600]/40 bg-[#fffdf3] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase text-[#07542f]">{payloadText(notif.payload, "eventTypeName") ?? "Convocation"}</p>
+                      <h4 className="mt-1 text-base font-black uppercase text-[#002f1d]">{notif.subject ?? "Convocation match"}</h4>
+                    </div>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black uppercase text-slate-500 ring-1 ring-slate-200">{relativeFr(notif.created_at)}</span>
+                  </div>
+                  <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {rows.map((row) => (
+                      <div key={`${notif.id}-${row.label}`} className={row.label === "Consignes" || row.label === "Message éducateur" ? "sm:col-span-2" : undefined}>
+                        <dt className="text-[11px] font-black uppercase text-slate-500">{row.label}</dt>
+                        <dd className="mt-0.5 text-sm font-bold leading-5 text-slate-800">{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="mt-4 rounded-md bg-white px-3 py-2 text-xs font-bold text-slate-600 ring-1 ring-slate-200">
+                    Merci de prévenir l'éducateur rapidement en cas d'empêchement.
+                  </p>
+                </article>
+              );
+            })
+          )}
+        </div>
+      </section>
 
       {/* Notifications */}
       <section className="official-card rounded-2xl bg-white p-5 sm:p-6">

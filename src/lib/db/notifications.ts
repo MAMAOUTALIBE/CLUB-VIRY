@@ -281,9 +281,18 @@ function renderNotificationEmailHtml(notification: NotificationLog): string {
     }
   };
   addLine("Pour", "childFirstName");
+  addLine("Type", "eventTypeName");
   addLine("Quand", "dateLabel");
+  addLine("Rendez-vous", "meetingLabel");
+  addLine("Lieu de rendez-vous", "meetingLocation");
   addLine("Lieu", "location");
   addLine("Adversaire", "opponentName");
+  addLine("Retour estimé", "returnLabel");
+  addLine("Tenue", "outfit");
+  addLine("Transport", "transport");
+  addLine("Consignes", "instructions");
+  addLine("Message éducateur", "coachComment");
+  addLine("Empêchement", "impedimentContact");
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://esvirychatillonfootball.org";
   const link = typeof notification.link === "string" && notification.link ? `${siteUrl}${notification.link}` : siteUrl;

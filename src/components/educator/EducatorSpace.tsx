@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Crown, Loader2, Plus, Save, ShieldAlert, Trash2, UserPlus, Users, X } from "lucide-react";
+import { CalendarDays, Clipboard, Crown, Loader2, Plus, Printer, Save, ShieldAlert, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { EducatorPublicProfileEditor } from "@/components/educator/EducatorPublicProfileEditor";
@@ -24,11 +24,64 @@ type Roster = { team: TeamLite; staff: StaffRow[]; matches: MatchRow[]; players:
 type AssignablePlayer = { id: string; first_name: string; last_name: string; birth_year: number | null };
 type TrainingSession = { id: string; starts_at: string; duration_min: number | null; location: string | null; theme: string | null; notes: string | null };
 type AttendanceStatus = "PRESENT" | "ABSENT" | "EXCUSE" | "BLESSE";
-type CallupStatus = "CONVOQUE" | "REMPLACANT" | "NON_CONVOQUE" | "BLESSE";
+type CallupStatus = "CONVOQUE" | "REMPLACANT" | "NON_CONVOQUE" | "ABSENT" | "BLESSE" | "SUSPENDU" | "A_CONFIRMER";
+type CallupResponseStatus = "EN_ATTENTE" | "PRESENT" | "ABSENT" | "RETARD";
+type CallupPresenceStatus = "NON_SAISI" | "PRESENT" | "ABSENT" | "RETARD" | "EXCUSE";
+type EventTypeRow = { id: string; name: string; slug: string; is_default: boolean };
+type MatchConvocation = {
+  event_type_id: string | null;
+  event_type_name: string;
+  meeting_at: string | null;
+  meeting_location: string | null;
+  event_location: string | null;
+  return_estimate_at: string | null;
+  instructions: string | null;
+  outfit: string | null;
+  transport: string | null;
+  coach_comment: string | null;
+  impediment_contact: string | null;
+  status: "DRAFT" | "SENT" | "CLOSED" | "CANCELLED";
+};
+type CallupRow = {
+  player_id: string;
+  status: CallupStatus;
+  response_status?: CallupResponseStatus;
+  response_comment?: string | null;
+  presence_status?: CallupPresenceStatus;
+  presence_comment?: string | null;
+};
+type ConvocationForm = {
+  eventTypeId: string;
+  customEventTypeName: string;
+  meetingAt: string;
+  meetingLocation: string;
+  eventLocation: string;
+  returnEstimateAt: string;
+  instructions: string;
+  outfit: string;
+  transport: string;
+  coachComment: string;
+  impedimentContact: string;
+  status: "DRAFT" | "SENT" | "CLOSED" | "CANCELLED";
+};
 
 const EMPTY_MATCH = { opponentName: "", startsAt: "", location: "HOME", competition: "" };
 const EMPTY_PLAYER = { playerId: "", position: "", shirtNumber: "" };
 const EMPTY_SESSION = { startsAt: "", durationMin: "", location: "", theme: "", notes: "" };
+const EMPTY_CONVOCATION: ConvocationForm = {
+  eventTypeId: "",
+  customEventTypeName: "",
+  meetingAt: "",
+  meetingLocation: "",
+  eventLocation: "",
+  returnEstimateAt: "",
+  instructions: "",
+  outfit: "",
+  transport: "",
+  coachComment: "",
+  impedimentContact: "",
+  status: "DRAFT"
+};
 
 const ATT_OPTIONS: Array<{ value: AttendanceStatus; label: string }> = [
   { value: "PRESENT", label: "Présent" },
@@ -39,13 +92,46 @@ const ATT_OPTIONS: Array<{ value: AttendanceStatus; label: string }> = [
 const CALLUP_OPTIONS: Array<{ value: CallupStatus; label: string }> = [
   { value: "CONVOQUE", label: "Convoqué" },
   { value: "REMPLACANT", label: "Remplaçant" },
+  { value: "A_CONFIRMER", label: "À confirmer" },
+  { value: "ABSENT", label: "Absent" },
   { value: "NON_CONVOQUE", label: "Non convoqué" },
-  { value: "BLESSE", label: "Blessé" }
+  { value: "BLESSE", label: "Blessé" },
+  { value: "SUSPENDU", label: "Suspendu" }
+];
+const RESPONSE_OPTIONS: Array<{ value: CallupResponseStatus; label: string }> = [
+  { value: "EN_ATTENTE", label: "En attente" },
+  { value: "PRESENT", label: "Présent" },
+  { value: "ABSENT", label: "Absent" },
+  { value: "RETARD", label: "Retard" }
+];
+const PRESENCE_OPTIONS: Array<{ value: CallupPresenceStatus; label: string }> = [
+  { value: "NON_SAISI", label: "Non saisi" },
+  { value: "PRESENT", label: "Présent" },
+  { value: "ABSENT", label: "Absent" },
+  { value: "RETARD", label: "Retard" },
+  { value: "EXCUSE", label: "Excusé" }
 ];
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "Date à confirmer";
   return new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+}
+
+function toDateTimeLocal(iso: string | null): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function emptyToNull(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function labelFor<T extends string>(options: Array<{ value: T; label: string }>, value: T): string {
+  return options.find((option) => option.value === value)?.label ?? value;
 }
 
 // Score "nous" / "adverse" <-> home/away selon le lieu du match.
@@ -80,6 +166,13 @@ export function EducatorSpace() {
   const [attendanceMap, setAttendanceMap] = useState<Record<string, AttendanceStatus>>({});
   const [callupFor, setCallupFor] = useState<string | null>(null);
   const [callupMap, setCallupMap] = useState<Record<string, CallupStatus>>({});
+  const [responseMap, setResponseMap] = useState<Record<string, CallupResponseStatus>>({});
+  const [presenceMap, setPresenceMap] = useState<Record<string, CallupPresenceStatus>>({});
+  const [responseCommentMap, setResponseCommentMap] = useState<Record<string, string>>({});
+  const [presenceCommentMap, setPresenceCommentMap] = useState<Record<string, string>>({});
+  const [eventTypes, setEventTypes] = useState<EventTypeRow[]>([]);
+  const [convocationForm, setConvocationForm] = useState<ConvocationForm>(EMPTY_CONVOCATION);
+  const [callupSearch, setCallupSearch] = useState("");
 
   const loadTeams = useCallback(async () => {
     setPhase("loading");
@@ -445,10 +538,47 @@ export function EducatorSpace() {
         return;
       }
       const saved: Record<string, CallupStatus> = {};
-      for (const c of json.data?.callups ?? []) saved[c.player_id] = c.status;
+      const responses: Record<string, CallupResponseStatus> = {};
+      const presences: Record<string, CallupPresenceStatus> = {};
+      const responseComments: Record<string, string> = {};
+      const presenceComments: Record<string, string> = {};
+      for (const c of (json.data?.callups ?? []) as CallupRow[]) {
+        saved[c.player_id] = c.status;
+        responses[c.player_id] = c.response_status ?? "EN_ATTENTE";
+        presences[c.player_id] = c.presence_status ?? "NON_SAISI";
+        responseComments[c.player_id] = c.response_comment ?? "";
+        presenceComments[c.player_id] = c.presence_comment ?? "";
+      }
       const map: Record<string, CallupStatus> = {};
-      for (const p of roster?.players ?? []) map[p.assignment.player_id] = saved[p.assignment.player_id] ?? "CONVOQUE";
+      const responseMapNext: Record<string, CallupResponseStatus> = {};
+      const presenceMapNext: Record<string, CallupPresenceStatus> = {};
+      for (const p of roster?.players ?? []) {
+        map[p.assignment.player_id] = saved[p.assignment.player_id] ?? "CONVOQUE";
+        responseMapNext[p.assignment.player_id] = responses[p.assignment.player_id] ?? "EN_ATTENTE";
+        presenceMapNext[p.assignment.player_id] = presences[p.assignment.player_id] ?? "NON_SAISI";
+      }
+      const convocation = json.data?.convocation as MatchConvocation | null | undefined;
+      setEventTypes(Array.isArray(json.data?.eventTypes) ? json.data.eventTypes : []);
+      setConvocationForm({
+        eventTypeId: convocation?.event_type_id ?? "",
+        customEventTypeName: "",
+        meetingAt: toDateTimeLocal(convocation?.meeting_at ?? null),
+        meetingLocation: convocation?.meeting_location ?? "",
+        eventLocation: convocation?.event_location ?? "",
+        returnEstimateAt: toDateTimeLocal(convocation?.return_estimate_at ?? null),
+        instructions: convocation?.instructions ?? "",
+        outfit: convocation?.outfit ?? "",
+        transport: convocation?.transport ?? "",
+        coachComment: convocation?.coach_comment ?? "",
+        impedimentContact: convocation?.impediment_contact ?? "",
+        status: convocation?.status ?? "DRAFT"
+      });
       setCallupMap(map);
+      setResponseMap(responseMapNext);
+      setPresenceMap(presenceMapNext);
+      setResponseCommentMap(responseComments);
+      setPresenceCommentMap(presenceComments);
+      setCallupSearch("");
       setAttendanceFor(null);
       setCallupFor(matchId);
     } finally {
@@ -460,12 +590,35 @@ export function EducatorSpace() {
     setBusy(true);
     setFormError("");
     try {
-      const entries = Object.entries(callupMap).map(([playerId, status]) => ({ playerId, status }));
+      const entries = Object.entries(callupMap).map(([playerId, status]) => ({
+        playerId,
+        status,
+        responseStatus: responseMap[playerId] ?? "EN_ATTENTE",
+        responseComment: responseCommentMap[playerId] ?? null,
+        presenceStatus: presenceMap[playerId] ?? "NON_SAISI",
+        presenceComment: presenceCommentMap[playerId] ?? null
+      }));
       const res = await fetch(`/api/educator/matches/${matchId}/callups`, {
         method: "PUT",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entries })
+        body: JSON.stringify({
+          convocation: {
+            eventTypeId: convocationForm.eventTypeId || null,
+            customEventTypeName: emptyToNull(convocationForm.customEventTypeName),
+            meetingAt: emptyToNull(convocationForm.meetingAt),
+            meetingLocation: emptyToNull(convocationForm.meetingLocation),
+            eventLocation: emptyToNull(convocationForm.eventLocation),
+            returnEstimateAt: emptyToNull(convocationForm.returnEstimateAt),
+            instructions: emptyToNull(convocationForm.instructions),
+            outfit: emptyToNull(convocationForm.outfit),
+            transport: emptyToNull(convocationForm.transport),
+            coachComment: emptyToNull(convocationForm.coachComment),
+            impedimentContact: emptyToNull(convocationForm.impedimentContact),
+            status: convocationForm.status
+          },
+          entries
+        })
       });
       if (res.status === 401) {
         setPhase("auth");
@@ -476,10 +629,54 @@ export function EducatorSpace() {
         setFormError(json?.error?.message ?? "Enregistrement des convocations impossible.");
         return;
       }
-      setCallupFor(null);
+      setEventTypes(Array.isArray(json.data?.eventTypes) ? json.data.eventTypes : eventTypes);
+      setFormError("");
     } finally {
       setBusy(false);
     }
+  }
+
+  function playerName(playerId: string): string {
+    const found = roster?.players.find((p) => p.assignment.player_id === playerId);
+    return found?.player ? `${found.player.first_name} ${found.player.last_name}` : "Joueur";
+  }
+
+  function buildConvocationMessage(match: MatchRow): string {
+    const selectedPlayers = Object.entries(callupMap)
+      .filter(([, status]) => status === "CONVOQUE" || status === "REMPLACANT" || status === "A_CONFIRMER")
+      .map(([playerId, status]) => `- ${playerName(playerId)} (${labelFor(CALLUP_OPTIONS, status)})`);
+    const absentPlayers = Object.entries(callupMap)
+      .filter(([, status]) => status === "ABSENT" || status === "BLESSE" || status === "SUSPENDU" || status === "NON_CONVOQUE")
+      .map(([playerId, status]) => `- ${playerName(playerId)} (${labelFor(CALLUP_OPTIONS, status)})`);
+    const staff = roster?.staff.map((s) => `${s.display_name} - ${s.role_title}`).join(", ") || "Educateur de l'equipe";
+    const eventTypeName = convocationForm.customEventTypeName.trim() || eventTypes.find((eventType) => eventType.id === convocationForm.eventTypeId)?.name || "Match";
+    return [
+      `Convocation ${eventTypeName} - ${roster?.team.name ?? "Equipe"}`,
+      `Categorie : ${roster?.team.age_range ?? roster?.team.level ?? "Non precisee"}`,
+      `Adversaire : ${match.opponent_name ?? "A confirmer"}`,
+      `Evenement : ${fmtDate(match.starts_at)}`,
+      convocationForm.eventLocation.trim() ? `Lieu : ${convocationForm.eventLocation.trim()}` : null,
+      convocationForm.meetingAt ? `Rendez-vous : ${fmtDate(convocationForm.meetingAt)}` : null,
+      convocationForm.meetingLocation.trim() ? `Lieu RDV : ${convocationForm.meetingLocation.trim()}` : null,
+      convocationForm.returnEstimateAt ? `Retour estime : ${fmtDate(convocationForm.returnEstimateAt)}` : null,
+      convocationForm.outfit.trim() ? `Tenue : ${convocationForm.outfit.trim()}` : null,
+      convocationForm.transport.trim() ? `Transport : ${convocationForm.transport.trim()}` : null,
+      convocationForm.instructions.trim() ? `Consignes : ${convocationForm.instructions.trim()}` : null,
+      convocationForm.coachComment.trim() ? `Message coach : ${convocationForm.coachComment.trim()}` : null,
+      convocationForm.impedimentContact.trim() ? `En cas d'empechement : ${convocationForm.impedimentContact.trim()}` : null,
+      `Staff : ${staff}`,
+      "",
+      "Joueurs convoques :",
+      selectedPlayers.length > 0 ? selectedPlayers.join("\n") : "- Aucun joueur selectionne",
+      absentPlayers.length > 0 ? `\nAbsents / indisponibles :\n${absentPlayers.join("\n")}` : null
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  async function copyConvocationMessage(match: MatchRow) {
+    const text = buildConvocationMessage(match);
+    await navigator.clipboard.writeText(text);
   }
 
   const assignedIds = new Set(roster?.players.map((p) => p.assignment.player_id) ?? []);
@@ -594,23 +791,123 @@ export function EducatorSpace() {
                       </div>
                     </div>
                     {callupFor === m.id ? (
-                      <div className="mt-3 grid gap-2 rounded-md border border-[#002f1d]/15 bg-white p-3">
-                        <p className="text-xs font-black uppercase text-[#07542f]">Convocations ({roster.players.length} joueurs)</p>
-                        {roster.players.length === 0 ? <p className="text-sm font-bold text-slate-500">Ajoutez d'abord des joueurs à l'effectif.</p> : null}
-                        {roster.players.map((p) => (
-                          <div key={p.assignment.player_id} className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-bold text-[#002f1d]">{p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur"}</span>
-                            <select value={callupMap[p.assignment.player_id] ?? "CONVOQUE"} onChange={(e) => setCallupMap((s) => ({ ...s, [p.assignment.player_id]: e.target.value as CallupStatus }))} className="focus-ring min-h-9 rounded-md border border-slate-300 bg-white px-2 text-xs font-bold">
-                              {CALLUP_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      <div className="mt-4 grid gap-4 rounded-md border border-[#002f1d]/15 bg-white p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-black uppercase text-[#07542f]">Fiche convocation</p>
+                            <h4 className="text-lg font-black uppercase text-[#002f1d]">{roster.team.name} vs {m.opponent_name ?? "Adversaire"}</h4>
+                            <p className="text-sm font-bold text-slate-600">{roster.team.age_range ?? roster.team.level ?? "Catégorie"} · {fmtDate(m.starts_at)}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button onClick={() => window.print()} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button"><Printer size={14} /> Imprimer</button>
+                            <button onClick={() => void copyConvocationMessage(m)} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button"><Clipboard size={14} /> Copier WhatsApp</button>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 rounded-md bg-[#fbfcf8] p-3 sm:grid-cols-2 xl:grid-cols-4">
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600">
+                            Type d'événement
+                            <select value={convocationForm.eventTypeId} onChange={(e) => setConvocationForm((f) => ({ ...f, eventTypeId: e.target.value, customEventTypeName: "" }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold">
+                              <option value="">Choisir / créer</option>
+                              {eventTypes.map((eventType) => <option key={eventType.id} value={eventType.id}>{eventType.name}</option>)}
                             </select>
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600">
+                            Nouveau type
+                            <input value={convocationForm.customEventTypeName} onChange={(e) => setConvocationForm((f) => ({ ...f, customEventTypeName: e.target.value, eventTypeId: "" }))} placeholder="Ex: Finale, plateau U9" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600">
+                            Heure de rendez-vous
+                            <input type="datetime-local" value={convocationForm.meetingAt} onChange={(e) => setConvocationForm((f) => ({ ...f, meetingAt: e.target.value }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600">
+                            Retour estimé
+                            <input type="datetime-local" value={convocationForm.returnEstimateAt} onChange={(e) => setConvocationForm((f) => ({ ...f, returnEstimateAt: e.target.value }))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600 sm:col-span-2">
+                            Lieu de rendez-vous
+                            <input value={convocationForm.meetingLocation} onChange={(e) => setConvocationForm((f) => ({ ...f, meetingLocation: e.target.value }))} placeholder="Ex: parking du stade Henri Longuet" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600 sm:col-span-2">
+                            Lieu de l'événement
+                            <input value={convocationForm.eventLocation} onChange={(e) => setConvocationForm((f) => ({ ...f, eventLocation: e.target.value }))} placeholder={m.location === "HOME" ? "Stade Henri Longuet" : "Adresse du déplacement"} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600">
+                            Tenue
+                            <input value={convocationForm.outfit} onChange={(e) => setConvocationForm((f) => ({ ...f, outfit: e.target.value }))} placeholder="Survêtement, crampons..." className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600">
+                            Transport
+                            <input value={convocationForm.transport} onChange={(e) => setConvocationForm((f) => ({ ...f, transport: e.target.value }))} placeholder="Minibus, parents..." className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600 sm:col-span-2">
+                            Contact empêchement
+                            <input value={convocationForm.impedimentContact} onChange={(e) => setConvocationForm((f) => ({ ...f, impedimentContact: e.target.value }))} placeholder="Nom + téléphone de l'éducateur" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600 sm:col-span-2">
+                            Informations parents
+                            <textarea value={convocationForm.instructions} onChange={(e) => setConvocationForm((f) => ({ ...f, instructions: e.target.value }))} rows={3} placeholder="Documents, repas, météo, parking, contraintes..." className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold" />
+                          </label>
+                          <label className="grid gap-1 text-xs font-black uppercase text-slate-600 sm:col-span-2">
+                            Commentaire éducateur
+                            <textarea value={convocationForm.coachComment} onChange={(e) => setConvocationForm((f) => ({ ...f, coachComment: e.target.value }))} rows={3} placeholder="Message du coach aux familles/joueurs" className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold" />
+                          </label>
+                        </div>
+
+                        <div className="grid gap-3 rounded-md border border-slate-200 p-3">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-black uppercase text-[#07542f]">Joueurs et réponses</p>
+                              <p className="text-sm font-bold text-slate-600">{roster.players.length} joueurs dans l'effectif · {Object.values(callupMap).filter((status) => status === "CONVOQUE" || status === "REMPLACANT").length} convoqués/remplaçants</p>
+                            </div>
+                            <input value={callupSearch} onChange={(e) => setCallupSearch(e.target.value)} placeholder="Rechercher un joueur" className="focus-ring min-h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold sm:w-64" />
                           </div>
-                        ))}
-                        {roster.players.length > 0 ? (
-                          <div className="mt-1 flex gap-2">
-                            <button onClick={() => void saveCallups(m.id)} disabled={busy} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={14} /> Enregistrer</button>
-                            <button onClick={() => setCallupFor(null)} className="focus-ring inline-flex min-h-10 items-center rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-slate-600" type="button">Fermer</button>
+                          {roster.players.length === 0 ? <p className="text-sm font-bold text-slate-500">Ajoutez d'abord des joueurs à l'effectif.</p> : null}
+                          <div className="grid gap-2">
+                            {roster.players
+                              .filter((p) => {
+                                const name = p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur";
+                                return name.toLowerCase().includes(callupSearch.trim().toLowerCase());
+                              })
+                              .map((p) => (
+                                <div key={p.assignment.player_id} className="grid gap-2 rounded-md bg-[#fbfcf8] p-3 xl:grid-cols-[1.5fr_150px_150px_150px] xl:items-center">
+                                  <div>
+                                    <p className="text-sm font-black text-[#002f1d]">{p.player ? `${p.player.first_name} ${p.player.last_name}` : "Joueur"}</p>
+                                    <p className="text-xs font-semibold text-slate-500">{p.assignment.position ?? "Poste non renseigné"}{p.assignment.shirt_number ? ` · n°${p.assignment.shirt_number}` : ""}</p>
+                                  </div>
+                                  <select value={callupMap[p.assignment.player_id] ?? "CONVOQUE"} onChange={(e) => setCallupMap((s) => ({ ...s, [p.assignment.player_id]: e.target.value as CallupStatus }))} className="focus-ring min-h-10 rounded-md border border-slate-300 bg-white px-2 text-xs font-bold">
+                                    {CALLUP_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                  </select>
+                                  <select value={responseMap[p.assignment.player_id] ?? "EN_ATTENTE"} onChange={(e) => setResponseMap((s) => ({ ...s, [p.assignment.player_id]: e.target.value as CallupResponseStatus }))} className="focus-ring min-h-10 rounded-md border border-slate-300 bg-white px-2 text-xs font-bold">
+                                    {RESPONSE_OPTIONS.map((o) => <option key={o.value} value={o.value}>Réponse : {o.label}</option>)}
+                                  </select>
+                                  <select value={presenceMap[p.assignment.player_id] ?? "NON_SAISI"} onChange={(e) => setPresenceMap((s) => ({ ...s, [p.assignment.player_id]: e.target.value as CallupPresenceStatus }))} className="focus-ring min-h-10 rounded-md border border-slate-300 bg-white px-2 text-xs font-bold">
+                                    {PRESENCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>Jour J : {o.label}</option>)}
+                                  </select>
+                                </div>
+                              ))}
                           </div>
-                        ) : null}
+                        </div>
+
+                        <div className="grid gap-3 rounded-md border border-slate-200 bg-[#fbfcf8] p-3 md:grid-cols-3">
+                          <div>
+                            <p className="text-xs font-black uppercase text-[#07542f]">Joueurs convoqués</p>
+                            <p className="mt-1 text-sm font-bold text-slate-700">{Object.values(callupMap).filter((status) => status === "CONVOQUE" || status === "REMPLACANT").length} joueurs</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-black uppercase text-[#07542f]">Présents confirmés</p>
+                            <p className="mt-1 text-sm font-bold text-slate-700">{Object.values(responseMap).filter((status) => status === "PRESENT").length} réponses</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-black uppercase text-[#07542f]">Sans réponse</p>
+                            <p className="mt-1 text-sm font-bold text-slate-700">{Object.values(responseMap).filter((status) => status === "EN_ATTENTE").length} familles</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <button onClick={() => void saveCallups(m.id)} disabled={busy} className="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-70" type="button"><Save size={16} /> Enregistrer et notifier</button>
+                          <button onClick={() => setCallupFor(null)} className="focus-ring inline-flex min-h-11 items-center rounded-md border border-slate-300 px-4 text-xs font-black uppercase text-slate-600" type="button">Fermer</button>
+                        </div>
                       </div>
                     ) : null}
                     {scoreFor === m.id ? (

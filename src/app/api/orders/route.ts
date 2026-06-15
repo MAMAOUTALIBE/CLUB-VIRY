@@ -4,7 +4,7 @@ import { getBearerToken, handleDbError, jsonError, jsonOk, readJsonBody } from "
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateOrderPayload } from "@/lib/api/validation";
 import { getAuthContext } from "@/lib/auth/session";
-import { createOrder, listOrdersForProfile } from "@/lib/db/recruitment-shop";
+import { createOrder, listOrdersForProfile, OrderValidationError } from "@/lib/db/recruitment-shop";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 
 export const runtime = "nodejs";
@@ -68,6 +68,10 @@ export async function POST(request: NextRequest) {
 
     return jsonOk(order, 201);
   } catch (error) {
+    if (error instanceof OrderValidationError || (error instanceof Error && error.name === "OrderValidationError")) {
+      return jsonError(400, "VALIDATION_ERROR", error.message);
+    }
+
     return handleDbError("orders", error);
   }
 }

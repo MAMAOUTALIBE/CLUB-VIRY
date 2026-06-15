@@ -418,7 +418,7 @@ const mockEducators: DisplayEducator[] = [
     bio: "Éducateur diplômé, en charge de la coordination sportive et de la formation des jeunes catégories.",
     teams: [
       { name: "Seniors D1", slug: "seniors-r1", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true },
-      { name: "U18", slug: "u18", category: "U18", roleTitle: "Référent", isHeadCoach: false }
+      { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Référent", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 48, matches: 22 }
   },
@@ -466,6 +466,102 @@ const mockEducators: DisplayEducator[] = [
     bio: "Engagée pour le développement du football féminin au club, elle accompagne les joueuses tout au long de la saison.",
     teams: [{ name: "Féminines", slug: "feminines", category: "Seniors", roleTitle: "Entraîneure principale", isHeadCoach: true }],
     stats: { teams: 1, sessions: 28, matches: 14 }
+  },
+  {
+    id: "mock-5",
+    name: "Thomas Renaud",
+    title: "Éducateur U15",
+    diploma: "UEFA C",
+    slug: educatorSlug("Thomas Renaud", "mock-5"),
+    joinedYear: 2018,
+    diplomas: ["UEFA C (2022)", "CFF3 (2019)"],
+    specialties: ["Préformation", "Transitions"],
+    quote: "La progression vient de l'exigence répétée à l'entraînement.",
+    avatar: null,
+    bio: "Référent de la catégorie U15, il accompagne les joueurs dans les premières exigences de la compétition à 11.",
+    teams: [{ name: "U15 R1", slug: "u15-r1", category: "U15", roleTitle: "Entraîneur principal", isHeadCoach: true }],
+    stats: { teams: 1, sessions: 36, matches: 18 }
+  },
+  {
+    id: "mock-6",
+    name: "Lina Roussel",
+    title: "Coordinatrice préformation",
+    diploma: "CFF3",
+    slug: educatorSlug("Lina Roussel", "mock-6"),
+    joinedYear: 2021,
+    diplomas: ["CFF3 (2021)", "Module préparation mentale (2023)"],
+    specialties: ["Préformation", "Projet de jeu"],
+    quote: "Construire un joueur, c'est l'aider à comprendre le jeu.",
+    avatar: null,
+    bio: "Elle assure le lien entre les catégories U15 et U18 pour harmoniser les principes de jeu et le suivi individuel.",
+    teams: [
+      { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Adjointe", isHeadCoach: false },
+      { name: "U15 R1", slug: "u15-r1", category: "U15", roleTitle: "Référente préformation", isHeadCoach: false }
+    ],
+    stats: { teams: 2, sessions: 42, matches: 20 }
+  },
+  {
+    id: "mock-7",
+    name: "Mehdi Tazi",
+    title: "Préparateur futsal",
+    diploma: "CFF Futsal",
+    slug: educatorSlug("Mehdi Tazi", "mock-7"),
+    joinedYear: 2022,
+    diplomas: ["CFF Futsal (2023)", "PSC1 (2022)"],
+    specialties: ["Futsal", "Intensité"],
+    quote: "Le détail technique fait souvent la différence dans les petits espaces.",
+    avatar: null,
+    bio: "Spécialiste du jeu en salle, il renforce les séances futsal autour du rythme, de la finition et des rotations.",
+    teams: [{ name: "Futsal", slug: "futsal", category: "Seniors", roleTitle: "Adjoint futsal", isHeadCoach: false }],
+    stats: { teams: 1, sessions: 24, matches: 13 }
+  },
+  {
+    id: "mock-8",
+    name: "Julie Caron",
+    title: "Adjointe Féminines",
+    diploma: "CFF2",
+    slug: educatorSlug("Julie Caron", "mock-8"),
+    joinedYear: 2023,
+    diplomas: ["CFF2 (2023)"],
+    specialties: ["Développement féminin", "Animation offensive"],
+    quote: "Chaque joueuse doit trouver sa place et oser prendre des initiatives.",
+    avatar: null,
+    bio: "Elle accompagne le groupe féminin sur les séances terrain, le suivi des jeunes joueuses et la préparation des matchs.",
+    teams: [{ name: "Féminines", slug: "feminines", category: "Seniors", roleTitle: "Adjointe", isHeadCoach: false }],
+    stats: { teams: 1, sessions: 22, matches: 11 }
+  },
+  {
+    id: "mock-9",
+    name: "Mamadou Keita",
+    title: "Référent gardiens",
+    diploma: "Module gardiens",
+    slug: educatorSlug("Mamadou Keita", "mock-9"),
+    joinedYear: 2016,
+    diplomas: ["Module gardiens (2020)", "CFF2 (2018)"],
+    specialties: ["Gardiens", "Lecture du jeu"],
+    quote: "Un gardien moderne participe au jeu autant qu'il protège son but.",
+    avatar: null,
+    bio: "Il suit les gardiens des catégories compétition avec un travail spécifique sur les appuis, la relance et la communication.",
+    teams: [
+      { name: "Seniors D1", slug: "seniors-r1", category: "Seniors", roleTitle: "Référent gardiens", isHeadCoach: false },
+      { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Référent gardiens", isHeadCoach: false }
+    ],
+    stats: { teams: 2, sessions: 34, matches: 16 }
+  },
+  {
+    id: "mock-10",
+    name: "Nabil Aït-Brahim",
+    title: "Éducateur U10-U11",
+    diploma: "CFF1",
+    slug: educatorSlug("Nabil Aït-Brahim", "mock-10"),
+    joinedYear: 2024,
+    diplomas: ["CFF1 (2024)"],
+    specialties: ["École de foot", "Coordination motrice"],
+    quote: "À cet âge, le plaisir et les bons repères font progresser vite.",
+    avatar: null,
+    bio: "Il encadre les groupes U10-U11 sur les plateaux et les séances de découverte du jeu collectif.",
+    teams: [{ name: "École de foot", slug: "ecole-de-foot", category: "U6 à U11", roleTitle: "Éducateur U10-U11", isHeadCoach: false }],
+    stats: { teams: 1, sessions: 25, matches: 10 }
   }
 ];
 
@@ -509,22 +605,329 @@ export async function getPublicEducatorBySlug(slug: string): Promise<DisplayEduc
 
 // --- Direction : bureau exécutif + dirigeants (personnes) -------------------
 
-export type DisplayOfficial = { id: string; name: string; position: string; photo: string | null };
+export type DisplayOfficialLink = { label: string; href: string };
+export type DisplayOfficial = {
+  id: string;
+  name: string;
+  slug: string;
+  category: "BUREAU" | "DIRIGEANT";
+  position: string;
+  department: string;
+  photo: string | null;
+  bio: string;
+  missions: string[];
+  availability: string;
+  contactLabel: string;
+  contactHref: string;
+  links: DisplayOfficialLink[];
+};
 export type ClubOfficialsContent = { bureau: DisplayOfficial[]; dirigeants: DisplayOfficial[] };
+
+type OfficialProfileSeed = {
+  id: string;
+  name: string;
+  category: DisplayOfficial["category"];
+  position: string;
+  department: string;
+  photo?: string | null;
+  bio: string;
+  missions: string[];
+  availability: string;
+  contactLabel?: string;
+  contactHref?: string;
+  links?: DisplayOfficialLink[];
+};
+
+function officialSlug(name: string, id: string): string {
+  return `${slugify(name) || "responsable"}-${id.slice(0, 8)}`;
+}
+
+function inferOfficialProfile(position: string, category: DisplayOfficial["category"]): Pick<DisplayOfficial, "department" | "bio" | "missions" | "availability" | "contactLabel" | "contactHref" | "links"> {
+  const normalized = position.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  if (normalized.includes("president")) {
+    return {
+      department: "Présidence",
+      bio: "Garant du projet associatif, du cap sportif et de la représentation du club auprès des institutions, partenaires et familles.",
+      missions: ["Porter la vision du club", "Représenter l'association", "Arbitrer les priorités stratégiques"],
+      availability: "Sur rendez-vous via le club",
+      contactLabel: "Contacter la présidence",
+      contactHref: "/contact",
+      links: [
+        { label: "Projet club", href: "/le-club" },
+        { label: "Partenariats", href: "/partenaires" }
+      ]
+    };
+  }
+
+  if (normalized.includes("licence") || normalized.includes("inscription")) {
+    return {
+      department: "Licences",
+      bio: "Point d'entrée des familles pour les dossiers administratifs, les renouvellements, les pièces manquantes et le suivi des inscriptions.",
+      missions: ["Suivre les licences", "Accompagner les familles", "Contrôler les dossiers administratifs"],
+      availability: "Permanence administrative les soirs d'entraînement",
+      contactLabel: "Question inscription",
+      contactHref: "/inscriptions",
+      links: [
+        { label: "Inscriptions", href: "/inscriptions" },
+        { label: "Espace membre", href: "/espace-membre" }
+      ]
+    };
+  }
+
+  if (normalized.includes("communication")) {
+    return {
+      department: "Communication",
+      bio: "Coordonne les informations publiques du club, les annonces officielles, les supports digitaux et la valorisation des équipes.",
+      missions: ["Publier les informations officielles", "Valoriser les équipes", "Coordonner les contenus médias"],
+      availability: "Demandes traitées sous 48 h",
+      contactLabel: "Transmettre une information",
+      contactHref: "/contact",
+      links: [
+        { label: "Actualités", href: "/actualites" },
+        { label: "Médias", href: "/medias" }
+      ]
+    };
+  }
+
+  if (normalized.includes("partenariat")) {
+    return {
+      department: "Partenariats",
+      bio: "Construit les relations avec les entreprises, collectivités et soutiens du territoire pour renforcer les projets du club.",
+      missions: ["Accueillir les partenaires", "Construire les offres", "Suivre les engagements"],
+      availability: "Rendez-vous partenaires sur demande",
+      contactLabel: "Devenir partenaire",
+      contactHref: "/partenaires",
+      links: [
+        { label: "Partenaires", href: "/partenaires" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
+  if (normalized.includes("evenement")) {
+    return {
+      department: "Événementiel",
+      bio: "Organise les temps forts du club, les tournois, les animations et la mobilisation des bénévoles.",
+      missions: ["Planifier les événements", "Coordonner les bénévoles", "Sécuriser l'accueil du public"],
+      availability: "Disponible avant chaque événement club",
+      contactLabel: "Proposer une aide",
+      contactHref: "/contact",
+      links: [
+        { label: "Calendrier", href: "/calendrier" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
+  if (normalized.includes("tresor")) {
+    return {
+      department: "Finances",
+      bio: "Assure le suivi financier, la rigueur budgétaire et la lisibilité des engagements économiques du club.",
+      missions: ["Suivre le budget", "Piloter les engagements financiers", "Préparer les bilans"],
+      availability: "Sur rendez-vous administratif",
+      contactLabel: "Question financière",
+      contactHref: "/contact",
+      links: [
+        { label: "Boutique", href: "/boutique" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
+  if (normalized.includes("secretaire")) {
+    return {
+      department: "Secrétariat",
+      bio: "Structure les échanges officiels, les documents administratifs et le fonctionnement courant de l'association.",
+      missions: ["Préparer les documents officiels", "Suivre les réunions", "Centraliser les demandes administratives"],
+      availability: "Réponse via le club",
+      contactLabel: "Contacter le secrétariat",
+      contactHref: "/contact",
+      links: [
+        { label: "Mentions légales", href: "/mentions-legales" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
+  return {
+    department: category === "BUREAU" ? "Bureau exécutif" : "Vie du club",
+    bio: "Responsable engagé dans le fonctionnement quotidien du club et l'accompagnement des licenciés, familles et bénévoles.",
+    missions: ["Orienter les demandes", "Coordonner son périmètre", "Faire remonter les besoins du terrain"],
+    availability: "Contact via le club",
+    contactLabel: "Contacter le club",
+    contactHref: "/contact",
+    links: [
+      { label: "Le Club", href: "/le-club" },
+      { label: "Contact", href: "/contact" }
+    ]
+  };
+}
+
+function buildOfficial(seed: OfficialProfileSeed): DisplayOfficial {
+  return {
+    id: seed.id,
+    name: seed.name,
+    slug: officialSlug(seed.name, seed.id),
+    category: seed.category,
+    position: seed.position,
+    department: seed.department,
+    photo: seed.photo ?? null,
+    bio: seed.bio,
+    missions: seed.missions,
+    availability: seed.availability,
+    contactLabel: seed.contactLabel ?? "Contacter le club",
+    contactHref: seed.contactHref ?? "/contact",
+    links: seed.links ?? [{ label: "Contact", href: "/contact" }]
+  };
+}
+
+function enrichOfficial(id: string, name: string, category: DisplayOfficial["category"], position: string, photo: string | null): DisplayOfficial {
+  const profile = inferOfficialProfile(position, category);
+  return {
+    id,
+    name,
+    slug: officialSlug(name, id),
+    category,
+    position,
+    photo,
+    ...profile
+  };
+}
 
 // Données vitrine tant qu'aucun membre n'est saisi depuis le CRM.
 const mockOfficials: ClubOfficialsContent = {
   bureau: [
-    { id: "b1", name: "Saglam Ferhat", position: "Président", photo: null },
-    { id: "b2", name: "A. Martin", position: "Vice-président", photo: null },
-    { id: "b3", name: "K. Sow", position: "Trésorier", photo: null },
-    { id: "b4", name: "M. Dubois", position: "Secrétaire général", photo: null }
+    buildOfficial({
+      id: "b1",
+      name: "Saglam Ferhat",
+      category: "BUREAU",
+      position: "Président",
+      department: "Présidence",
+      bio: "Président de l'ES Viry-Châtillon Football, il porte le projet club, représente l'association et veille à la cohérence entre ambition sportive, rôle éducatif et ancrage local.",
+      missions: ["Fixer le cap du club", "Représenter l'association", "Coordonner le bureau exécutif", "Développer les relations institutionnelles"],
+      availability: "Sur rendez-vous via le secrétariat du club",
+      contactLabel: "Contacter la présidence",
+      contactHref: "/contact",
+      links: [
+        { label: "Projet club", href: "/le-club" },
+        { label: "Partenariats", href: "/partenaires" }
+      ]
+    }),
+    buildOfficial({
+      id: "b2",
+      name: "A. Martin",
+      category: "BUREAU",
+      position: "Vice-président",
+      department: "Gouvernance",
+      bio: "Appui direct de la présidence, il suit les sujets transverses, la coordination interne et la continuité des décisions du bureau.",
+      missions: ["Préparer les décisions du bureau", "Coordonner les responsables de pôle", "Suivre les dossiers prioritaires"],
+      availability: "Sur rendez-vous club",
+      contactLabel: "Contacter la gouvernance",
+      contactHref: "/contact",
+      links: [
+        { label: "Organigramme", href: "/le-club/organigramme" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "b3",
+      name: "K. Sow",
+      category: "BUREAU",
+      position: "Trésorier",
+      department: "Finances",
+      bio: "Responsable du suivi financier, il sécurise le budget, les paiements et la bonne utilisation des ressources du club.",
+      missions: ["Piloter le budget", "Suivre les paiements", "Préparer les bilans financiers"],
+      availability: "Sur rendez-vous administratif",
+      contactLabel: "Question financière",
+      contactHref: "/contact",
+      links: [
+        { label: "Boutique", href: "/boutique" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "b4",
+      name: "M. Dubois",
+      category: "BUREAU",
+      position: "Secrétaire général",
+      department: "Secrétariat",
+      bio: "Référent administratif du bureau, il structure les documents officiels, les convocations, comptes rendus et échanges institutionnels.",
+      missions: ["Gérer les documents officiels", "Préparer les réunions", "Centraliser les demandes administratives"],
+      availability: "Réponse via le club",
+      contactLabel: "Contacter le secrétariat",
+      contactHref: "/contact",
+      links: [
+        { label: "Mentions légales", href: "/mentions-legales" },
+        { label: "Contact", href: "/contact" }
+      ]
+    })
   ],
   dirigeants: [
-    { id: "d1", name: "L. Petit", position: "Responsable des licences", photo: null },
-    { id: "d2", name: "R. Garcia", position: "Responsable communication", photo: null },
-    { id: "d3", name: "S. Bernard", position: "Responsable partenariats", photo: null },
-    { id: "d4", name: "N. Roux", position: "Responsable événementiel", photo: null }
+    buildOfficial({
+      id: "d1",
+      name: "L. Petit",
+      category: "DIRIGEANT",
+      position: "Responsable des licences",
+      department: "Licences",
+      bio: "Interlocuteur des familles pour les créations, renouvellements et suivis de licence.",
+      missions: ["Accompagner les familles", "Contrôler les pièces administratives", "Suivre les dossiers FFF"],
+      availability: "Permanences les soirs d'entraînement",
+      contactLabel: "Question inscription",
+      contactHref: "/inscriptions",
+      links: [
+        { label: "Inscriptions", href: "/inscriptions" },
+        { label: "Espace membre", href: "/espace-membre" }
+      ]
+    }),
+    buildOfficial({
+      id: "d2",
+      name: "R. Garcia",
+      category: "DIRIGEANT",
+      position: "Responsable communication",
+      department: "Communication",
+      bio: "Coordonne les annonces, actualités, photos et informations publiques du club.",
+      missions: ["Publier les annonces officielles", "Valoriser les équipes", "Coordonner les contenus médias"],
+      availability: "Demandes traitées sous 48 h",
+      contactLabel: "Transmettre une information",
+      contactHref: "/contact",
+      links: [
+        { label: "Actualités", href: "/actualites" },
+        { label: "Médias", href: "/medias" }
+      ]
+    }),
+    buildOfficial({
+      id: "d3",
+      name: "S. Bernard",
+      category: "DIRIGEANT",
+      position: "Responsable partenariats",
+      department: "Partenariats",
+      bio: "Développe les relations avec les partenaires locaux et accompagne les entreprises qui souhaitent soutenir le club.",
+      missions: ["Présenter les offres partenaires", "Suivre les contreparties", "Créer des relations durables"],
+      availability: "Rendez-vous partenaires sur demande",
+      contactLabel: "Devenir partenaire",
+      contactHref: "/partenaires",
+      links: [
+        { label: "Partenaires", href: "/partenaires" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "d4",
+      name: "N. Roux",
+      category: "DIRIGEANT",
+      position: "Responsable événementiel",
+      department: "Événementiel",
+      bio: "Organise les temps forts du club, les tournois et les actions qui rassemblent licenciés, familles et bénévoles.",
+      missions: ["Planifier les événements", "Mobiliser les bénévoles", "Coordonner l'accueil public"],
+      availability: "Avant chaque événement club",
+      contactLabel: "Proposer une aide",
+      contactHref: "/contact",
+      links: [
+        { label: "Calendrier", href: "/calendrier" },
+        { label: "Contact", href: "/contact" }
+      ]
+    })
   ]
 };
 
@@ -533,7 +936,7 @@ export async function getClubOfficials(): Promise<ClubOfficialsContent> {
     try {
       const rows = await listClubOfficials();
       if (rows.length > 0) {
-        const toDisplay = (r: (typeof rows)[number]): DisplayOfficial => ({ id: r.id, name: r.full_name, position: r.position, photo: r.photo_url });
+        const toDisplay = (r: (typeof rows)[number]): DisplayOfficial => enrichOfficial(r.id, r.full_name, r.category, r.position, r.photo_url);
         return {
           bureau: rows.filter((r) => r.category === "BUREAU").map(toDisplay),
           dirigeants: rows.filter((r) => r.category === "DIRIGEANT").map(toDisplay)
@@ -544,4 +947,9 @@ export async function getClubOfficials(): Promise<ClubOfficialsContent> {
     }
   }
   return mockOfficials;
+}
+
+export async function getClubOfficialBySlug(slug: string): Promise<DisplayOfficial | null> {
+  const officials = await getClubOfficials();
+  return [...officials.bureau, ...officials.dirigeants].find((official) => official.slug === slug) ?? null;
 }

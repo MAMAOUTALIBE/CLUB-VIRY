@@ -118,7 +118,8 @@ export async function POST(request: NextRequest) {
     });
 
     if (uploadError) {
-      return jsonError(500, "SUPABASE_ERROR", uploadError.message);
+      console.error("[api] documents/upload storage upload", uploadError);
+      return jsonError(500, "SUPABASE_ERROR", "Une erreur interne est survenue. Réessayez plus tard.");
     }
 
     const document = await markRegistrationDocumentUploaded({

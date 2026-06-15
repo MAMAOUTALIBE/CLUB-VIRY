@@ -158,9 +158,31 @@ export async function notifyTeamSessionChange(
 export async function notifyMatchCallups(matchId: string, convokedPlayerIds: string[]): Promise<void> {
   try {
     if (convokedPlayerIds.length === 0) return;
-    const { data: match } = await getSupabaseAdminClient().from("matches").select("starts_at, opponent_name").eq("id", matchId).maybeSingle();
-    const startsAt = (match as { starts_at: string | null } | null)?.starts_at ?? null;
-    const opponentName = (match as { opponent_name: string | null } | null)?.opponent_name ?? null;
+    const [{ data: match }, { data: convocation }] = await Promise.all([
+      getSupabaseAdminClient().from("matches").select("starts_at, opponent_name, venue").eq("id", matchId).maybeSingle(),
+      getSupabaseAdminClient()
+        .from("match_convocations")
+        .select("meeting_at, meeting_location, event_location, return_estimate_at, instructions, outfit, transport, coach_comment, impediment_contact, event_type_name")
+        .eq("match_id", matchId)
+        .maybeSingle()
+    ]);
+    const matchRow = match as { starts_at: string | null; opponent_name: string | null; venue: string | null } | null;
+    const convocationRow = convocation as
+      | {
+          meeting_at: string | null;
+          meeting_location: string | null;
+          event_location: string | null;
+          return_estimate_at: string | null;
+          instructions: string | null;
+          outfit: string | null;
+          transport: string | null;
+          coach_comment: string | null;
+          impediment_contact: string | null;
+          event_type_name: string | null;
+        }
+      | null;
+    const startsAt = matchRow?.starts_at ?? null;
+    const opponentName = matchRow?.opponent_name ?? null;
 
     const recipients = await getPlayersGuardianRecipients(convokedPlayerIds);
     const dateLabel = formatFrDateTime(startsAt);
@@ -169,7 +191,21 @@ export async function notifyMatchCallups(matchId: string, convokedPlayerIds: str
       template: "match_callup",
       subject: `Convocation — match ${dateLabel}`,
       link: "/espace-membre",
-      payload: { startsAt, opponentName, dateLabel }
+      payload: {
+        startsAt,
+        opponentName,
+        dateLabel,
+        eventTypeName: convocationRow?.event_type_name ?? null,
+        meetingLabel: convocationRow?.meeting_at ? formatFrDateTime(convocationRow.meeting_at) : null,
+        meetingLocation: convocationRow?.meeting_location ?? null,
+        location: convocationRow?.event_location ?? matchRow?.venue ?? null,
+        returnLabel: convocationRow?.return_estimate_at ? formatFrDateTime(convocationRow.return_estimate_at) : null,
+        instructions: convocationRow?.instructions ?? null,
+        outfit: convocationRow?.outfit ?? null,
+        transport: convocationRow?.transport ?? null,
+        coachComment: convocationRow?.coach_comment ?? null,
+        impedimentContact: convocationRow?.impediment_contact ?? null
+      }
     });
   } catch (error) {
     // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.

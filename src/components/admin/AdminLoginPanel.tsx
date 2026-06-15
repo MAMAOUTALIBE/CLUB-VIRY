@@ -69,6 +69,7 @@ export function AdminLoginPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => safeNextPath(searchParams.get("next")), [searchParams]);
+  const accessError = searchParams.get("error") === "forbidden" ? "Votre compte n'a pas les droits CRM requis." : "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -162,7 +163,11 @@ export function AdminLoginPanel() {
           />
         </label>
 
-        {message ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700" id="login-error" role="alert">{message}</p> : null}
+        {message || accessError ? (
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700" id="login-error" role="alert">
+            {message || accessError}
+          </p>
+        ) : null}
 
         <button
           className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#002f1d] px-5 text-sm font-black uppercase text-white hover:bg-[#07542f] disabled:cursor-wait disabled:opacity-70"

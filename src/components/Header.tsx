@@ -28,10 +28,24 @@ const navItems = [
     children: [
       ["Histoire", "/le-club/histoire"],
       ["Mot du Président", "/le-club/mot-du-president"],
+      ["Bureau", "/le-club/bureau"],
+      ["Dirigeants", "/le-club/dirigeants"],
       ["Organigramme", "/le-club/organigramme"],
       ["Encadrement", "/le-club/encadrement"],
+      ["Installations", "/le-club/installations"],
+      ["Codes de conduite", "/le-club/codes-de-conduite"],
       ["Stade Henri Longuet", "/le-club/stade-henri-longuet"],
       ["Partenaires", "/partenaires"]
+    ]
+  },
+  {
+    label: "Formation",
+    href: "/formation/ecole-de-foot",
+    children: [
+      ["École de foot", "/formation/ecole-de-foot"],
+      ["Football à 11", "/formation/football-a-11"],
+      ["Projet école de foot", "/formation/projet-ecole-de-foot"],
+      ["Stages", "/formation/stages"]
     ]
   },
   {

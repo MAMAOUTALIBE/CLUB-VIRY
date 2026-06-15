@@ -118,13 +118,13 @@ function extractRows(json: unknown, dataKey: string): { ok: true; rows: Row[] } 
 }
 
 export function AdminModuleBoard(props: AdminModuleBoardProps) {
-  const { title, description, endpoint, dataKey, statuses, columns, titleFields, demo, kpis, exportHref } = props;
+  const { title, description, endpoint, dataKey, statuses, columns, titleFields, kpis, exportHref } = props;
   const statusField = props.statusField ?? "status";
   const createdAtField = props.createdAtField ?? "created_at";
 
-  const [rows, setRows] = useState<Row[]>(demo);
-  const [state, setState] = useState<"demo" | "loading" | "connected" | "error">("demo");
-  const [message, setMessage] = useState("Mode démo : connectez-vous pour charger les données réelles.");
+  const [rows, setRows] = useState<Row[]>([]);
+  const [state, setState] = useState<"loading" | "connected" | "error">("loading");
+  const [message, setMessage] = useState("Chargement via la session admin...");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -147,10 +147,10 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
       const parsed = extractRows(await response.json(), dataKey);
 
       if (!parsed.ok) {
-        setRows(demo);
+        setRows([]);
         setState("error");
         setHasMore(false);
-        setMessage(`${parsed.message} (affichage démo)`);
+        setMessage(parsed.message);
         return;
       }
 
@@ -160,10 +160,10 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
       setHasMore(parsed.rows.length >= targetLimit);
       setMessage(`${parsed.rows.length} enregistrement(s) chargé(s) depuis le backend.`);
     } catch (error) {
-      setRows(demo);
+      setRows([]);
       setState("error");
       setHasMore(false);
-      setMessage(`${error instanceof Error ? error.message : "Erreur de chargement."} (affichage démo)`);
+      setMessage(error instanceof Error ? error.message : "Erreur de chargement.");
     }
   }
 

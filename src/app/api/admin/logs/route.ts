@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { handleDbError, jsonError, jsonOk } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, parseLimit } from "@/lib/api/http";
 import { listActivityLogs, listNotificationLogs } from "@/lib/db/contact-admin";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 30) || 30, 100);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 30, 100);
 
   try {
     const [activityLogs, notificationLogs] = await Promise.all([listActivityLogs(limit), listNotificationLogs(limit)]);

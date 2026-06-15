@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
-import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { handleDbError, jsonError, jsonOk, parseLimit, readJsonBody } from "@/lib/api/http";
 import { validateAdminTeamPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { createTeam, listTeamsForAdmin } from "@/lib/db/teams";
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? 100) || 100, 500);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 100, 500);
 
   try {
     const teams = await listTeamsForAdmin(limit);

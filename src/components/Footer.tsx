@@ -21,18 +21,21 @@ const columns = [
     links: [
       ["Histoire", "/le-club/histoire"],
       ["Mot du président", "/le-club/mot-du-president"],
+      ["Bureau", "/le-club/bureau"],
+      ["Dirigeants", "/le-club/dirigeants"],
       ["Organigramme", "/le-club/organigramme"],
-      ["Encadrement", "/le-club/encadrement"],
-      ["Stade", "/le-club/stade-henri-longuet"]
+      ["Installations", "/le-club/installations"],
+      ["Codes de conduite", "/le-club/codes-de-conduite"]
     ]
   },
   {
-    title: "Équipes",
+    title: "Formation",
     links: [
-      ["École de foot", "/equipes/ecole-de-foot"],
-      ["Seniors", "/equipes/seniors-r1"],
-      ["Féminines", "/equipes/feminines"],
-      ["Futsal", "/equipes/futsal"]
+      ["École de foot", "/formation/ecole-de-foot"],
+      ["Football à 11", "/formation/football-a-11"],
+      ["Projet école de foot", "/formation/projet-ecole-de-foot"],
+      ["Stages", "/formation/stages"],
+      ["Toutes les équipes", "/equipes"]
     ]
   },
   {

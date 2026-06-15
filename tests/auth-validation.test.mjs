@@ -36,8 +36,21 @@ import {
   validateRegistrationPayload,
   validateRegisterPayload
 } from "../src/lib/api/validation.ts";
-import { hasPermission } from "../src/lib/auth/permissions.ts";
+import { isSameOriginRequest } from "../src/lib/api/origin.ts";
+import { canAccessCrmPath, hasPermission, isEducatorCrmPath } from "../src/lib/auth/permissions.ts";
 import { canAdminUpdateProfile } from "../src/lib/auth/roles.ts";
+
+function originRequest(headers, nextOrigin = "https://club.example") {
+  const normalized = new Map(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]));
+  return {
+    nextUrl: { origin: nextOrigin },
+    headers: {
+      get(name) {
+        return normalized.get(name.toLowerCase()) ?? null;
+      }
+    }
+  };
+}
 
 test("public registration rejects privileged roles", () => {
   const result = validateRegisterPayload({
@@ -75,6 +88,27 @@ test("login validation requires a valid email", () => {
 
   assert.equal(result.ok, false);
   assert.match(JSON.stringify(result), /Adresse email invalide/);
+});
+
+test("same-origin guard accepts same origin and server clients", () => {
+  assert.equal(isSameOriginRequest(originRequest({ origin: "https://club.example" })), true);
+  assert.equal(isSameOriginRequest(originRequest({ referer: "https://club.example/admin" })), true);
+  assert.equal(isSameOriginRequest(originRequest({})), true);
+});
+
+test("same-origin guard accepts the request host when next origin differs", () => {
+  assert.equal(
+    isSameOriginRequest(
+      originRequest({ origin: "http://127.0.0.1:3002", host: "127.0.0.1:3002", "x-forwarded-proto": "http" }, "http://localhost:3002")
+    ),
+    true
+  );
+});
+
+test("same-origin guard rejects cross-origin browser requests", () => {
+  assert.equal(isSameOriginRequest(originRequest({ origin: "https://evil.example" })), false);
+  assert.equal(isSameOriginRequest(originRequest({ referer: "https://evil.example/form" })), false);
+  assert.equal(isSameOriginRequest(originRequest({ referer: "not a url" })), false);
 });
 
 test("refresh token validation rejects short tokens", () => {
@@ -232,6 +266,28 @@ test("admin permission is not granted to family role", () => {
 
 test("admin permission is granted to club admin role", () => {
   assert.equal(hasPermission("ADMIN_CLUB", "admin:access"), true);
+});
+
+test("crm page access is limited to club management roles", () => {
+  assert.equal(hasPermission("SUPER_ADMIN", "admin:access"), true);
+  assert.equal(hasPermission("ADMIN_CLUB", "admin:access"), true);
+  assert.equal(hasPermission("DIRIGEANT", "admin:access"), true);
+  assert.equal(hasPermission("EDUCATEUR", "admin:access"), false);
+  assert.equal(hasPermission("FAMILLE", "admin:access"), false);
+  assert.equal(hasPermission("MEMBRE", "admin:access"), false);
+});
+
+test("educator crm access is limited to convocations", () => {
+  assert.equal(isEducatorCrmPath("/admin/convocations"), true);
+  assert.equal(isEducatorCrmPath("/admin/convocations/weekend"), true);
+  assert.equal(isEducatorCrmPath("/admin"), false);
+  assert.equal(isEducatorCrmPath("/admin/equipes"), false);
+
+  assert.equal(canAccessCrmPath("EDUCATEUR", "/admin/convocations"), true);
+  assert.equal(canAccessCrmPath("EDUCATEUR", "/admin"), false);
+  assert.equal(canAccessCrmPath("EDUCATEUR", "/admin/equipes"), false);
+  assert.equal(canAccessCrmPath("FAMILLE", "/admin/convocations"), false);
+  assert.equal(canAccessCrmPath("ADMIN_CLUB", "/admin/equipes"), true);
 });
 
 test("educator permission is limited to educator and club management roles", () => {

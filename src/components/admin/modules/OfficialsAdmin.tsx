@@ -25,12 +25,29 @@ export function OfficialsAdmin() {
         },
         { name: "fullName", label: "Nom complet", required: true, rowKey: "full_name", placeholder: "Prénom Nom", fullWidth: true },
         { name: "position", label: "Fonction", required: true, placeholder: "Président, Trésorier, Responsable licences…", fullWidth: true },
-        { name: "photoUrl", label: "Photo (URL)", type: "url", rowKey: "photo_url", placeholder: "https://…" },
+        {
+          name: "photoUrl",
+          label: "Photo du responsable (URL)",
+          type: "url",
+          rowKey: "photo_url",
+          placeholder: "https://…",
+          fullWidth: true,
+          help: "Téléversez la photo dans Médias / Supabase Storage ou un hébergeur autorisé, puis collez l'URL ici. Format conseillé : portrait vertical 800 x 1000 px."
+        },
         { name: "orderIndex", label: "Ordre d'affichage", type: "number", rowKey: "order_index", help: "Petit nombre = affiché en premier (le Président en 0)." },
         { name: "isActive", label: "Actif (visible sur le site)", type: "boolean", rowKey: "is_active" }
       ]}
       columns={[
         { label: "Nom", render: (r) => <span className="font-bold text-[#002f1d]">{String(r.full_name ?? "—")}</span> },
+        {
+          label: "Photo",
+          render: (r) =>
+            r.photo_url ? (
+              <img src={String(r.photo_url)} alt="" className="h-10 w-10 rounded-md object-cover ring-2 ring-[#f7c600]" />
+            ) : (
+              <span className="text-xs font-black uppercase text-slate-400">À ajouter</span>
+            )
+        },
         { label: "Fonction", render: (r) => String(r.position ?? "—") },
         { label: "Catégorie", render: (r) => (r.category === "BUREAU" ? "Bureau exécutif" : "Dirigeant") },
         { label: "Ordre", render: (r) => String(r.order_index ?? "—") },

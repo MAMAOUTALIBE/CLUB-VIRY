@@ -1,8 +1,7 @@
 import type { NextRequest } from "next/server";
 
-import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
+import { jsonError, jsonOk } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
-import { validateRefreshSessionPayload } from "@/lib/api/validation";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -19,36 +18,46 @@ export async function POST(request: NextRequest) {
     return jsonError(503, "CONFIGURATION_ERROR", "Supabase Auth n'est pas encore configure.");
   }
 
-  const body = await readJsonBody(request);
+  const refreshToken = request.cookies.get("admin_refresh")?.value;
 
-  if (body === undefined) {
-    return jsonError(400, "INVALID_JSON", "Le corps de la requete doit etre un JSON valide.");
-  }
-
-  const payload = validateRefreshSessionPayload(body);
-
-  if (!payload.ok) {
-    return jsonError(400, "VALIDATION_ERROR", "Session invalide.", payload.issues);
+  if (!refreshToken) {
+    return jsonError(401, "AUTH_REQUIRED", "Session de renouvellement manquante.");
   }
 
   const { data, error } = await getSupabaseClient().auth.refreshSession({
-    refresh_token: payload.data.refreshToken
+    refresh_token: refreshToken
   });
 
-  if (error) {
+  if (error || !data.session) {
     // Détail Supabase journalisé côté serveur, message générique côté client
     // (ne pas exposer l'état interne du token / de la session).
-    console.error("refresh error:", error.message);
+    if (error) {
+      console.error("refresh error:", error.message);
+    }
     return jsonError(401, "AUTH_FAILED", "Session invalide ou expiree.");
   }
 
-  return jsonOk({
-    session: data.session
-      ? {
-          accessToken: data.session.access_token,
-          refreshToken: data.session.refresh_token,
-          expiresAt: data.session.expires_at
-        }
-      : null
+  const response = jsonOk({
+    session: {
+      expiresAt: data.session.expires_at
+    }
   });
+
+  const secure = process.env.NODE_ENV === "production";
+  response.cookies.set("admin_session", data.session.access_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "strict",
+    path: "/",
+    maxAge: data.session.expires_in ?? 3600
+  });
+  response.cookies.set("admin_refresh", data.session.refresh_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7
+  });
+
+  return response;
 }
