@@ -234,35 +234,93 @@ export function StageCards({ stages }: { stages: Stage[] }) {
   );
 }
 
+function OrganizationNodeButton({ compact = false, node, onSelect, selected }: { compact?: boolean; node: OrgNode; onSelect: (title: string) => void; selected: boolean }) {
+  return (
+    <button
+      className={`focus-ring rounded-lg border text-left transition ${
+        selected ? "border-[#f7c600] bg-[#002f1d] text-white shadow-lg" : "border-[#07542f]/12 bg-white text-[#002f1d] shadow-sm hover:border-[#f7c600] hover:shadow-md"
+      } ${compact ? "p-4" : "p-5"}`}
+      onClick={() => onSelect(node.title)}
+      type="button"
+    >
+      <span className={`block font-black uppercase ${selected ? "text-[#f7c600]" : "text-[#8a6d00]"} ${compact ? "text-[11px]" : "text-xs"}`}>
+        {node.lead}
+      </span>
+      <span className={`mt-2 block font-black uppercase leading-tight ${compact ? "text-lg" : "text-2xl"}`}>{node.title}</span>
+      {node.children?.length ? (
+        <span className={`mt-3 block text-xs font-bold leading-5 ${selected ? "text-white/70" : "text-slate-600"}`}>
+          {node.children.length} rattachement{node.children.length > 1 ? "s" : ""}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 export function OrganizationMap({ nodes }: { nodes: OrgNode[] }) {
   const [selected, setSelected] = useState(nodes[0]?.title ?? "");
   const current = nodes.find((node) => node.title === selected) ?? nodes[0];
+  const president = nodes.find((node) => node.title === "President") ?? nodes[0];
+  const governance = nodes.filter((node) => ["Bureau"].includes(node.title));
+  const sport = nodes.filter((node) => ["Direction sportive", "Ecole de foot", "Football a 11"].includes(node.title));
+  const support = nodes.filter((node) => ["Communication", "Logistique", "Evenementiel", "Partenariats"].includes(node.title));
+  const groups = [
+    { title: "Gouvernance", text: "Pilotage associatif, administration et décisions du club.", nodes: governance },
+    { title: "Sportif", text: "Projet terrain, catégories, éducateurs et progression des joueurs.", nodes: sport },
+    { title: "Support club", text: "Communication, matériel, événements et relations partenaires.", nodes: support }
+  ].filter((group) => group.nodes.length > 0);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <div className="grid gap-2">
-        {nodes.map((node) => (
-          <button
-            className={`focus-ring rounded-lg border px-4 py-4 text-left transition ${
-              selected === node.title ? "border-[#f7c600] bg-[#002f1d] text-white shadow-lg" : "border-[#07542f]/12 bg-white text-[#002f1d] hover:border-[#f7c600]"
-            }`}
-            key={node.title}
-            onClick={() => setSelected(node.title)}
-            type="button"
-          >
-            <span className="block text-xs font-black uppercase text-[#8a6d00]">{node.lead}</span>
-            <span className="mt-1 block text-lg font-black uppercase">{node.title}</span>
-          </button>
+    <div className="space-y-5">
+      {president ? (
+        <div className="grid gap-5 lg:grid-cols-[minmax(280px,360px)_1fr] lg:items-stretch">
+          <OrganizationNodeButton node={president} onSelect={setSelected} selected={selected === president.title} />
+          <div className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm">
+            <p className="text-xs font-black uppercase text-[#8a6d00]">Niveau 1</p>
+            <h3 className="mt-2 text-2xl font-black uppercase text-[#002f1d]">Présidence du club</h3>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-700">{president.mission}</p>
+            {president.children?.length ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {president.children.map((child) => (
+                  <span className="rounded-md bg-[#07542f]/8 px-3 py-1.5 text-[11px] font-black uppercase text-[#07542f]" key={child}>
+                    {child}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        {groups.map((group) => (
+          <section className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm" key={group.title}>
+            <p className="text-xs font-black uppercase text-[#8a6d00]">Pôle</p>
+            <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{group.title}</h3>
+            <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-600">{group.text}</p>
+            <div className="mt-5 grid gap-3">
+              {group.nodes.map((node) => (
+                <OrganizationNodeButton compact key={node.title} node={node} onSelect={setSelected} selected={selected === node.title} />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
+
       {current ? (
-        <article className="rounded-lg bg-[#002f1d] p-6 text-white shadow-xl">
-          <p className="text-sm font-black uppercase text-[#f7c600]">Vue interactive</p>
-          <h2 className="mt-2 text-4xl font-black uppercase">{current.title}</h2>
-          <p className="mt-2 text-lg font-bold text-white/78">{current.lead}</p>
-          <p className="mt-5 max-w-3xl leading-8 text-white/80">{current.mission}</p>
+        <article className="rounded-lg bg-[#002f1d] p-6 text-white shadow-xl lg:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase text-[#f7c600]">Fiche du pôle sélectionné</p>
+              <h2 className="mt-2 text-3xl font-black uppercase sm:text-4xl">{current.title}</h2>
+              <p className="mt-2 text-lg font-bold text-white/78">{current.lead}</p>
+            </div>
+            <span className="inline-flex w-fit rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs font-black uppercase text-white/80">
+              {current.children?.length ? `${current.children.length} rattachements` : "Pôle opérationnel"}
+            </span>
+          </div>
+          <p className="mt-5 max-w-4xl leading-8 text-white/80">{current.mission}</p>
           {current.children?.length ? (
-            <div className="mt-8">
+            <div className="mt-6">
               <p className="text-xs font-black uppercase text-[#f7c600]">Rattachements</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {current.children.map((child) => (

@@ -138,7 +138,7 @@ export type SiteContent = {
 const SETTINGS_DEFAULTS: SiteContent = {
   socials: { facebook: "", instagram: "", youtube: "", tiktok: "", whatsapp: "" },
   contact: { phone1: "06 29 67 04 33", phone2: "01 69 96 67 00", email: "esvirychatillon91170@gmail.com", address: "Stade Henri Longuet, 91170 Viry-Châtillon" },
-  president: { name: "Saglam Ferhat", message: "", photoUrl: "" },
+  president: { name: "SAGLAM FERHAT", message: "", photoUrl: "" },
   inscriptions_banner: { text: "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !", active: true },
   club_stats: [
     { label: "Licenciés", value: "+600", iconName: "Users" },
@@ -748,7 +748,7 @@ const mockOfficials: ClubOfficialsContent = {
   bureau: [
     buildOfficial({
       id: "b1",
-      name: "Saglam Ferhat",
+      name: "SAGLAM FERHAT",
       category: "BUREAU",
       position: "Président",
       department: "Présidence",

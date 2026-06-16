@@ -56,15 +56,16 @@ export function DiplomaBadge({ diploma, className }: { diploma: string; classNam
   );
 }
 
-// Bannière : photo de l'éducateur, ou repli pelouse + monogramme doré.
+// Bannière : photo de l'éducateur, ou stade Henri Longuet + monogramme doré.
 export function EducatorBanner({ educator, className, showBadge = true }: { educator: DisplayEducator; className: string; showBadge?: boolean }) {
   return (
     <div className={`relative w-full overflow-hidden ${className}`}>
       {educator.avatar ? (
         <img src={educator.avatar} alt={educator.name} className="h-full w-full object-cover" />
       ) : (
-        <div className="ac-pitch flex h-full w-full items-center justify-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#001c10]/50 text-3xl font-black uppercase text-[#f7c600] ring-2 ring-[#f7c600]/60 backdrop-blur-sm">
+        <div className="relative flex h-full w-full items-center justify-center">
+          <img src="/stade/imagepelouse.png" alt="" className="absolute inset-0 h-full w-full object-cover" aria-hidden="true" />
+          <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#001c10]/82 text-3xl font-black uppercase text-[#f7c600] ring-2 ring-[#f7c600]/80 shadow-lg">
             {initials(educator.name)}
           </span>
         </div>
@@ -132,7 +133,7 @@ function EducatorCardLarge({ educator, onOpen }: { educator: DisplayEducator; on
       type="button"
       onClick={onOpen}
       aria-label={`Voir la fiche de ${educator.name} et le contacter`}
-      className="official-card focus-ring group flex h-full w-[85vw] max-w-[20rem] flex-col overflow-hidden rounded-2xl bg-white text-left text-[#002f1d] shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl sm:w-[20rem]"
+      className="official-card focus-ring group flex h-full w-full flex-col overflow-hidden rounded-2xl bg-white text-left text-[#002f1d] shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl"
     >
       <EducatorBanner educator={educator} className="h-40" />
       <div className="flex flex-1 flex-col p-5">
@@ -462,7 +463,7 @@ function EducatorModal({ educator, onClose }: { educator: DisplayEducator; onClo
   );
 }
 
-// ---- Annuaire : recherche + filtre + carrousel 2 lignes ----
+// ---- Annuaire : recherche + filtre + carrousel 3 cartes ----
 export function EducatorsDirectory({ educators }: { educators: DisplayEducator[] }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -529,7 +530,7 @@ export function EducatorsDirectory({ educators }: { educators: DisplayEducator[]
     const el = trackRef.current;
     if (!el) return;
     const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: reduce ? "auto" : "smooth" });
+    el.scrollBy({ left: direction * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
   };
 
   const hasFilters = query.trim() !== "" || category !== "";
@@ -607,11 +608,10 @@ export function EducatorsDirectory({ educators }: { educators: DisplayEducator[]
           <div
             ref={trackRef}
             onScroll={updateArrows}
-            style={{ gridTemplateRows: `repeat(${filtered.length <= 2 ? 1 : 2}, minmax(0, 1fr))` }}
-            className="grid snap-x snap-mandatory grid-flow-col gap-4 overflow-x-auto scroll-smooth pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {filtered.map((educator) => (
-              <div key={educator.id} className="snap-start">
+              <div key={educator.id} className="educators-carousel-item snap-start">
                 <EducatorCardLarge educator={educator} onOpen={() => setSelected(educator)} />
               </div>
             ))}

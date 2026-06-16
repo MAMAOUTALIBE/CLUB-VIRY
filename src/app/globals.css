@@ -52,6 +52,22 @@ select {
   box-shadow: 0 16px 36px rgba(0, 31, 19, 0.1);
 }
 
+.educators-carousel-item {
+  flex: 0 0 85vw;
+}
+
+@media (min-width: 640px) {
+  .educators-carousel-item {
+    flex-basis: calc((100% - 1rem) / 2);
+  }
+}
+
+@media (min-width: 1280px) {
+  .educators-carousel-item {
+    flex-basis: calc((100% - 2rem) / 3);
+  }
+}
+
 .glass-card {
   border: 1px solid rgba(247, 198, 0, 0.28);
   background: rgba(0, 28, 16, 0.58);

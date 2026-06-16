@@ -54,7 +54,7 @@ export const dirigeants: StaffPerson[] = [
 ];
 
 export const bureau: StaffPerson[] = [
-  { name: "Mamadou Bah", role: "President", category: "Presidence", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
+  { name: "SAGLAM FERHAT", role: "President", category: "Presidence", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
   { name: "Fatou Camara", role: "Vice-presidente", category: "Direction", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
   { name: "Laurent Girard", role: "Tresorier", category: "Finances", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
   { name: "Sonia Mercier", role: "Secretaire generale", category: "Administration", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
@@ -101,7 +101,7 @@ export const stages: Stage[] = [
 ];
 
 export const orgNodes: OrgNode[] = [
-  { title: "President", lead: "Mamadou Bah", mission: "Fixe le cap associatif, represente le club et arbitre les grandes decisions.", children: ["Bureau", "Direction sportive", "Partenariats"] },
+  { title: "President", lead: "SAGLAM FERHAT", mission: "Fixe le cap associatif, represente le club et arbitre les grandes decisions.", children: ["Bureau", "Direction sportive", "Partenariats"] },
   { title: "Bureau", lead: "President, vice-president, tresorier, secretaire", mission: "Pilote l'administration, les finances, la conformite et la vie associative.", children: ["Administration", "Communication", "Logistique"] },
   { title: "Direction sportive", lead: "Responsable technique", mission: "Coordonne le projet sportif et accompagne les educateurs.", children: ["Ecole de foot", "Football a 11", "Gardiens"] },
   { title: "Ecole de foot", lead: "Responsable U6-U13", mission: "Accueil, apprentissage, plaisir et premiers reperes collectifs." },

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
+import { HomeHeroCarousel, type HomeHeroSlide } from "@/components/HomeHeroCarousel";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
 import { matches } from "@/lib/data";
@@ -27,6 +28,18 @@ const websiteJsonLd = {
   inLanguage: "fr-FR"
 };
 
+const heroSlides: HomeHeroSlide[] = [
+  { src: images.stadiumHero, objectPosition: "center 90%" },
+  { src: images.stadeTribune, objectPosition: "center center" },
+  { src: images.stadeTribune2, objectPosition: "center center" },
+  { src: images.teamHuddle, objectPosition: "center 48%" },
+  { src: images.youthTeam, objectPosition: "center 45%" },
+  { src: images.training, objectPosition: "center 45%" },
+  { src: images.football, objectPosition: "center 50%" },
+  { src: images.pitch, objectPosition: "center 46%" },
+  { src: images.supporters, objectPosition: "center 42%" }
+];
+
 export default async function HomePage() {
   const [allNews, settings, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners()]);
   const partnerNames = featuredPartners.map((partner) => partner.name);
@@ -43,6 +56,7 @@ export default async function HomePage() {
 
   const nextMatch = matches[0];
   const otherMatches = matches.slice(1);
+  const homeMatches = [nextMatch, ...otherMatches].slice(0, 3);
   const isClub = (name: string) => name.toLowerCase().includes("viry");
   const teamInitials = (name: string) =>
     name
@@ -82,45 +96,35 @@ export default async function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }} />
-      <section className="hero-stadium image-tint relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
-        {/* LCP : hero en next/image (priority -> preload auto + AVIF/WebP). zIndex:0 inline
-            pour rester sous le contenu (z-[2]) ; .hero-stadium::before neutralise le voile. */}
-        <Image src={images.stadiumHero} alt="" fill priority sizes="100vw" className="object-cover" style={{ objectPosition: "center 90%", zIndex: 0 }} />
+      <section className="hero-stadium relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
+        <HomeHeroCarousel slides={heroSlides} />
         {/* Contenu principal (centré, occupe l'espace disponible) */}
         <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="grid w-full items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+          <div className="w-full max-w-4xl">
             {/* Hero above-the-fold rendu en HTML statique (pas de framer-motion) :
                 le LCP ne depend plus de l'hydratation JS. */}
             <div>
-              <div>
-                <h1 className="max-w-4xl">
-                  <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
-                    Une passion
-                  </span>
-                  <span className="font-script -mt-1 block pl-6 text-6xl leading-[1.05] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
-                    notre force
-                  </span>
-                </h1>
-                <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">
-                  Porté par un nouveau bureau nouvellement nommé, notre club ouvre un nouveau chapitre.
-                </p>
-                <div className="mt-4 h-1 w-24 rounded-full bg-[#f7c600]" />
-                <div className="mt-7 flex flex-wrap gap-4">
-                  <Link className="focus-ring inline-flex items-center gap-4 rounded-lg bg-[#f7c600] px-7 py-3.5 text-sm font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white" href="/le-club">
-                    Découvrir le club
-                    <ArrowRight size={22} aria-hidden="true" />
-                  </Link>
-                  <Link className="focus-ring inline-flex items-center gap-4 rounded-lg border border-white/70 bg-black/10 px-7 py-3.5 text-sm font-black uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]" href="/equipes">
-                    Nos équipes
-                    <ArrowRight size={22} aria-hidden="true" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-            <div className="hidden justify-center lg:flex">
-              <div className="relative min-h-[300px] w-full max-w-[600px]">
-                <div className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
-                <img className="absolute left-1/2 top-0 h-[210px] w-[210px] -translate-x-1/2 rounded-full object-contain drop-shadow-2xl 2xl:h-[250px] 2xl:w-[250px]" src="/club-logo.svg" alt="ES Viry-Châtillon Football" width={250} height={250} />
+              <h1 className="max-w-4xl">
+                <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
+                  Une passion
+                </span>
+                <span className="font-script -mt-1 block pl-6 text-6xl leading-[1.05] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
+                  notre force
+                </span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">
+                Porté par un nouveau bureau nouvellement nommé, notre club ouvre un nouveau chapitre.
+              </p>
+              <div className="mt-4 h-1 w-24 rounded-full bg-[#f7c600]" />
+              <div className="mt-7 flex flex-wrap gap-4">
+                <Link className="focus-ring inline-flex items-center gap-4 rounded-lg bg-[#f7c600] px-7 py-3.5 text-sm font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white" href="/le-club">
+                  Découvrir le club
+                  <ArrowRight size={22} aria-hidden="true" />
+                </Link>
+                <Link className="focus-ring inline-flex items-center gap-4 rounded-lg border border-white/70 bg-black/10 px-7 py-3.5 text-sm font-black uppercase text-white backdrop-blur transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]" href="/equipes">
+                  Nos équipes
+                  <ArrowRight size={22} aria-hidden="true" />
+                </Link>
               </div>
             </div>
           </div>
@@ -182,130 +186,75 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
-        {/* ── Prochain match : carte premium type tableau d'affichage ── */}
-        <div className="club-panel relative overflow-hidden rounded-3xl text-white">
+        {/* ── Prochains matchs : affichage compact en liste ── */}
+        <div className="club-panel relative overflow-hidden rounded-3xl p-5 text-white sm:p-7">
           <div className="stadium-grid pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
           <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
           <div className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-[#0a6b3d]/45 blur-3xl" aria-hidden="true" />
-          <div className="relative grid min-h-full lg:grid-cols-[1fr_0.74fr]">
-            <div className="relative p-6 sm:p-8">
-              <div className="flex items-center justify-between gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#f7c600]/30 bg-[#f7c600]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-[#f7c600]">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-[#f7c600]/70 motion-safe:animate-ping" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f7c600]" />
-                  </span>
-                  Matchday
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white/85 ring-1 ring-white/15">
-                  <MapPin size={12} className="text-[#f7c600]" aria-hidden="true" />
-                  {isClub(nextMatch.home) ? "À domicile" : "Extérieur"}
-                </span>
-              </div>
-
-              <h2 className="mt-5 text-3xl font-black uppercase leading-[0.95] sm:text-[2.6rem]">
-                Prochain
-                <span className="block text-[#f7c600]">rendez-vous</span>
+          <div className="relative">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="inline-flex items-center gap-3 text-2xl font-black uppercase leading-none text-white sm:text-3xl">
+                <Ticket size={24} className="text-[#f7c600]" aria-hidden="true" />
+                Prochains matchs
               </h2>
-              <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white/[0.07] px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white/85">
-                <Trophy size={14} className="text-[#f7c600]" aria-hidden="true" />
-                {nextMatch.team}
-              </p>
-
-              <div className="light-sweep relative mt-6 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-b from-white/[0.09] to-black/25 p-6 sm:p-7">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 sm:gap-4">
-                  <div className="flex min-w-0 flex-col items-center gap-3 text-center">
-                    <div className="relative">
-                      <span className="absolute inset-0 -z-10 rounded-full bg-[#f7c600]/18 blur-2xl" aria-hidden="true" />
-                      {crest(nextMatch.home, "lg")}
-                    </div>
-                    <span className="max-w-full break-words text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.home)}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 pt-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-[11px] font-black text-[#f7c600] ring-1 ring-[#f7c600]/45 backdrop-blur">
-                      VS
-                    </span>
-                    <span className="h-7 w-px bg-gradient-to-b from-transparent via-[#f7c600]/50 to-transparent" aria-hidden="true" />
-                    <span className="rounded-full bg-black/35 px-2.5 py-1 text-base font-black tabular-nums tracking-tight text-[#ffd84d] ring-1 ring-white/10">
-                      {nextMatch.time}
-                    </span>
-                  </div>
-                  <div className="flex min-w-0 flex-col items-center gap-3 text-center">
-                    <div className="relative">
-                      <span className="absolute inset-0 -z-10 rounded-full bg-white/5 blur-xl" aria-hidden="true" />
-                      {crest(nextMatch.away, "lg")}
-                    </div>
-                    <span className="max-w-full break-words text-sm font-black uppercase leading-tight sm:text-base">{shortTeam(nextMatch.away)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-                <span className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] p-3 text-sm font-bold text-white/85">
-                  <CalendarDays className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
-                  {nextMatch.date}
-                </span>
-                <span className="inline-flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] p-3 text-sm font-bold text-white/85">
-                  <MapPin className="shrink-0 text-[#f7c600]" size={18} aria-hidden="true" />
-                  {nextMatch.place}
-                </span>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
-                <ButtonLink href="/equipes/seniors-r1" variant="outline">Fiche équipe</ButtonLink>
-              </div>
-            </div>
-
-            <div className="relative border-t border-white/10 bg-[#00120b]/55 p-5 sm:p-6 lg:border-l lg:border-t-0">
-              <div className="flex items-center justify-between">
-                <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">
-                  <Ticket size={14} aria-hidden="true" /> Autres matchs
-                </p>
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#f7c600]/15 px-1.5 text-[11px] font-black text-[#f7c600]">
-                  {otherMatches.length}
-                </span>
-              </div>
-              <div className="mt-4 space-y-3">
-                {otherMatches.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-4 text-center text-xs font-bold text-white/75">
-                    Aucun autre match programmé pour le moment.
-                  </p>
-                ) : null}
-                {otherMatches.map((match) => (
-                  <article
-                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] p-3.5 transition duration-200 hover:-translate-y-0.5 hover:border-[#f7c600]/45 hover:bg-white/[0.09]"
-                    key={match.team + "-" + match.away}
-                    aria-label={`${match.team} : ${shortTeam(match.home)} contre ${shortTeam(match.away)} — ${match.date}`}
-                  >
-                    <span className="absolute inset-y-0 left-0 w-1 origin-top scale-y-0 bg-[#f7c600] transition-transform duration-200 group-hover:scale-y-100" aria-hidden="true" />
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-md bg-[#f7c600]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#f7c600]">
-                        {match.team}
-                      </span>
-                      <span className="text-[10px] font-black uppercase text-white/75">{match.time}</span>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2 text-sm font-bold">
-                      {crest(match.home, "sm")}
-                      <span className="min-w-0 flex-1 truncate">{shortTeam(match.home)}</span>
-                      <span className="shrink-0 text-[10px] font-black uppercase text-[#f7c600]">vs</span>
-                      <span className="min-w-0 flex-1 truncate text-right">{shortTeam(match.away)}</span>
-                      {crest(match.away, "sm")}
-                    </div>
-                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-white/75">
-                      <CalendarDays className="shrink-0 text-[#f7c600]/80" size={12} aria-hidden="true" />
-                      {match.date} · {match.place}
-                    </p>
-                  </article>
-                ))}
-              </div>
               <Link
                 href="/calendrier"
-                className="focus-ring mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.04] py-2.5 text-xs font-black uppercase tracking-wide text-white/85 transition hover:-translate-y-0.5 hover:border-[#f7c600]/50 hover:text-[#f7c600]"
+                className="focus-ring inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#f7c600] transition hover:text-white"
               >
-                Voir tous les matchs <ArrowUpRight size={14} aria-hidden="true" />
+                Voir le calendrier <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
+
+            <div className="mt-6 grid gap-4">
+              {homeMatches.map((match, index) => (
+                <article
+                  className={`grid gap-4 rounded-2xl border bg-white/[0.06] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:bg-white/[0.09] sm:grid-cols-[minmax(0,1fr)_minmax(13rem,0.72fr)] ${
+                    index === homeMatches.length - 1 ? "border-[#f7c600]/55" : "border-white/12 hover:border-[#f7c600]/45"
+                  }`}
+                  key={match.team + "-" + match.away}
+                  aria-label={`${match.team} : ${shortTeam(match.home)} contre ${shortTeam(match.away)} — ${match.date} à ${match.time}`}
+                >
+                  <div className="min-w-0">
+                    <span className="inline-flex rounded-md bg-[#f7c600] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#001c10]">
+                      {match.team}
+                    </span>
+                    <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-5">
+                      <div className="min-w-0 text-center">
+                        <div className="mx-auto w-fit">{crest(match.home, "sm")}</div>
+                        <p className="mt-2 truncate text-base font-black uppercase text-white sm:text-lg">{shortTeam(match.home)}</p>
+                      </div>
+                      <span className="text-lg font-black uppercase text-[#f7c600]">VS</span>
+                      <div className="min-w-0 text-center">
+                        <div className="mx-auto w-fit">{crest(match.away, "sm")}</div>
+                        <p className="mt-2 truncate text-base font-black uppercase text-white sm:text-lg">{shortTeam(match.away)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-center rounded-xl border border-white/10 bg-[#00120b]/35 p-4">
+                    <p className="inline-flex items-center gap-2 text-base font-black text-white">
+                      <CalendarDays size={18} className="shrink-0 text-[#f7c600]" aria-hidden="true" />
+                      {match.date}
+                    </p>
+                    <p className="mt-2 inline-flex items-center gap-2 text-3xl font-black leading-none text-white">
+                      <Clock size={20} className="shrink-0 text-[#f7c600]" aria-hidden="true" />
+                      {match.time}
+                    </p>
+                    <p className="mt-3 inline-flex items-start gap-2 text-sm font-bold leading-5 text-white/75">
+                      <MapPin size={16} className="mt-0.5 shrink-0 text-[#f7c600]" aria-hidden="true" />
+                      {match.place}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <Link
+              href="/calendrier"
+              className="focus-ring mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] py-3 text-sm font-black uppercase text-white transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]"
+            >
+              Voir tous les matchs <ArrowRight size={18} aria-hidden="true" />
+            </Link>
           </div>
         </div>
 

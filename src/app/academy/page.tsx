@@ -37,7 +37,7 @@ const PUBLIC_ICON: Record<string, LucideIcon> = {
 
 // Image du hero. Pour la scène Academy immersive (licencié + laptops + ballon),
 // dépose l'image dans public/ et remplace la valeur ci-dessous, ex. "/academy-hero.jpg".
-const HERO_IMAGE = "/stade/aerien.jpg";
+const HERO_IMAGE = "/stade/imagepelouse.png";
 
 const PILLARS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   { icon: Dumbbell, title: "Former le joueur", text: "Développe ton potentiel sur le terrain." },
@@ -148,7 +148,7 @@ export default function AcademyPage() {
 
       {/* ── SECTION FINALE — Pour qui + CTA (carte premium sur photo stade retravaillée) ── */}
       <section className="light-sweep relative isolate overflow-hidden px-4 py-20 text-white sm:px-6 lg:px-8">
-        <Image src="/stade/aerien.jpg" alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
+        <Image src="/stade/imagepelouse.png" alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
         {/* Voile léger : la photo du stade reste bien visible (la carte gère la lisibilité du texte). */}
         <div className="absolute inset-0 z-[1] bg-gradient-to-br from-[#001c10]/55 via-[#001c10]/30 to-[#001c10]/55" aria-hidden="true" />
         <span

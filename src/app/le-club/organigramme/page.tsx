@@ -5,6 +5,7 @@ import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { OrganizationMap } from "@/components/club/ClubPublicBlocks";
+import { OfficialsCarousel } from "@/components/club/OfficialsCarousel";
 import { orgNodes } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
 import type { DisplayOfficial } from "@/lib/public-content";
@@ -188,9 +189,6 @@ function Spotlight({ president }: { president: DisplayOfficial | null }) {
           <p className="text-sm font-black uppercase text-[#f7c600]">Direction</p>
           <div className="gold-divider mb-4 mt-2" aria-hidden="true" />
           <h2 className="text-3xl font-black uppercase sm:text-4xl">Un point d'entrée clair pour comprendre le club</h2>
-          <p className="mt-4 max-w-2xl leading-7 text-white/78">
-            Chaque responsable dispose d'une fiche publique pour expliquer son rôle, ses missions et les bons chemins de contact. L'objectif : moins de flou pour les familles, les éducateurs et les partenaires.
-          </p>
         </div>
         <OfficialProfileCard official={president} featured />
       </div>
@@ -268,6 +266,7 @@ export default async function OrganizationPage() {
   const [{ organigramme }, officials] = await Promise.all([getSiteSettings(), getClubOfficials()]);
   const allOfficials = [...officials.bureau, ...officials.dirigeants];
   const president = officials.bureau.find((official) => /pr[ée]sident/i.test(official.position) && !/vice/i.test(official.position)) ?? null;
+  const carouselOfficials = president ? allOfficials.filter((official) => official.id !== president.id) : allOfficials;
   const departments = uniqueDepartments(allOfficials);
   const contactGuide = buildContactGuide(allOfficials);
 
@@ -296,11 +295,7 @@ export default async function OrganizationPage() {
 
       <section id="tous-les-responsables" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionTitle eyebrow="Carte des rôles" title="Une direction lisible, profil par profil" text="Cliquez sur un responsable pour consulter ses missions, son périmètre et les meilleurs chemins de contact." />
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {allOfficials.map((official) => (
-            <OfficialProfileCard key={official.id} official={official} featured={official.id === president?.id} />
-          ))}
-        </div>
+        <OfficialsCarousel officials={carouselOfficials} />
       </section>
 
       <ContactGuide items={contactGuide} />
