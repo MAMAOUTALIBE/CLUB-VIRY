@@ -1,0 +1,10 @@
+services:
+  web:
+    networks:
+      - supabase-esviry
+
+networks:
+  # Reseau du Supabase auto-heberge (cree par sa propre stack docker-compose).
+  # A utiliser seulement quand NEXT_PUBLIC_SUPABASE_URL pointe vers le Supabase interne.
+  supabase-esviry:
+    external: true

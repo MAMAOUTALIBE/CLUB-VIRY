@@ -39,6 +39,7 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
       ["/academy", "ES Viry-Châtillon Academy"],
       ["/actualites", "Actualités"],
       ["/calendrier", "Calendrier"],
+      ["/resultats", "Résultats"],
       ["/medias", "Médias / Galerie"]
     ]
   },

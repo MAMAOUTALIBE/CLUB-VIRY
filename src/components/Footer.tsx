@@ -45,6 +45,7 @@ const columns = [
       ["Academy", "/academy"],
       ["Détections", "/detections-recrutement"],
       ["Calendrier", "/calendrier"],
+      ["Résultats", "/resultats"],
       ["Contact", "/contact"]
     ]
   },

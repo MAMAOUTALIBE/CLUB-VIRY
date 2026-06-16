@@ -37,6 +37,7 @@ import {
   validateRegisterPayload
 } from "../src/lib/api/validation.ts";
 import { isSameOriginRequest } from "../src/lib/api/origin.ts";
+import { getSafeWebhookUrl, isPrivateOrReservedIp } from "../src/lib/api/webhook-security.ts";
 import { canAccessCrmPath, hasPermission, isEducatorCrmPath } from "../src/lib/auth/permissions.ts";
 import { canAdminUpdateProfile } from "../src/lib/auth/roles.ts";
 
@@ -109,6 +110,38 @@ test("same-origin guard rejects cross-origin browser requests", () => {
   assert.equal(isSameOriginRequest(originRequest({ origin: "https://evil.example" })), false);
   assert.equal(isSameOriginRequest(originRequest({ referer: "https://evil.example/form" })), false);
   assert.equal(isSameOriginRequest(originRequest({ referer: "not a url" })), false);
+});
+
+test("webhook URL guard rejects unsafe targets", async () => {
+  assert.equal(await getSafeWebhookUrl("http://hooks.example/path"), null);
+  assert.equal(await getSafeWebhookUrl("https://localhost/hook"), null);
+  assert.equal(await getSafeWebhookUrl("https://169.254.169.254/latest/meta-data"), null);
+  assert.equal(await getSafeWebhookUrl("https://user:secret@hooks.example/path"), null);
+});
+
+test("webhook URL guard rejects hostnames resolving to private addresses", async () => {
+  const url = await getSafeWebhookUrl("https://hooks.example/path", async () => [{ address: "10.0.0.2", family: 4 }]);
+
+  assert.equal(url, null);
+});
+
+test("webhook URL guard accepts HTTPS hostnames resolving publicly", async () => {
+  const url = await getSafeWebhookUrl("https://hooks.example/path", async () => [{ address: "8.8.8.8", family: 4 }]);
+
+  assert.equal(url?.toString(), "https://hooks.example/path");
+});
+
+test("private IP detector blocks local, private and metadata ranges", () => {
+  assert.equal(isPrivateOrReservedIp("127.0.0.1"), true);
+  assert.equal(isPrivateOrReservedIp("10.0.0.1"), true);
+  assert.equal(isPrivateOrReservedIp("172.16.0.1"), true);
+  assert.equal(isPrivateOrReservedIp("192.168.1.2"), true);
+  assert.equal(isPrivateOrReservedIp("203.0.113.10"), true);
+  assert.equal(isPrivateOrReservedIp("169.254.169.254"), true);
+  assert.equal(isPrivateOrReservedIp("::1"), true);
+  assert.equal(isPrivateOrReservedIp("fd00::1"), true);
+  assert.equal(isPrivateOrReservedIp("2001:db8::1"), true);
+  assert.equal(isPrivateOrReservedIp("8.8.8.8"), false);
 });
 
 test("refresh token validation rejects short tokens", () => {

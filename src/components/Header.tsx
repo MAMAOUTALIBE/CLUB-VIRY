@@ -66,6 +66,7 @@ const navItems = [
     children: [
       ["Actualités", "/actualites"],
       ["Calendrier", "/calendrier"],
+      ["Résultats", "/resultats"],
       ["Médias", "/medias"]
     ]
   },
@@ -303,7 +304,7 @@ export function Header({ banner, socials }: HeaderProps) {
                   aria-haspopup="true"
                   className={triggerClass}
                   id={`menu-trigger-${item.href}`}
-                  onClick={() => setOpenMenu(item.href)}
+                    onClick={() => setOpenMenu((current) => (current === item.href ? null : item.href))}
                   type="button"
                 >
                   {item.label}

@@ -1,21 +1,16 @@
-import { handleDbError, jsonOk } from "@/lib/api/http";
+import { jsonOk } from "@/lib/api/http";
 import { listTeams } from "@/lib/db/teams";
-import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
-import { getPublicTeams } from "@/lib/public-content";
+import { getFallbackTeams } from "@/lib/public-fallbacks";
+import { readPublicDb } from "@/lib/public-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    if (!isSupabaseAdminConfigured) {
-      const teams = await getPublicTeams();
-      return jsonOk({ teams });
-    }
-
-    const teams = await listTeams();
+  const teams = await readPublicDb(() => listTeams());
+  if (teams && teams.length > 0) {
     return jsonOk({ teams });
-  } catch (error) {
-    return handleDbError("teams", error);
   }
+
+  return jsonOk({ teams: getFallbackTeams() });
 }

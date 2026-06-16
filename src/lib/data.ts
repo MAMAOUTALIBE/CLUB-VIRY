@@ -33,6 +33,7 @@ export const navItems = [
   { label: "Équipes", href: "/equipes" },
   { label: "Actualités", href: "/actualites" },
   { label: "Calendrier", href: "/calendrier" },
+  { label: "Résultats", href: "/resultats" },
   { label: "Inscriptions", href: "/inscriptions" },
   { label: "Partenaires", href: "/partenaires" },
   { label: "Boutique", href: "/boutique" },
@@ -137,7 +138,7 @@ export const teams: Team[] = [
     image: images.teamHuddle,
     coach: "Yanis B.",
     assistant: "Mourad S.",
-    nextMatch: "Samedi 24 mai à 18:00 contre COMPACT",
+    nextMatch: "Samedi 5 septembre à 18:00 contre COMPACT",
     players: ["A. Diallo", "M. Traoré", "S. Keita", "I. Camara", "N. Benali", "T. Martin", "K. Diop", "R. Silva"]
   },
   {
@@ -149,7 +150,7 @@ export const teams: Team[] = [
     image: images.training,
     coach: "Karim M.",
     assistant: "Lina R.",
-    nextMatch: "Dimanche 25 mai à 15:00 contre Brétigny FC",
+    nextMatch: "Dimanche 6 septembre à 15:00 contre Brétigny FC",
     players: ["L. Mendy", "A. Petit", "J. Morel", "F. Sylla", "D. Sow", "B. Kone"]
   },
   {
@@ -161,7 +162,7 @@ export const teams: Team[] = [
     image: images.youthTeam,
     coach: "Thomas R.",
     assistant: "Nabil A.",
-    nextMatch: "Samedi 24 mai à 15:00 contre Evry FC",
+    nextMatch: "Samedi 5 septembre à 15:00 contre Evry FC",
     players: ["R. N'Diaye", "I. Lopez", "M. Bamba", "Y. Cohen", "P. Lefort", "S. Diallo"]
   },
   {
@@ -227,6 +228,7 @@ export const adminModules = [
   "Équipes",
   "Joueurs",
   "Matchs",
+  "Résultats",
   "Calendrier",
   "Inscriptions",
   "Détections",

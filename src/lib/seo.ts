@@ -84,6 +84,10 @@ const PAGES: Record<string, PageSeo> = {
     title: "Calendrier",
     description: "Le calendrier officiel de l'ES Viry-Chatillon Football : matchs des equipes, evenements du club et rendez-vous des Jaune et Vert tout au long de la saison."
   },
+  "/resultats": {
+    title: "Resultats",
+    description: "Les derniers resultats de l'ES Viry-Chatillon Football : scores publies par equipe, rencontres recentes et suivi sportif de la saison."
+  },
   "/inscriptions": {
     title: "Inscriptions",
     description: "Inscrivez votre enfant a l'ES Viry-Chatillon Football : modalites, pieces a fournir, tarifs et formulaire d'inscription en ligne pour la nouvelle saison."

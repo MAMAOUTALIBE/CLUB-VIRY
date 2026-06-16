@@ -24,6 +24,7 @@ const STATIC_ROUTES = [
   "/equipes",
   "/actualites",
   "/calendrier",
+  "/resultats",
   "/inscriptions",
   "/detections-recrutement",
   "/partenaires",

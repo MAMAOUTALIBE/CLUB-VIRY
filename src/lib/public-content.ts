@@ -8,12 +8,12 @@ import { news as mockNews, partners as mockPartners, products as mockProducts, t
 import { getPublishedNewsBySlug, listPartnersForAdmin, listPublicMedia, listPublishedNews, listTeamMedia } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { getAllSettings } from "@/lib/db/settings";
-import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import { getPublicTeamRosterBySlug, listTeams } from "@/lib/db/teams";
 import { listPublicEducators } from "@/lib/db/educators";
 import { listClubOfficials } from "@/lib/db/officials";
 import type { Match, NewsArticle } from "@/lib/db/types";
 import { images } from "@/lib/images";
+import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
 
 /**
@@ -69,30 +69,18 @@ function mapNewsRow(a: NewsArticle): DisplayNews {
 }
 
 export async function getPublicNews(limit = 12): Promise<DisplayNews[]> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const rows = await listPublishedNews(limit);
-      if (rows.length > 0) {
-        return rows.map(mapNewsRow);
-      }
-    } catch {
-      // repli mock ci-dessous
-    }
+  const rows = await readPublicDb(() => listPublishedNews(limit));
+  if (rows && rows.length > 0) {
+    return rows.map(mapNewsRow);
   }
   return fromMock();
 }
 
 // Fetch direct par slug (index) + cache() pour dédupliquer entre generateMetadata et le rendu.
 export const getPublicNewsBySlug = cache(async (slug: string): Promise<DisplayNews | null> => {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const row = await getPublishedNewsBySlug(slug);
-      if (row) {
-        return mapNewsRow(row);
-      }
-    } catch {
-      // repli mock ci-dessous
-    }
+  const row = await readPublicDb(() => getPublishedNewsBySlug(slug));
+  if (row) {
+    return mapNewsRow(row);
   }
   return fromMock().find((article) => article.slug === slug) ?? null;
 });
@@ -100,18 +88,12 @@ export const getPublicNewsBySlug = cache(async (slug: string): Promise<DisplayNe
 export type DisplayPartner = { name: string; logoUrl: string | null; websiteUrl: string | null; tier: string | null };
 
 export async function getPublicPartners(): Promise<DisplayPartner[]> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const rows = await listPartnersForAdmin(100);
-      const active = rows
-        .filter((p) => p.is_active)
-        .sort((a, b) => a.order_index - b.order_index);
-      if (active.length > 0) {
-        return active.map((p) => ({ name: p.name, logoUrl: p.logo_url, websiteUrl: p.website_url, tier: p.tier }));
-      }
-    } catch {
-      // repli mock
-    }
+  const rows = await readPublicDb(() => listPartnersForAdmin(100));
+  const active = (rows ?? [])
+    .filter((p) => p.is_active)
+    .sort((a, b) => a.order_index - b.order_index);
+  if (active.length > 0) {
+    return active.map((p) => ({ name: p.name, logoUrl: p.logo_url, websiteUrl: p.website_url, tier: p.tier }));
   }
   return mockPartners.map((name) => ({ name, logoUrl: null, websiteUrl: null, tier: null }));
 }
@@ -123,15 +105,9 @@ function priceFr(cents: number, currency: string): string {
 }
 
 export async function getPublicProducts(): Promise<DisplayProduct[]> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const { products } = await listPublicProducts();
-      if (products.length > 0) {
-        return products.map((p) => ({ name: p.name, price: priceFr(p.price_cents, p.currency), category: "Boutique", imageUrl: p.image_url, icon: null }));
-      }
-    } catch {
-      // repli mock
-    }
+  const payload = await readPublicDb(() => listPublicProducts());
+  if (payload && payload.products.length > 0) {
+    return payload.products.map((p) => ({ name: p.name, price: priceFr(p.price_cents, p.currency), category: "Boutique", imageUrl: p.image_url, icon: null }));
   }
   return mockProducts.map((p) => ({ name: p.name, price: p.price, category: p.category, imageUrl: null, icon: p.icon }));
 }
@@ -221,56 +197,46 @@ function pickStr(raw: unknown, fallback: string): string {
 }
 
 export async function getSiteSettings(): Promise<SiteContent> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const all = await getAllSettings();
-      const stats = all.club_stats as Record<string, unknown> | undefined;
-      const vals = all.values as Record<string, unknown> | undefined;
-      const hist = all.histoire as Record<string, unknown> | undefined;
-      const org = all.organigramme as Record<string, unknown> | undefined;
-      const stade = all.stade as Record<string, unknown> | undefined;
-      return {
-        socials: { ...SETTINGS_DEFAULTS.socials, ...(all.socials ?? {}) },
-        contact: { ...SETTINGS_DEFAULTS.contact, ...(all.contact ?? {}) },
-        president: { ...SETTINGS_DEFAULTS.president, ...(all.president ?? {}) },
-        inscriptions_banner: { ...SETTINGS_DEFAULTS.inscriptions_banner, ...(all.inscriptions_banner ?? {}) },
-        club_stats: pickArray<DisplayStat>(stats?.items, SETTINGS_DEFAULTS.club_stats),
-        values: pickArray<DisplayValue>(vals?.items, SETTINGS_DEFAULTS.values),
-        histoire: {
-          eyebrow: pickStr(hist?.eyebrow, SETTINGS_DEFAULTS.histoire.eyebrow),
-          title: pickStr(hist?.title, SETTINGS_DEFAULTS.histoire.title),
-          intro: pickStr(hist?.intro, SETTINGS_DEFAULTS.histoire.intro),
-          timeline: pickArray<DisplayHistoryItem>(hist?.timeline, SETTINGS_DEFAULTS.histoire.timeline)
-        },
-        organigramme: {
-          title: pickStr(org?.title, SETTINGS_DEFAULTS.organigramme.title),
-          intro: pickStr(org?.intro, SETTINGS_DEFAULTS.organigramme.intro),
-          groups: pickArray<OrgGroup>(org?.groups, SETTINGS_DEFAULTS.organigramme.groups)
-        },
-        stade: {
-          address: pickStr(stade?.address, SETTINGS_DEFAULTS.stade.address),
-          mapsQuery: pickStr(stade?.mapsQuery, SETTINGS_DEFAULTS.stade.mapsQuery),
-          infrastructures: pickArray<string>(stade?.infrastructures, SETTINGS_DEFAULTS.stade.infrastructures),
-          gallery: pickArray<StadePhoto>(stade?.gallery, SETTINGS_DEFAULTS.stade.gallery)
-        }
-      } as SiteContent;
-    } catch {
-      // repli défauts
-    }
+  const all = await readPublicDb(() => getAllSettings());
+  if (all) {
+    const stats = all.club_stats as Record<string, unknown> | undefined;
+    const vals = all.values as Record<string, unknown> | undefined;
+    const hist = all.histoire as Record<string, unknown> | undefined;
+    const org = all.organigramme as Record<string, unknown> | undefined;
+    const stade = all.stade as Record<string, unknown> | undefined;
+    return {
+      socials: { ...SETTINGS_DEFAULTS.socials, ...(all.socials ?? {}) },
+      contact: { ...SETTINGS_DEFAULTS.contact, ...(all.contact ?? {}) },
+      president: { ...SETTINGS_DEFAULTS.president, ...(all.president ?? {}) },
+      inscriptions_banner: { ...SETTINGS_DEFAULTS.inscriptions_banner, ...(all.inscriptions_banner ?? {}) },
+      club_stats: pickArray<DisplayStat>(stats?.items, SETTINGS_DEFAULTS.club_stats),
+      values: pickArray<DisplayValue>(vals?.items, SETTINGS_DEFAULTS.values),
+      histoire: {
+        eyebrow: pickStr(hist?.eyebrow, SETTINGS_DEFAULTS.histoire.eyebrow),
+        title: pickStr(hist?.title, SETTINGS_DEFAULTS.histoire.title),
+        intro: pickStr(hist?.intro, SETTINGS_DEFAULTS.histoire.intro),
+        timeline: pickArray<DisplayHistoryItem>(hist?.timeline, SETTINGS_DEFAULTS.histoire.timeline)
+      },
+      organigramme: {
+        title: pickStr(org?.title, SETTINGS_DEFAULTS.organigramme.title),
+        intro: pickStr(org?.intro, SETTINGS_DEFAULTS.organigramme.intro),
+        groups: pickArray<OrgGroup>(org?.groups, SETTINGS_DEFAULTS.organigramme.groups)
+      },
+      stade: {
+        address: pickStr(stade?.address, SETTINGS_DEFAULTS.stade.address),
+        mapsQuery: pickStr(stade?.mapsQuery, SETTINGS_DEFAULTS.stade.mapsQuery),
+        infrastructures: pickArray<string>(stade?.infrastructures, SETTINGS_DEFAULTS.stade.infrastructures),
+        gallery: pickArray<StadePhoto>(stade?.gallery, SETTINGS_DEFAULTS.stade.gallery)
+      }
+    } as SiteContent;
   }
   return SETTINGS_DEFAULTS;
 }
 
 export async function getPublicAlbums(): Promise<DisplayAlbum[]> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const { albums } = await listPublicMedia();
-      if (albums.length > 0) {
-        return albums.map((a) => ({ title: a.title, image: a.cover_image_url || images.teamHuddle }));
-      }
-    } catch {
-      // repli mock
-    }
+  const payload = await readPublicDb(() => listPublicMedia());
+  if (payload && payload.albums.length > 0) {
+    return payload.albums.map((a) => ({ title: a.title, image: a.cover_image_url || images.teamHuddle }));
   }
   return mockNews.map((n) => ({ title: n.title, image: n.image }));
 }
@@ -306,54 +272,42 @@ function formatNextMatch(matches: Match[]): string {
 }
 
 export async function getPublicTeams(): Promise<DisplayTeam[]> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const rows = await listTeams();
-      if (rows.length > 0) {
-        return rows.map((t) => ({
-          slug: t.slug,
-          name: t.name,
-          category: t.age_range ?? t.level ?? "Équipe",
-          season: DEFAULT_SEASON,
-          description: t.description ?? "",
-          image: t.cover_image_url || images.teamHuddle
-        }));
-      }
-    } catch {
-      // repli mock
-    }
+  const rows = await readPublicDb(() => listTeams());
+  if (rows && rows.length > 0) {
+    return rows.map((t) => ({
+      slug: t.slug,
+      name: t.name,
+      category: t.age_range ?? t.level ?? "Équipe",
+      season: DEFAULT_SEASON,
+      description: t.description ?? "",
+      image: t.cover_image_url || images.teamHuddle
+    }));
   }
   return mockTeams.map((t) => ({ slug: t.slug, name: t.name, category: t.category, season: t.season, description: t.description, image: t.image }));
 }
 
 export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDetail | null> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const roster = await getPublicTeamRosterBySlug(slug);
-      if (roster) {
-        const head = roster.staff.find((s) => s.is_head_coach) ?? roster.staff[0];
-        return {
-          slug: roster.team.slug,
-          name: roster.team.name,
-          category: roster.team.age_range ?? roster.team.level ?? "Équipe",
-          season: DEFAULT_SEASON,
-          description: roster.team.description ?? "",
-          image: roster.team.cover_image_url || images.teamHuddle,
-          coach: head?.display_name ?? "À confirmer",
-          staff: roster.staff.map((s) => ({ name: s.display_name, role: s.role_title, isHeadCoach: s.is_head_coach })),
-          players: roster.players.map((p) => ({
-            name: p.player ? publicPlayerName(p.player.first_name, p.player.last_name) : "Joueur",
-            position: p.assignment.position ?? "",
-            shirtNumber: p.assignment.shirt_number
-          })),
-          nextMatch: formatNextMatch(roster.matches),
-          media: (await listTeamMedia(roster.team.id)).map((asset) => ({ type: asset.type, url: asset.url, thumbnail: asset.thumbnail_url, title: asset.title }))
-        };
-      }
-      // slug absent en base → on retombe sur les données mock ci-dessous (les fiches vitrine restent visibles).
-    } catch {
-      // repli mock
-    }
+  const roster = await readPublicDb(() => getPublicTeamRosterBySlug(slug));
+  if (roster) {
+    const head = roster.staff.find((s) => s.is_head_coach) ?? roster.staff[0];
+    const media = await readPublicDb(() => listTeamMedia(roster.team.id));
+    return {
+      slug: roster.team.slug,
+      name: roster.team.name,
+      category: roster.team.age_range ?? roster.team.level ?? "Équipe",
+      season: DEFAULT_SEASON,
+      description: roster.team.description ?? "",
+      image: roster.team.cover_image_url || images.teamHuddle,
+      coach: head?.display_name ?? "À confirmer",
+      staff: roster.staff.map((s) => ({ name: s.display_name, role: s.role_title, isHeadCoach: s.is_head_coach })),
+      players: roster.players.map((p) => ({
+        name: p.player ? publicPlayerName(p.player.first_name, p.player.last_name) : "Joueur",
+        position: p.assignment.position ?? "",
+        shirtNumber: p.assignment.shirt_number
+      })),
+      nextMatch: formatNextMatch(roster.matches),
+      media: (media ?? []).map((asset) => ({ type: asset.type, url: asset.url, thumbnail: asset.thumbnail_url, title: asset.title }))
+    };
   }
   const mock = mockTeams.find((t) => t.slug === slug);
   if (!mock) {
@@ -566,33 +520,27 @@ const mockEducators: DisplayEducator[] = [
 ];
 
 export async function getPublicEducators(): Promise<DisplayEducator[]> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const rows = await listPublicEducators();
-      if (rows.length > 0) {
-        return rows.map((r) => {
-          const head = r.teams.find((t) => t.isHeadCoach);
-          const name = r.name?.trim() || "Éducateur";
-          return {
-            id: r.id,
-            name,
-            slug: educatorSlug(name, r.id),
-            title: r.title?.trim() || head?.roleTitle || "Éducateur",
-            diploma: r.diploma?.trim() || null,
-            joinedYear: r.joined_year ?? null,
-            diplomas: Array.isArray(r.diplomas) ? r.diplomas : [],
-            specialties: Array.isArray(r.specialties) ? r.specialties : [],
-            quote: r.quote?.trim() || null,
-            avatar: r.avatar_url,
-            bio: r.bio ?? "",
-            teams: r.teams,
-            stats: { teams: r.team_count, sessions: r.session_count, matches: r.match_count }
-          };
-        });
-      }
-    } catch {
-      // repli mock
-    }
+  const rows = await readPublicDb(() => listPublicEducators());
+  if (rows && rows.length > 0) {
+    return rows.map((r) => {
+      const head = r.teams.find((t) => t.isHeadCoach);
+      const name = r.name?.trim() || "Éducateur";
+      return {
+        id: r.id,
+        name,
+        slug: educatorSlug(name, r.id),
+        title: r.title?.trim() || head?.roleTitle || "Éducateur",
+        diploma: r.diploma?.trim() || null,
+        joinedYear: r.joined_year ?? null,
+        diplomas: Array.isArray(r.diplomas) ? r.diplomas : [],
+        specialties: Array.isArray(r.specialties) ? r.specialties : [],
+        quote: r.quote?.trim() || null,
+        avatar: r.avatar_url,
+        bio: r.bio ?? "",
+        teams: r.teams,
+        stats: { teams: r.team_count, sessions: r.session_count, matches: r.match_count }
+      };
+    });
   }
   return mockEducators;
 }
@@ -932,19 +880,13 @@ const mockOfficials: ClubOfficialsContent = {
 };
 
 export async function getClubOfficials(): Promise<ClubOfficialsContent> {
-  if (isSupabaseAdminConfigured) {
-    try {
-      const rows = await listClubOfficials();
-      if (rows.length > 0) {
-        const toDisplay = (r: (typeof rows)[number]): DisplayOfficial => enrichOfficial(r.id, r.full_name, r.category, r.position, r.photo_url);
-        return {
-          bureau: rows.filter((r) => r.category === "BUREAU").map(toDisplay),
-          dirigeants: rows.filter((r) => r.category === "DIRIGEANT").map(toDisplay)
-        };
-      }
-    } catch {
-      // repli mock
-    }
+  const rows = await readPublicDb(() => listClubOfficials());
+  if (rows && rows.length > 0) {
+    const toDisplay = (r: (typeof rows)[number]): DisplayOfficial => enrichOfficial(r.id, r.full_name, r.category, r.position, r.photo_url);
+    return {
+      bureau: rows.filter((r) => r.category === "BUREAU").map(toDisplay),
+      dirigeants: rows.filter((r) => r.category === "DIRIGEANT").map(toDisplay)
+    };
   }
   return mockOfficials;
 }

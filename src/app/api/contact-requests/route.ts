@@ -4,8 +4,8 @@ import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateContactMessagePayload } from "@/lib/api/validation";
 import { createContactMessage } from "@/lib/db/contact-admin";
-import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import { captureLead } from "@/lib/leads";
+import { canUsePublicDb, markPublicDbUnavailable } from "@/lib/public-db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
     ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip")
   };
 
-  // Mode "vitrine" : sans Supabase, on capture la demande (fichier + webhook) au lieu d'echouer.
-  if (!isSupabaseAdminConfigured) {
+  // Mode "vitrine" ou backend temporairement indisponible : capture locale + webhook.
+  if (!canUsePublicDb()) {
     const result = await captureLead("contact", payload.data, meta);
 
     if (!result.captured) {
@@ -57,6 +57,14 @@ export async function POST(request: NextRequest) {
 
     return jsonOk({ message }, 201);
   } catch (error) {
+    markPublicDbUnavailable();
+    console.warn("[api] contact-requests db unavailable, captured as lead", error instanceof Error ? error.message : "unknown error");
+    const result = await captureLead("contact", payload.data, meta);
+
+    if (result.captured) {
+      return jsonOk({ reference: result.reference }, 201);
+    }
+
     return handleDbError("contact-requests", error);
   }
 }

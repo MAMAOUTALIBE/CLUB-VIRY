@@ -1,5 +1,7 @@
 import { matches as fallbackMatches } from "./data";
+import { listPublicCalendar } from "./db/calendar";
 import type { ClubEvent, ClubEventType, Match, MatchLocation, MatchStatus } from "./db/types";
+import { readPublicDb } from "./public-db";
 
 export type CalendarDisplayItem = {
   id: string;
@@ -24,19 +26,6 @@ export type CalendarPageData = {
   month: number;
   isFallback: boolean;
 };
-
-type CalendarApiResponse =
-  | {
-      ok: true;
-      data: {
-        events?: ClubEvent[];
-        matches?: Match[];
-      };
-    }
-  | {
-      ok: false;
-      error?: unknown;
-    };
 
 const clubName = "ES Viry-Châtillon";
 
@@ -207,36 +196,12 @@ export function buildCalendarPageData(items: CalendarDisplayItem[], isFallback: 
   };
 }
 
-function getSiteOrigin() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return "http://localhost:3000";
-}
-
 export async function getCalendarPageData(): Promise<CalendarPageData> {
-  try {
-    const response = await fetch(`${getSiteOrigin()}/api/calendar?limit=40`, {
-      cache: "no-store"
-    });
+  const calendar = await readPublicDb(() => listPublicCalendar({ limit: 40 }));
 
-    if (!response.ok) {
-      return buildCalendarPageData([], true);
-    }
-
-    const payload = (await response.json()) as CalendarApiResponse;
-
-    if (!payload.ok) {
-      return buildCalendarPageData([], true);
-    }
-
-    return buildCalendarPageData(calendarApiToItems(payload.data), false);
-  } catch {
-    return buildCalendarPageData([], true);
+  if (calendar && (calendar.events.length > 0 || calendar.matches.length > 0)) {
+    return buildCalendarPageData(calendarApiToItems(calendar), false);
   }
+
+  return buildCalendarPageData([], true);
 }

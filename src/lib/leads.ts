@@ -3,6 +3,8 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { getSafeWebhookUrl } from "@/lib/api/webhook-security";
+
 /**
  * Couche de capture des demandes publiques (contact, inscription, recrutement)
  * qui fonctionne SANS Supabase, pour le lancement "vitrine".
@@ -41,6 +43,11 @@ function readWebhookConfig() {
     url: process.env.NOTIFICATION_WEBHOOK_URL?.trim() || process.env.EMAIL_PROVIDER_WEBHOOK_URL?.trim() || null,
     secret: process.env.NOTIFICATION_WEBHOOK_SECRET?.trim() || process.env.EMAIL_PROVIDER_WEBHOOK_SECRET?.trim() || null
   };
+}
+
+function getWebhookTimeoutMs(): number {
+  const configured = Number.parseInt(process.env.NOTIFICATION_WEBHOOK_TIMEOUT_MS ?? "", 10);
+  return Number.isFinite(configured) && configured >= 1_000 && configured <= 15_000 ? configured : 4_000;
 }
 
 function buildReference(type: LeadType): string {
@@ -84,8 +91,9 @@ async function appendToFile(type: LeadType, record: Record<string, unknown>): Pr
 
 async function forwardToWebhook(record: Record<string, unknown>): Promise<boolean> {
   const webhook = readWebhookConfig();
+  const url = await getSafeWebhookUrl(webhook.url);
 
-  if (!webhook.url) {
+  if (!url) {
     return false;
   }
 
@@ -95,16 +103,24 @@ async function forwardToWebhook(record: Record<string, unknown>): Promise<boolea
     headers["X-Notification-Secret"] = webhook.secret;
   }
 
-  const response = await fetch(webhook.url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      ...record,
-      recipientEmail: process.env.ADMIN_NOTIFICATIONS_EMAIL || null
-    })
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), getWebhookTimeoutMs());
 
-  return response.ok;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        ...record,
+        recipientEmail: process.env.ADMIN_NOTIFICATIONS_EMAIL || null
+      })
+    });
+
+    return response.ok;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function captureLead(

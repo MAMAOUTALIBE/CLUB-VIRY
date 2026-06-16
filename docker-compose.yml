@@ -24,10 +24,9 @@ services:
     volumes:
       - ./var/leads:/app/var/leads
     networks:
-      # esviry-net : joint par Traefik (HTTPS public). supabase-esviry : reseau
-      # PRIVE pour joindre le Supabase auto-heberge interne (sb-esviry-kong:8000).
+      # esviry-net : joint par Traefik (HTTPS public).
+      # Le reseau Supabase interne est optionnel et ajoute par docker-compose.crm.yml.
       - esviry-net
-      - supabase-esviry
     labels:
       - "traefik.enable=true"
       # Traefik tourne en reseau host : on lui indique le reseau du conteneur a joindre.
@@ -43,7 +42,3 @@ services:
 networks:
   esviry-net:
     name: esviry-net
-  # Reseau du Supabase auto-heberge (cree par sa propre stack docker-compose).
-  # En mode vitrine (sans Supabase) ce reseau peut etre absent : voir note deploiement.
-  supabase-esviry:
-    external: true

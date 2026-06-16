@@ -180,7 +180,10 @@ Pour l'admin, l'authentification et les données dynamiques :
 2. Appliquer **dans l'ordre** les migrations `supabase/migrations/202606060001_*.sql` → `...0009_*.sql`, puis `supabase/seed.sql`.
 3. Créer un compte **admin** (`ADMIN_CLUB` ou `SUPER_ADMIN`).
 4. Renseigner dans `/opt/esviry/.env.local` : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-5. `docker compose up -d --build`. Connexion via `https://esvirychatillonfootball.org/connexion`.
+5. Si Supabase est auto-hébergé sur le même VPS et accessible via le réseau Docker interne, utiliser l'override CRM :
+   `docker compose -f docker-compose.yml -f docker-compose.crm.yml up -d --build`.
+   En mode vitrine, garder simplement `docker compose up -d --build`.
+6. Connexion via `https://esvirychatillonfootball.org/connexion`.
 
 ---
 
