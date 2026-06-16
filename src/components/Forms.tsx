@@ -24,6 +24,7 @@ type FormConfig = {
   withMessage?: boolean;
   messageLabel?: string;
   messageRequired?: boolean;
+  messageMaxLength?: number;
   successMessage?: string;
   buildPayload: (values: Record<string, string>) => Record<string, unknown>;
 };
@@ -48,6 +49,9 @@ function FormShell({
   withMessage = true,
   messageLabel = "Message",
   messageRequired = true,
+  // Aligné sur la borne serveur (validation.ts) : 1500 pour les demandes
+  // (inscription/recrutement/partenariat), 3000 pour le contact.
+  messageMaxLength = 3000,
   successMessage = "Votre demande a bien été envoyée. Le club vous recontacte rapidement.",
   buildPayload
 }: FormConfig) {
@@ -135,7 +139,7 @@ function FormShell({
 
   return (
     <form className="official-card rounded-lg bg-white p-5 sm:p-6" noValidate onSubmit={handleSubmit}>
-      <p className="text-xs font-black uppercase text-[#8a6d00]">Formulaire officiel</p>
+      <p className="text-xs font-black uppercase text-[#664d00]">Formulaire officiel</p>
       <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{title}</h2>
       <div className="gold-divider mt-3" aria-hidden="true" />
       {/* Honeypot anti-bot (masqué aux humains et aux lecteurs d'écran) */}
@@ -210,7 +214,7 @@ function FormShell({
             aria-invalid={Boolean(fieldErrors.message) || undefined}
             className={`focus-ring min-h-32 rounded-md border bg-[#fbfcf8] px-3 py-2 ${fieldErrors.message ? "border-red-500" : "border-slate-300"}`}
             id={`${formId}-message`}
-            maxLength={3000}
+            maxLength={messageMaxLength}
             name="message"
             required={messageRequired}
           />
@@ -289,6 +293,7 @@ export function RegistrationForm() {
       ]}
       messageLabel="Message (facultatif)"
       messageRequired={false}
+      messageMaxLength={1500}
       submitLabel="Envoyer ma demande d'inscription"
       successMessage="Votre demande d'inscription est bien envoyée. Le club vous recontacte pour finaliser la licence."
       title="Formulaire d'inscription"
@@ -327,6 +332,7 @@ export function RecruitmentForm() {
       ]}
       messageLabel="Message (facultatif)"
       messageRequired={false}
+      messageMaxLength={1500}
       submitLabel="Envoyer ma candidature"
       successMessage="Votre candidature est bien envoyée. La cellule sportive du club l'étudiera et vous recontactera."
       title="Formulaire de candidature"
@@ -353,6 +359,7 @@ export function PartnerForm() {
       ]}
       messageLabel="Votre projet de partenariat (facultatif)"
       messageRequired={false}
+      messageMaxLength={1500}
       submitLabel="Envoyer ma demande"
       successMessage="Votre demande de partenariat est bien envoyée. Le club vous recontacte rapidement."
       title="Devenir partenaire"

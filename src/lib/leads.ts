@@ -19,7 +19,7 @@ import { getSafeWebhookUrl } from "@/lib/api/webhook-security";
  * module n'est plus sollicite.
  */
 
-export type LeadType = "contact" | "registration" | "recruitment" | "partnership";
+export type LeadType = "contact" | "registration" | "recruitment" | "partnership" | "newsletter" | "order";
 
 export type LeadCaptureResult = {
   captured: boolean;

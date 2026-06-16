@@ -96,7 +96,7 @@ export default async function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }} />
-      <section className="hero-stadium relative isolate flex min-h-[640px] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
+      <section className="hero-stadium relative isolate flex min-h-[85svh] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white sm:min-h-[640px] lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
         <HomeHeroCarousel slides={heroSlides} />
         {/* Contenu principal (centré, occupe l'espace disponible) */}
         <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -173,7 +173,7 @@ export default async function HomePage() {
                     <Icon size={24} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Accès rapide</p>
+                    <p className="text-[11px] font-black uppercase tracking-wide text-[#664d00]">Accès rapide</p>
                     <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{action.label}</h2>
                     <p className="mt-1 text-sm font-bold text-slate-600">{action.text}</p>
                   </div>
@@ -285,7 +285,7 @@ export default async function HomePage() {
               <ButtonLink href={`/actualites/${leadNews.slug}`} variant="dark">Lire l'article</ButtonLink>
               <Link
                 href="/actualites"
-                className="focus-ring inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#8a6d00] transition hover:text-[#002f1d]"
+                className="focus-ring inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#664d00] transition hover:text-[#002f1d]"
               >
                 Toutes les actus
                 <ArrowUpRight size={14} aria-hidden="true" />
@@ -372,7 +372,7 @@ export default async function HomePage() {
                       <Image src={item.image} alt={item.title} fill sizes="160px" className="object-cover transition-transform duration-500 group-hover:scale-[1.06]" />
                     </div>
                     <div className="min-w-0 flex-1 py-1">
-                      <p className="text-[10px] font-black uppercase text-[#8a6d00]">{item.category} · {item.date}</p>
+                      <p className="text-[10px] font-black uppercase text-[#664d00]">{item.category} · {item.date}</p>
                       <h3 className="mt-1 text-base font-black uppercase leading-tight text-[#002f1d] line-clamp-2">{item.title}</h3>
                       <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-black uppercase text-[#002f1d] transition group-hover:text-[#07542f]">
                         Lire <ArrowUpRight size={12} aria-hidden="true" />
@@ -401,7 +401,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[#002f1d]/10 py-4 text-xs font-black uppercase tracking-wide text-[#8a6d00]">
+          <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[#002f1d]/10 py-4 text-xs font-black uppercase tracking-wide text-[#664d00]">
             <span className="inline-flex items-center gap-2">
               <Handshake size={16} aria-hidden="true" />
               Partenaires institutionnels &amp; officiels
@@ -455,7 +455,7 @@ export default async function HomePage() {
                       aria-hidden="true"
                     />
                     <span
-                      className="pointer-events-none absolute right-3 top-2 text-[11px] font-black tabular-nums text-[#002f1d]/15 transition-colors duration-200 group-hover:text-[#8a6d00]/40"
+                      className="pointer-events-none absolute right-3 top-2 text-[11px] font-black tabular-nums text-[#002f1d]/15 transition-colors duration-200 group-hover:text-[#664d00]/40"
                       aria-hidden="true"
                     >
                       {String(index + 1).padStart(2, "0")}
@@ -463,7 +463,7 @@ export default async function HomePage() {
                     <span
                       className={`relative mb-4 flex h-16 w-16 items-center justify-center rounded-full shadow-[0_10px_24px_rgba(0,31,19,0.22)] transition-all duration-300 group-hover:shadow-[0_14px_30px_rgba(0,31,19,0.3)] ${
                         isInstitutionnel
-                          ? "bg-gradient-to-br from-[#f7c600] to-[#8a6d00] ring-1 ring-[#8a6d00]/30 group-hover:ring-[#f7c600]"
+                          ? "bg-gradient-to-br from-[#f7c600] to-[#664d00] ring-1 ring-[#664d00]/30 group-hover:ring-[#f7c600]"
                           : "bg-gradient-to-br from-[#00351f] to-[#001c10] ring-1 ring-[#f7c600]/30 group-hover:ring-[#f7c600]"
                       }`}
                       aria-hidden="true"
@@ -478,7 +478,7 @@ export default async function HomePage() {
                       </span>
                     </span>
                     <h3 className="text-sm font-black uppercase leading-tight text-[#002f1d]">{partner}</h3>
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#8a6d00]">
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#664d00]">
                       <BadgeCheck size={13} aria-hidden="true" />
                       {tier}
                     </p>

@@ -40,7 +40,7 @@ const navItems = [
   },
   {
     label: "Formation",
-    href: "/formation/ecole-de-foot",
+    href: "/formation",
     children: [
       ["École de foot", "/formation/ecole-de-foot"],
       ["Football à 11", "/formation/football-a-11"],
@@ -151,6 +151,21 @@ export function Header({ banner, socials }: HeaderProps) {
     mobileMenuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
 
     return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Verrouille le scroll de la page tant que le menu mobile est ouvert
+  // (evite de scroller le contenu derriere le panneau).
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   // Menus deroulants desktop (pattern disclosure) : Echap ferme et rend le focus au

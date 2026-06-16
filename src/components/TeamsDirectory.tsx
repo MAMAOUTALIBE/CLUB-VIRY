@@ -80,7 +80,7 @@ export function TeamsDirectory({ teams }: { teams: TeamCard[] }) {
                 <span className="absolute left-4 top-4 z-[1] rounded bg-[#f7c600] px-3 py-1 text-xs font-black uppercase text-[#002f1d]">{team.season}</span>
               </div>
               <div className="p-5">
-                <p className="text-sm font-black uppercase text-[#8a6d00]">{team.category}</p>
+                <p className="text-sm font-black uppercase text-[#664d00]">{team.category}</p>
                 <h2 className="text-2xl font-black uppercase text-[#002f1d]">{team.name}</h2>
                 <p className="mt-2 text-sm text-slate-700">{team.description}</p>
                 <p className="mt-4 text-xs font-black uppercase text-[#002f1d]">Voir la fiche équipe</p>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, Mail, MapPin, User } from "lucide-react";
+import { NewsletterForm } from "@/components/NewsletterForm";
 import { socialItems } from "@/lib/socials";
 
 type FooterProps = {
@@ -73,6 +74,9 @@ export function Footer({ socials, contact }: FooterProps) {
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-[#07542f]/40 blur-3xl" />
 
       <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mb-12 rounded-2xl border border-[#f7c600]/25 bg-white/[0.04] p-6 sm:p-8">
+          <NewsletterForm />
+        </div>
         <div className="grid gap-12 lg:grid-cols-[1.25fr_2fr_1.5fr]">
           {/* Bloc marque */}
           <div>

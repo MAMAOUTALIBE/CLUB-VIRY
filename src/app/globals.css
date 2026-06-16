@@ -87,10 +87,13 @@ select {
     border-color 180ms ease;
 }
 
-.premium-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(247, 198, 0, 0.6);
-  box-shadow: 0 26px 62px rgba(0, 31, 19, 0.18);
+/* Survol réservé aux pointeurs réels : évite le « hover collant » au tactile. */
+@media (hover: hover) {
+  .premium-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(247, 198, 0, 0.6);
+    box-shadow: 0 26px 62px rgba(0, 31, 19, 0.18);
+  }
 }
 
 .stadium-grid {

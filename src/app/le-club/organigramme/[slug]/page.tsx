@@ -144,17 +144,17 @@ export default async function OfficialProfilePage({ params }: Props) {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-lg border border-[#07542f]/15 bg-[#fbfcf8] p-4">
                 <ShieldCheck size={26} className="text-[#07542f]" aria-hidden="true" />
-                <p className="mt-3 text-xs font-black uppercase text-[#8a6d00]">Catégorie</p>
+                <p className="mt-3 text-xs font-black uppercase text-[#664d00]">Catégorie</p>
                 <p className="mt-1 font-black uppercase text-[#002f1d]">{official.category === "BUREAU" ? "Bureau exécutif" : "Responsable opérationnel"}</p>
               </div>
               <div className="rounded-lg border border-[#07542f]/15 bg-[#fbfcf8] p-4">
                 <MapPin size={26} className="text-[#07542f]" aria-hidden="true" />
-                <p className="mt-3 text-xs font-black uppercase text-[#8a6d00]">Pôle</p>
+                <p className="mt-3 text-xs font-black uppercase text-[#664d00]">Pôle</p>
                 <p className="mt-1 font-black uppercase text-[#002f1d]">{official.department}</p>
               </div>
               <div className="rounded-lg border border-[#07542f]/15 bg-[#fbfcf8] p-4">
                 <Users size={26} className="text-[#07542f]" aria-hidden="true" />
-                <p className="mt-3 text-xs font-black uppercase text-[#8a6d00]">Public</p>
+                <p className="mt-3 text-xs font-black uppercase text-[#664d00]">Public</p>
                 <p className="mt-1 font-black uppercase text-[#002f1d]">Familles, bénévoles, partenaires</p>
               </div>
             </div>

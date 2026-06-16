@@ -880,6 +880,109 @@ export function validateContactMessagePayload(input: unknown): ValidationResult<
   };
 }
 
+export type NewsletterPayload = {
+  email: string;
+};
+
+export function validateNewsletterPayload(input: unknown): ValidationResult<NewsletterPayload> {
+  const body = asRecord(input);
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const email = normalizeEmail(body.email);
+
+  if (!email || !isValidEmail(email)) {
+    return { ok: false, issues: [{ field: "email", message: "Adresse email invalide." }] };
+  }
+
+  return { ok: true, data: { email } };
+}
+
+export type OrderRequestItemPayload = {
+  name: string;
+  quantity: number;
+  price?: string;
+};
+
+export type OrderRequestPayload = {
+  fullName: string;
+  email: string;
+  phone?: string;
+  items: OrderRequestItemPayload[];
+  message?: string;
+};
+
+export function validateOrderRequestPayload(input: unknown): ValidationResult<OrderRequestPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const fullName = normalizeString(body.fullName);
+  const email = normalizeEmail(body.email);
+  const phone = normalizeString(body.phone);
+  const message = normalizeString(body.message);
+
+  if (!fullName || fullName.length < 2 || fullName.length > 160) {
+    issues.push({ field: "fullName", message: "Nom complet invalide." });
+  }
+
+  if (!email || !isValidEmail(email)) {
+    issues.push({ field: "email", message: "Adresse email invalide." });
+  }
+
+  if (phone && (phone.length < 6 || phone.length > 32)) {
+    issues.push({ field: "phone", message: "Telephone invalide." });
+  }
+
+  if (message && message.length > 1500) {
+    issues.push({ field: "message", message: "Message trop long (1500 caracteres maximum)." });
+  }
+
+  const rawItems = Array.isArray(body.items) ? body.items : null;
+  const items: OrderRequestItemPayload[] = [];
+
+  if (!rawItems || rawItems.length === 0) {
+    issues.push({ field: "items", message: "Votre panier est vide." });
+  } else if (rawItems.length > 50) {
+    issues.push({ field: "items", message: "Trop d'articles dans le panier." });
+  } else {
+    for (const raw of rawItems) {
+      const itemRecord = asRecord(raw);
+      const name = normalizeString(itemRecord?.name);
+      const price = normalizeString(itemRecord?.price);
+      const quantityValue = Number(itemRecord?.quantity);
+      const quantity = Number.isInteger(quantityValue) ? quantityValue : 0;
+
+      if (!name || name.length > 160 || quantity < 1 || quantity > 99 || (price && price.length > 40)) {
+        issues.push({ field: "items", message: "Article du panier invalide." });
+        break;
+      }
+
+      items.push({ name, quantity, ...(price ? { price } : {}) });
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      fullName: fullName as string,
+      email: email as string,
+      ...(phone ? { phone } : {}),
+      items,
+      ...(message ? { message } : {})
+    }
+  };
+}
+
 export function validateRegistrationLeadPayload(input: unknown): ValidationResult<RegistrationLeadPayload> {
   const body = asRecord(input);
   const issues: ValidationIssue[] = [];

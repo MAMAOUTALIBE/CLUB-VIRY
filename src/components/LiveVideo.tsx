@@ -53,23 +53,16 @@ export function LiveVideo() {
           loop
           playsInline
           preload="metadata"
-          aria-label="Diffusion du match en direct"
+          aria-label="Aperçu vidéo (démonstration)"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35" />
 
         {/* Haut : badge direct + spectateurs + qualité */}
         <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between sm:inset-x-4 sm:top-4">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#e11d48] px-3 py-1 text-xs font-black uppercase tracking-wider shadow-[0_0_18px_rgba(225,29,72,0.6)]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-              </span>
-              En direct
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-bold backdrop-blur">
+            <span className="inline-flex items-center gap-2 rounded-full bg-black/55 px-3 py-1 text-xs font-black uppercase tracking-wider backdrop-blur">
               <Eye size={13} aria-hidden="true" />
-              1 248
+              Aperçu vidéo
             </span>
           </div>
           <span className="rounded-md bg-black/45 px-2 py-1 text-[11px] font-black uppercase tracking-wide backdrop-blur">HD</span>
@@ -108,8 +101,7 @@ export function LiveVideo() {
             {playing ? <Pause size={20} aria-hidden="true" /> : <Play size={20} fill="currentColor" aria-hidden="true" />}
           </button>
           <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-white/85">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#e11d48]" />
-            Direct
+            Démo
           </span>
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
             <div className="h-full w-full bg-gradient-to-r from-[#e11d48] to-[#fb7185]" />
@@ -134,7 +126,7 @@ export function LiveVideo() {
       {/* Légende sous le lecteur */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5">
         <p className="text-xs font-bold text-white/60">
-          <span className="font-black uppercase text-[#f7c600]">Direct vidéo</span> · commenté depuis le Stade Henri Longuet
+          <span className="font-black uppercase text-[#f7c600]">Aperçu vidéo</span> · démonstration du futur direct depuis le Stade Henri Longuet
         </p>
         <span className="text-[11px] font-bold uppercase tracking-wide text-white/45">Démo · clip de test en boucle</span>
       </div>

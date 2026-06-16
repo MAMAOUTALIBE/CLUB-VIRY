@@ -4,6 +4,7 @@ import { APP_ROLES, ROLE_LABELS } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { isSupabaseAdminConfigured } from "@/lib/db";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export function GET() {

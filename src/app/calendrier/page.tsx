@@ -6,7 +6,7 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData } from "@/lib/calendar-view";
 import { images } from "@/lib/images";
-import { socialItems } from "@/lib/socials";
+import { socialItems, isLiveSocial } from "@/lib/socials";
 import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
@@ -156,25 +156,41 @@ export default async function CalendarPage() {
                 Compositions, résultats et changements d'horaire en temps réel sur nos réseaux.
               </p>
               <div className="mt-3 flex flex-wrap gap-2" aria-label="Réseaux sociaux">
-                {socialItems.map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    aria-label={social.label}
-                    title={social.label}
-                    className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-[#f7c600]/60"
-                    style={{
-                      background: social.background,
-                      borderColor: social.borderColor,
-                      color: social.color,
-                      boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
-                    }}
-                  >
+                {socialItems.map((social) => {
+                  // Lien cliquable seulement si une vraie URL est configurée ;
+                  // sinon icône décorative (évite un <a href=""> qui recharge la page).
+                  const className =
+                    "focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-[#f7c600]/60";
+                  const style = {
+                    background: social.background,
+                    borderColor: social.borderColor,
+                    color: social.color,
+                    boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
+                  };
+                  const icon = (
                     <svg aria-hidden="true" className="h-4 w-4" fill="currentColor" viewBox={social.viewBox}>
                       <path d={social.path} />
                     </svg>
-                  </a>
-                ))}
+                  );
+                  return isLiveSocial(social) ? (
+                    <a
+                      key={social.label}
+                      href={social.href}
+                      aria-label={social.label}
+                      title={social.label}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className={className}
+                      style={style}
+                    >
+                      {icon}
+                    </a>
+                  ) : (
+                    <span key={social.label} aria-label={social.label} title={social.label} role="img" className={className} style={style}>
+                      {icon}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -186,7 +202,7 @@ export default async function CalendarPage() {
             {calendar.items.map((item) => (
               <article className="official-card group rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl" key={item.id}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-black uppercase text-[#8a6d00]">
+                  <p className="text-sm font-black uppercase text-[#664d00]">
                     {item.dateLabel} · {item.timeLabel}
                   </p>
                   <span className="rounded-full bg-[#002f1d]/10 px-3 py-1 text-xs font-black uppercase text-[#002f1d]">

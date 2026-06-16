@@ -38,7 +38,7 @@ export default async function NewsPage() {
             <Image src={leadNews.image} alt={leadNews.title} fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
           </div>
           <div className="p-6">
-            <p className="text-xs font-black uppercase text-[#8a6d00]">
+            <p className="text-xs font-black uppercase text-[#664d00]">
               À la une · <time dateTime={leadNews.isoDate}>{leadNews.date}</time>
             </p>
             <h2 className="mt-3 text-4xl font-black uppercase text-[#002f1d]">{leadNews.title}</h2>
@@ -54,7 +54,7 @@ export default async function NewsPage() {
                   <Image src={item.image} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                 </div>
                 <div className="p-5">
-                  <p className="text-xs font-black uppercase text-[#8a6d00]">
+                  <p className="text-xs font-black uppercase text-[#664d00]">
                     {item.category} · <time dateTime={item.isoDate}>{item.date}</time>
                   </p>
                   <h2 className="mt-2 text-xl font-black uppercase text-[#002f1d]">{item.title}</h2>
@@ -87,8 +87,8 @@ export default async function NewsPage() {
                 <Phone size={20} aria-hidden="true" />
               </span>
               <span>
-                <span className="block text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Téléphone</span>
-                <span className="block text-sm font-bold text-[#002f1d] transition group-hover:text-[#8a6d00]">06 29 67 04 33<br />01 69 96 67 00</span>
+                <span className="block text-[11px] font-black uppercase tracking-wide text-[#664d00]">Téléphone</span>
+                <span className="block text-sm font-bold text-[#002f1d] transition group-hover:text-[#664d00]">06 29 67 04 33<br />01 69 96 67 00</span>
               </span>
             </a>
             <div className="flex items-start gap-3 sm:border-l sm:border-slate-200 sm:pl-4">
@@ -96,7 +96,7 @@ export default async function NewsPage() {
                 <MapPin size={20} aria-hidden="true" />
               </span>
               <span>
-                <span className="block text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Adresse du club</span>
+                <span className="block text-[11px] font-black uppercase tracking-wide text-[#664d00]">Adresse du club</span>
                 <span className="block text-sm font-bold text-[#002f1d]">Stade Henri Longuet<br />91170 Viry-Châtillon</span>
               </span>
             </div>
@@ -105,8 +105,8 @@ export default async function NewsPage() {
                 <Mail size={20} aria-hidden="true" />
               </span>
               <span className="min-w-0">
-                <span className="block text-[11px] font-black uppercase tracking-wide text-[#8a6d00]">Email</span>
-                <span className="block break-words text-sm font-bold text-[#002f1d] transition group-hover:text-[#8a6d00]">esvirychatillon91170@gmail.com</span>
+                <span className="block text-[11px] font-black uppercase tracking-wide text-[#664d00]">Email</span>
+                <span className="block break-words text-sm font-bold text-[#002f1d] transition group-hover:text-[#664d00]">esvirychatillon91170@gmail.com</span>
               </span>
             </a>
           </div>

@@ -60,6 +60,10 @@ const PAGES: Record<string, PageSeo> = {
     title: "Equipes",
     description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors en passant par les feminines et le futsal : effectifs, staff et categories."
   },
+  "/formation": {
+    title: "Formation",
+    description: "La formation a l'ES Viry-Chatillon Football : ecole de foot (U6-U13), football a 11 (U14-Seniors), projet pedagogique et stages de perfectionnement pour tous les licencies."
+  },
   "/formation/ecole-de-foot": {
     title: "Educateurs de l'ecole de foot",
     description: "Les educateurs de l'ecole de foot de l'ES Viry-Chatillon Football : categories U6 a U13, roles, poles et reperes pour les familles."

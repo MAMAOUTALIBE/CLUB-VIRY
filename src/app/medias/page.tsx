@@ -1,7 +1,6 @@
 import { Camera, Clapperboard, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
 import { FeatureCards } from "@/components/FeatureCards";
-import { Stagger, StaggerItem } from "@/components/Motion";
+import { MediaGallery } from "@/components/MediaGallery";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -19,24 +18,9 @@ export default async function MediaPage() {
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         {/* Pas de barre de filtres : la galerie n'a pas de filtrage reel (false affordance retiree). */}
         <div className="mb-8">
-          <SectionTitle title="Photos récentes" text="La vie du club en images : joie, effort, supporters, matchs et moments de transmission." />
+          <SectionTitle title="Photos récentes" text="La vie du club en images : joie, effort, supporters, matchs et moments de transmission. Cliquez sur une photo pour l'agrandir." />
         </div>
-        <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {albums.map((item, index) => (
-            <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
-              <div className={`relative w-full ${index === 0 ? "h-[29rem]" : "h-52"}`}>
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  sizes={index === 0 ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
-                  className="object-cover"
-                />
-              </div>
-              <figcaption className="p-3 text-sm font-black uppercase text-[#002f1d]">{item.title}</figcaption>
-            </StaggerItem>
-          ))}
-        </Stagger>
+        <MediaGallery items={albums} />
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
         <FeatureCards

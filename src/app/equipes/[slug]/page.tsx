@@ -84,7 +84,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {team.staff.map((member) => (
                   <li className="rounded-md border border-[#002f1d]/10 bg-[#fbfcf8] p-4" key={`${member.name}-${member.role}`}>
-                    <p className="text-xs font-black uppercase text-[#8a6d00]">{member.role}</p>
+                    <p className="text-xs font-black uppercase text-[#664d00]">{member.role}</p>
                     <p className="mt-1 text-sm font-black text-[#002f1d]">{member.name}</p>
                   </li>
                 ))}

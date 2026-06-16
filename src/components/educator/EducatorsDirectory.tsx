@@ -64,7 +64,7 @@ export function EducatorBanner({ educator, className, showBadge = true }: { educ
         <img src={educator.avatar} alt={educator.name} className="h-full w-full object-cover" />
       ) : (
         <div className="relative flex h-full w-full items-center justify-center">
-          <img src="/stade/imagepelouse.png" alt="" className="absolute inset-0 h-full w-full object-cover" aria-hidden="true" />
+          <img src="/stade/imagepelouse.webp" alt="" className="absolute inset-0 h-full w-full object-cover" aria-hidden="true" />
           <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#001c10]/82 text-3xl font-black uppercase text-[#f7c600] ring-2 ring-[#f7c600]/80 shadow-lg">
             {initials(educator.name)}
           </span>

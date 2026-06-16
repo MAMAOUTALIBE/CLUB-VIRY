@@ -40,7 +40,7 @@ export default async function ResultsPage() {
             return (
               <article className="official-card rounded-lg bg-white p-5" key={item.id}>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-black uppercase text-[#8a6d00]">{item.competition}</p>
+                  <p className="text-sm font-black uppercase text-[#664d00]">{item.competition}</p>
                   <Medal className="text-[#f7c600]" size={20} aria-hidden="true" />
                 </div>
                 <p className="mt-2 text-sm font-semibold text-slate-600">{item.dateLabel}</p>

@@ -107,7 +107,7 @@ export function TrainingSlots({ slots }: { slots: Array<{ category: string; time
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {slots.map((slot) => (
         <article className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm" key={slot.category}>
-          <p className="text-xs font-black uppercase text-[#8a6d00]">Créneau indicatif</p>
+          <p className="text-xs font-black uppercase text-[#664d00]">Créneau indicatif</p>
           <h3 className="mt-2 text-2xl font-black uppercase text-[#002f1d]">{slot.category}</h3>
           <p className="mt-3 flex items-start gap-2 text-sm font-bold text-slate-700">
             <Clock className="mt-0.5 shrink-0 text-[#07542f]" size={17} aria-hidden="true" />
@@ -209,7 +209,7 @@ export function StageCards({ stages }: { stages: Stage[] }) {
         <article className="premium-card flex min-h-72 flex-col rounded-lg bg-white p-6" key={stage.title}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase text-[#8a6d00]">{stage.audience}</p>
+              <p className="text-xs font-black uppercase text-[#664d00]">{stage.audience}</p>
               <h2 className="mt-2 text-2xl font-black uppercase text-[#002f1d]">{stage.title}</h2>
             </div>
             <span className={`rounded-md px-3 py-1 text-xs font-black uppercase ${styles[stage.status]}`}>{stage.status}</span>
@@ -243,7 +243,7 @@ function OrganizationNodeButton({ compact = false, node, onSelect, selected }: {
       onClick={() => onSelect(node.title)}
       type="button"
     >
-      <span className={`block font-black uppercase ${selected ? "text-[#f7c600]" : "text-[#8a6d00]"} ${compact ? "text-[11px]" : "text-xs"}`}>
+      <span className={`block font-black uppercase ${selected ? "text-[#f7c600]" : "text-[#664d00]"} ${compact ? "text-[11px]" : "text-xs"}`}>
         {node.lead}
       </span>
       <span className={`mt-2 block font-black uppercase leading-tight ${compact ? "text-lg" : "text-2xl"}`}>{node.title}</span>
@@ -275,7 +275,7 @@ export function OrganizationMap({ nodes }: { nodes: OrgNode[] }) {
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,360px)_1fr] lg:items-stretch">
           <OrganizationNodeButton node={president} onSelect={setSelected} selected={selected === president.title} />
           <div className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm">
-            <p className="text-xs font-black uppercase text-[#8a6d00]">Niveau 1</p>
+            <p className="text-xs font-black uppercase text-[#664d00]">Niveau 1</p>
             <h3 className="mt-2 text-2xl font-black uppercase text-[#002f1d]">Présidence du club</h3>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-700">{president.mission}</p>
             {president.children?.length ? (
@@ -294,7 +294,7 @@ export function OrganizationMap({ nodes }: { nodes: OrgNode[] }) {
       <div className="grid gap-5 lg:grid-cols-3">
         {groups.map((group) => (
           <section className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm" key={group.title}>
-            <p className="text-xs font-black uppercase text-[#8a6d00]">Pôle</p>
+            <p className="text-xs font-black uppercase text-[#664d00]">Pôle</p>
             <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{group.title}</h3>
             <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-600">{group.text}</p>
             <div className="mt-5 grid gap-3">

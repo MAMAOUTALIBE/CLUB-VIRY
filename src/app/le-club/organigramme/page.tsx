@@ -218,7 +218,7 @@ function DepartmentSection({ department, officials }: { department: string; offi
     <article id={id} className="official-card rounded-lg bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black uppercase text-[#8a6d00]">Pôle</p>
+          <p className="text-xs font-black uppercase text-[#664d00]">Pôle</p>
           <h3 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{department}</h3>
         </div>
         <span className="rounded-full bg-[#07542f]/10 px-3 py-1 text-xs font-black uppercase text-[#07542f]">{officials.length}</span>
@@ -284,7 +284,7 @@ export default async function OrganizationPage() {
       <section className="border-b border-[#07542f]/10 bg-[#f7f8f4] px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-black uppercase text-[#8a6d00]">Navigation rapide</p>
+            <p className="text-sm font-black uppercase text-[#664d00]">Navigation rapide</p>
             <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">Trouvez le bon interlocuteur</h2>
           </div>
           <DepartmentNav departments={departments} />

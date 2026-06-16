@@ -1,6 +1,6 @@
 export const images = {
-  stadiumHero: "/stade/imagepelouse.png",
-  stadiumAerial: "/stade/imagepelouse.png",
+  stadiumHero: "/stade/imagepelouse.webp",
+  stadiumAerial: "/stade/imagepelouse.webp",
   stadeTribune: "/stade/tribune.jpg",
   stadeTribune2: "/stade/tribune2.jpg",
   teamHuddle:
