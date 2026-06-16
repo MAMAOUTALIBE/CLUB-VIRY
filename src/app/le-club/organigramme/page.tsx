@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Camera, ClipboardList, GraduationCap, Landmark, Mail, Settings, ShieldCheck, Upload, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, Camera, ClipboardList, GraduationCap, Landmark, Mail, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { FeatureCards } from "@/components/FeatureCards";
 import { PageHero } from "@/components/PageHero";
@@ -108,12 +108,6 @@ function OfficialPortrait({ official, featured = false }: { official: DisplayOff
       <span className="absolute left-3 top-3 rounded-full bg-[#f7c600] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-[#001c10] shadow">
         {official.department}
       </span>
-      {!official.photo ? (
-        <span className="absolute bottom-3 left-3 right-3 inline-flex items-center justify-center gap-1.5 rounded-md bg-white/92 px-3 py-2 text-[10px] font-black uppercase text-[#002f1d] shadow">
-          <Upload size={13} aria-hidden="true" />
-          Emplacement photo responsable
-        </span>
-      ) : null}
     </div>
   );
 }

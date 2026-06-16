@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, Camera, Link as LinkIcon, Mail, MapPin, ShieldCheck, Upload, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, Camera, Link as LinkIcon, Mail, MapPin, ShieldCheck, Users } from "lucide-react";
 
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -117,12 +117,6 @@ export default async function OfficialProfilePage({ params }: Props) {
               <span className="absolute left-4 top-4 rounded-full bg-[#f7c600] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-[#001c10] shadow">
                 Photo officielle
               </span>
-              {!official.photo ? (
-                <span className="absolute bottom-4 left-4 right-4 inline-flex items-center justify-center gap-1.5 rounded-md bg-white/92 px-3 py-2 text-[10px] font-black uppercase text-[#002f1d] shadow">
-                  <Upload size={13} aria-hidden="true" />
-                  Prévu pour la photo du responsable
-                </span>
-              ) : null}
             </div>
             <div className="p-6">
               <h1 className="text-2xl font-black uppercase text-[#002f1d]">{official.name}</h1>
