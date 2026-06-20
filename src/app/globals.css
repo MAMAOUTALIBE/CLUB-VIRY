@@ -459,24 +459,60 @@ details.ac-frame[open] {
 }
 
 /* =====================================================================
-   Grands écrans — meilleure exploitation de l'espace.
-   Le conteneur standard des pages est `max-w-7xl` (1280px), répété partout.
-   Sur les très grands écrans, 1280px laisse d'énormes marges vides : on
-   élargit progressivement CE conteneur, d'un seul endroit, pour toutes les
-   pages à la fois. Plafonné à ~1664px pour rester sous le header (1680px)
-   et préserver des longueurs de ligne lisibles.
-   (Les conteneurs de texte/prose plus étroits — max-w-4xl/3xl/2xl — ne sont
-   volontairement pas touchés : ils doivent rester confortables à lire.)
+   Grands écrans (FHD, 24"/27" iMac, QHD, ultrawide, 4K) — AGRANDISSEMENT global.
+   Tout le système Tailwind est en `rem` : en augmentant la taille de police
+   RACINE (html), on agrandit proportionnellement TOUT (texte, espacements,
+   boutons, cartes) — un vrai « zoom » qui rend le site lisible et présent sur
+   les très grands écrans, au lieu d'un petit îlot perdu au centre.
+   En parallèle on élargit le conteneur des pages (max-w-7xl) et la barre du
+   header (max-w-[1680px]) pour remplir l'espace, de façon progressive.
 
+   La hauteur du header (--header-h) est remesurée en JS, elle s'ajuste seule.
    Règles non-layered : prioritaires sur les utilitaires Tailwind (@layer). */
 @media (min-width: 1920px) {
+  html {
+    font-size: 17px;
+  }
   .max-w-7xl {
-    max-width: 96rem; /* 1536px */
+    max-width: 92rem;
+  }
+  .max-w-\[1680px\] {
+    max-width: 98rem;
+  }
+}
+
+@media (min-width: 2240px) {
+  html {
+    font-size: 18px;
+  }
+  .max-w-7xl {
+    max-width: 100rem;
+  }
+  .max-w-\[1680px\] {
+    max-width: 106rem;
   }
 }
 
 @media (min-width: 2560px) {
+  html {
+    font-size: 19px;
+  }
   .max-w-7xl {
-    max-width: 104rem; /* 1664px — aligné juste sous le header */
+    max-width: 106rem;
+  }
+  .max-w-\[1680px\] {
+    max-width: 112rem;
+  }
+}
+
+@media (min-width: 3200px) {
+  html {
+    font-size: 20px;
+  }
+  .max-w-7xl {
+    max-width: 112rem;
+  }
+  .max-w-\[1680px\] {
+    max-width: 120rem;
   }
 }
