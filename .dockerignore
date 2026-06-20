@@ -17,3 +17,5 @@ tests
 docs
 *.png
 .playwright-mcp
+# Stack reverse-proxy : hors du build de l'app (contient acme.json = secret).
+infra

@@ -1,0 +1,70 @@
+# ===========================================================================
+# Reverse-proxy Traefik — HTTPS automatique (Let's Encrypt) pour le VPS.
+#
+# A lancer UNE SEULE FOIS au premier deploiement (puis il tourne en continu).
+# La stack du site (docker-compose.yml a la racine) suppose ce Traefik present :
+# elle ne fait que poser des labels `traefik.*`, c'est ce conteneur qui route.
+#
+#   cd /opt/esviry/infra/traefik
+#   cp .env.example .env           # renseigner ACME_EMAIL
+#   touch acme.json && chmod 600 acme.json
+#   docker compose -f docker-compose.traefik.yml up -d
+#
+# Prerequis : le reseau `esviry-net` doit exister. Il est cree par la stack du
+# site (docker-compose.yml a la racine) au premier `up`. Donc l'ordre du tout
+# premier deploiement est : (1) build+up du site, (2) up de ce Traefik.
+# Voir docs/deploiement-hostinger.md.
+# ===========================================================================
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--global.sendAnonymousUsage=false"
+      - "--global.checkNewVersion=false"
+      # Pas de dashboard expose (surface d'attaque en moins).
+      - "--api.dashboard=false"
+      # Decouverte des conteneurs via le socket Docker, en opt-in (label traefik.enable=true).
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.network=esviry-net"
+      # HTTP (:80) -> redirige tout vers HTTPS (:443), de maniere permanente (301).
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
+      # HTTPS (:443) : TLS active par defaut + certificat Let's Encrypt automatique.
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+      # Resolveur ACME via challenge TLS-ALPN (compatible avec la redirection globale 80->443).
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Definir ACME_EMAIL dans infra/traefik/.env}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
+      # Pour repeter des essais sans taper le rate-limit Let's Encrypt (5 certs/semaine/domaine),
+      # decommenter le serveur de STAGING (certificats non valides mais illimites) :
+      # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Lecture seule du socket : Traefik observe les conteneurs, il n'en cree pas.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Stockage des certificats (doit etre un FICHIER chmod 600, pas un dossier).
+      - ./acme.json:/acme.json
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - esviry-net
+
+networks:
+  # Reseau partage avec la stack du site. Cree par docker-compose.yml (racine) au
+  # premier `up` ; ici on s'y rattache (external) sans le recreer.
+  esviry-net:
+    name: esviry-net
+    external: true

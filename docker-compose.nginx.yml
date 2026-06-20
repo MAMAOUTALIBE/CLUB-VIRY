@@ -1,0 +1,45 @@
+# ===========================================================================
+# Déploiement DERRIÈRE un nginx hôte (pas de Traefik).
+# Pour un VPS où nginx natif tient déjà les ports 80/443 (ex. srv1768778, qui
+# héberge aussi lodene.org). Le conteneur n'est publié QU'EN LOCAL ; c'est le
+# nginx de l'hôte qui fait le reverse-proxy + HTTPS (certbot).
+#
+#   docker compose -f docker-compose.nginx.yml --env-file .env.local build
+#   docker compose -f docker-compose.nginx.yml --env-file .env.local up -d
+#
+# Le vhost nginx correspondant est dans infra/nginx/esvirychatillonfootball.org.conf
+# ===========================================================================
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Inliné AU BUILD par Next.js (SEO/sitemap/canonical). Doit être l'URL publique finale.
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://esvirychatillonfootball.org}
+        # Vides = mode vitrine. Remplir (au build) pour passer en CRM.
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    image: es-viry-football:latest
+    container_name: es-viry-football
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=production
+      - LEADS_DIR=/app/var/leads
+    volumes:
+      - ./var/leads:/app/var/leads
+    # IMPORTANT : écoute uniquement sur la loopback de l'hôte. nginx (hôte) proxy vers ici.
+    # Le conteneur n'est donc JAMAIS exposé directement à Internet.
+    ports:
+      - "127.0.0.1:8090:3000"
