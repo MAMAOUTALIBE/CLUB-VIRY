@@ -22,7 +22,7 @@ export default async function ShopPage() {
           title="Tous les produits"
           text="Ajoutez vos articles au panier, puis envoyez votre demande de commande au club (à régler et à retirer sur place)."
         />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {products.map((product) => {
             const Icon = product.icon;
             return (

@@ -71,7 +71,7 @@ export function TeamsDirectory({ teams }: { teams: TeamCard[] }) {
         {visibleTeams.length} équipe{visibleTeams.length > 1 ? "s" : ""} affichée{visibleTeams.length > 1 ? "s" : ""}.
       </p>
 
-      <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {visibleTeams.map((team) => (
           <StaggerItem key={team.slug}>
             <Link className="focus-ring premium-card group block overflow-hidden rounded-lg bg-white" href={`/equipes/${team.slug}`}>

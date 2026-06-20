@@ -46,7 +46,7 @@ export default async function NewsPage() {
             <p className="mt-4 text-xs font-black uppercase text-[#002f1d]">Lire l'article →</p>
           </div>
         </Link>
-        <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {otherNews.map((item) => (
             <StaggerItem key={item.title}>
               <Link className="focus-ring premium-card block h-full overflow-hidden rounded-lg bg-white" href={`/actualites/${item.slug}`}>

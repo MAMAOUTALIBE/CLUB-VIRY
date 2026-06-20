@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Breakpoints additionnels pour les très grands écrans (FHD, QHD/1440p, ultrawide, 4K).
+   Tailwind s'arrête à 2xl (1536px) par défaut : on ajoute 3xl/4xl pour pouvoir
+   densifier les grilles (ex. 3xl:grid-cols-5) au-delà. */
+@theme {
+  --breakpoint-3xl: 120rem; /* 1920px — Full HD et au-delà */
+  --breakpoint-4xl: 160rem; /* 2560px — QHD/1440p, ultrawide, 4K */
+}
+
 :root {
   --viry-green: #00351f;
   --viry-green-2: #07542f;
@@ -447,5 +455,28 @@ details.ac-frame[open] {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+}
+
+/* =====================================================================
+   Grands écrans — meilleure exploitation de l'espace.
+   Le conteneur standard des pages est `max-w-7xl` (1280px), répété partout.
+   Sur les très grands écrans, 1280px laisse d'énormes marges vides : on
+   élargit progressivement CE conteneur, d'un seul endroit, pour toutes les
+   pages à la fois. Plafonné à ~1664px pour rester sous le header (1680px)
+   et préserver des longueurs de ligne lisibles.
+   (Les conteneurs de texte/prose plus étroits — max-w-4xl/3xl/2xl — ne sont
+   volontairement pas touchés : ils doivent rester confortables à lire.)
+
+   Règles non-layered : prioritaires sur les utilitaires Tailwind (@layer). */
+@media (min-width: 1920px) {
+  .max-w-7xl {
+    max-width: 96rem; /* 1536px */
+  }
+}
+
+@media (min-width: 2560px) {
+  .max-w-7xl {
+    max-width: 104rem; /* 1664px — aligné juste sous le header */
   }
 }

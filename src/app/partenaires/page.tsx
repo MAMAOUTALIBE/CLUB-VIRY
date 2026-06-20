@@ -26,7 +26,7 @@ export default async function PartnersPage() {
         </div>
         <div>
           <SectionTitle title="Ils nous font confiance" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
             {partners.map((partner) => {
               const inner = partner.logoUrl ? (
                 <img src={partner.logoUrl} alt={partner.name} className="mx-auto max-h-16 w-auto object-contain" />

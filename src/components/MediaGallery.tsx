@@ -48,7 +48,7 @@ export function MediaGallery({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6">
         {items.map((item, index) => (
           <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
             <button type="button" onClick={() => setOpenIndex(index)} aria-label={`Agrandir : ${item.title}`} className="focus-ring group block w-full text-left">
