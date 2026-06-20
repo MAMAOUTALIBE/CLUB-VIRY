@@ -304,7 +304,7 @@ Hébergé en **Docker + Traefik** sur le VPS, à côté d'autres sites (e-format
 |---|---|
 | **Domaine** | `esvirychatillonfootball.org` (+ `www`) |
 | **Site en ligne** | https://esvirychatillonfootball.org |
-| **VPS (SSH)** | `root@187.127.228.197` — port `22` |
+| **VPS (SSH)** | `deploy@votre-vps` — port `22` |
 | **Dossier sur le VPS** | `/opt/esviry` |
 | **Branche de production** | `main` |
 | **Conteneur Docker** | `es-viry-football` |
@@ -315,7 +315,7 @@ Hébergé en **Docker + Traefik** sur le VPS, à côté d'autres sites (e-format
 
 **Se connecter au VPS** :
 ```bash
-ssh -p 22 root@187.127.228.197
+ssh -p 22 deploy@votre-vps
 ```
 
 ---
@@ -338,7 +338,7 @@ Tu déploies sur le VPS      →   ./deploy.sh   (ou les 3 commandes manuelles)
 Traefik sert la nouvelle version en HTTPS, automatiquement.
 ```
 
-> Le build (`docker compose build`) tourne **sur le VPS** : c'est lui qui exécute
+> Le build (`docker compose --env-file .env.local build`) tourne **sur le VPS** : c'est lui qui exécute
 > `npm ci` + `next build`. Tu n'as donc rien à builder en local pour déployer.
 
 ---
@@ -371,11 +371,11 @@ attend que le conteneur soit `healthy` et fait un smoke test. (Voir le script `d
 
 **Option manuelle — sur le VPS :**
 ```bash
-ssh -p 22 root@187.127.228.197
+ssh -p 22 deploy@votre-vps
 cd /opt/esviry
 git pull --ff-only
-docker compose build
-docker compose up -d
+docker compose --env-file .env.local build
+docker compose --env-file .env.local up -d
 docker compose ps        # le conteneur doit passer à "healthy" (~30 s)
 ```
 
@@ -405,9 +405,9 @@ Sur le VPS :
 cd /opt/esviry
 git log --oneline -5                 # repère le commit qui marchait
 git checkout <hash_du_commit_ok>     # ex: 557ba0c
-docker compose build && docker compose up -d
+docker compose --env-file .env.local build && docker compose --env-file .env.local up -d
 ```
-Pour revenir ensuite à la dernière version : `git checkout main && git pull && docker compose build && docker compose up -d`.
+Pour revenir ensuite à la dernière version : `git checkout main && git pull && docker compose --env-file .env.local build && docker compose --env-file .env.local up -d`.
 
 ---
 
@@ -429,7 +429,7 @@ cat var/leads/recruitment.jsonl
 
 > 💡 Pour être **prévenu en temps réel** de chaque demande (en plus du fichier),
 > renseigne `NOTIFICATION_WEBHOOK_URL` dans `/opt/esviry/.env.local` (Make / Zapier /
-> Discord / relais email), puis `docker compose up -d`.
+> Discord / relais email), puis `docker compose --env-file .env.local up -d`.
 
 ---
 
@@ -438,7 +438,7 @@ cat var/leads/recruitment.jsonl
 | Symptôme | Cause probable / solution |
 |---|---|
 | **Conteneur `unhealthy`** | `docker compose logs --tail=50` pour voir l'erreur. Souvent un build cassé : corrige le code, re-`git push`, redéploie. |
-| **HTTPS / cadenas KO** | Le DNS de `esvirychatillonfootball.org` doit pointer vers `187.127.228.197`. Vérifie : `dig +short esvirychatillonfootball.org` → doit renvoyer `187.127.228.197`. Traefik régénère le certificat automatiquement une fois le DNS bon. |
+| **HTTPS / cadenas KO** | Le DNS de `esvirychatillonfootball.org` doit pointer vers l'IPv4 du VPS Hostinger. Vérifie : `dig +short esvirychatillonfootball.org`. Traefik régénère le certificat automatiquement une fois le DNS bon. |
 | **Build qui échoue sur la RAM** | Le VPS est partagé. Réessaie quand il est moins chargé, ou libère de la mémoire. |
 | **`git pull` refusé (divergence)** | Tu as dû committer sur le VPS par erreur. Fais `git fetch origin && git reset --hard origin/main` (⚠️ écrase les modifs locales du VPS, mais pas `.env.local`/`var/leads`). |
 | **Demandes non enregistrées dans `var/leads`** | Vérifie le propriétaire : `chown -R 1001:1001 /opt/esviry/var/leads` (le conteneur tourne en uid 1001). |
@@ -448,14 +448,14 @@ cat var/leads/recruitment.jsonl
 ## 7. Première installation (déjà faite — pour mémoire / nouveau serveur)
 
 ```bash
-ssh -p 22 root@187.127.228.197
+ssh -p 22 deploy@votre-vps
 cd /opt
 git clone https://github.com/MAMAOUTALIBE/CLUB-VIRY.git esviry
 cd esviry
 cp .env.production.example .env.local          # déjà rempli pour esvirychatillonfootball.org
 mkdir -p var/leads && chown -R 1001:1001 var/leads
-docker compose build
-docker compose up -d
+docker compose --env-file .env.local build
+docker compose --env-file .env.local up -d
 ```
 Prérequis : Docker + un Traefik en service (entrypoints `web`/`websecure`, certresolver
 `letsencrypt`) et le DNS du domaine pointant vers le VPS. Le réseau `esviry-net` est créé
@@ -470,7 +470,7 @@ Pour l'admin, l'authentification et les données dynamiques :
 2. Appliquer **dans l'ordre** les migrations `supabase/migrations/202606060001_*.sql` → `...0009_*.sql`, puis `supabase/seed.sql`.
 3. Créer un compte **admin** (`ADMIN_CLUB` ou `SUPER_ADMIN`).
 4. Renseigner dans `/opt/esviry/.env.local` : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-5. `docker compose up -d --build`. Connexion via `https://esvirychatillonfootball.org/connexion`.
+5. `docker compose --env-file .env.local up -d --build`. Connexion via `https://esvirychatillonfootball.org/connexion`.
 
 ---
 

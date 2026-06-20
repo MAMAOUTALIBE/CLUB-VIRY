@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
     return jsonError(400, "VALIDATION_ERROR", "Paiement invalide.", payload.issues);
   }
 
+  if ((payload.data.provider ?? "manual") === "stripe") {
+    return jsonError(409, "PAYMENT_UNAVAILABLE", "Le paiement par carte n'est pas encore connecte.");
+  }
+
   const profileId = auth.context.user.id;
 
   try {

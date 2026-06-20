@@ -13,6 +13,15 @@ services:
     image: es-viry-football:latest
     container_name: es-viry-football
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     # Variables d'environnement (NEXT_PUBLIC_SITE_URL, NOTIFICATION_WEBHOOK_URL, etc.)
     env_file:
       - .env.local
