@@ -43,3 +43,14 @@ services:
     # Le conteneur n'est donc JAMAIS exposé directement à Internet.
     ports:
       - "127.0.0.1:8090:3000"
+    networks:
+      - default
+      # Réseau de la stack Supabase auto-hébergée : permet au serveur d'atteindre
+      # l'API Supabase via http://kong:8000 (mode CRM). Vitrine : sans effet.
+      - supabase
+
+networks:
+  default: {}
+  supabase:
+    name: supabase_default
+    external: true
