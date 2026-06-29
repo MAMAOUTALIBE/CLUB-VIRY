@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarDays, CheckCircle2, ClipboardCheck, Clock, GraduationCap, MapPin, Megaphone, Search, ShieldCheck, Trophy, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import type { ConductBlock, Installation, OrgNode, StaffPerson, Stage } from "@/lib/club-pages-data";
+import type { ConductBlock, Installation, OrgNode, RegulationItem, StaffPerson, Stage } from "@/lib/club-pages-data";
 
 const iconMap = {
   ClipboardCheck,
@@ -160,24 +160,65 @@ export function InstallationCards({ installations }: { installations: Installati
 
 export function ConductGrid({ blocks }: { blocks: ConductBlock[] }) {
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-5 lg:grid-cols-2">
       {blocks.map((block) => {
         const Icon = iconMap[block.icon as keyof typeof iconMap] ?? ShieldCheck;
         return (
           <article className="rounded-lg border border-[#07542f]/12 bg-white p-6 shadow-sm" key={block.title}>
-            <Icon className="text-[#07542f]" size={34} aria-hidden="true" />
-            <h2 className="mt-4 text-2xl font-black uppercase text-[#002f1d]">{block.title}</h2>
-            <ul className="mt-4 space-y-3">
-              {block.rules.map((rule) => (
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#07542f]/10 text-[#07542f]">
+                <Icon size={27} aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-xs font-black uppercase text-[#664d00]">{block.audience}</p>
+                <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{block.title}</h2>
+              </div>
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">{block.intro}</p>
+            <ul className="mt-5 space-y-3">
+              {block.essentials.map((rule) => (
                 <li className="flex gap-2 text-sm font-semibold leading-6 text-slate-700" key={rule}>
                   <CheckCircle2 className="mt-0.5 shrink-0 text-[#07542f]" size={17} aria-hidden="true" />
                   <span>{rule}</span>
                 </li>
               ))}
             </ul>
+            {block.rules.length ? (
+              <details className="mt-5 rounded-md border border-[#07542f]/12 bg-[#07542f]/[0.03] p-4">
+                <summary className="cursor-pointer text-sm font-black uppercase text-[#07542f]">Voir toutes les règles</summary>
+                <ul className="mt-4 space-y-3">
+                  {block.rules.map((rule) => (
+                    <li className="flex gap-2 text-sm font-semibold leading-6 text-slate-700" key={rule}>
+                      <CheckCircle2 className="mt-0.5 shrink-0 text-[#07542f]" size={17} aria-hidden="true" />
+                      <span>{rule}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
           </article>
         );
       })}
+    </div>
+  );
+}
+
+export function ConductRegulation({ items }: { items: RegulationItem[] }) {
+  return (
+    <div className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm sm:p-6">
+      <ol className="grid gap-4 md:grid-cols-2">
+        {items.map((item, index) => (
+          <li className="flex gap-4 rounded-md bg-slate-50 p-4" key={item.title}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#f7c600] text-xs font-black text-[#001c10]">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <h3 className="text-sm font-black uppercase text-[#002f1d]">{item.title}</h3>
+              <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{item.text}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
