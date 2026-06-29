@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Kaushan_Script } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { ImageProtection } from "@/components/ImageProtection";
 import { getSiteSettings } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
 import "./globals.css";
@@ -72,6 +73,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body>
+        <ImageProtection />
         <a
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-[#f7c600] focus:px-4 focus:py-2 focus:text-sm focus:font-black focus:uppercase focus:text-[#002f1d]"
           href="#contenu"

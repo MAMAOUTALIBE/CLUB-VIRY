@@ -23,6 +23,24 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Dissuasion du téléchargement des images : pas de glisser-déposer ni de sélection
+   (le menu contextuel et les raccourcis Ctrl+S/Ctrl+P sont gérés par ImageProtection,
+   l'anti-hotlink / accès direct par le proxy). */
+img,
+picture {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* À l'impression, les images ne sont pas rendues (protection des visuels du club). */
+@media print {
+  img,
+  picture,
+  video {
+    display: none !important;
+  }
+}
+
 body {
   background:
     linear-gradient(180deg, rgba(0, 53, 31, 0.05), rgba(247, 248, 244, 0) 24rem),

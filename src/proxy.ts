@@ -9,6 +9,42 @@ import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /**
+ * Anti-hotlink / téléchargement direct des images du club.
+ *
+ * Couvre l'optimiseur next/image (`/_next/image`, donc TOUTES les `<Image>` du site)
+ * et les fichiers originaux servis depuis `/public` (photos historiques, stade).
+ * On n'autorise que les sous-ressources chargées par NOTRE propre site
+ * (`Sec-Fetch-Site` same-origin/same-site). L'accès direct (URL tapée, ouverture dans
+ * un nouvel onglet → `none`) et le hotlink depuis un autre site (`cross-site`) sont refusés.
+ * Aucune protection ne bloque une capture d'écran : c'est de la dissuasion.
+ */
+const protectedImagePrefixes = ["/historique/", "/stade/"];
+const imageExtension = /\.(?:jpe?g|png|webp|avif|gif|svg)$/i;
+
+function isProtectedImageRequest(pathname: string): boolean {
+  if (pathname === "/_next/image") {
+    return true;
+  }
+  return protectedImagePrefixes.some((prefix) => pathname.startsWith(prefix)) && imageExtension.test(pathname);
+}
+
+function isAllowedImageContext(request: NextRequest): boolean {
+  const secFetchSite = request.headers.get("sec-fetch-site");
+
+  // Requête de navigateur (en-tête présent) : on n'autorise que nos propres sous-ressources.
+  // - same-origin / same-site  → image chargée par une de nos pages → OK
+  // - none (URL tapée, nouvel onglet) / cross-site (hotlink) → refusé
+  if (secFetchSite) {
+    return secFetchSite === "same-origin" || secFetchSite === "same-site";
+  }
+
+  // Pas d'en-tête Sec-Fetch : requête serveur (l'optimiseur next/image lit l'original
+  // en interne) ou client non-navigateur. On laisse passer pour ne pas casser
+  // l'optimisation ; tout accès direct depuis un navigateur reste, lui, intercepté ci-dessus.
+  return true;
+}
+
+/**
  * Protège l'espace d'administration / CRM (convention Next.js 16 "proxy").
  *
  * Le cookie `admin_session` (HttpOnly) contient l'access token Supabase posé à la
@@ -54,6 +90,19 @@ async function getAdminSessionStatus(token: string | undefined, pathname: string
 }
 
 export async function proxy(request: NextRequest) {
+  if (isProtectedImageRequest(request.nextUrl.pathname)) {
+    if (isAllowedImageContext(request)) {
+      return NextResponse.next();
+    }
+    return new NextResponse("Image protégée — accès non autorisé.", {
+      status: 403,
+      headers: {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "no-store"
+      }
+    });
+  }
+
   if (request.nextUrl.pathname.startsWith("/api/") && mutatingMethods.has(request.method) && !isSameOriginRequest(request)) {
     return NextResponse.json(
       {
@@ -93,5 +142,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/api/:path*"]
+  matcher: ["/admin", "/admin/:path*", "/api/:path*", "/_next/image", "/historique/:path*", "/stade/:path*"]
 };
