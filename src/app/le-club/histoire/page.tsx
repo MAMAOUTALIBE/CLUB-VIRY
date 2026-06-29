@@ -1,7 +1,10 @@
 import { PageHero } from "@/components/PageHero";
 import { PremiumCta } from "@/components/PremiumCta";
 import { SectionTitle } from "@/components/SectionTitle";
+import { PalmaresFanion } from "@/components/club/PalmaresFanion";
+import { MediaGallery } from "@/components/MediaGallery";
 import { Reveal } from "@/components/Motion";
+import { galerieHistorique } from "@/lib/club-pages-data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getSiteSettings } from "@/lib/public-content";
@@ -49,6 +52,26 @@ export default async function HistoryPage() {
               );
             })}
           </div>
+        </div>
+      </section>
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <SectionTitle
+          eyebrow="Archives"
+          title="Photos historiques"
+          text="Quelques équipes du club à la fin des années 1980 : cadets, juniors, poussins et anciens."
+        />
+        <div className="mt-10">
+          <MediaGallery items={galerieHistorique} />
+        </div>
+      </section>
+      <section className="border-t border-slate-200/70 bg-slate-50/60">
+        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+          <SectionTitle
+            eyebrow="Équipe Fanion"
+            title="Palmarès des championnats"
+            text="Le parcours sportif de l'équipe première, saison par saison, de la Division d'Honneur en 1969 jusqu'au CFA en 2013."
+          />
+          <PalmaresFanion />
         </div>
       </section>
       <PremiumCta
