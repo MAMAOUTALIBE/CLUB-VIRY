@@ -27,6 +27,7 @@ const navItems = [
     href: "/le-club",
     children: [
       ["Histoire", "/le-club/histoire"],
+      ["Galerie photos", "/le-club/galerie"],
       ["Mot du Président", "/le-club/mot-du-president"],
       ["Bureau", "/le-club/bureau"],
       ["Dirigeants", "/le-club/dirigeants"],
@@ -82,11 +83,63 @@ const navItems = [
   }
 ];
 
+const mobileNavGroups = [
+  {
+    label: "Le Club",
+    href: "/le-club",
+    links: [
+      ["Présentation", "/le-club"],
+      ["Histoire", "/le-club/histoire"],
+      ["Galerie photos", "/le-club/galerie"],
+      ["Installations", "/le-club/installations"],
+      ["Codes de conduite", "/le-club/codes-de-conduite"]
+    ]
+  },
+  {
+    label: "Formation",
+    href: "/formation",
+    links: [
+      ["Formation", "/formation"],
+      ["Équipes", "/equipes"],
+      ["Academy", "/academy"],
+      ["École de foot", "/formation/ecole-de-foot"],
+      ["Football à 11", "/formation/football-a-11"],
+      ["Stages", "/formation/stages"]
+    ]
+  },
+  {
+    label: "Actu & Médias",
+    href: "/actualites",
+    links: [
+      ["Actualités", "/actualites"],
+      ["Calendrier", "/calendrier"],
+      ["Résultats", "/resultats"],
+      ["Médias", "/medias"]
+    ]
+  },
+  {
+    label: "Boutique",
+    href: "/boutique",
+    links: [["Boutique", "/boutique"]]
+  },
+  {
+    label: "Nous rejoindre",
+    href: "/inscriptions",
+    links: [
+      ["Inscriptions", "/inscriptions"],
+      ["Détections", "/detections-recrutement"],
+      ["Partenaires", "/partenaires"],
+      ["Contact", "/contact"]
+    ]
+  }
+];
+
 export function Header({ banner, socials }: HeaderProps) {
   const announcement = banner?.text?.trim() || DEFAULT_ANNOUNCEMENT;
   const bannerActive = banner?.active !== false;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openMobileGroup, setOpenMobileGroup] = useState(mobileNavGroups[0]?.href ?? "");
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -133,8 +186,7 @@ export function Header({ banner, socials }: HeaderProps) {
     return () => window.removeEventListener("resize", applyHeaderHeight);
   }, []);
 
-  // Menu mobile : Echap ferme et restaure le focus sur le bouton ; a l'ouverture,
-  // le focus est deplace sur le premier element du panneau (pattern disclosure).
+  // Menu mobile : Echap ferme, Tab reste dans le panneau, et le focus revient au bouton.
   useEffect(() => {
     if (!open) {
       return;
@@ -144,10 +196,33 @@ export function Header({ banner, socials }: HeaderProps) {
       if (event.key === "Escape") {
         setOpen(false);
         menuButtonRef.current?.focus();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusable = Array.from(
+          mobileMenuRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? []
+        ).filter((element) => !element.hasAttribute("inert"));
+
+        if (!focusable.length) {
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     }
 
     document.addEventListener("keydown", onKeyDown);
+    setOpenMobileGroup((current) => current || mobileNavGroups[0]?.href || "");
     mobileMenuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
 
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -279,7 +354,7 @@ export function Header({ banner, socials }: HeaderProps) {
             width={60}
             height={60}
           />
-          <span className="hidden max-w-[240px] truncate text-lg font-black uppercase tracking-tight text-white transition hover:text-[#f7c600] sm:block lg:text-xl">
+          <span className="block max-w-[190px] truncate text-sm font-black uppercase tracking-tight text-white transition hover:text-[#f7c600] sm:max-w-[240px] sm:text-lg lg:text-xl">
             ES Viry-Châtillon
           </span>
         </Link>
@@ -393,36 +468,68 @@ export function Header({ banner, socials }: HeaderProps) {
         <MotionDiv
           ref={mobileMenuRef}
           id="mobile-menu"
-          className="club-shell border-t border-[#f7c600]/30 px-4 py-4 min-[1280px]:hidden"
+          className="fixed inset-x-0 bottom-0 top-[var(--header-h)] z-50 overflow-y-auto overscroll-contain border-t border-[#f7c600]/30 bg-[#001c10] px-4 py-4 min-[1280px]:hidden"
           initial={reduceMotion ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.22 }}
         >
-          <div className="mx-auto grid max-w-7xl gap-2">
-            {navItems.map((item) => (
-              <div key={item.href}>
-                <Link
-                  aria-current={isItemActive(item) ? "page" : undefined}
-                  className={`focus-ring flex items-center justify-between rounded-md px-3 py-3 text-sm font-black uppercase hover:bg-white/10 ${
-                    isItemActive(item) ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
-                  }`}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                >
-                  {item.label}
-                </Link>
-                {item.children ? (
-                  <div className="ml-3 mt-1 grid gap-1 border-l border-[#f7c600]/30 pl-3">
-                    {item.children.map(([label, href]) => (
-                      <Link className="focus-ring rounded px-3 py-2 text-xs font-black uppercase text-white/75 hover:text-[#f7c600]" href={href} key={`${item.label}-${label}-${href}`} onClick={() => setOpen(false)}>
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
+          <div className="mx-auto flex h-full max-w-7xl flex-col gap-3">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#f7c600]/25 pb-3">
+              <div>
+                <p className="text-xs font-black uppercase text-[#f7c600]">Menu</p>
+                <p className="text-lg font-black uppercase text-white">ES Viry-Châtillon</p>
               </div>
-            ))}
-            <div className="mt-2 grid gap-2 border-t border-[#f7c600]/30 pt-3">
+              <button
+                className="focus-ring inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-white/18 text-white"
+                onClick={() => {
+                  setOpen(false);
+                  menuButtonRef.current?.focus();
+                }}
+                type="button"
+              >
+                <span className="sr-only">Fermer le menu</span>
+                <X size={24} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto overscroll-contain pr-1">
+              {mobileNavGroups.map((group) => {
+                const expanded = openMobileGroup === group.href;
+                const active = isActive(group.href) || group.links.some(([, href]) => isActive(href));
+                return (
+                  <section className="rounded-lg border border-white/12 bg-white/[0.04]" key={group.href}>
+                    <button
+                      aria-expanded={expanded}
+                      className={`focus-ring flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-black uppercase ${
+                        active ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
+                      }`}
+                      onClick={() => setOpenMobileGroup((current) => (current === group.href ? "" : group.href))}
+                      type="button"
+                    >
+                      {group.label}
+                      <ChevronDown size={18} aria-hidden="true" className={`shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+                    </button>
+                    {expanded ? (
+                      <div className="grid gap-1 px-2 py-2">
+                        {group.links.map(([label, href]) => (
+                          <Link
+                            aria-current={isActive(href) ? "page" : undefined}
+                            className="focus-ring min-h-11 rounded-md px-3 py-3 text-sm font-bold uppercase text-white/82 hover:bg-white/10 hover:text-[#f7c600]"
+                            href={href}
+                            key={`${group.label}-${href}`}
+                            onClick={() => setOpen(false)}
+                          >
+                            {label}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </section>
+                );
+              })}
+            </div>
+
+            <div className="grid shrink-0 gap-2 border-t border-[#f7c600]/30 pt-3">
               <Link
                 className="focus-ring flex items-center gap-2 rounded-md border border-white/18 px-3 py-3 text-sm font-black uppercase text-white hover:bg-white/10"
                 href="/espace-membre"
@@ -431,14 +538,21 @@ export function Header({ banner, socials }: HeaderProps) {
                 <User size={18} aria-hidden="true" />
                 Mon espace
               </Link>
+              <Link
+                className="focus-ring rounded-md border border-white/18 px-3 py-3 text-center text-sm font-black uppercase text-white hover:bg-white/10"
+                href="/connexion"
+                onClick={() => setOpen(false)}
+              >
+                Connexion
+              </Link>
+              <Link
+                className="focus-ring rounded-md bg-[#f7c600] px-3 py-3 text-center text-sm font-black uppercase text-[#002f1d]"
+                href="/inscriptions"
+                onClick={() => setOpen(false)}
+              >
+                Rejoindre le club
+              </Link>
             </div>
-            <Link
-              className="focus-ring mt-2 rounded-md bg-[#f7c600] px-3 py-3 text-center text-sm font-black uppercase text-[#002f1d]"
-              href="/inscriptions"
-              onClick={() => setOpen(false)}
-            >
-              Rejoindre le club
-            </Link>
           </div>
         </MotionDiv>
       ) : null}

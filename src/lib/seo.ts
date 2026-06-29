@@ -20,6 +20,10 @@ const PAGES: Record<string, PageSeo> = {
     title: "Histoire",
     description: "L'histoire de l'ES Viry-Chatillon Football depuis 1958 : un club formateur et populaire de l'Essonne, ancre dans son territoire et tourne vers l'avenir."
   },
+  "/le-club/galerie": {
+    title: "Galerie photos historiques",
+    description: "Les archives en images de l'ES Viry-Chatillon Football : equipes de jeunes des annees 1960 a aujourd'hui, tournois, finales et epopee en Coupe de France."
+  },
   "/le-club/mot-du-president": {
     title: "Mot du President",
     description: "Le mot du president de l'ES Viry-Chatillon Football : la vision, les ambitions sportives et les valeurs humaines qui animent le club et ses licencies."

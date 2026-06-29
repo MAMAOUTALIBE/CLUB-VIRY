@@ -3,8 +3,9 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { SectionTitle } from "@/components/SectionTitle";
 import { PalmaresFanion } from "@/components/club/PalmaresFanion";
 import { MediaGallery } from "@/components/MediaGallery";
+import { ButtonLink } from "@/components/ButtonLink";
 import { Reveal } from "@/components/Motion";
-import { galerieHistorique } from "@/lib/club-pages-data";
+import { galerieArchives } from "@/lib/club-pages-data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getSiteSettings } from "@/lib/public-content";
@@ -58,10 +59,13 @@ export default async function HistoryPage() {
         <SectionTitle
           eyebrow="Archives"
           title="Photos historiques"
-          text="Quelques équipes du club à la fin des années 1980 : cadets, juniors, poussins et anciens."
+          text="Un aperçu de la mémoire du club, des équipes de jeunes des années 1960 à l'épopée en Coupe de France."
         />
         <div className="mt-10">
-          <MediaGallery items={galerieHistorique} />
+          <MediaGallery items={galerieArchives.slice(0, 8)} />
+        </div>
+        <div className="mt-8 text-center">
+          <ButtonLink href="/le-club/galerie">Voir toutes les archives ({galerieArchives.length} photos)</ButtonLink>
         </div>
       </section>
       <section className="border-t border-slate-200/70 bg-slate-50/60">
