@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DesktopOnly } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { images } from "@/lib/images";
 import { pageMetadata } from "@/lib/seo";
@@ -76,9 +77,15 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
 export default function SiteMapPage() {
   return (
     <>
-      <PageHero description="Retrouvez toutes les pages du site officiel de l'ES Viry-Châtillon Football." image={images.stadiumHero} title="Plan du site" />
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="px-4 py-8 md:px-6 lg:px-8 xl:hidden">
+        <p className="text-xs font-black uppercase text-[#664d00]">Navigation</p>
+        <h1 className="mt-1 text-3xl font-black uppercase leading-tight text-[#002f1d]">Plan du site</h1>
+      </div>
+      <DesktopOnly>
+        <PageHero description="Retrouvez toutes les pages du site officiel de l'ES Viry-Châtillon Football." image={images.stadiumHero} title="Plan du site" />
+      </DesktopOnly>
+      <section className="mx-auto max-w-5xl px-4 pb-10 md:py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
           {SECTIONS.map((section) => (
             <nav aria-label={section.title} key={section.title}>
               <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#07542f]">{section.title}</h2>

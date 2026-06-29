@@ -1,6 +1,7 @@
 import { Clock, Mail, MapPin, MessageSquare, Phone, Users } from "lucide-react";
 import { ContactForm } from "@/components/Forms";
 import { FeatureCards } from "@/components/FeatureCards";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -11,8 +12,26 @@ export const metadata = pageMetadata("/contact");
 export default function ContactPage() {
   return (
     <>
+      <MobileScreen
+        eyebrow="Contact"
+        title="Nous écrire"
+        description="Coordonnées utiles et formulaire pour joindre rapidement le club."
+        scrollable
+      >
+        <div className="grid gap-3 pb-2 md:grid-cols-[0.75fr_1.25fr]">
+          <MobileCard>
+            <div className="grid gap-2 text-sm font-bold text-slate-700">
+              <p>Stade Henri Longuet · 91170 Viry-Châtillon</p>
+              <p>01 69 24 39 50</p>
+              <p className="break-words">esvirychatillon91170@gmail.com</p>
+            </div>
+          </MobileCard>
+          <ContactForm />
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Nous sommes à votre écoute." image={images.stadiumAerial} title="Contactez-nous" />
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8 3xl:grid-cols-[0.72fr_minmax(0,0.95fr)] 3xl:justify-center">
         <address className="not-italic">
           <div className="club-panel rounded-lg p-6 text-white">
             <h2 className="text-2xl font-black uppercase text-[#f7c600]">Coordonnées</h2>
@@ -45,6 +64,7 @@ export default function ContactPage() {
           ]}
         />
       </section>
+      </DesktopOnly>
     </>
   );
 }

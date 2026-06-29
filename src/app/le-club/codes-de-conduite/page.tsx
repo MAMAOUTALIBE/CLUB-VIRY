@@ -1,6 +1,7 @@
 import { BookOpen, Download } from "lucide-react";
 
 import { ButtonLink } from "@/components/ButtonLink";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { ConductGrid, ConductRegulation } from "@/components/club/ClubPublicBlocks";
@@ -16,6 +17,38 @@ const conductPdfDownloadHref = "/le-club/codes-de-conduite/pdf?download=1";
 export default function CodesDeConduitePage() {
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Codes de conduite"
+        description="Les règles essentielles pour joueurs, parents, supporters et éducateurs."
+        actions={[{ href: "/contact", label: "Signaler une question", variant: "secondary" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2 md:col-span-2">
+            <a className="focus-ring rounded-lg bg-[#f7c600] p-3 text-sm font-black uppercase text-[#001c10]" href={conductPdfDownloadHref} download>
+              Télécharger PDF
+            </a>
+            <a className="focus-ring rounded-lg border border-[#07542f]/15 bg-white p-3 text-sm font-black uppercase text-[#07542f]" href={conductPdfHref} target="_blank" rel="noopener noreferrer">
+              Lire le PDF
+            </a>
+          </div>
+          {conductBlocks.map((block) => (
+            <MobileCard key={block.title}>
+              <p className="text-xs font-black uppercase text-[#664d00]">{block.audience}</p>
+              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{block.title}</h2>
+              <ul className="mt-2 grid gap-1.5">
+                {block.essentials.slice(0, 3).map((rule) => (
+                  <li className="text-sm font-semibold leading-5 text-slate-700" key={rule}>
+                    {rule}
+                  </li>
+                ))}
+              </ul>
+            </MobileCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         eyebrow="Le Club"
         description="Un cadre partagé pour les joueurs, parents, éducateurs et supporters : respect, ponctualité, responsabilité et confiance."
@@ -72,6 +105,7 @@ export default function CodesDeConduitePage() {
           <ConductRegulation items={regulationItems} />
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

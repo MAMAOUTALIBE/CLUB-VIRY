@@ -71,12 +71,12 @@ export function TeamsDirectory({ teams }: { teams: TeamCard[] }) {
         {visibleTeams.length} équipe{visibleTeams.length > 1 ? "s" : ""} affichée{visibleTeams.length > 1 ? "s" : ""}.
       </p>
 
-      <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6">
         {visibleTeams.map((team) => (
           <StaggerItem key={team.slug}>
             <Link className="focus-ring premium-card group block overflow-hidden rounded-lg bg-white" href={`/equipes/${team.slug}`}>
               <div className="relative h-56 overflow-hidden">
-                <Image src={team.image} alt={team.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition group-hover:scale-105" />
+                <Image src={team.image} alt={team.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, (max-width: 1920px) 25vw, 18vw" className="object-cover transition group-hover:scale-105" />
                 <span className="absolute left-4 top-4 z-[1] rounded bg-[#f7c600] px-3 py-1 text-xs font-black uppercase text-[#002f1d]">{team.season}</span>
               </div>
               <div className="p-5">

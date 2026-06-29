@@ -24,11 +24,15 @@ export function AddToCartButton({ product }: { product: CartProductInput }) {
     >
       {added ? (
         <>
-          <Check size={16} aria-hidden="true" /> Ajouté au panier
+          <Check size={16} aria-hidden="true" />
+          <span className="sm:hidden">Ajouté</span>
+          <span className="hidden sm:inline">Ajouté au panier</span>
         </>
       ) : (
         <>
-          <ShoppingBag size={16} aria-hidden="true" /> Ajouter au panier
+          <ShoppingBag size={16} aria-hidden="true" />
+          <span className="sm:hidden">Ajouter</span>
+          <span className="hidden sm:inline">Ajouter au panier</span>
         </>
       )}
     </button>

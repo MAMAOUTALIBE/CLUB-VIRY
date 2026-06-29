@@ -62,7 +62,7 @@ export function StaffDirectory({ people, intro }: { people: StaffPerson[]; intro
         </label>
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4 3xl:grid-cols-5">
         {filtered.map((person) => (
           <article className="premium-card overflow-hidden rounded-lg bg-white" key={`${person.name}-${person.role}`}>
             <div className="relative h-56">
@@ -125,7 +125,7 @@ export function TrainingSlots({ slots }: { slots: Array<{ category: string; time
 
 export function InstallationCards({ installations }: { installations: Installation[] }) {
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
       {installations.map((installation) => (
         <article className="premium-card overflow-hidden rounded-lg bg-white" key={installation.name}>
           <div className="relative h-64">
@@ -160,7 +160,7 @@ export function InstallationCards({ installations }: { installations: Installati
 
 export function ConductGrid({ blocks }: { blocks: ConductBlock[] }) {
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-4">
       {blocks.map((block) => {
         const Icon = iconMap[block.icon as keyof typeof iconMap] ?? ShieldCheck;
         return (
@@ -206,7 +206,7 @@ export function ConductGrid({ blocks }: { blocks: ConductBlock[] }) {
 export function ConductRegulation({ items }: { items: RegulationItem[] }) {
   return (
     <div className="rounded-lg border border-[#07542f]/12 bg-white p-5 shadow-sm sm:p-6">
-      <ol className="grid gap-4 md:grid-cols-2">
+      <ol className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         {items.map((item, index) => (
           <li className="flex gap-4 rounded-md bg-slate-50 p-4" key={item.title}>
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#f7c600] text-xs font-black text-[#001c10]">
@@ -245,7 +245,7 @@ export function StageCards({ stages }: { stages: Stage[] }) {
   };
 
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
       {stages.map((stage) => (
         <article className="premium-card flex min-h-72 flex-col rounded-lg bg-white p-6" key={stage.title}>
           <div className="flex items-start justify-between gap-3">

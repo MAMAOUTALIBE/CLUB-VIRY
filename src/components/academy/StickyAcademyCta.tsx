@@ -31,7 +31,7 @@ export function StickyAcademyCta({ academyUrl }: { academyUrl?: string }) {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#f7c600]/40 bg-[#001c10]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur transition-all duration-300 lg:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#f7c600]/40 bg-[#001c10]/95 px-4 py-3 pb-[calc(0.75rem_+_env(safe-area-inset-bottom))] backdrop-blur transition-all duration-300 lg:hidden ${
         show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0"
       }`}
     >

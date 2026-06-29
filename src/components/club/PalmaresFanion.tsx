@@ -105,8 +105,8 @@ export function PalmaresFanion() {
 
       {/* --- TABLETTE / DESKTOP : tableau complet --- */}
       <div className="mt-6 hidden overflow-hidden rounded-2xl border border-slate-200 md:block">
-        <div className="max-h-[40rem] overflow-y-auto">
-          <table className="w-full border-collapse text-sm">
+        <div className="max-h-[40rem] overflow-auto 3xl:max-h-[48rem]">
+          <table className="w-full min-w-[58rem] border-collapse text-sm 3xl:text-base">
             <thead className="sticky top-0 z-10 bg-[#002f1d] text-[#f7c600]">
               <tr className="text-left">
                 <th scope="col" className="px-3 py-2.5 font-black uppercase">Année</th>

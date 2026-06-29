@@ -48,16 +48,16 @@ export function MediaGallery({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6">
+      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-7">
         {items.map((item, index) => (
           <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
             <button type="button" onClick={() => setOpenIndex(index)} aria-label={`Agrandir : ${item.title}`} className="focus-ring group block w-full text-left">
-              <div className={`relative w-full ${index === 0 ? "h-[29rem]" : "h-52"}`}>
+              <div className={`relative w-full ${index === 0 ? "h-[29rem] 3xl:h-[34rem]" : "h-52 3xl:h-60"}`}>
                 <Image
                   src={item.image}
                   alt={item.title}
                   fill
-                  sizes={index === 0 ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"}
+                  sizes={index === 0 ? "(max-width: 1024px) 100vw, (max-width: 1920px) 50vw, 34vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1920px) 20vw, 14vw"}
                   className="object-cover transition duration-300 group-hover:scale-[1.03]"
                 />
               </div>
@@ -98,7 +98,7 @@ export function MediaGallery({ items }: { items: GalleryItem[] }) {
             </button>
           ) : null}
 
-          <figure className="relative max-w-5xl" onClick={(event) => event.stopPropagation()}>
+          <figure className="relative max-w-5xl 3xl:max-w-7xl" onClick={(event) => event.stopPropagation()}>
             {/* Image plein écran : <img> (object-contain) pour respecter le ratio sans dimensions connues. */}
             <img src={current.image} alt={current.title} className="mx-auto max-h-[80vh] w-auto max-w-full rounded-lg object-contain shadow-2xl" />
             <figcaption className="mt-3 text-center text-sm font-black uppercase tracking-wide text-white">

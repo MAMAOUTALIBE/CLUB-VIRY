@@ -134,6 +134,10 @@ const mobileNavGroups = [
   }
 ];
 
+function menuDomId(href: string) {
+  return href.replace(/[^a-zA-Z0-9_-]/g, "-") || "home";
+}
+
 export function Header({ banner, socials }: HeaderProps) {
   const announcement = banner?.text?.trim() || DEFAULT_ANNOUNCEMENT;
   const bannerActive = banner?.active !== false;
@@ -222,7 +226,6 @@ export function Header({ banner, socials }: HeaderProps) {
     }
 
     document.addEventListener("keydown", onKeyDown);
-    setOpenMobileGroup((current) => current || mobileNavGroups[0]?.href || "");
     mobileMenuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
 
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -250,9 +253,11 @@ export function Header({ banner, socials }: HeaderProps) {
       return;
     }
 
+    const activeMenu = openMenu;
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        const trigger = document.getElementById(`menu-trigger-${openMenu}`);
+        const trigger = document.getElementById(`menu-trigger-${menuDomId(activeMenu)}`);
         setOpenMenu(null);
         trigger?.focus();
       }
@@ -285,7 +290,7 @@ export function Header({ banner, socials }: HeaderProps) {
       }`}
     >
       <div className="hidden border-b border-[#f7c600]/20 bg-black/30 text-xs font-bold lg:block">
-        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-1">
+        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-1 2xl:px-8 3xl:px-10">
           {bannerActive ? (
             <div className="marquee min-w-0 flex-1 text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">
               <span className="sr-only">{announcement}</span>
@@ -341,7 +346,7 @@ export function Header({ banner, socials }: HeaderProps) {
       </div>
 
       <nav
-        className={`mx-auto flex max-w-[1680px] items-center gap-4 px-4 transition-all sm:px-6 lg:px-8 ${
+        className={`mx-auto flex max-w-[1680px] items-center gap-4 px-4 transition-all sm:px-6 lg:px-8 min-[1280px]:gap-3 2xl:gap-5 3xl:px-10 ${
           scrolled ? "py-1.5" : "py-2"
         }`}
         aria-label="Navigation principale"
@@ -354,15 +359,15 @@ export function Header({ banner, socials }: HeaderProps) {
             width={60}
             height={60}
           />
-          <span className="block max-w-[190px] truncate text-sm font-black uppercase tracking-tight text-white transition hover:text-[#f7c600] sm:max-w-[240px] sm:text-lg lg:text-xl">
+          <span className="block max-w-[190px] truncate text-sm font-black uppercase tracking-tight text-white transition hover:text-[#f7c600] sm:max-w-[240px] sm:text-lg lg:text-xl min-[1280px]:hidden min-[1440px]:block min-[1440px]:max-w-[210px] 3xl:max-w-[260px]">
             ES Viry-Châtillon
           </span>
         </Link>
 
-        <div ref={desktopNavRef} className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-white/12 bg-white/[0.045] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl min-[1280px]:flex">
+        <div ref={desktopNavRef} className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 rounded-full border border-white/12 bg-white/[0.045] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-xl min-[1280px]:flex min-[1440px]:gap-1 3xl:gap-1.5">
           {navItems.map((item) => {
             const active = isItemActive(item);
-            const triggerClass = `focus-ring relative inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[12px] font-black uppercase transition min-[1500px]:px-4 min-[1500px]:text-[13px] ${
+            const triggerClass = `focus-ring relative inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-2 text-[11px] font-black uppercase transition min-[1440px]:px-3 min-[1500px]:px-4 min-[1500px]:text-[13px] ${
               active ? "bg-[#f7c600] text-[#001c10] shadow-[0_8px_22px_rgba(247,198,0,0.24)]" : "text-white/90 hover:bg-white/8 hover:text-[#f7c600]"
             }`;
 
@@ -375,6 +380,7 @@ export function Header({ banner, socials }: HeaderProps) {
             }
 
             const expanded = openMenu === item.href;
+            const menuId = menuDomId(item.href);
             return (
               <div
                 className="relative"
@@ -389,21 +395,31 @@ export function Header({ banner, socials }: HeaderProps) {
               >
                 <button
                   aria-current={active ? "page" : undefined}
-                  aria-controls={`submenu-${item.href}`}
+                  aria-controls={`submenu-${menuId}`}
                   aria-expanded={expanded}
                   aria-haspopup="true"
                   className={triggerClass}
-                  id={`menu-trigger-${item.href}`}
-                    onClick={() => setOpenMenu((current) => (current === item.href ? null : item.href))}
+                  id={`menu-trigger-${menuId}`}
+                  onClick={() => setOpenMenu((current) => (current === item.href ? null : item.href))}
+                  onKeyDown={(event) => {
+                    if (event.key !== "ArrowDown") {
+                      return;
+                    }
+                    event.preventDefault();
+                    setOpenMenu(item.href);
+                    requestAnimationFrame(() => {
+                      document.querySelector<HTMLElement>(`#submenu-${menuId} a`)?.focus();
+                    });
+                  }}
                   type="button"
                 >
                   {item.label}
                   <ChevronDown size={13} aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
                 </button>
                 <div
-                  id={`submenu-${item.href}`}
+                  id={`submenu-${menuId}`}
                   inert={!expanded}
-                  className={`absolute left-0 top-full w-72 pt-4 transition duration-200 ${
+                  className={`absolute left-0 top-full w-72 pt-4 transition duration-200 2xl:w-80 ${
                     expanded ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
                   }`}
                 >
@@ -436,7 +452,7 @@ export function Header({ banner, socials }: HeaderProps) {
 
         <div className="ml-auto flex flex-none items-center gap-2">
           <Link
-            className="focus-ring hidden h-11 items-center gap-2 rounded-full border border-white/18 bg-white/5 px-4 text-xs font-black uppercase hover:border-[#f7c600]/65 hover:text-[#f7c600] min-[1280px]:inline-flex"
+            className="focus-ring hidden h-11 items-center gap-2 rounded-full border border-white/18 bg-white/5 px-3 text-xs font-black uppercase hover:border-[#f7c600]/65 hover:text-[#f7c600] min-[1280px]:inline-flex min-[1440px]:px-4"
             href="/espace-membre"
             title="Mon espace"
           >
@@ -444,7 +460,7 @@ export function Header({ banner, socials }: HeaderProps) {
             <span className="hidden min-[1500px]:inline">Mon espace</span>
           </Link>
           <Link
-            className="focus-ring hidden h-11 items-center gap-2 rounded-full bg-[#f7c600] px-5 text-xs font-black uppercase text-[#001c10] shadow-[0_12px_28px_rgba(247,198,0,0.22)] transition hover:bg-white min-[1280px]:inline-flex"
+            className="focus-ring hidden h-11 items-center gap-2 rounded-full bg-[#f7c600] px-4 text-xs font-black uppercase text-[#001c10] shadow-[0_12px_28px_rgba(247,198,0,0.22)] transition hover:bg-white min-[1280px]:inline-flex min-[1440px]:px-5"
             href="/inscriptions"
           >
             Rejoindre
@@ -456,7 +472,10 @@ export function Header({ banner, socials }: HeaderProps) {
             aria-expanded={open}
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             className="focus-ring rounded-md border border-white/18 p-2 hover:bg-white/10 min-[1280px]:hidden"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => {
+              setOpen((value) => !value);
+              setOpenMobileGroup((current) => current || mobileNavGroups[0]?.href || "");
+            }}
             type="button"
           >
             {open ? <X size={28} /> : <Menu size={28} />}
@@ -473,7 +492,7 @@ export function Header({ banner, socials }: HeaderProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.22 }}
         >
-          <div className="mx-auto flex h-full max-w-7xl flex-col gap-3">
+          <div className="mx-auto flex h-full max-w-5xl flex-col gap-3">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#f7c600]/25 pb-3">
               <div>
                 <p className="text-xs font-black uppercase text-[#f7c600]">Menu</p>
@@ -492,7 +511,7 @@ export function Header({ banner, socials }: HeaderProps) {
               </button>
             </div>
 
-            <div className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto overscroll-contain pr-1">
+            <div className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto overscroll-contain pr-1 md:grid-cols-2">
               {mobileNavGroups.map((group) => {
                 const expanded = openMobileGroup === group.href;
                 const active = isActive(group.href) || group.links.some(([, href]) => isActive(href));
@@ -529,7 +548,7 @@ export function Header({ banner, socials }: HeaderProps) {
               })}
             </div>
 
-            <div className="grid shrink-0 gap-2 border-t border-[#f7c600]/30 pt-3">
+            <div className="grid shrink-0 gap-2 border-t border-[#f7c600]/30 pt-3 md:grid-cols-3">
               <Link
                 className="focus-ring flex items-center gap-2 rounded-md border border-white/18 px-3 py-3 text-sm font-black uppercase text-white hover:bg-white/10"
                 href="/espace-membre"

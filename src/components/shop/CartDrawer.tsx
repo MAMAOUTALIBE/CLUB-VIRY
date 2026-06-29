@@ -103,7 +103,7 @@ export function CartDrawer() {
           aria-modal="true"
           aria-label="Panier"
         >
-          <div className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl xl:max-w-lg 3xl:max-w-xl" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <h2 className="text-lg font-black uppercase text-[#002f1d]">Mon panier</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label="Fermer le panier" className="focus-ring rounded-md p-1 text-slate-500 hover:bg-slate-100">

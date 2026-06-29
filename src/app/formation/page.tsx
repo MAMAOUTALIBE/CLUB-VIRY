@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, GraduationCap, Target, Users } from "lucide-react";
 
 import { ButtonLink } from "@/components/ButtonLink";
+import { DesktopOnly, MobileLinkCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -39,6 +40,22 @@ const sections = [
 export default function FormationPage() {
   return (
     <>
+      <MobileScreen
+        eyebrow="Formation"
+        title="Parcours joueur"
+        description="École de foot, football à 11, projet éducatif et stages : l’essentiel en accès rapide."
+        actions={[{ href: "/inscriptions", label: "Rejoindre le club" }]}
+      >
+        <div className="grid h-full content-start gap-3 md:grid-cols-2">
+          {sections.map((section) => (
+            <MobileLinkCard href={section.href} key={section.href}>
+              <h2 className="text-lg font-black uppercase text-[#002f1d]">{section.title}</h2>
+              <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-slate-700">{section.text}</p>
+            </MobileLinkCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         eyebrow="Formation"
         description="De l'école de foot aux Seniors, l'ES Viry-Châtillon forme ses joueurs avec un projet clair, des éducateurs diplômés et un cadre exigeant. Explorez les différentes facettes de la formation au club."
@@ -55,7 +72,7 @@ export default function FormationPage() {
             title="Explorer la formation"
             text="Quatre entrées pour comprendre l'organisation sportive du club, de l'accueil des plus jeunes aux stages de perfectionnement."
           />
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             {sections.map((section) => {
               const Icon = section.icon;
               return (
@@ -79,6 +96,7 @@ export default function FormationPage() {
           </div>
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { CalendarDays, ChevronRight, Clock, MapPin, Shield, Sparkles } from "lucide-react";
 import Link from "next/link";
 
+import { DesktopOnly, MobileCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -37,6 +38,40 @@ export default async function CalendarPage() {
 
   return (
     <>
+      <MobileScreen
+        eyebrow={calendar.monthTitle}
+        title="Calendrier"
+        description="Le prochain rendez-vous reste visible, la liste complète défile dans la zone centrale."
+        actions={[{ href: "/resultats", label: "Voir les résultats", variant: "secondary" }]}
+      >
+        <div className="flex h-full min-h-0 flex-col gap-3">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">{calendar.featured.eyebrow}</p>
+            <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{calendar.featured.title}</h2>
+            <p className="mt-2 text-sm font-bold text-slate-700">
+              {calendar.featured.dateLabel} · {calendar.featured.timeLabel}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-600">{calendar.featured.place}</p>
+          </MobileCard>
+          <MobileScrollableList>
+            {calendar.items.map((item) => (
+              <MobileCard key={item.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase text-[#664d00]">{item.eyebrow}</p>
+                    <h2 className="mt-1 text-base font-black uppercase text-[#002f1d]">{item.title}</h2>
+                  </div>
+                  <span className="shrink-0 text-right text-xs font-black uppercase text-slate-600">{item.dateLabel}</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-slate-700">
+                  {item.timeLabel} · {item.place}
+                </p>
+              </MobileCard>
+            ))}
+          </MobileScrollableList>
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Matchs, événements, stages et rendez-vous du club." image={images.pitch} title="Calendrier">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#f7c600]/40 bg-black/30 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#f7c600] backdrop-blur">
           <Sparkles size={15} />
@@ -84,7 +119,7 @@ export default async function CalendarPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:px-8 3xl:grid-cols-[0.72fr_1.28fr]">
         <div className="club-panel rounded-2xl p-6 text-white lg:sticky lg:top-28">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f7c600]/15 text-[#f7c600]">
@@ -198,7 +233,7 @@ export default async function CalendarPage() {
 
         <div>
           <SectionTitle eyebrow="Matchs et événements" title="Prochains rendez-vous" />
-          <div className="space-y-4">
+          <div className="space-y-4 2xl:grid 2xl:grid-cols-2 2xl:gap-4 2xl:space-y-0">
             {calendar.items.map((item) => (
               <article className="official-card group rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl" key={item.id}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -233,6 +268,7 @@ export default async function CalendarPage() {
         text="Chaque match est une occasion de faire vivre le stade, les familles et les couleurs du club."
         title="Venez soutenir les Jaune et Vert"
       />
+      </DesktopOnly>
     </>
   );
 }

@@ -11,8 +11,15 @@ type FeatureCardsProps = {
 };
 
 export function FeatureCards({ items, inverse = false }: FeatureCardsProps) {
+  const gridDensity =
+    items.length >= 5
+      ? "lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5"
+      : items.length === 4
+        ? "lg:grid-cols-3 xl:grid-cols-4"
+        : "lg:grid-cols-3";
+
   return (
-    <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <Stagger className={`grid gap-4 sm:grid-cols-2 ${gridDensity}`}>
       {items.map((item) => {
         const Icon = item.icon;
         return (

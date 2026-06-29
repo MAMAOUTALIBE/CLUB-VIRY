@@ -1,5 +1,6 @@
 import { Dumbbell, Eye, Send, Target } from "lucide-react";
 import { FeatureCards } from "@/components/FeatureCards";
+import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { RecruitmentForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
@@ -10,14 +11,33 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata("/detections-recrutement");
 
 export default function RecruitmentPage() {
+  const categories = ["Football à 11", "Formation", "Seniors", "Féminines", "Futsal"];
   return (
     <>
+      <MobileScreen
+        eyebrow="Détections"
+        title="Recrutement"
+        description="Candidature étudiée par la cellule sportive selon le profil, l’état d’esprit et la catégorie."
+        scrollable
+      >
+        <div className="grid gap-3 pb-2 md:grid-cols-[0.75fr_1.25fr]">
+          <div className="flex flex-wrap gap-2">
+            {categories.map((item) => (
+              <span className="rounded-md bg-[#002f1d] px-3 py-2 text-xs font-black uppercase text-[#f7c600]" key={item}>
+                {item}
+              </span>
+            ))}
+          </div>
+          <RecruitmentForm />
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         description="Tu as le talent ? Nous sommes là pour t'aider à le développer."
         image={images.training}
         title="Détections / Recrutement"
       />
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 3xl:grid-cols-[0.72fr_minmax(0,0.95fr)] 3xl:justify-center">
         <div>
           <SectionTitle title="Catégories concernées" text="Les candidatures sont étudiées par la cellule sportive du club." />
           <ul className="space-y-3">
@@ -52,6 +72,7 @@ export default function RecruitmentPage() {
         text="Tu as le talent et l'envie ? Rejoins un club ambitieux qui forme et fait progresser."
         title="Le talent se développe dans un cadre exigeant"
       />
+      </DesktopOnly>
     </>
   );
 }

@@ -11,6 +11,7 @@ import {
   Users
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { SectionTitle } from "@/components/SectionTitle";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { AcademyCta } from "@/components/academy/AcademyCta";
@@ -53,15 +54,44 @@ const DARK_BTN =
   "focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[#002f1d] px-6 py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_-14px_rgba(0,31,19,0.6)] transition hover:-translate-y-0.5 hover:bg-[#07542f]";
 
 export default function AcademyPage() {
+  const academyCtaHref = ACADEMY_URL || "/contact";
   return (
     <>
+      <MobileScreen
+        eyebrow="Academy"
+        title="Sport. École. Avenir."
+        description="Une plateforme pour progresser sur le terrain, à l’école et dans son projet personnel."
+        actions={[{ href: academyCtaHref, label: ACADEMY_URL ? "Accéder" : "Demander l'accès" }]}
+      >
+        <div className="grid h-full content-start gap-3 md:grid-cols-3">
+          {PILLARS.map((pillar) => (
+            <MobileCard key={pillar.title}>
+              <h2 className="text-lg font-black uppercase text-[#002f1d]">{pillar.title}</h2>
+              <p className="mt-1 text-sm font-semibold leading-5 text-slate-700">{pillar.text}</p>
+            </MobileCard>
+          ))}
+          <div className="md:col-span-3">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Publics</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {PUBLICS.slice(0, 6).map((item) => (
+                <span className="rounded-md bg-[#07542f]/8 px-2.5 py-1 text-xs font-black uppercase text-[#002f1d]" key={item.label}>
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </MobileCard>
+          </div>
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       {/* ── SECTION 1 — Hero premium immersif ── */}
       <section className="image-tint stadium-grid relative isolate overflow-hidden border-b-4 border-[#f7c600] text-white">
         <Image src={HERO_IMAGE} alt="" fill priority sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
         {/* Overlay cinématographique : sombre à gauche (lisibilité du texte), respire à droite (scène) + fond chaud bas */}
         <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#001c10]/95 via-[#001c10]/80 to-[#001c10]/35" aria-hidden="true" />
         <div className="absolute inset-0 z-[1] bg-gradient-to-t from-[#001c10]/75 via-transparent to-[#001c10]/30" aria-hidden="true" />
-        <div className="relative z-[2] mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="relative z-[2] mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24 3xl:py-28">
           <div className="max-w-2xl">
             <p className="text-sm font-black uppercase tracking-[0.22em] text-[#f7c600] [text-shadow:0_2px_8px_rgba(0,0,0,0.55)]">Forme-toi. Progresse. Réussis.</p>
             <h1 className="mt-4 [text-shadow:0_3px_16px_rgba(0,0,0,0.6)]">
@@ -114,7 +144,7 @@ export default function AcademyPage() {
               Voir toutes les formations <ArrowRight size={16} aria-hidden="true" />
             </AcademyCta>
           </div>
-          <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6">
             {FEATURED_FORMATIONS.map((formation) => {
               const Icon = formation.icon;
               return (
@@ -193,6 +223,7 @@ export default function AcademyPage() {
       </section>
 
       <StickyAcademyCta academyUrl={ACADEMY_URL} />
+      </DesktopOnly>
     </>
   );
 }

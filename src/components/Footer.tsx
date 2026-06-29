@@ -69,15 +69,92 @@ export function Footer({ socials, contact }: FooterProps) {
 
   return (
     <footer className="club-shell relative overflow-hidden border-t-4 border-[#f7c600] text-white">
-      {/* Halos décoratifs */}
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-[#f7c600]/10 blur-3xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-[#07542f]/40 blur-3xl" />
-
-      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mb-12 rounded-2xl border border-[#f7c600]/25 bg-white/[0.04] p-6 sm:p-8">
-          <NewsletterForm />
+      <div className="relative mx-auto max-w-5xl px-4 py-8 md:px-6 lg:px-8 xl:hidden">
+        <div className="flex items-center gap-3 md:justify-center">
+          <img
+            decoding="async"
+            loading="lazy"
+            className="h-14 w-14 shrink-0 rounded-full object-contain"
+            src="/club-logo.svg"
+            alt="ES Viry-Châtillon Football"
+            width={56}
+            height={56}
+          />
+          <div>
+            <p className="text-base font-black uppercase leading-tight">ES Viry-Châtillon</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#f7c600]">Football</p>
+          </div>
         </div>
-        <div className="grid gap-12 lg:grid-cols-[1.25fr_2fr_1.5fr]">
+
+        <nav className="mt-6 grid gap-2 md:grid-cols-2 lg:grid-cols-3" aria-label="Liens essentiels">
+          {[
+            ["Inscriptions", "/inscriptions"],
+            ["Calendrier", "/calendrier"],
+            ["Boutique", "/boutique"],
+            ["Contact", "/contact"],
+            ["Espace membre", "/espace-membre"]
+          ].map(([label, href]) => (
+            <Link className="focus-ring min-h-11 rounded-md border border-white/12 bg-white/[0.04] px-3 py-3 text-sm font-black uppercase text-white/85" href={href} key={href}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mt-6 flex flex-wrap gap-3 md:justify-center" aria-label="Réseaux sociaux">
+          {socialItems.map((social) => {
+            const href = socialHref(socials, social.label);
+            const live = /^(https?:|mailto:|tel:)/.test(href);
+            const className = "focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full border ring-1 ring-white/10";
+            const style = {
+              background: social.background,
+              borderColor: social.borderColor,
+              color: social.color,
+              boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
+            };
+            const icon = (
+              <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="currentColor" viewBox={social.viewBox}>
+                <path d={social.path} />
+              </svg>
+            );
+
+            return live ? (
+              <a key={social.label} href={href} target="_blank" rel="noopener noreferrer" aria-label={social.label} title={social.label} className={className} style={style}>
+                {icon}
+              </a>
+            ) : (
+              <span key={social.label} role="img" aria-label={social.label} title={social.label} className={className} style={style}>
+                {icon}
+              </span>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 grid gap-2 border-t border-white/10 pt-5 text-xs text-white/65 md:text-center">
+          <p>© 2026 ES Viry-Châtillon Football</p>
+          <div className="flex flex-wrap gap-4">
+            <Link className="focus-ring hover:text-[#f7c600]" href="/mentions-legales">
+              Mentions légales
+            </Link>
+            <Link className="focus-ring hover:text-[#f7c600]" href="/politique-confidentialite">
+              Confidentialité
+            </Link>
+            <Link className="focus-ring hover:text-[#f7c600]" href="/plan-du-site">
+              Plan du site
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden xl:block">
+        {/* Halos décoratifs */}
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-[#f7c600]/10 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-[#07542f]/40 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 3xl:py-16">
+          <div className="mb-12 rounded-2xl border border-[#f7c600]/25 bg-white/[0.04] p-6 sm:p-8 3xl:p-10">
+            <NewsletterForm />
+          </div>
+          <div className="grid gap-12 lg:grid-cols-[1.25fr_2fr_1.5fr] 3xl:grid-cols-[1.05fr_2.2fr_1.25fr] 3xl:gap-14">
           {/* Bloc marque */}
           <div>
             <div className="flex items-center gap-4">
@@ -211,6 +288,7 @@ export function Footer({ socials, contact }: FooterProps) {
             </Link>
           </div>
         </div>
+      </div>
       </div>
     </footer>
   );

@@ -26,7 +26,7 @@ export default async function HistoryPage() {
           {/* Ligne verticale dorée en dégradé, reliant les noeuds */}
           <span
             aria-hidden="true"
-            className="absolute left-7 top-7 h-[calc(100%-3.5rem)] w-[2px] rounded-full bg-gradient-to-b from-[#f7c600] via-[#f7c600]/45 to-transparent"
+            className="absolute left-7 top-7 h-[calc(100%_-_3.5rem)] w-[2px] rounded-full bg-gradient-to-b from-[#f7c600] via-[#f7c600]/45 to-transparent"
           />
           <div className="grid gap-7">
             {timeline.map(({ year, title, text, iconName }, index) => {

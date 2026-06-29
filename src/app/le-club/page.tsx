@@ -1,6 +1,7 @@
 import { Award, Building2, HeartHandshake, ShieldCheck, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { FeatureCards } from "@/components/FeatureCards";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -18,6 +19,37 @@ export default async function ClubPage() {
   const values = settings.values;
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Notre maison"
+        description="Un club formateur, familial et ambitieux, ancré à Viry-Châtillon depuis 1958."
+        actions={[
+          { href: "/inscriptions", label: "Rejoindre le club" },
+          { href: "/le-club/histoire", label: "Histoire", variant: "secondary" }
+        ]}
+      >
+        <div className="grid h-full content-start gap-3 md:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid grid-cols-3 gap-2">
+            {clubStats.slice(0, 3).map((stat) => (
+              <MobileCard key={stat.label}>
+                <p className="text-xl font-black text-[#002f1d]">{stat.value}</p>
+                <p className="mt-1 text-[11px] font-black uppercase text-slate-600">{stat.label}</p>
+              </MobileCard>
+            ))}
+          </div>
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Nos valeurs</p>
+            <div className="mt-3 grid gap-2">
+              {values.slice(0, 5).map((value) => (
+                <p className="rounded-md bg-[#07542f]/8 px-3 py-2 text-sm font-black uppercase text-[#002f1d]" key={value.title}>
+                  {value.title}
+                </p>
+              ))}
+            </div>
+          </MobileCard>
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         description="Fondé en 1958, l'ES Viry-Châtillon Football est un club formateur, ambitieux et attaché à son territoire."
         eyebrow="Le Club"
@@ -87,6 +119,7 @@ export default async function ClubPage() {
         text="Chaque saison rassemble joueurs, familles et partenaires autour du club."
         title="Construisons ensemble la prochaine saison jaune et verte"
       />
+      </DesktopOnly>
     </>
   );
 }

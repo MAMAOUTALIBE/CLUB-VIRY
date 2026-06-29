@@ -125,7 +125,7 @@ export function OfficialsCarousel({ officials }: { officials: DisplayOfficial[] 
       </div>
 
       <div className="relative">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6">
           {visibleOfficials.map((official) => (
             <OfficialProfileCard key={official.id} official={official} />
           ))}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { LiveMatch } from "@/components/LiveMatch";
 import { LiveVideo } from "@/components/LiveVideo";
+import { DesktopOnly, MobileLinkCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -20,10 +21,35 @@ export default async function NewsPage() {
 
   return (
     <>
+      <MobileScreen
+        eyebrow="Actualités"
+        title="Vie du club"
+        description="L’actualité importante en haut, le reste à parcourir sans quitter l’écran."
+        actions={[{ href: "/calendrier", label: "Calendrier", variant: "secondary" }]}
+      >
+        <div className="flex h-full min-h-0 flex-col gap-3">
+          {leadNews ? (
+            <MobileLinkCard href={`/actualites/${leadNews.slug}`}>
+              <p className="text-xs font-black uppercase text-[#664d00]">À la une · {leadNews.date}</p>
+              <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{leadNews.title}</h2>
+              <p className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-slate-700">{leadNews.excerpt}</p>
+            </MobileLinkCard>
+          ) : null}
+          <MobileScrollableList>
+            {otherNews.map((item) => (
+              <MobileLinkCard href={`/actualites/${item.slug}`} key={item.slug}>
+                <p className="text-xs font-black uppercase text-[#664d00]">{item.category} · {item.date}</p>
+                <h2 className="mt-1 text-base font-black uppercase leading-tight text-[#002f1d]">{item.title}</h2>
+              </MobileLinkCard>
+            ))}
+          </MobileScrollableList>
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Toute la vie du club : résultats, stages, événements, informations pratiques." image={images.teamHuddle} title="Actualités" />
       <section className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 lg:px-8">
         <SectionTitle eyebrow="Match en direct" title="Suivez les Jaune et Vert" text="Regardez le match en vidéo et suivez le score, le chrono et les faits de match en temps réel." />
-        <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr] 3xl:grid-cols-[1.65fr_1fr]">
           <LiveVideo />
           <LiveMatch />
         </div>
@@ -46,7 +72,7 @@ export default async function NewsPage() {
             <p className="mt-4 text-xs font-black uppercase text-[#002f1d]">Lire l'article →</p>
           </div>
         </Link>
-        <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <Stagger className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
           {otherNews.map((item) => (
             <StaggerItem key={item.title}>
               <Link className="focus-ring premium-card block h-full overflow-hidden rounded-lg bg-white" href={`/actualites/${item.slug}`}>
@@ -112,6 +138,7 @@ export default async function NewsPage() {
           </div>
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

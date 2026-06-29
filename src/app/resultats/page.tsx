@@ -1,5 +1,6 @@
 import { Medal, Trophy } from "lucide-react";
 
+import { DesktopOnly, MobileCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -16,6 +17,34 @@ export default async function ResultsPage() {
 
   return (
     <>
+      <MobileScreen
+        eyebrow="Scores"
+        title="Résultats"
+        description="Les derniers scores publiés par le club, équipe par équipe."
+        actions={[{ href: "/calendrier", label: "Calendrier", variant: "secondary" }]}
+      >
+        <MobileScrollableList>
+          {results.items.map((item) => (
+            <MobileCard key={item.id}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase text-[#664d00]">{item.competition}</p>
+                <p className="text-xs font-bold text-slate-600">{item.dateLabel}</p>
+              </div>
+              <div className="mt-3 grid gap-2">
+                <p className="flex items-center justify-between gap-3 rounded-md bg-slate-100 px-3 py-2 text-sm font-black uppercase text-[#002f1d]">
+                  <span className="truncate">{item.home}</span>
+                  <span>{item.homeScore}</span>
+                </p>
+                <p className="flex items-center justify-between gap-3 rounded-md bg-slate-100 px-3 py-2 text-sm font-black uppercase text-[#002f1d]">
+                  <span className="truncate">{item.away}</span>
+                  <span>{item.awayScore}</span>
+                </p>
+              </div>
+            </MobileCard>
+          ))}
+        </MobileScrollableList>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Derniers scores publiés par le club, équipe par équipe." image={images.teamHuddle} title="Résultats">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#f7c600]/40 bg-black/30 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#f7c600] backdrop-blur">
           <Trophy size={15} aria-hidden="true" />
@@ -33,7 +62,7 @@ export default async function ResultsPage() {
           ) : null}
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
           {results.items.map((item) => {
             const homeWins = item.homeScore > item.awayScore;
             const awayWins = item.awayScore > item.homeScore;
@@ -71,6 +100,7 @@ export default async function ResultsPage() {
         text="Retrouvez les prochains rendez-vous et les fiches équipes du club."
         title="Les résultats et le calendrier avancent ensemble"
       />
+      </DesktopOnly>
     </>
   );
 }

@@ -138,7 +138,7 @@ function FormShell({
   }
 
   return (
-    <form className="official-card rounded-lg bg-white p-5 sm:p-6" noValidate onSubmit={handleSubmit}>
+    <form className="official-card w-full rounded-lg bg-white p-5 sm:p-6 xl:max-w-4xl 3xl:p-8" noValidate onSubmit={handleSubmit}>
       <p className="text-xs font-black uppercase text-[#664d00]">Formulaire officiel</p>
       <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{title}</h2>
       <div className="gold-divider mt-3" aria-hidden="true" />

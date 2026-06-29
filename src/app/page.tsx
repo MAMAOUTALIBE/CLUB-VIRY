@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { HomeHeroCarousel, type HomeHeroSlide } from "@/components/HomeHeroCarousel";
+import { DesktopOnly, MobileCard, MobileLinkCard, MobileScreen } from "@/components/MobilePage";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
 import { matches } from "@/lib/data";
@@ -96,19 +97,63 @@ export default async function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }} />
-      <section className="hero-stadium relative isolate flex min-h-[85svh] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white sm:min-h-[640px] lg:h-[calc(100svh-var(--header-h))] lg:min-h-0">
+      <MobileScreen
+        eyebrow="ES Viry-Châtillon Football"
+        title="Jaune et Vert"
+        description="Club formateur de Viry-Châtillon : équipes, matchs, inscriptions et boutique en accès direct."
+        actions={[{ href: "/inscriptions", label: "Nous rejoindre" }]}
+      >
+        <div className="grid h-full content-start gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2 md:col-span-2 lg:grid-cols-4">
+            {[
+              ["Calendrier", "/calendrier"],
+              ["Boutique", "/boutique"],
+              ["Équipes", "/equipes"],
+              ["Actu", "/actualites"]
+            ].map(([label, href]) => (
+              <MobileLinkCard href={href} key={href}>
+                <p className="text-sm font-black uppercase text-[#002f1d]">{label}</p>
+              </MobileLinkCard>
+            ))}
+          </div>
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Prochain match</p>
+            <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{nextMatch.team}</h2>
+            <p className="mt-2 text-sm font-bold text-slate-700">
+              {shortTeam(nextMatch.home)} vs {shortTeam(nextMatch.away)}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-600">
+              {nextMatch.date} · {nextMatch.time}
+            </p>
+          </MobileCard>
+          {leadNews ? (
+            <MobileLinkCard href={`/actualites/${leadNews.slug}`}>
+              <p className="text-xs font-black uppercase text-[#664d00]">À la une</p>
+              <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{leadNews.title}</h2>
+              <p className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-slate-700">{leadNews.excerpt}</p>
+            </MobileLinkCard>
+          ) : null}
+          {partnerNames.length ? (
+            <p className="text-center text-xs font-black uppercase text-[#002f1d]/65 md:col-span-2">
+              Partenaires : {partnerNames.slice(0, 3).join(" · ")}
+            </p>
+          ) : null}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
+      <section className="hero-stadium relative isolate flex min-h-[85svh] flex-col overflow-hidden border-b border-[#f7c600]/35 text-white sm:min-h-[640px] lg:h-[calc(100svh_-_var(--header-h))] lg:min-h-0 3xl:min-h-[760px]">
         <HomeHeroCarousel slides={heroSlides} />
         {/* Contenu principal (centré, occupe l'espace disponible) */}
-        <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="w-full max-w-4xl">
+        <div className="relative z-[2] mx-auto flex w-full max-w-[1720px] flex-1 items-center px-4 py-6 sm:px-6 lg:px-8 lg:py-8 3xl:max-w-[1920px] 3xl:px-10">
+          <div className="w-full max-w-4xl 3xl:max-w-5xl">
             {/* Hero above-the-fold rendu en HTML statique (pas de framer-motion) :
                 le LCP ne depend plus de l'hydratation JS. */}
             <div>
               <h1 className="max-w-4xl">
-                <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
+                <span className="font-script block text-6xl leading-[1.05] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl 3xl:text-9xl">
                   Une passion
                 </span>
-                <span className="font-script -mt-1 block pl-6 text-6xl leading-[1.05] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl">
+                <span className="font-script -mt-1 block pl-6 text-6xl leading-[1.05] text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-7xl xl:text-8xl 2xl:text-8xl 3xl:text-9xl">
                   notre force
                 </span>
               </h1>
@@ -131,7 +176,7 @@ export default async function HomePage() {
         </div>
 
         {/* Barre statistiques : tout en bas du hero, compacte, une seule ligne par carte */}
-        <div className="relative z-[2] mx-auto w-full max-w-[1560px] shrink-0 px-4 pb-4 sm:px-6 lg:px-8 lg:pb-5">
+        <div className="relative z-[2] mx-auto w-full max-w-[1560px] shrink-0 px-4 pb-4 sm:px-6 lg:px-8 lg:pb-5 3xl:max-w-[1800px] 3xl:px-10">
           <Stagger
             aria-label="Chiffres clés du club"
             role="group"
@@ -159,7 +204,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
-        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 3xl:gap-5">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
@@ -185,7 +230,7 @@ export default async function HomePage() {
         </Stagger>
       </section>
 
-      <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
+      <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 3xl:grid-cols-[1.18fr_0.82fr] 3xl:gap-8">
         {/* ── Prochains matchs : affichage compact en liste ── */}
         <div className="club-panel relative overflow-hidden rounded-3xl p-5 text-white sm:p-7">
           <div className="stadium-grid pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
@@ -413,7 +458,7 @@ export default async function HomePage() {
             </span>
           </div>
 
-          <Stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          <Stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 3xl:grid-cols-6 4xl:grid-cols-8">
             {partnerNames.slice(0, 8).map((partner, index) => {
               const TIERS: Record<string, string> = {
                 "Essonne Département": "Institutionnel",
@@ -536,6 +581,7 @@ export default async function HomePage() {
           </Stagger>
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

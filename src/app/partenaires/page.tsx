@@ -2,6 +2,7 @@ import { BadgeEuro, Eye, Handshake, Megaphone } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { FeatureCards } from "@/components/FeatureCards";
 import { PartnerForm } from "@/components/Forms";
+import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -15,8 +16,28 @@ export default async function PartnersPage() {
   const partners = await getPublicPartners();
   return (
     <>
+      <MobileScreen
+        eyebrow="Partenaires"
+        title="Soutenir le club"
+        description="Associez votre image à un club formateur et populaire du territoire."
+        actions={[{ href: "/contact", label: "Devenir partenaire" }]}
+        scrollable
+      >
+        <div className="grid grid-cols-2 gap-3 pb-2 lg:grid-cols-3">
+          {partners.map((partner) => (
+            <div className="flex min-h-24 items-center justify-center rounded-lg border border-[#07542f]/12 bg-white p-3 text-center shadow-sm" key={partner.name}>
+              {partner.logoUrl ? (
+                <img src={partner.logoUrl} alt={partner.name} className="max-h-12 w-auto object-contain" />
+              ) : (
+                <span className="text-sm font-black uppercase text-[#002f1d]">{partner.name}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Associez votre image à un club formateur et populaire du territoire." image={images.supporters} title="Partenaires" />
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8 3xl:grid-cols-[0.7fr_1.3fr]">
         <div className="club-panel rounded-lg p-6 text-white">
           <h2 className="text-3xl font-black uppercase text-[#f7c600]">Devenez partenaire du club</h2>
           <p className="mt-4 text-white/80">Visibilité locale, visibilité stade, événements, textile, médias : construisons une offre adaptée.</p>
@@ -26,7 +47,7 @@ export default async function PartnersPage() {
         </div>
         <div>
           <SectionTitle title="Ils nous font confiance" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6">
             {partners.map((partner) => {
               const inner = partner.logoUrl ? (
                 <img src={partner.logoUrl} alt={partner.name} className="mx-auto max-h-16 w-auto object-contain" />
@@ -62,6 +83,7 @@ export default async function PartnersPage() {
           <PartnerForm />
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

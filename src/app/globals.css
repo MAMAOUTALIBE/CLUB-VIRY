@@ -23,6 +23,15 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
+main {
+  min-width: 0;
+}
+
 /* Dissuasion du téléchargement des images : pas de glisser-déposer ni de sélection
    (le menu contextuel et les raccourcis Ctrl+S/Ctrl+P sont gérés par ImageProtection,
    l'anti-hotlink / accès direct par le proxy). */
@@ -496,6 +505,15 @@ details.ac-frame[open] {
   }
   .max-w-\[1680px\] {
     max-width: 98rem;
+  }
+}
+
+@media (min-width: 1536px) and (max-width: 1919.98px) {
+  .max-w-7xl {
+    max-width: 86rem;
+  }
+  .max-w-\[1680px\] {
+    max-width: 92rem;
   }
 }
 
