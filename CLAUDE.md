@@ -18,6 +18,8 @@ npm run seed:test-users   # seed local Supabase auth + profiles for manual CRM t
 
 Run a single test file: `node --test --experimental-strip-types tests/auth-validation.test.mjs`
 
+Three suites exist: `auth-validation.test.mjs` (the `validate*Payload()` functions — add coverage here for new validators), `runtime-env.test.mjs`, and `seed-local-test-users.test.mjs`.
+
 Node **>=22 <23** is required (see `.nvmrc` / `engines`). Always run `typecheck`, `lint`, `test`, and `build` before deploying.
 
 CI (`.github/workflows/ci.yml`, on PRs + push to `main`) runs the same gate end-to-end: it copies `.env.production.example` → `.env.local`, then `npm audit --audit-level=moderate`, `typecheck`, `lint`, `test`, `build` (with `NEXT_PUBLIC_SITE_URL` set), and finally `docker compose config` to validate the compose stack. Keep these green locally before pushing — a moderate-or-higher `npm audit` finding fails the build.
@@ -74,7 +76,7 @@ export async function GET(request: NextRequest) {
 
 ## Frontend structure
 
-- `src/app/` — Next.js App Router. Public site is the French slugs at the root (`le-club`, `equipes`, `formation`, `calendrier`, `boutique`, `inscriptions`, `detections-recrutement`, …). `src/app/admin/*` is the CRM (~25 pages). `src/app/api/*` is ~104 route handlers.
+- `src/app/` — Next.js App Router. Public site is the French slugs at the root (`le-club`, `equipes`, `formation`, `calendrier`, `boutique`, `inscriptions`, `detections-recrutement`, …). `src/app/admin/*` is the CRM (~25 pages). `src/app/api/*` is ~106 route handlers. `/api/backend/health` is the unauthenticated health/smoke-test endpoint the deploy scripts poll.
 - `src/components/{admin,member,educator,club,academy}/` — admin CRM widgets (`AdminCrud`, `AdminModuleBoard`, `Admin360Explorer`, etc.) are client components that call the API with `credentials: "include"` so the HttpOnly cookie rides along.
 - Styling is **TailwindCSS v4** (config-less, via `@tailwindcss/postcss`). Club brand colors recur as literals: green `#002f1d`, yellow `#f7c600`.
 - SEO/security helpers: `src/lib/seo.ts`, `src/lib/jsonld.ts` (escaped JSON-LD, anti-XSS). Strict CSP and security headers are set in `next.config.ts` (`output: "standalone"`).
@@ -82,7 +84,7 @@ export async function GET(request: NextRequest) {
 
 ## Deployment
 
-Production is **vitrine mode**, Docker + Traefik on a VPS, domain `esvirychatillonfootball.org`, branch `main`. See `DEPLOYMENT.md` (French, step-by-step) and `./deploy.sh` (SSH + rebuild on the VPS + healthcheck + smoke test). `docker-compose.yml` is the base stack; `docker-compose.crm.yml` is an overlay adding the self-hosted Supabase network when running CRM mode. Env on the VPS lives in `/opt/esviry/.env` (out of git); `NEXT_PUBLIC_*` vars are inlined at **build** time (passed as Docker build args), so switching modes requires a rebuild. Captured leads persist in the `./var/leads` volume.
+Production is **vitrine mode**, Docker + Traefik on a VPS, domain `esvirychatillonfootball.org`, branch `main`. See `DEPLOYMENT.md` (French, step-by-step) and `./deploy.sh` (SSH + rebuild on the VPS + healthcheck + smoke test against `https://<domain>/api/backend/health`). `docker-compose.yml` is the base stack; `docker-compose.crm.yml` is an overlay adding the self-hosted Supabase network when running CRM mode. Env on the VPS lives in `/opt/esviry/.env` (out of git); `NEXT_PUBLIC_*` vars are inlined at **build** time (passed as Docker build args), so switching modes requires a rebuild. Captured leads persist in the `./var/leads` volume.
 
 The base `docker-compose.yml` only attaches Traefik labels — it assumes an **external Traefik already running**. The reverse-proxy itself lives in `infra/traefik/docker-compose.traefik.yml` (Traefik v3, ports 80/443, Let's Encrypt TLS-ALPN via `letsencrypt` resolver, joins the `esviry-net` network). For a **from-scratch VPS** (e.g. fresh Hostinger): `scripts/provision-vps.sh` bootstraps Docker + UFW, then follow `docs/deploiement-hostinger.md` end-to-end (DNS → Supabase Cloud → first manual `up` → start Traefik → smoke test). CRM env template: `.env.production.crm.example`. First bring-up is manual (the site must create `esviry-net` before Traefik starts, and `deploy.sh`'s HTTPS smoke test needs Traefik live); `deploy.sh` is for updates thereafter.
 
