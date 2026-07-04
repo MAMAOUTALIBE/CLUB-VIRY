@@ -87,6 +87,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  devIndicators: false,
+  allowedDevOrigins: ["192.168.1.98"],
   images: {
     // AVIF en premier (poids ~20-30% < WebP), WebP en repli. Sert les <Image> en formats modernes.
     formats: ["image/avif", "image/webp"],

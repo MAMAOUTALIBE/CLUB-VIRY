@@ -27,12 +27,12 @@ export function OfficialsAdmin() {
         { name: "position", label: "Fonction", required: true, placeholder: "Président, Trésorier, Responsable licences…", fullWidth: true },
         {
           name: "photoUrl",
-          label: "Photo du responsable (URL)",
+          label: "Photo individuelle du membre (URL)",
           type: "url",
           rowKey: "photo_url",
           placeholder: "https://…",
           fullWidth: true,
-          help: "Téléversez la photo dans Médias / Supabase Storage ou un hébergeur autorisé, puis collez l'URL ici. Format conseillé : portrait vertical 800 x 1000 px."
+          help: "Cette photo apparaît sur la fiche du membre et ne remplace pas la photo de couverture de la page. Format conseillé : portrait vertical 800 x 1000 px."
         },
         { name: "orderIndex", label: "Ordre d'affichage", type: "number", rowKey: "order_index", help: "Petit nombre = affiché en premier (le Président en 0)." },
         { name: "isActive", label: "Actif (visible sur le site)", type: "boolean", rowKey: "is_active" }

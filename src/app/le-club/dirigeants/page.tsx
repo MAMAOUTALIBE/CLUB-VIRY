@@ -1,5 +1,6 @@
 import { ButtonLink } from "@/components/ButtonLink";
-import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
+import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
+import { OfficialIdentityCard } from "@/components/OfficialIdentityCard";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StaffDirectory } from "@/components/club/ClubPublicBlocks";
@@ -22,13 +23,13 @@ export default async function DirigeantsPage() {
         actions={[{ href: "/le-club/organigramme", label: "Organigramme" }]}
         scrollable
       >
-        <div className="grid gap-3 pb-2">
-          {people.map((person) => (
-            <MobileCard key={person.name}>
-              <p className="text-xs font-black uppercase text-[#664d00]">{person.pole}</p>
-              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{person.name}</h2>
-              <p className="mt-1 text-sm font-semibold text-slate-700">{person.role}</p>
-            </MobileCard>
+        <div className="grid gap-3 pb-6">
+          {dirigeants.map((official) => (
+            <OfficialIdentityCard
+              key={official.id}
+              href={`/le-club/organigramme/${official.slug}`}
+              official={{ name: official.name, position: official.position, department: official.department, photo: official.photo }}
+            />
           ))}
         </div>
       </MobileScreen>

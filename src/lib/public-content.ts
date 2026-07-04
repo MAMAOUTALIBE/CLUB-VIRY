@@ -778,6 +778,27 @@ function inferOfficialProfile(position: string, category: DisplayOfficial["categ
     };
   }
 
+  if (
+    normalized.includes("information") ||
+    normalized.includes("numerique") ||
+    normalized.includes("informatique") ||
+    normalized.includes("digital") ||
+    normalized.includes("web")
+  ) {
+    return {
+      department: "Systèmes d'information",
+      bio: "Responsable des systèmes d'information et du numérique du club : site officiel, CRM, données, outils digitaux et accompagnement de la formation.",
+      missions: ["Développer et maintenir le site du club", "Administrer les systèmes d'information et les données", "Outiller le numérique de la formation"],
+      availability: "Disponible en ligne, réponse via le club",
+      contactLabel: "Contact numérique",
+      contactHref: "/contact",
+      links: [
+        { label: "Le Club", href: "/le-club" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
   return {
     department: category === "BUREAU" ? "Bureau exécutif" : "Vie du club",
     bio: "Responsable engagé dans le fonctionnement quotidien du club et l'accompagnement des licenciés, familles et bénévoles.",
@@ -986,6 +1007,22 @@ const mockOfficials: ClubOfficialsContent = {
       contactHref: "/contact",
       links: [
         { label: "Stade Henri Longuet", href: "/le-club/stade-henri-longuet" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "d7",
+      name: "BAH Mamadou",
+      category: "DIRIGEANT",
+      position: "Responsable systèmes d'information & numérique",
+      department: "Systèmes d'information",
+      bio: "Développeur du site officiel du club, il pilote l'ensemble des systèmes d'information : site, CRM, données, outils numériques et accompagnement digital de la formation.",
+      missions: ["Développer et maintenir le site du club", "Administrer les systèmes d'information et les données", "Outiller le numérique de la formation"],
+      availability: "Disponible en ligne, réponse via le club",
+      contactLabel: "Contact numérique",
+      contactHref: "/contact",
+      links: [
+        { label: "Le Club", href: "/le-club" },
         { label: "Contact", href: "/contact" }
       ]
     })

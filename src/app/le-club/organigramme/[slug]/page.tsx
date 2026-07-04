@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, Camera, Link as LinkIcon, Mail, MapPin, ShieldCheck, Users } from "lucide-react";
 
 import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
+import { OfficialIdentityCard } from "@/components/OfficialIdentityCard";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -107,7 +108,8 @@ export default async function OfficialProfilePage({ params }: Props) {
         ]}
         scrollable
       >
-        <div className="grid gap-3 pb-2">
+        <div className="grid gap-3 pb-6">
+          <OfficialIdentityCard official={{ name: official.name, position: official.position, department: official.department, photo: official.photo }} />
           <MobileCard>
             <p className="text-xs font-black uppercase text-[#664d00]">Rôle</p>
             <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{official.position}</h2>
