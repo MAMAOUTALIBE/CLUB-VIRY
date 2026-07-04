@@ -3,13 +3,17 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StaffDirectory } from "@/components/club/ClubPublicBlocks";
-import { dirigeants } from "@/lib/club-pages-data";
+import { getClubOfficials, officialToStaffPerson } from "@/lib/public-content";
 import { images } from "@/lib/images";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/dirigeants");
+export const revalidate = 300;
 
-export default function DirigeantsPage() {
+export default async function DirigeantsPage() {
+  const { dirigeants } = await getClubOfficials();
+  const people = dirigeants.map((official) => officialToStaffPerson(official, images.supporters));
+
   return (
     <>
       <MobileScreen
@@ -19,7 +23,7 @@ export default function DirigeantsPage() {
         scrollable
       >
         <div className="grid gap-3 pb-2">
-          {dirigeants.map((person) => (
+          {people.map((person) => (
             <MobileCard key={person.name}>
               <p className="text-xs font-black uppercase text-[#664d00]">{person.pole}</p>
               <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{person.name}</h2>
@@ -31,7 +35,7 @@ export default function DirigeantsPage() {
       <DesktopOnly>
       <PageHero
         eyebrow="Le Club"
-        description="Les dirigeants accompagnent le fonctionnement quotidien du club : administratif, logistique, communication, sportif et partenariats."
+        description="Les dirigeants accompagnent le fonctionnement quotidien du club : administratif, licences, communication, partenariats, bénévoles, arbitrage et sécurité."
         image={images.supporters}
         title="Les dirigeants"
       >
@@ -39,8 +43,8 @@ export default function DirigeantsPage() {
       </PageHero>
 
       <StaffDirectory
-        intro="Cette présentation publique évite les contacts personnels directs. Les familles et partenaires passent par les canaux officiels du club."
-        people={dirigeants}
+        intro="Les responsables de pôle et référents du club. Cette présentation publique évite les contacts personnels directs : familles et partenaires passent par les canaux officiels du club."
+        people={people}
       />
 
       <section className="bg-[#f7f8f4] px-4 py-14 sm:px-6 lg:px-8">

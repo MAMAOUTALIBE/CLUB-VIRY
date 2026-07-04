@@ -53,21 +53,8 @@ export const footA11Educators: StaffPerson[] = [
   { name: "Amina Roux", role: "Preparation physique", category: "Seniors", pole: "Performance", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Prevention", "Reathletisation"] }
 ];
 
-export const dirigeants: StaffPerson[] = [
-  { name: "Samir Rahmani", role: "Responsable administratif", category: "Administration", pole: "Administration", contact: "contact via secretariat", photo: images.supporters, tags: ["Licences", "Dossiers"] },
-  { name: "Claire Dubois", role: "Referente communication", category: "Communication", pole: "Communication", contact: "contact via secretariat", photo: images.supporters, tags: ["Site", "Reseaux"] },
-  { name: "Jean Morel", role: "Responsable logistique", category: "Logistique", pole: "Logistique", contact: "contact via secretariat", photo: images.supporters, tags: ["Materiel", "Planning"] },
-  { name: "Binta Sow", role: "Coordination sportive", category: "Sportif", pole: "Sportif", contact: "contact via secretariat", photo: images.supporters, tags: ["Equipes", "Educateurs"] },
-  { name: "Olivier Petit", role: "Partenariats locaux", category: "Administration", pole: "Partenariats", contact: "contact via secretariat", photo: images.supporters, tags: ["Sponsors"] }
-];
-
-export const bureau: StaffPerson[] = [
-  { name: "SAGLAM FERHAT", role: "President", category: "Presidence", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
-  { name: "Fatou Camara", role: "Vice-presidente", category: "Direction", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
-  { name: "Laurent Girard", role: "Tresorier", category: "Finances", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
-  { name: "Sonia Mercier", role: "Secretaire generale", category: "Administration", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial },
-  { name: "Equipe bureau", role: "Membres actifs", category: "Vie associative", pole: "Bureau", contact: "contact via secretariat", photo: images.stadiumAerial }
-];
+// Les membres du bureau et les dirigeants proviennent désormais de la source unique
+// `getClubOfficials()` (src/lib/public-content.ts), partagée avec l'organigramme.
 
 export const trainingSlots = [
   { category: "U6-U7", time: "Mercredi 14h00 - 15h30", place: "Terrain synthetique" },

@@ -15,6 +15,7 @@ import type { Match, NewsArticle } from "@/lib/db/types";
 import { images } from "@/lib/images";
 import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
+import type { StaffPerson } from "@/lib/club-pages-data";
 
 /**
  * Couche de lecture publique du contenu éditorial.
@@ -597,6 +598,21 @@ function officialSlug(name: string, id: string): string {
 function inferOfficialProfile(position: string, category: DisplayOfficial["category"]): Pick<DisplayOfficial, "department" | "bio" | "missions" | "availability" | "contactLabel" | "contactHref" | "links"> {
   const normalized = position.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
+  if (normalized.includes("vice")) {
+    return {
+      department: "Gouvernance",
+      bio: "Bras droit de la présidence, il assure la continuité des décisions du bureau, la coordination interne et le suivi des dossiers transverses du club.",
+      missions: ["Seconder la présidence", "Coordonner les responsables de pôle", "Assurer le suivi des décisions du bureau"],
+      availability: "Sur rendez-vous via le club",
+      contactLabel: "Contacter la gouvernance",
+      contactHref: "/contact",
+      links: [
+        { label: "Organigramme", href: "/le-club/organigramme" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
   if (normalized.includes("president")) {
     return {
       department: "Présidence",
@@ -702,6 +718,66 @@ function inferOfficialProfile(position: string, category: DisplayOfficial["categ
     };
   }
 
+  if (normalized.includes("correspondant")) {
+    return {
+      department: "Administration & licences",
+      bio: "Correspondant officiel du club et interlocuteur des familles pour les licences : créations, renouvellements, pièces administratives et suivi des dossiers.",
+      missions: ["Assurer le rôle de correspondant du club", "Suivre les licences et inscriptions", "Accompagner les familles dans leurs démarches"],
+      availability: "Permanence administrative les soirs d'entraînement",
+      contactLabel: "Question inscription",
+      contactHref: "/inscriptions",
+      links: [
+        { label: "Inscriptions", href: "/inscriptions" },
+        { label: "Espace membre", href: "/espace-membre" }
+      ]
+    };
+  }
+
+  if (normalized.includes("arbitre")) {
+    return {
+      department: "Arbitrage",
+      bio: "Référent arbitrage du club, il accompagne les arbitres, veille au respect des règles et fait le lien avec les instances sur les questions d'arbitrage.",
+      missions: ["Accompagner les arbitres du club", "Faire le lien avec les instances", "Sensibiliser au respect de l'arbitrage"],
+      availability: "Contact via le club",
+      contactLabel: "Contacter le club",
+      contactHref: "/contact",
+      links: [
+        { label: "Calendrier", href: "/calendrier" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
+  if (normalized.includes("securite")) {
+    return {
+      department: "Sécurité",
+      bio: "Référent sécurité du club, il veille au bon déroulement et à la sécurité lors des rencontres, manifestations et rassemblements au stade.",
+      missions: ["Veiller à la sécurité des rencontres", "Coordonner l'accueil et les accès", "Prévenir les risques lors des manifestations"],
+      availability: "Présent les jours de match et d'événement",
+      contactLabel: "Contacter le club",
+      contactHref: "/contact",
+      links: [
+        { label: "Stade Henri Longuet", href: "/le-club/stade-henri-longuet" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
+  if (normalized.includes("benevole") || normalized.includes("manifestation")) {
+    return {
+      department: "Bénévoles & manifestations",
+      bio: "Responsable de la mobilisation des bénévoles et de l'organisation des manifestations qui rassemblent licenciés, familles et supporters du club.",
+      missions: ["Coordonner les bénévoles", "Organiser les manifestations du club", "Assurer l'accueil du public lors des événements"],
+      availability: "Avant chaque événement du club",
+      contactLabel: "Aider comme bénévole",
+      contactHref: "/contact",
+      links: [
+        { label: "Calendrier", href: "/calendrier" },
+        { label: "Contact", href: "/contact" }
+      ]
+    };
+  }
+
   return {
     department: category === "BUREAU" ? "Bureau exécutif" : "Vie du club",
     bio: "Responsable engagé dans le fonctionnement quotidien du club et l'accompagnement des licenciés, familles et bénévoles.",
@@ -747,12 +823,13 @@ function enrichOfficial(id: string, name: string, category: DisplayOfficial["cat
   };
 }
 
-// Données vitrine tant qu'aucun membre n'est saisi depuis le CRM.
+// Données officielles du club (bureau statutaire + dirigeants / responsables de pôle).
+// Source unique alimentant l'organigramme, ses fiches détail et les pages Bureau/Dirigeants.
 const mockOfficials: ClubOfficialsContent = {
   bureau: [
     buildOfficial({
       id: "b1",
-      name: "SAGLAM FERHAT",
+      name: "SAGLAM Ferhat",
       category: "BUREAU",
       position: "Président",
       department: "Présidence",
@@ -768,13 +845,13 @@ const mockOfficials: ClubOfficialsContent = {
     }),
     buildOfficial({
       id: "b2",
-      name: "A. Martin",
+      name: "FALL Ousmane",
       category: "BUREAU",
       position: "Vice-président",
       department: "Gouvernance",
-      bio: "Appui direct de la présidence, il suit les sujets transverses, la coordination interne et la continuité des décisions du bureau.",
-      missions: ["Préparer les décisions du bureau", "Coordonner les responsables de pôle", "Suivre les dossiers prioritaires"],
-      availability: "Sur rendez-vous club",
+      bio: "Bras droit de la présidence, il assure la continuité des décisions du bureau, la coordination interne et le suivi des dossiers transverses du club.",
+      missions: ["Seconder la présidence", "Coordonner les responsables de pôle", "Assurer le suivi des décisions du bureau"],
+      availability: "Sur rendez-vous via le club",
       contactLabel: "Contacter la gouvernance",
       contactHref: "/contact",
       links: [
@@ -784,12 +861,28 @@ const mockOfficials: ClubOfficialsContent = {
     }),
     buildOfficial({
       id: "b3",
-      name: "K. Sow",
+      name: "TRAORÉ Laye",
+      category: "BUREAU",
+      position: "Secrétaire général",
+      department: "Secrétariat",
+      bio: "Référent administratif du bureau, il structure les documents officiels, les convocations, comptes rendus et la vie statutaire de l'association.",
+      missions: ["Gérer les documents officiels", "Préparer les réunions et assemblées", "Centraliser les demandes administratives"],
+      availability: "Réponse via le secrétariat du club",
+      contactLabel: "Contacter le secrétariat",
+      contactHref: "/contact",
+      links: [
+        { label: "Mentions légales", href: "/mentions-legales" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "b4",
+      name: "ABDEDAIM Khaled",
       category: "BUREAU",
       position: "Trésorier",
       department: "Finances",
-      bio: "Responsable du suivi financier, il sécurise le budget, les paiements et la bonne utilisation des ressources du club.",
-      missions: ["Piloter le budget", "Suivre les paiements", "Préparer les bilans financiers"],
+      bio: "Responsable du suivi financier, il sécurise le budget, les cotisations et la bonne utilisation des ressources du club.",
+      missions: ["Piloter le budget", "Suivre les cotisations et paiements", "Préparer les bilans financiers"],
       availability: "Sur rendez-vous administratif",
       contactLabel: "Question financière",
       contactHref: "/contact",
@@ -797,34 +890,18 @@ const mockOfficials: ClubOfficialsContent = {
         { label: "Boutique", href: "/boutique" },
         { label: "Contact", href: "/contact" }
       ]
-    }),
-    buildOfficial({
-      id: "b4",
-      name: "M. Dubois",
-      category: "BUREAU",
-      position: "Secrétaire général",
-      department: "Secrétariat",
-      bio: "Référent administratif du bureau, il structure les documents officiels, les convocations, comptes rendus et échanges institutionnels.",
-      missions: ["Gérer les documents officiels", "Préparer les réunions", "Centraliser les demandes administratives"],
-      availability: "Réponse via le club",
-      contactLabel: "Contacter le secrétariat",
-      contactHref: "/contact",
-      links: [
-        { label: "Mentions légales", href: "/mentions-legales" },
-        { label: "Contact", href: "/contact" }
-      ]
     })
   ],
   dirigeants: [
     buildOfficial({
       id: "d1",
-      name: "L. Petit",
+      name: "AURÉAL Jean-Pierre",
       category: "DIRIGEANT",
-      position: "Responsable des licences",
-      department: "Licences",
-      bio: "Interlocuteur des familles pour les créations, renouvellements et suivis de licence.",
-      missions: ["Accompagner les familles", "Contrôler les pièces administratives", "Suivre les dossiers FFF"],
-      availability: "Permanences les soirs d'entraînement",
+      position: "Correspondant · Responsable administratif et licences",
+      department: "Administration & licences",
+      bio: "Correspondant officiel du club et interlocuteur des familles pour les licences : créations, renouvellements, pièces administratives et suivi des dossiers.",
+      missions: ["Assurer le rôle de correspondant du club", "Suivre les licences et inscriptions", "Accompagner les familles dans leurs démarches"],
+      availability: "Permanence administrative les soirs d'entraînement",
       contactLabel: "Question inscription",
       contactHref: "/inscriptions",
       links: [
@@ -834,12 +911,12 @@ const mockOfficials: ClubOfficialsContent = {
     }),
     buildOfficial({
       id: "d2",
-      name: "R. Garcia",
+      name: "LOUGUEAIDI Jawad",
       category: "DIRIGEANT",
       position: "Responsable communication",
       department: "Communication",
-      bio: "Coordonne les annonces, actualités, photos et informations publiques du club.",
-      missions: ["Publier les annonces officielles", "Valoriser les équipes", "Coordonner les contenus médias"],
+      bio: "Coordonne les informations publiques du club, les annonces officielles, les supports digitaux et la valorisation des équipes.",
+      missions: ["Publier les informations officielles", "Valoriser les équipes", "Animer les supports digitaux"],
       availability: "Demandes traitées sous 48 h",
       contactLabel: "Transmettre une information",
       contactHref: "/contact",
@@ -850,12 +927,12 @@ const mockOfficials: ClubOfficialsContent = {
     }),
     buildOfficial({
       id: "d3",
-      name: "S. Bernard",
+      name: "FOL Stéphane",
       category: "DIRIGEANT",
-      position: "Responsable partenariats",
+      position: "Responsable partenariats et sponsoring",
       department: "Partenariats",
-      bio: "Développe les relations avec les partenaires locaux et accompagne les entreprises qui souhaitent soutenir le club.",
-      missions: ["Présenter les offres partenaires", "Suivre les contreparties", "Créer des relations durables"],
+      bio: "Développe les relations avec les entreprises et soutiens du territoire, et accompagne les partenaires qui souhaitent s'associer au club.",
+      missions: ["Accueillir et fidéliser les partenaires", "Construire les offres de sponsoring", "Suivre les engagements et contreparties"],
       availability: "Rendez-vous partenaires sur demande",
       contactLabel: "Devenir partenaire",
       contactHref: "/partenaires",
@@ -866,17 +943,49 @@ const mockOfficials: ClubOfficialsContent = {
     }),
     buildOfficial({
       id: "d4",
-      name: "N. Roux",
+      name: "FRIHI Fouad & CARRIC Cédric",
       category: "DIRIGEANT",
-      position: "Responsable événementiel",
-      department: "Événementiel",
-      bio: "Organise les temps forts du club, les tournois et les actions qui rassemblent licenciés, familles et bénévoles.",
-      missions: ["Planifier les événements", "Mobiliser les bénévoles", "Coordonner l'accueil public"],
-      availability: "Avant chaque événement club",
-      contactLabel: "Proposer une aide",
+      position: "Responsables bénévoles et manifestations",
+      department: "Bénévoles & manifestations",
+      bio: "Ils organisent les temps forts du club, les manifestations et mobilisent les bénévoles autour des événements qui rassemblent licenciés et familles.",
+      missions: ["Coordonner les bénévoles", "Organiser les manifestations du club", "Assurer l'accueil du public lors des événements"],
+      availability: "Avant chaque événement du club",
+      contactLabel: "Aider comme bénévole",
       contactHref: "/contact",
       links: [
         { label: "Calendrier", href: "/calendrier" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "d5",
+      name: "BOUTANT Jean-Claude",
+      category: "DIRIGEANT",
+      position: "Référent arbitres",
+      department: "Arbitrage",
+      bio: "Référent arbitrage du club, il accompagne les arbitres, veille au respect des règles et fait le lien avec les instances sur les questions d'arbitrage.",
+      missions: ["Accompagner les arbitres du club", "Faire le lien avec les instances", "Sensibiliser au respect de l'arbitrage"],
+      availability: "Contact via le club",
+      contactLabel: "Contacter le club",
+      contactHref: "/contact",
+      links: [
+        { label: "Calendrier", href: "/calendrier" },
+        { label: "Contact", href: "/contact" }
+      ]
+    }),
+    buildOfficial({
+      id: "d6",
+      name: "PEREIRA Fernando",
+      category: "DIRIGEANT",
+      position: "Référent sécurité",
+      department: "Sécurité",
+      bio: "Référent sécurité du club, il veille au bon déroulement et à la sécurité lors des rencontres, manifestations et rassemblements au stade.",
+      missions: ["Veiller à la sécurité des rencontres", "Coordonner l'accueil et les accès", "Prévenir les risques lors des manifestations"],
+      availability: "Présent les jours de match et d'événement",
+      contactLabel: "Contacter le club",
+      contactHref: "/contact",
+      links: [
+        { label: "Stade Henri Longuet", href: "/le-club/stade-henri-longuet" },
         { label: "Contact", href: "/contact" }
       ]
     })
@@ -893,6 +1002,23 @@ export async function getClubOfficials(): Promise<ClubOfficialsContent> {
     };
   }
   return mockOfficials;
+}
+
+/**
+ * Adapte une fiche officielle (DisplayOfficial) au format StaffPerson attendu par
+ * l'annuaire public (StaffDirectory). Permet aux pages Bureau/Dirigeants de partager
+ * la même source de vérité que l'organigramme sans dupliquer les noms.
+ */
+export function officialToStaffPerson(official: DisplayOfficial, fallbackPhoto: string): StaffPerson {
+  return {
+    name: official.name,
+    role: official.position,
+    category: official.department,
+    pole: official.department,
+    contact: "Via le secrétariat du club",
+    photo: official.photo ?? fallbackPhoto,
+    tags: official.missions.slice(0, 2)
+  };
 }
 
 export async function getClubOfficialBySlug(slug: string): Promise<DisplayOfficial | null> {
