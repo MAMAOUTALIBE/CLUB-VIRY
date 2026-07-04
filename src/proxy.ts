@@ -50,7 +50,7 @@ function isAllowedImageContext(request: NextRequest): boolean {
  * Le cookie `admin_session` (HttpOnly) contient l'access token Supabase posé à la
  * connexion. On ne se contente PAS de vérifier sa présence : on valide réellement
  * la session auprès de Supabase (signature + expiration). Un cookie forgé ou expiré
- * est donc rejeté et la requête est redirigée vers /connexion, non indexable.
+ * est donc rejeté et la requête est redirigée vers l'accueil, non indexable.
  *
  * Ce gate assure l'AUTHENTIFICATION et l'AUTORISATION au niveau page :
  * seules les sessions autorisées pour le chemin demandé peuvent charger le CRM.
@@ -125,12 +125,8 @@ export async function proxy(request: NextRequest) {
 
   if (sessionStatus !== "authorized") {
     const url = request.nextUrl.clone();
-    url.pathname = "/connexion";
+    url.pathname = "/";
     url.search = "";
-    url.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
-    if (sessionStatus === "forbidden") {
-      url.searchParams.set("error", "forbidden");
-    }
     const redirect = NextResponse.redirect(url);
     redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
     return redirect;

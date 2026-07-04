@@ -6,7 +6,7 @@ import Link from "next/link";
 export function EducatorCrmSidebar() {
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
-    window.location.href = "/connexion";
+    window.location.href = "/";
   }
 
   return (

@@ -171,7 +171,7 @@ const SETTINGS_DEFAULTS: SiteContent = {
     groups: [
       { title: "Bureau", text: "Président, vice-présidents, trésorerie, secrétariat général" },
       { title: "Direction sportive", text: "Responsable technique, coordinateurs catégories, référents gardiens" },
-      { title: "Éducateurs", text: "École de foot, jeunes, seniors, féminines, futsal" },
+      { title: "Éducateurs", text: "École de foot, jeunes, seniors, féminines" },
       { title: "Administration", text: "Licences, inscriptions, communication, partenariats" }
     ]
   },
@@ -194,6 +194,13 @@ function pickArray<T>(raw: unknown, fallback: T[]): T[] {
 /** Retourne la chaîne stockée si non vide, sinon le défaut. */
 function pickStr(raw: unknown, fallback: string): string {
   return typeof raw === "string" && raw.trim() !== "" ? raw : fallback;
+}
+
+function withoutRetiredPublicMentions(groups: OrgGroup[]): OrgGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    text: group.text.replace(/,\s*futsal\b/gi, "").replace(/\s+et\s+futsal\b/gi, "")
+  }));
 }
 
 export async function getSiteSettings(): Promise<SiteContent> {
@@ -220,7 +227,7 @@ export async function getSiteSettings(): Promise<SiteContent> {
       organigramme: {
         title: pickStr(org?.title, SETTINGS_DEFAULTS.organigramme.title),
         intro: pickStr(org?.intro, SETTINGS_DEFAULTS.organigramme.intro),
-        groups: pickArray<OrgGroup>(org?.groups, SETTINGS_DEFAULTS.organigramme.groups)
+        groups: withoutRetiredPublicMentions(pickArray<OrgGroup>(org?.groups, SETTINGS_DEFAULTS.organigramme.groups))
       },
       stade: {
         address: pickStr(stade?.address, SETTINGS_DEFAULTS.stade.address),
@@ -254,6 +261,11 @@ export type DisplayTeamDetail = DisplayTeam & {
 };
 
 const DEFAULT_SEASON = "2025 / 2026";
+const RETIRED_PUBLIC_TEAM_SLUGS = new Set(["futsal"]);
+
+function isPublicTeamVisible(slug: string): boolean {
+  return !RETIRED_PUBLIC_TEAM_SLUGS.has(slug);
+}
 
 /** Affichage public d'un nom de joueur : prénom + initiale du nom (protection PII). */
 function publicPlayerName(firstName: string, lastName: string): string {
@@ -274,19 +286,27 @@ function formatNextMatch(matches: Match[]): string {
 export async function getPublicTeams(): Promise<DisplayTeam[]> {
   const rows = await readPublicDb(() => listTeams());
   if (rows && rows.length > 0) {
-    return rows.map((t) => ({
-      slug: t.slug,
-      name: t.name,
-      category: t.age_range ?? t.level ?? "Équipe",
-      season: DEFAULT_SEASON,
-      description: t.description ?? "",
-      image: t.cover_image_url || images.teamHuddle
-    }));
+    return rows
+      .filter((t) => isPublicTeamVisible(t.slug))
+      .map((t) => ({
+        slug: t.slug,
+        name: t.name,
+        category: t.age_range ?? t.level ?? "Équipe",
+        season: DEFAULT_SEASON,
+        description: t.description ?? "",
+        image: t.cover_image_url || images.teamHuddle
+      }));
   }
-  return mockTeams.map((t) => ({ slug: t.slug, name: t.name, category: t.category, season: t.season, description: t.description, image: t.image }));
+  return mockTeams
+    .filter((t) => isPublicTeamVisible(t.slug))
+    .map((t) => ({ slug: t.slug, name: t.name, category: t.category, season: t.season, description: t.description, image: t.image }));
 }
 
 export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDetail | null> {
+  if (!isPublicTeamVisible(slug)) {
+    return null;
+  }
+
   const roster = await readPublicDb(() => getPublicTeamRosterBySlug(slug));
   if (roster) {
     const head = roster.staff.find((s) => s.is_head_coach) ?? roster.staff[0];
@@ -350,6 +370,15 @@ export type DisplayEducator = {
   stats: { teams: number; sessions: number; matches: number };
 };
 
+function withoutRetiredTeamAssignments(educator: DisplayEducator): DisplayEducator | null {
+  const teams = educator.teams.filter((team) => isPublicTeamVisible(team.slug));
+  if (teams.length === 0) {
+    return null;
+  }
+
+  return { ...educator, teams, stats: { ...educator.stats, teams: teams.length } };
+}
+
 // Slug unique et déterministe par éducateur (évite les collisions d'homonymes :
 // deux "Mohamed Diallo" ont des slugs distincts ; un nom vide reste routable).
 export function educatorSlug(name: string, id: string): string {
@@ -390,21 +419,6 @@ const mockEducators: DisplayEducator[] = [
     bio: "Passionnée par l'apprentissage des plus jeunes, elle encadre l'école de foot avec exigence et bienveillance.",
     teams: [{ name: "École de foot", slug: "ecole-de-foot", category: "U6 à U11", roleTitle: "Entraîneure principale", isHeadCoach: true }],
     stats: { teams: 1, sessions: 30, matches: 12 }
-  },
-  {
-    id: "mock-3",
-    name: "Lucas Moreau",
-    title: "Entraîneur Futsal",
-    diploma: "CFF Futsal",
-    slug: educatorSlug("Lucas Moreau", "mock-3"),
-    joinedYear: 2015,
-    diplomas: ["CFF Futsal (2022)", "CFF3 (2018)"],
-    specialties: ["Futsal", "Jeu rapide"],
-    quote: "Le futsal aiguise la technique et la prise de décision.",
-    avatar: null,
-    bio: "Ancien joueur du club, il transmet sa connaissance du jeu rapide aux équipes futsal.",
-    teams: [{ name: "Futsal", slug: "futsal", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true }],
-    stats: { teams: 1, sessions: 26, matches: 15 }
   },
   {
     id: "mock-4",
@@ -453,21 +467,6 @@ const mockEducators: DisplayEducator[] = [
       { name: "U15 R1", slug: "u15-r1", category: "U15", roleTitle: "Référente préformation", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 42, matches: 20 }
-  },
-  {
-    id: "mock-7",
-    name: "Mehdi Tazi",
-    title: "Préparateur futsal",
-    diploma: "CFF Futsal",
-    slug: educatorSlug("Mehdi Tazi", "mock-7"),
-    joinedYear: 2022,
-    diplomas: ["CFF Futsal (2023)", "PSC1 (2022)"],
-    specialties: ["Futsal", "Intensité"],
-    quote: "Le détail technique fait souvent la différence dans les petits espaces.",
-    avatar: null,
-    bio: "Spécialiste du jeu en salle, il renforce les séances futsal autour du rythme, de la finition et des rotations.",
-    teams: [{ name: "Futsal", slug: "futsal", category: "Seniors", roleTitle: "Adjoint futsal", isHeadCoach: false }],
-    stats: { teams: 1, sessions: 24, matches: 13 }
   },
   {
     id: "mock-8",
@@ -522,27 +521,32 @@ const mockEducators: DisplayEducator[] = [
 export async function getPublicEducators(): Promise<DisplayEducator[]> {
   const rows = await readPublicDb(() => listPublicEducators());
   if (rows && rows.length > 0) {
-    return rows.map((r) => {
-      const head = r.teams.find((t) => t.isHeadCoach);
-      const name = r.name?.trim() || "Éducateur";
-      return {
-        id: r.id,
-        name,
-        slug: educatorSlug(name, r.id),
-        title: r.title?.trim() || head?.roleTitle || "Éducateur",
-        diploma: r.diploma?.trim() || null,
-        joinedYear: r.joined_year ?? null,
-        diplomas: Array.isArray(r.diplomas) ? r.diplomas : [],
-        specialties: Array.isArray(r.specialties) ? r.specialties : [],
-        quote: r.quote?.trim() || null,
-        avatar: r.avatar_url,
-        bio: r.bio ?? "",
-        teams: r.teams,
-        stats: { teams: r.team_count, sessions: r.session_count, matches: r.match_count }
-      };
-    });
+    return rows
+      .map((r) => {
+        const teams = r.teams.filter((team) => isPublicTeamVisible(team.slug));
+        const head = teams.find((t) => t.isHeadCoach);
+        const name = r.name?.trim() || "Éducateur";
+        return withoutRetiredTeamAssignments({
+          id: r.id,
+          name,
+          slug: educatorSlug(name, r.id),
+          title: r.title?.trim() || head?.roleTitle || "Éducateur",
+          diploma: r.diploma?.trim() || null,
+          joinedYear: r.joined_year ?? null,
+          diplomas: Array.isArray(r.diplomas) ? r.diplomas : [],
+          specialties: Array.isArray(r.specialties) ? r.specialties : [],
+          quote: r.quote?.trim() || null,
+          avatar: r.avatar_url,
+          bio: r.bio ?? "",
+          teams,
+          stats: { teams: r.team_count, sessions: r.session_count, matches: r.match_count }
+        });
+      })
+      .filter((educator): educator is DisplayEducator => educator !== null);
   }
-  return mockEducators;
+  return mockEducators
+    .map(withoutRetiredTeamAssignments)
+    .filter((educator): educator is DisplayEducator => educator !== null);
 }
 
 // Fiche éducateur par slug (page détail). Réutilise getPublicEducators (cache léger).

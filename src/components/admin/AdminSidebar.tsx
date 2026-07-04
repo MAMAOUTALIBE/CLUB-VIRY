@@ -128,7 +128,7 @@ export function AdminSidebar() {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
-    window.location.href = "/connexion";
+    window.location.href = "/";
   }
 
   const pilotageActive = pathname === "/admin";

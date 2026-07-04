@@ -2,6 +2,7 @@ import { ArrowRight, PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ButtonLink";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PageHero } from "@/components/PageHero";
@@ -57,6 +58,38 @@ export default async function TeamPage({ params }: TeamPageProps) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(teamJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd) }} />
+      <MobileScreen
+        eyebrow={team.category}
+        title={team.name}
+        actions={[
+          { href: "/calendrier", label: "Calendrier" },
+          { href: "/equipes", label: "Équipes", variant: "secondary" }
+        ]}
+      >
+        <div className="grid gap-3">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Coach</p>
+            <h2 className="mt-1 text-xl font-black uppercase text-[#002f1d]">{team.coach}</h2>
+          </MobileCard>
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Prochain match</p>
+            <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{team.nextMatch}</h2>
+          </MobileCard>
+          {team.staff.length > 0 ? (
+            <MobileCard>
+              <p className="text-xs font-black uppercase text-[#664d00]">Encadrement</p>
+              <div className="mt-3 grid gap-2">
+                {team.staff.slice(0, 4).map((member) => (
+                  <p className="text-sm font-bold text-slate-700" key={`${member.name}-${member.role}`}>
+                    <span className="font-black text-[#002f1d]">{member.role}</span> · {member.name}
+                  </p>
+                ))}
+              </div>
+            </MobileCard>
+          ) : null}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description={team.description} eyebrow={team.season} image={team.image} title={team.name}>
         <ButtonLink href="/calendrier">Voir le calendrier</ButtonLink>
       </PageHero>
@@ -169,6 +202,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         text="Le groupe, son staff et sa saison, présentés clairement."
         title={`${team.name}, un groupe qui porte le blason`}
       />
+      </DesktopOnly>
     </>
   );
 }

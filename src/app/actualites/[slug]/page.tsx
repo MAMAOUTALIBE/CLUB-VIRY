@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { buildBreadcrumb, buildNewsArticle, jsonLdScript } from "@/lib/jsonld";
 import { getPublicNews, getPublicNewsBySlug } from "@/lib/public-content";
@@ -56,6 +58,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd) }} />
+      <MobileScreen
+        eyebrow={`${article.category} · ${article.date}`}
+        title={article.title}
+        actions={[{ href: "/actualites", label: "Actualités", variant: "secondary" }]}
+        scrollable
+      >
+        <MobileCard>
+          <div className="relative mb-4 h-44 overflow-hidden rounded-md bg-[#002f1d]">
+            <Image src={article.image} alt={article.title} fill sizes="100vw" className="object-cover" />
+          </div>
+          {article.excerpt ? <p className="text-base font-black leading-6 text-[#002f1d]">{article.excerpt}</p> : null}
+          {article.content ? (
+            <div className="mt-4 whitespace-pre-line text-sm font-medium leading-6 text-slate-700">{article.content}</div>
+          ) : null}
+        </MobileCard>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description={article.excerpt} eyebrow={`${article.category} · ${article.date}`} image={article.image} title={article.title} />
       <article className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
         <Link className="focus-ring inline-flex items-center gap-2 text-sm font-black uppercase text-[#002f1d] hover:text-[#664d00]" href="/actualites">
@@ -89,6 +108,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         </div>
       </article>
+      </DesktopOnly>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { FileCheck, ShieldCheck, Smile, Users } from "lucide-react";
 import { FeatureCards } from "@/components/FeatureCards";
-import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
+import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { RegistrationForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
@@ -16,18 +16,9 @@ export default function RegistrationPage() {
       <MobileScreen
         eyebrow="Inscriptions"
         title="Saison 2025 / 2026"
-        description="Préparez les pièces, remplissez le formulaire, le club vous recontacte."
         scrollable
       >
         <div className="grid gap-3 pb-2">
-          <div className="grid gap-2 md:grid-cols-4">
-            {["Catégorie", "Formulaire", "Pièces", "Cotisation"].map((step, index) => (
-              <MobileCard key={step}>
-                <p className="text-xs font-black uppercase text-[#664d00]">Étape {index + 1}</p>
-                <h2 className="text-base font-black uppercase text-[#002f1d]">{step}</h2>
-              </MobileCard>
-            ))}
-          </div>
           <RegistrationForm />
         </div>
       </MobileScreen>

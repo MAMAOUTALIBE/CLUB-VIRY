@@ -35,13 +35,13 @@ export default async function CalendarPage() {
     { value: matchCount, label: "Matchs" },
     { value: homeCount, label: "À domicile" }
   ];
+  const mobileItems = calendar.items.slice(0, 6);
 
   return (
     <>
       <MobileScreen
         eyebrow={calendar.monthTitle}
         title="Calendrier"
-        description="Le prochain rendez-vous reste visible, la liste complète défile dans la zone centrale."
         actions={[{ href: "/resultats", label: "Voir les résultats", variant: "secondary" }]}
       >
         <div className="flex h-full min-h-0 flex-col gap-3">
@@ -54,7 +54,7 @@ export default async function CalendarPage() {
             <p className="mt-1 text-sm font-semibold text-slate-600">{calendar.featured.place}</p>
           </MobileCard>
           <MobileScrollableList>
-            {calendar.items.map((item) => (
+            {mobileItems.map((item) => (
               <MobileCard key={item.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>

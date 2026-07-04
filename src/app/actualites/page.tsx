@@ -18,13 +18,13 @@ export default async function NewsPage() {
   const allNews = await getPublicNews(13);
   const leadNews = allNews[0];
   const otherNews = allNews.slice(1);
+  const mobileNews = allNews.slice(1, 6);
 
   return (
     <>
       <MobileScreen
         eyebrow="Actualités"
         title="Vie du club"
-        description="L’actualité importante en haut, le reste à parcourir sans quitter l’écran."
         actions={[{ href: "/calendrier", label: "Calendrier", variant: "secondary" }]}
       >
         <div className="flex h-full min-h-0 flex-col gap-3">
@@ -36,7 +36,7 @@ export default async function NewsPage() {
             </MobileLinkCard>
           ) : null}
           <MobileScrollableList>
-            {otherNews.map((item) => (
+            {mobileNews.map((item) => (
               <MobileLinkCard href={`/actualites/${item.slug}`} key={item.slug}>
                 <p className="text-xs font-black uppercase text-[#664d00]">{item.category} · {item.date}</p>
                 <h2 className="mt-1 text-base font-black uppercase leading-tight text-[#002f1d]">{item.title}</h2>

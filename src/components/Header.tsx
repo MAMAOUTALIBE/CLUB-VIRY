@@ -56,8 +56,7 @@ const navItems = [
       ["Toutes les équipes", "/equipes"],
       ["Seniors D1", "/equipes/seniors-r1"],
       ["École de foot", "/equipes/ecole-de-foot"],
-      ["Féminines", "/equipes/feminines"],
-      ["Futsal", "/equipes/futsal"]
+      ["Féminines", "/equipes/feminines"]
     ]
   },
   { label: "Academy", href: "/academy" },
@@ -548,7 +547,7 @@ export function Header({ banner, socials }: HeaderProps) {
               })}
             </div>
 
-            <div className="grid shrink-0 gap-2 border-t border-[#f7c600]/30 pt-3 md:grid-cols-3">
+            <div className="grid shrink-0 gap-2 border-t border-[#f7c600]/30 pt-3 md:grid-cols-2">
               <Link
                 className="focus-ring flex items-center gap-2 rounded-md border border-white/18 px-3 py-3 text-sm font-black uppercase text-white hover:bg-white/10"
                 href="/espace-membre"
@@ -556,13 +555,6 @@ export function Header({ banner, socials }: HeaderProps) {
               >
                 <User size={18} aria-hidden="true" />
                 Mon espace
-              </Link>
-              <Link
-                className="focus-ring rounded-md border border-white/18 px-3 py-3 text-center text-sm font-black uppercase text-white hover:bg-white/10"
-                href="/connexion"
-                onClick={() => setOpen(false)}
-              >
-                Connexion
               </Link>
               <Link
                 className="focus-ring rounded-md bg-[#f7c600] px-3 py-3 text-center text-sm font-black uppercase text-[#002f1d]"

@@ -62,7 +62,7 @@ const PAGES: Record<string, PageSeo> = {
   },
   "/equipes": {
     title: "Equipes",
-    description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors en passant par les feminines et le futsal : effectifs, staff et categories."
+    description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors en passant par les feminines : effectifs, staff et categories."
   },
   "/formation": {
     title: "Formation",

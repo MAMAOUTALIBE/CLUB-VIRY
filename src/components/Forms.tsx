@@ -288,7 +288,7 @@ export function RegistrationForm() {
           label: "Catégorie souhaitée",
           required: true,
           as: "select",
-          options: ["U6 / U7", "U8 / U9", "U10 / U11", "U12 / U13", "U14 / U15", "U16 / U17", "U18", "Seniors", "Féminines", "Futsal", "Loisir"]
+          options: ["U6 / U7", "U8 / U9", "U10 / U11", "U12 / U13", "U14 / U15", "U16 / U17", "U18", "Seniors", "Féminines", "Loisir"]
         }
       ]}
       messageLabel="Message (facultatif)"

@@ -17,7 +17,6 @@ export default async function TeamsPage() {
       <MobileScreen
         eyebrow="Équipes"
         title="Nos catégories"
-        description="Du premier ballon aux seniors, retrouvez chaque groupe du club."
         actions={[{ href: "/inscriptions", label: "Rejoindre une équipe" }]}
       >
         <MobileScrollableList>
@@ -25,7 +24,6 @@ export default async function TeamsPage() {
             <MobileLinkCard href={`/equipes/${team.slug}`} key={team.slug}>
               <p className="text-xs font-black uppercase text-[#664d00]">{team.category}</p>
               <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{team.name}</h2>
-              <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-700">{team.description}</p>
             </MobileLinkCard>
           ))}
         </MobileScrollableList>

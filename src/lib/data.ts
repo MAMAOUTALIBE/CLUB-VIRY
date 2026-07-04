@@ -178,18 +178,6 @@ export const teams: Team[] = [
     players: ["L. Bernard", "A. Henry", "C. Moreau", "M. Sissoko", "E. Garcia"]
   },
   {
-    slug: "futsal",
-    name: "Futsal",
-    category: "Futsal",
-    season: "2025 / 2026",
-    description: "Une section compétition dynamique autour de la technique et de l'intensité.",
-    image: images.football,
-    coach: "Mehdi T.",
-    assistant: "Rayan H.",
-    nextMatch: "Calendrier à confirmer",
-    players: ["O. Dabo", "N. Martins", "A. Rezgui", "H. Ba", "C. Pereira"]
-  },
-  {
     slug: "ecole-de-foot",
     name: "École de foot",
     category: "U6 à U11",

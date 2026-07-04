@@ -20,7 +20,6 @@ export default async function ResultsPage() {
       <MobileScreen
         eyebrow="Scores"
         title="Résultats"
-        description="Les derniers scores publiés par le club, équipe par équipe."
         actions={[{ href: "/calendrier", label: "Calendrier", variant: "secondary" }]}
       >
         <MobileScrollableList>

@@ -57,6 +57,7 @@ const scriptSrc =
   process.env.NODE_ENV === "production"
     ? "script-src 'self' 'unsafe-inline'"
     : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+const productionOnlyCsp = process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : [];
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -70,12 +71,12 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   `connect-src 'self' https://images.unsplash.com ${supabaseCspSources}`,
   "frame-src https://www.google.com https://maps.google.com",
-  "upgrade-insecure-requests"
+  ...productionOnlyCsp
 ].join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  ...(process.env.NODE_ENV === "production" ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

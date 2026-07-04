@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata("/detections-recrutement");
 
 export default function RecruitmentPage() {
-  const categories = ["Football à 11", "Formation", "Seniors", "Féminines", "Futsal"];
+  const categories = ["Football à 11", "Formation", "Seniors", "Féminines"];
   return (
     <>
       <MobileScreen
@@ -41,7 +41,7 @@ export default function RecruitmentPage() {
         <div>
           <SectionTitle title="Catégories concernées" text="Les candidatures sont étudiées par la cellule sportive du club." />
           <ul className="space-y-3">
-            {["Football à 11", "Préformation et formation", "Seniors", "Féminines", "Futsal"].map((item) => (
+            {["Football à 11", "Préformation et formation", "Seniors", "Féminines"].map((item) => (
               <li className="club-panel rounded-lg px-5 py-4 font-black uppercase text-white" key={item}>
                 {item}
               </li>
