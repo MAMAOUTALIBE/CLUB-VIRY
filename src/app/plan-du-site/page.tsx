@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DesktopOnly } from "@/components/MobilePage";
+import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { images } from "@/lib/images";
 import { pageMetadata } from "@/lib/seo";
@@ -77,23 +77,15 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
 export default function SiteMapPage() {
   return (
     <>
-      <div className="px-4 py-8 md:px-6 lg:px-8 xl:hidden">
-        <p className="text-xs font-black uppercase text-[#664d00]">Navigation</p>
-        <h1 className="mt-1 text-3xl font-black uppercase leading-tight text-[#002f1d]">Plan du site</h1>
-      </div>
-      <DesktopOnly>
-        <PageHero description="Retrouvez toutes les pages du site officiel de l'ES Viry-Châtillon Football." image={images.stadiumHero} title="Plan du site" />
-      </DesktopOnly>
-      <section className="mx-auto max-w-5xl px-4 pb-10 md:py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+      <MobileScreen eyebrow="Navigation" title="Plan du site" scrollable>
+        <div className="grid gap-5 pb-2">
           {SECTIONS.map((section) => (
-            <nav aria-label={section.title} key={section.title}>
-              <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#07542f]">{section.title}</h2>
-              <span aria-hidden="true" className="mt-2 block h-[2px] w-8 rounded-full bg-[#f7c600]" />
-              <ul className="mt-4 grid gap-2.5">
-                {section.links.map(([href, label]) => (
+            <nav aria-label={section.title} className="rounded-lg border border-[#07542f]/12 bg-white p-4 shadow-sm" key={section.title}>
+              <h2 className="text-sm font-black uppercase text-[#002f1d]">{section.title}</h2>
+              <ul className="mt-3 grid gap-2">
+                {section.links.slice(0, 5).map(([href, label]) => (
                   <li key={href}>
-                    <Link className="focus-ring font-bold text-[#002f1d] transition hover:text-[#07542f] hover:underline" href={href}>
+                    <Link className="focus-ring font-bold text-slate-700" href={href}>
                       {label}
                     </Link>
                   </li>
@@ -102,7 +94,29 @@ export default function SiteMapPage() {
             </nav>
           ))}
         </div>
-      </section>
+      </MobileScreen>
+      <DesktopOnly>
+        <PageHero description="Retrouvez toutes les pages du site officiel de l'ES Viry-Châtillon Football." image={images.stadiumHero} title="Plan du site" />
+        <section className="mx-auto max-w-5xl px-4 pb-10 md:py-14 sm:px-6 lg:px-8">
+          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {SECTIONS.map((section) => (
+              <nav aria-label={section.title} key={section.title}>
+                <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#07542f]">{section.title}</h2>
+                <span aria-hidden="true" className="mt-2 block h-[2px] w-8 rounded-full bg-[#f7c600]" />
+                <ul className="mt-4 grid gap-2.5">
+                  {section.links.map(([href, label]) => (
+                    <li key={href}>
+                      <Link className="focus-ring font-bold text-[#002f1d] transition hover:text-[#07542f] hover:underline" href={href}>
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+          </div>
+        </section>
+      </DesktopOnly>
     </>
   );
 }

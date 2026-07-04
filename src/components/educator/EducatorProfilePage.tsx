@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, GraduationCap, Mail, Quote, Trophy, Users } from "lucide-react";
 
+import { DesktopOnly, MobileCard, MobileLinkCard, MobileScreen } from "@/components/MobilePage";
 import type { DisplayEducator } from "@/lib/public-content";
 import { ContactForm, DiplomaBadge, EducatorBanner, StatBlock, TeamChip, firstName } from "@/components/educator/EducatorsDirectory";
 
@@ -10,6 +11,32 @@ import { ContactForm, DiplomaBadge, EducatorBanner, StatBlock, TeamChip, firstNa
 // de l'annuaire pour rester cohérent avec la fiche modale.
 export function EducatorProfilePage({ educator }: { educator: DisplayEducator }) {
   return (
+    <>
+      <MobileScreen
+        eyebrow="Éducateur"
+        title={educator.name}
+        actions={[{ href: "/le-club/encadrement", label: "Retour", variant: "secondary" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Rôle</p>
+            <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{educator.title}</h2>
+            {educator.diploma ? <p className="mt-2 text-sm font-bold text-slate-700">{educator.diploma}</p> : null}
+          </MobileCard>
+          {educator.teams.length > 0 ? (
+            <div className="grid gap-3">
+              {educator.teams.slice(0, 4).map((team) => (
+                <MobileLinkCard href={`/equipes/${team.slug}`} key={`${team.slug}-${team.roleTitle}`}>
+                  <p className="text-xs font-black uppercase text-[#664d00]">{team.roleTitle}</p>
+                  <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{team.name}</h2>
+                </MobileLinkCard>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
     <article className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <Link
         href="/le-club/encadrement"
@@ -139,5 +166,7 @@ export function EducatorProfilePage({ educator }: { educator: DisplayEducator })
         </div>
       </div>
     </article>
+      </DesktopOnly>
+    </>
   );
 }

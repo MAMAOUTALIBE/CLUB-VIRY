@@ -20,7 +20,6 @@ export default function CodesDeConduitePage() {
       <MobileScreen
         eyebrow="Le Club"
         title="Codes de conduite"
-        description="Les règles essentielles pour joueurs, parents, supporters et éducateurs."
         actions={[{ href: "/contact", label: "Signaler une question", variant: "secondary" }]}
         scrollable
       >

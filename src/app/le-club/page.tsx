@@ -22,7 +22,6 @@ export default async function ClubPage() {
       <MobileScreen
         eyebrow="Le Club"
         title="Notre maison"
-        description="Un club formateur, familial et ambitieux, ancré à Viry-Châtillon depuis 1958."
         actions={[
           { href: "/inscriptions", label: "Rejoindre le club" },
           { href: "/le-club/histoire", label: "Histoire", variant: "secondary" }

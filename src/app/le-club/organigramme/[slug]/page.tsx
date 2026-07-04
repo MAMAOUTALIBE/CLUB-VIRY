@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, BadgeCheck, CalendarDays, Camera, Link as LinkIcon, Mail, MapPin, ShieldCheck, Users } from "lucide-react";
 
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -13,7 +14,7 @@ type Props = {
 };
 
 export const revalidate = 300;
-export const dynamicParams = true;
+export const dynamic = "force-dynamic";
 
 function monogram(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -41,11 +42,6 @@ function Avatar({ official }: { official: DisplayOfficial }) {
       </span>
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  const officials = await getClubOfficials();
-  return [...officials.bureau, ...officials.dirigeants].map((official) => ({ slug: official.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -102,6 +98,33 @@ export default async function OfficialProfilePage({ params }: Props) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(personJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd) }} />
+      <MobileScreen
+        eyebrow={official.department}
+        title={official.name}
+        actions={[
+          { href: official.contactHref, label: official.contactLabel },
+          { href: "/le-club/organigramme", label: "Retour", variant: "secondary" }
+        ]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Rôle</p>
+            <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{official.position}</h2>
+          </MobileCard>
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Missions</p>
+            <div className="mt-3 grid gap-2">
+              {official.missions.slice(0, 4).map((mission) => (
+                <p className="text-sm font-semibold leading-5 text-slate-700" key={mission}>
+                  {mission}
+                </p>
+              ))}
+            </div>
+          </MobileCard>
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero eyebrow="Profil responsable" description={`${official.position} — ${official.department}`} image={images.training} title={official.name}>
         <Link href="/le-club/organigramme" className="focus-ring inline-flex items-center gap-2 rounded-full bg-[#f7c600] px-5 py-3 text-sm font-black uppercase text-[#001c10] shadow-lg">
           <ArrowLeft size={16} aria-hidden="true" />
@@ -209,6 +232,7 @@ export default async function OfficialProfilePage({ params }: Props) {
           </div>
         </section>
       ) : null}
+      </DesktopOnly>
     </>
   );
 }

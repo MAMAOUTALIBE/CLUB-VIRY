@@ -60,14 +60,12 @@ export default function AcademyPage() {
       <MobileScreen
         eyebrow="Academy"
         title="Sport. École. Avenir."
-        description="Une plateforme pour progresser sur le terrain, à l’école et dans son projet personnel."
         actions={[{ href: academyCtaHref, label: ACADEMY_URL ? "Accéder" : "Demander l'accès" }]}
       >
         <div className="grid h-full content-start gap-3 md:grid-cols-3">
           {PILLARS.map((pillar) => (
             <MobileCard key={pillar.title}>
               <h2 className="text-lg font-black uppercase text-[#002f1d]">{pillar.title}</h2>
-              <p className="mt-1 text-sm font-semibold leading-5 text-slate-700">{pillar.text}</p>
             </MobileCard>
           ))}
           <div className="md:col-span-3">

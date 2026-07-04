@@ -2,19 +2,14 @@ import { notFound } from "next/navigation";
 
 import { EducatorProfilePage } from "@/components/educator/EducatorProfilePage";
 import { buildBreadcrumb, jsonLdScript } from "@/lib/jsonld";
-import { getPublicEducatorBySlug, getPublicEducators } from "@/lib/public-content";
+import { getPublicEducatorBySlug } from "@/lib/public-content";
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamicParams = true;
+export const dynamic = "force-dynamic";
 export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
-
-export async function generateStaticParams() {
-  const all = await getPublicEducators();
-  return all.map((educator) => ({ slug: educator.slug }));
-}
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;

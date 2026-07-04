@@ -1,5 +1,6 @@
 import { ButtonLink } from "@/components/ButtonLink";
 import { FeatureCards } from "@/components/FeatureCards";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SchoolProjectTimeline } from "@/components/club/ClubPublicBlocks";
@@ -13,6 +14,21 @@ export const metadata = pageMetadata("/formation/projet-ecole-de-foot");
 export default function ProjetEcoleDeFootPage() {
   return (
     <>
+      <MobileScreen
+        eyebrow="Projet"
+        title="École de foot"
+        actions={[{ href: "/formation/ecole-de-foot", label: "Éducateurs" }]}
+      >
+        <div className="grid h-full content-start gap-3 md:grid-cols-2">
+          {schoolProject.slice(0, 4).map((item) => (
+            <MobileCard key={item.year}>
+              <p className="text-xs font-black uppercase text-[#664d00]">{item.year}</p>
+              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{item.title}</h2>
+            </MobileCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         eyebrow="Projet"
         description="Le projet école de foot fixe un cadre commun pour accueillir, former et accompagner les jeunes joueurs dans la durée."
@@ -42,6 +58,7 @@ export default function ProjetEcoleDeFootPage() {
           <SchoolProjectTimeline items={schoolProject} />
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

@@ -15,7 +15,6 @@ export default function ContactPage() {
       <MobileScreen
         eyebrow="Contact"
         title="Nous écrire"
-        description="Coordonnées utiles et formulaire pour joindre rapidement le club."
         scrollable
       >
         <div className="grid gap-3 pb-2 md:grid-cols-[0.75fr_1.25fr]">

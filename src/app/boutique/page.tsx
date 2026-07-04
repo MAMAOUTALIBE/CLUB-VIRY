@@ -20,7 +20,6 @@ export default async function ShopPage() {
       <MobileScreen
         eyebrow="Boutique"
         title="Produits club"
-        description="Textile, accessoires et packs supporters. Ajoutez au panier puis finalisez votre demande."
         scrollable
       >
         <div className="grid grid-cols-2 gap-3 pb-2 lg:grid-cols-3">

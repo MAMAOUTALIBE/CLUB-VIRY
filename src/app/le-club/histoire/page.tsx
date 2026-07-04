@@ -1,6 +1,7 @@
 import { PageHero } from "@/components/PageHero";
 import { PremiumCta } from "@/components/PremiumCta";
 import { SectionTitle } from "@/components/SectionTitle";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PalmaresFanion } from "@/components/club/PalmaresFanion";
 import { MediaGallery } from "@/components/MediaGallery";
 import { ButtonLink } from "@/components/ButtonLink";
@@ -19,6 +20,22 @@ export default async function HistoryPage() {
   const timeline = histoire.timeline;
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Histoire"
+        actions={[{ href: "/le-club/galerie", label: "Galerie", variant: "secondary" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          {timeline.slice(0, 4).map(({ year, title }) => (
+            <MobileCard key={`${year}-${title}`}>
+              <p className="text-xs font-black uppercase text-[#664d00]">{year}</p>
+              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{title}</h2>
+            </MobileCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Un club historique de l'Essonne, porté par des bénévoles, des éducateurs et des familles." image={images.stadiumAerial} title="Notre histoire" />
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionTitle eyebrow={histoire.eyebrow} title={histoire.title} text={histoire.intro} />
@@ -86,6 +103,7 @@ export default async function HistoryPage() {
         text="L'histoire du club continue chaque week-end, sur le terrain et autour des familles."
         title="Une histoire vivante, portée par le terrain"
       />
+      </DesktopOnly>
     </>
   );
 }

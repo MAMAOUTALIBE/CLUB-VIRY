@@ -1,5 +1,6 @@
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
+import { DesktopOnly, MobileLinkCard, MobileScreen } from "@/components/MobilePage";
 import { EducatorsDirectory } from "@/components/educator/EducatorsDirectory";
 import { StaffByTeam } from "@/components/educator/StaffByTeam";
 import { images } from "@/lib/images";
@@ -14,6 +15,22 @@ export default async function EncadrementPage() {
 
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Encadrement"
+        actions={[{ href: "/equipes", label: "Équipes", variant: "secondary" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          {educators.slice(0, 8).map((educator) => (
+            <MobileLinkCard href={`/le-club/encadrement/${educator.slug}`} key={educator.id}>
+              <p className="text-xs font-black uppercase text-[#664d00]">{educator.title}</p>
+              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{educator.name}</h2>
+            </MobileLinkCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         description="Des éducateurs diplômés et passionnés au service de la formation et du plaisir de jouer."
         image={images.teamHuddle}
@@ -46,6 +63,7 @@ export default async function EncadrementPage() {
           </div>
         </section>
       ) : null}
+      </DesktopOnly>
     </>
   );
 }

@@ -19,7 +19,6 @@ export default async function PartnersPage() {
       <MobileScreen
         eyebrow="Partenaires"
         title="Soutenir le club"
-        description="Associez votre image à un club formateur et populaire du territoire."
         actions={[{ href: "/contact", label: "Devenir partenaire" }]}
         scrollable
       >

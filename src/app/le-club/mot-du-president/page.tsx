@@ -1,4 +1,5 @@
 import { Quote } from "lucide-react";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { getSiteSettings } from "@/lib/public-content";
@@ -21,6 +22,19 @@ export default async function PresidentPage() {
 
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Mot du Président"
+        actions={[{ href: "/contact", label: "Contact" }]}
+        scrollable
+      >
+        <MobileCard>
+          <p className="text-base font-black leading-6 text-[#002f1d]">L'avenir s'écrit ensemble</p>
+          <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">{paragraphs[0]}</p>
+          <p className="mt-5 text-right text-sm font-black uppercase text-[#002f1d]">{signature}</p>
+        </MobileCard>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero description="Un message pour les joueurs, les familles, les éducateurs, les bénévoles et les partenaires." image={images.supporters} title="Mot du Président" />
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:px-8">
         <div className="club-panel rounded-lg p-8 text-center text-white">
@@ -52,6 +66,7 @@ export default async function PresidentPage() {
         text="La crédibilité d'un club se construit avec ses éducateurs, ses bénévoles, ses familles et ses partenaires."
         title="Faisons rayonner Viry ensemble"
       />
+      </DesktopOnly>
     </>
   );
 }

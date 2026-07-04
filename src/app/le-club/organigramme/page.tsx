@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, Camera, ClipboardList, GraduationCap, Landmark, Mail, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { FeatureCards } from "@/components/FeatureCards";
+import { DesktopOnly, MobileCard, MobileLinkCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { OrganizationMap } from "@/components/club/ClubPublicBlocks";
@@ -272,6 +273,33 @@ export default async function OrganizationPage() {
 
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Organisation"
+        actions={[{ href: "/contact", label: "Contact", variant: "secondary" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Pôles</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {departments.slice(0, 6).map((department) => (
+                <span className="rounded-md bg-[#07542f]/10 px-2.5 py-1 text-xs font-black uppercase text-[#002f1d]" key={department}>
+                  {department}
+                </span>
+              ))}
+            </div>
+          </MobileCard>
+          {allOfficials.slice(0, 6).map((official) => (
+            <MobileLinkCard href={officialHref(official)} key={official.id}>
+              <p className="text-xs font-black uppercase text-[#664d00]">{official.department}</p>
+              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{official.name}</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-700">{official.position}</p>
+            </MobileLinkCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         eyebrow="Le Club"
         description="Identifiez rapidement le bon responsable pour chaque sujet : projet sportif, licences, partenariats, communication ou événements."
@@ -358,6 +386,7 @@ export default async function OrganizationPage() {
           />
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }

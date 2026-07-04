@@ -18,7 +18,6 @@ export default async function MediaPage() {
       <MobileScreen
         eyebrow="Médias"
         title="Galerie"
-        description="Les derniers moments du club en images."
         scrollable
       >
         <div className="grid grid-cols-2 gap-3 pb-2 lg:grid-cols-3">

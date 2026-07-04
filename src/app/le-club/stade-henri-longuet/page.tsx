@@ -1,6 +1,7 @@
 import { Home, MapPin, Users, Waves } from "lucide-react";
 import Image from "next/image";
 import { FeatureCards } from "@/components/FeatureCards";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
@@ -15,6 +16,30 @@ export default async function StadiumPage() {
   const mapsSrc = `https://www.google.com/maps?q=${encodeURIComponent(stade.mapsQuery || stade.address)}&output=embed`;
   return (
     <>
+      <MobileScreen
+        eyebrow="Le Club"
+        title="Stade Henri Longuet"
+        actions={[{ href: "/contact", label: "Contact", variant: "secondary" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Adresse</p>
+            <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{stade.address}</h2>
+          </MobileCard>
+          <MobileCard>
+            <p className="text-xs font-black uppercase text-[#664d00]">Infrastructures</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {stade.infrastructures.slice(0, 6).map((item) => (
+                <span className="rounded-md bg-[#07542f]/10 px-2.5 py-1 text-xs font-black uppercase text-[#002f1d]" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          </MobileCard>
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         description="Notre maison, notre fierté. Un lieu de vie sportive au coeur de Viry-Châtillon."
         image={images.stadiumAerial}
@@ -64,6 +89,7 @@ export default async function StadiumPage() {
           ]}
         />
       </section>
+      </DesktopOnly>
     </>
   );
 }

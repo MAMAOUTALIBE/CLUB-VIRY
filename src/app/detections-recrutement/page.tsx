@@ -17,7 +17,6 @@ export default function RecruitmentPage() {
       <MobileScreen
         eyebrow="Détections"
         title="Recrutement"
-        description="Candidature étudiée par la cellule sportive selon le profil, l’état d’esprit et la catégorie."
         scrollable
       >
         <div className="grid gap-3 pb-2 md:grid-cols-[0.75fr_1.25fr]">

@@ -1,4 +1,5 @@
 import { ButtonLink } from "@/components/ButtonLink";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { FeatureCards } from "@/components/FeatureCards";
@@ -13,6 +14,23 @@ export const metadata = pageMetadata("/formation/football-a-11");
 export default function FootballA11Page() {
   return (
     <>
+      <MobileScreen
+        eyebrow="Formation"
+        title="Football à 11"
+        actions={[{ href: "/detections-recrutement", label: "Détections" }]}
+        scrollable
+      >
+        <div className="grid gap-3 pb-2">
+          {footA11Educators.slice(0, 6).map((person) => (
+            <MobileCard key={person.name}>
+              <p className="text-xs font-black uppercase text-[#664d00]">{person.category}</p>
+              <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{person.name}</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-700">{person.role}</p>
+            </MobileCard>
+          ))}
+        </div>
+      </MobileScreen>
+      <DesktopOnly>
       <PageHero
         eyebrow="Formation"
         description="Une lecture claire de l'encadrement du football à 11, des U14 aux Seniors, avec les rôles sportifs et les catégories suivies."
@@ -40,6 +58,7 @@ export default function FootballA11Page() {
           />
         </div>
       </section>
+      </DesktopOnly>
     </>
   );
 }
