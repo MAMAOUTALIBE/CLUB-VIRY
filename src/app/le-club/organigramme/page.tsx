@@ -284,14 +284,14 @@ export default async function OrganizationPage() {
           <MobileCard>
             <p className="text-xs font-black uppercase text-[#664d00]">Pôles</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {departments.slice(0, 6).map((department) => (
+              {departments.map((department) => (
                 <span className="rounded-md bg-[#07542f]/10 px-2.5 py-1 text-xs font-black uppercase text-[#002f1d]" key={department}>
                   {department}
                 </span>
               ))}
             </div>
           </MobileCard>
-          {allOfficials.slice(0, 6).map((official) => (
+          {allOfficials.map((official) => (
             <OfficialIdentityCard
               key={official.id}
               href={officialHref(official)}
