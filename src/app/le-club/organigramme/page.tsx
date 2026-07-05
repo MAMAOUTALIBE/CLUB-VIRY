@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Camera, ClipboardList, GraduationCap, Landmark, Mail, Settings, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, ClipboardList, GraduationCap, Landmark, Mail, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { FeatureCards } from "@/components/FeatureCards";
 import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { OfficialIdentityCard } from "@/components/OfficialIdentityCard";
 import { PageHero } from "@/components/PageHero";
+import { PersonProfileCard } from "@/components/PersonProfileCard";
 import { SectionTitle } from "@/components/SectionTitle";
 import { OrganizationMap } from "@/components/club/ClubPublicBlocks";
 import { OfficialsCarousel } from "@/components/club/OfficialsCarousel";
@@ -90,31 +91,6 @@ function Avatar({ official, size = "h-16 w-16" }: { official: DisplayOfficial; s
   );
 }
 
-function OfficialPortrait({ official, featured = false }: { official: DisplayOfficial; featured?: boolean }) {
-  const height = featured ? "h-64" : "h-52";
-
-  return (
-    <div className={`relative overflow-hidden rounded-lg border border-[#07542f]/15 bg-[#002f1d] ${height}`}>
-      {official.photo ? (
-        <img src={official.photo} alt={official.name} className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.03]" />
-      ) : (
-        <div className="stadium-grid flex h-full w-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_20%,rgba(247,198,0,0.18),transparent_38%),linear-gradient(145deg,#001c10,#07542f)] px-5 text-center">
-          <span className="flex h-24 w-24 items-center justify-center rounded-full bg-[#001c10]/75 text-3xl font-black uppercase text-[#f7c600] ring-2 ring-[#f7c600]">
-            {monogram(official.name)}
-          </span>
-          <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#f7c600]/45 bg-[#001c10]/55 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600]">
-            <Camera size={13} aria-hidden="true" />
-            Photo à ajouter
-          </span>
-        </div>
-      )}
-      <span className="absolute left-3 top-3 rounded-full bg-[#f7c600] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-[#001c10] shadow">
-        {official.department}
-      </span>
-    </div>
-  );
-}
-
 function HeroStats({ bureauCount, dirigeantCount, departmentCount }: { bureauCount: number; dirigeantCount: number; departmentCount: number }) {
   const stats = [
     { label: "Bureau", value: bureauCount },
@@ -151,33 +127,23 @@ function DepartmentNav({ departments }: { departments: string[] }) {
 
 function OfficialProfileCard({ official, featured = false }: { official: DisplayOfficial; featured?: boolean }) {
   return (
-    <Link
-      href={officialHref(official)}
-      className={`focus-ring official-card group flex h-full flex-col overflow-hidden rounded-lg bg-white text-[#002f1d] transition duration-200 hover:-translate-y-1 hover:border-[#f7c600] hover:shadow-2xl ${featured ? "ring-2 ring-[#f7c600]/70" : ""}`}
-    >
-      <OfficialPortrait official={official} featured={featured} />
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-start gap-3">
-          <Avatar official={official} size="h-12 w-12" />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-xl font-black uppercase leading-tight">{official.name}</h3>
-            <p className="mt-1 text-sm font-bold uppercase tracking-wide text-[#07542f]">{official.position}</p>
-          </div>
-        </div>
-        <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-700">{official.bio}</p>
-        <ul className="mt-4 space-y-2">
-          {official.missions.slice(0, 3).map((mission) => (
-            <li key={mission} className="flex gap-2 text-sm font-semibold text-slate-700">
-              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[#07542f]" aria-hidden="true" />
-              <span>{mission}</span>
-            </li>
-          ))}
-        </ul>
-        <span className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-black uppercase text-[#07542f] group-hover:text-[#002f1d]">
-          Voir le profil <ArrowRight size={16} aria-hidden="true" />
-        </span>
-      </div>
-    </Link>
+    <PersonProfileCard
+      actionHref={officialHref(official)}
+      avatarPhoto={official.photo}
+      badge={official.category === "BUREAU" ? "Bureau" : "Direction"}
+      category={official.department}
+      coverImage={images.stadiumAerial}
+      featured={featured}
+      name={official.name}
+      pole={official.department}
+      role={official.position}
+      stats={[
+        { icon: "users", label: "Pôle", value: 1 },
+        { icon: "calendar", label: "Missions", value: Math.max(1, official.missions.length) },
+        { icon: "trophy", label: "Contact", value: "Club" }
+      ]}
+      tags={official.missions}
+    />
   );
 }
 
@@ -295,7 +261,7 @@ export default async function OrganizationPage() {
             <OfficialIdentityCard
               key={official.id}
               href={officialHref(official)}
-              official={{ name: official.name, position: official.position, department: official.department, photo: official.photo }}
+              official={{ name: official.name, position: official.position, department: official.department, photo: official.photo, missionCount: official.missions.length }}
             />
           ))}
         </div>

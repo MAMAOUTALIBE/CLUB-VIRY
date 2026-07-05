@@ -289,16 +289,16 @@ export function Header({ banner, socials }: HeaderProps) {
       }`}
     >
       <div className="hidden border-b border-[#f7c600]/20 bg-black/30 text-xs font-bold lg:block">
-        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-1 2xl:px-8 3xl:px-10">
+        <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-2.5 2xl:px-8 3xl:px-10">
           {bannerActive ? (
-            <div className="marquee min-w-0 flex-1 text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">
+            <div className="marquee min-w-0 flex-1 text-base font-extrabold uppercase tracking-wide text-white sm:text-lg">
               <span className="sr-only">{announcement}</span>
               <div className="marquee__track" aria-hidden="true">
                 {[0, 1].map((half) => (
                   <div className="flex shrink-0 items-center" key={half}>
                     {[0, 1, 2].map((index) => (
                       <span className="inline-flex items-center gap-2 whitespace-nowrap px-8" key={index}>
-                        <CalendarDays className="shrink-0 text-[#f7c600]" size={20} aria-hidden="true" />
+                        <CalendarDays className="shrink-0 text-[#f7c600]" size={22} aria-hidden="true" />
                         {announcement}
                       </span>
                     ))}

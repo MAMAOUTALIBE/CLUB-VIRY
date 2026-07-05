@@ -28,7 +28,7 @@ export default async function DirigeantsPage() {
             <OfficialIdentityCard
               key={official.id}
               href={`/le-club/organigramme/${official.slug}`}
-              official={{ name: official.name, position: official.position, department: official.department, photo: official.photo }}
+              official={{ name: official.name, position: official.position, department: official.department, photo: official.photo, missionCount: official.missions.length }}
             />
           ))}
         </div>

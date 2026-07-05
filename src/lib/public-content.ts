@@ -1016,6 +1016,7 @@ const mockOfficials: ClubOfficialsContent = {
       category: "DIRIGEANT",
       position: "Responsable systèmes d'information & numérique",
       department: "Systèmes d'information",
+      photo: "/dirigeants/PHOTOBAH.png",
       bio: "Développeur du site officiel du club, il pilote l'ensemble des systèmes d'information : site, CRM, données, outils numériques et accompagnement digital de la formation.",
       missions: ["Développer et maintenir le site du club", "Administrer les systèmes d'information et les données", "Outiller le numérique de la formation"],
       availability: "Disponible en ligne, réponse via le club",
@@ -1054,6 +1055,10 @@ export function officialToStaffPerson(official: DisplayOfficial, fallbackPhoto: 
     pole: official.department,
     contact: "Via le secrétariat du club",
     photo: official.photo ?? fallbackPhoto,
+    avatarPhoto: official.photo,
+    badge: official.category === "BUREAU" ? "Bureau" : "Direction",
+    coverPhoto: fallbackPhoto,
+    href: `/le-club/organigramme/${official.slug}`,
     tags: official.missions.slice(0, 2)
   };
 }

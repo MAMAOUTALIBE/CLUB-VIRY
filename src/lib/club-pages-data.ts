@@ -7,6 +7,10 @@ export type StaffPerson = {
   pole: string;
   contact: string;
   photo: string;
+  avatarPhoto?: string | null;
+  badge?: string;
+  coverPhoto?: string;
+  href?: string;
   tags?: string[];
 };
 

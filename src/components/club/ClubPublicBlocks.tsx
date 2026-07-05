@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarDays, CheckCircle2, ClipboardCheck, Clock, GraduationCap, MapPin, Megaphone, Search, ShieldCheck, Trophy, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { PersonProfileCard } from "@/components/PersonProfileCard";
 import type { ConductBlock, Installation, OrgNode, RegulationItem, StaffPerson, Stage } from "@/lib/club-pages-data";
 
 const iconMap = {
@@ -63,40 +64,31 @@ export function StaffDirectory({ people, intro }: { people: StaffPerson[]; intro
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4 3xl:grid-cols-5">
-        {filtered.map((person) => (
-          <article className="premium-card overflow-hidden rounded-lg bg-white" key={`${person.name}-${person.role}`}>
-            <div className="relative h-56">
-              <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 320px" src={person.photo} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/82 via-transparent to-transparent" aria-hidden="true" />
-              <span className="absolute left-4 top-4 rounded-md bg-[#f7c600] px-3 py-1 text-[11px] font-black uppercase text-[#001c10]">{person.category}</span>
-              <div className="absolute bottom-4 left-4 right-4">
-                <h2 className="text-2xl font-black uppercase leading-tight text-white">{person.name}</h2>
-                <p className="mt-1 text-sm font-black uppercase text-[#f7c600]">{person.role}</p>
-              </div>
-            </div>
-            <div className="p-5">
-              <div className="grid gap-3 text-sm font-semibold text-slate-700">
-                <p>
-                  <span className="font-black uppercase text-[#07542f]">Pôle : </span>
-                  {person.pole}
-                </p>
-                <p>
-                  <span className="font-black uppercase text-[#07542f]">Contact : </span>
-                  {person.contact}
-                </p>
-              </div>
-              {person.tags?.length ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {person.tags.map((tag) => (
-                    <span className="rounded-md bg-[#07542f]/8 px-2.5 py-1 text-[11px] font-black uppercase text-[#07542f]" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </article>
-        ))}
+        {filtered.map((person) => {
+          const missionCount = Math.max(1, person.tags?.length ?? 0);
+          const scopeCount = unique([person.category, person.pole]).length;
+
+          return (
+            <PersonProfileCard
+              actionHref={person.href ?? "/contact"}
+              actionLabel={person.href ? "Voir la fiche & contacter" : "Contacter le club"}
+              avatarPhoto={person.avatarPhoto}
+              badge={person.badge ?? person.category}
+              category={person.category}
+              coverImage={person.coverPhoto ?? person.photo}
+              key={`${person.name}-${person.role}`}
+              name={person.name}
+              pole={person.pole}
+              role={person.role}
+              stats={[
+                { icon: "users", label: "Pôles", value: scopeCount },
+                { icon: "calendar", label: "Missions", value: missionCount },
+                { icon: "trophy", label: "Contact", value: "Club" }
+              ]}
+              tags={person.tags}
+            />
+          );
+        })}
       </div>
     </section>
   );

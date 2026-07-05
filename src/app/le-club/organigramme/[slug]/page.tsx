@@ -109,7 +109,7 @@ export default async function OfficialProfilePage({ params }: Props) {
         scrollable
       >
         <div className="grid gap-3 pb-6">
-          <OfficialIdentityCard official={{ name: official.name, position: official.position, department: official.department, photo: official.photo }} />
+          <OfficialIdentityCard official={{ name: official.name, position: official.position, department: official.department, photo: official.photo, missionCount: official.missions.length }} />
           <MobileCard>
             <p className="text-xs font-black uppercase text-[#664d00]">Rôle</p>
             <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{official.position}</h2>
