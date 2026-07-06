@@ -139,7 +139,7 @@ export default function AcademyPage() {
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <SectionTitle eyebrow="Catalogue" title="Nos formations phares" />
               <AcademyCta url={ACADEMY_URL} className={DARK_BTN}>
-                Voir Toute les formations <ArrowRight size={16} aria-hidden="true" />
+                Voir toutes les formations <ArrowRight size={16} aria-hidden="true" />
               </AcademyCta>
             </div>
             <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6">
