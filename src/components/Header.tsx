@@ -90,6 +90,10 @@ const mobileNavGroups = [
       ["Présentation", "/le-club"],
       ["Histoire", "/le-club/histoire"],
       ["Galerie photos", "/le-club/galerie"],
+      ["Bureau", "/le-club/bureau"],
+      ["Dirigeants", "/le-club/dirigeants"],
+      ["Organigramme", "/le-club/organigramme"],
+      ["Encadrement", "/le-club/encadrement"],
       ["Installations", "/le-club/installations"],
       ["Codes de conduite", "/le-club/codes-de-conduite"]
     ]
