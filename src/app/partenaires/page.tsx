@@ -10,7 +10,7 @@ import { getPublicPartners } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/partenaires");
-export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
+export const dynamic = "force-dynamic"; // CRM : publication des partenaires visible immediatement
 
 export default async function PartnersPage() {
   const partners = await getPublicPartners();

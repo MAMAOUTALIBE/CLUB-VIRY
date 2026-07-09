@@ -19,7 +19,7 @@ export const metadata = {
   alternates: { canonical: "/" }
 };
 
-export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
+export const dynamic = "force-dynamic"; // CRM : partenaires et contenus lus en production à chaque requête
 
 // JSON-LD WebSite (uniquement sur l'accueil) : aide Google a afficher le nom du site.
 const websiteJsonLd = {
