@@ -90,24 +90,31 @@ const mobileNavGroups = [
       ["Présentation", "/le-club"],
       ["Histoire", "/le-club/histoire"],
       ["Galerie photos", "/le-club/galerie"],
+      ["Mot du Président", "/le-club/mot-du-president"],
       ["Bureau", "/le-club/bureau"],
       ["Dirigeants", "/le-club/dirigeants"],
       ["Organigramme", "/le-club/organigramme"],
       ["Encadrement", "/le-club/encadrement"],
       ["Installations", "/le-club/installations"],
-      ["Codes de conduite", "/le-club/codes-de-conduite"]
+      ["Codes de conduite", "/le-club/codes-de-conduite"],
+      ["Stade Henri Longuet", "/le-club/stade-henri-longuet"],
+      ["Partenaires", "/partenaires"]
     ]
   },
   {
-    label: "Formation",
+    label: "Formation & équipes",
     href: "/formation",
     links: [
       ["Formation", "/formation"],
-      ["Équipes", "/equipes"],
-      ["Academy", "/academy"],
       ["École de foot", "/formation/ecole-de-foot"],
       ["Football à 11", "/formation/football-a-11"],
-      ["Stages", "/formation/stages"]
+      ["Projet école de foot", "/formation/projet-ecole-de-foot"],
+      ["Stages", "/formation/stages"],
+      ["Toutes les équipes", "/equipes"],
+      ["Seniors D1", "/equipes/seniors-r1"],
+      ["École de foot équipes", "/equipes/ecole-de-foot"],
+      ["Féminines", "/equipes/feminines"],
+      ["Academy", "/academy"]
     ]
   },
   {
@@ -123,7 +130,11 @@ const mobileNavGroups = [
   {
     label: "Boutique",
     href: "/boutique",
-    links: [["Boutique", "/boutique"]]
+    links: [
+      ["Boutique", "/boutique"],
+      ["Conditions générales", "/boutique/conditions-generales"],
+      ["Livraison & retour", "/boutique/livraison-retour"]
+    ]
   },
   {
     label: "Nous rejoindre",
@@ -132,7 +143,17 @@ const mobileNavGroups = [
       ["Inscriptions", "/inscriptions"],
       ["Détections", "/detections-recrutement"],
       ["Partenaires", "/partenaires"],
-      ["Contact", "/contact"]
+      ["Contact", "/contact"],
+      ["Espace membre", "/espace-membre"]
+    ]
+  },
+  {
+    label: "Infos",
+    href: "/plan-du-site",
+    links: [
+      ["Plan du site", "/plan-du-site"],
+      ["Mentions légales", "/mentions-legales"],
+      ["Confidentialité", "/politique-confidentialite"]
     ]
   }
 ];
@@ -513,6 +534,24 @@ export function Header({ banner, socials }: HeaderProps) {
                 <X size={24} aria-hidden="true" />
               </button>
             </div>
+
+            <nav className="grid shrink-0 grid-cols-2 gap-2 md:grid-cols-4" aria-label="Accès rapides mobile">
+              {[
+                ["Partenaires", "/partenaires"],
+                ["Inscriptions", "/inscriptions"],
+                ["Calendrier", "/calendrier"],
+                ["Boutique", "/boutique"]
+              ].map(([label, href]) => (
+                <Link
+                  className="focus-ring min-h-11 rounded-md border border-[#f7c600]/25 bg-white/[0.06] px-3 py-3 text-center text-xs font-black uppercase text-white hover:bg-[#f7c600] hover:text-[#002f1d]"
+                  href={href}
+                  key={href}
+                  onClick={() => setOpen(false)}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
 
             <div className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto overscroll-contain pr-1 md:grid-cols-2">
               {mobileNavGroups.map((group) => {

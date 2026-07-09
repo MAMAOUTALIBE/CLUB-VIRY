@@ -66,8 +66,10 @@ export default async function HomePage() {
   const mobileActions = [
     ["Inscriptions", "/inscriptions"],
     ["Calendrier", "/calendrier"],
+    ["Partenaires", "/partenaires"],
     ["Équipes", "/equipes"],
-    ["Boutique", "/boutique"]
+    ["Boutique", "/boutique"],
+    ["Actualités", "/actualites"]
   ];
 
   const nextMatch = matches[0];

@@ -89,7 +89,9 @@ export function Footer({ socials, contact }: FooterProps) {
         <nav className="mt-6 grid gap-2 md:grid-cols-2 lg:grid-cols-3" aria-label="Liens essentiels">
           {[
             ["Inscriptions", "/inscriptions"],
+            ["Partenaires", "/partenaires"],
             ["Calendrier", "/calendrier"],
+            ["Actualités", "/actualites"],
             ["Boutique", "/boutique"],
             ["Contact", "/contact"],
             ["Espace membre", "/espace-membre"]

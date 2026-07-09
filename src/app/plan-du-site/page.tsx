@@ -83,7 +83,7 @@ export default function SiteMapPage() {
             <nav aria-label={section.title} className="rounded-lg border border-[#07542f]/12 bg-white p-4 shadow-sm" key={section.title}>
               <h2 className="text-sm font-black uppercase text-[#002f1d]">{section.title}</h2>
               <ul className="mt-3 grid gap-2">
-                {section.links.slice(0, 5).map(([href, label]) => (
+                {section.links.map(([href, label]) => (
                   <li key={href}>
                     <Link className="focus-ring font-bold text-slate-700" href={href}>
                       {label}
