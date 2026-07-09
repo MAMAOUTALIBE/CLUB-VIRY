@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
@@ -50,6 +51,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       entityId: partner.id,
       metadata: { name: partner.name, slug: partner.slug, isActive: partner.is_active }
     });
+    revalidatePath("/");
+    revalidatePath("/partenaires");
 
     return jsonOk({ partner });
   } catch (error) {

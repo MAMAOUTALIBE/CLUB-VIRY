@@ -619,6 +619,13 @@ test("admin partner validation rejects invalid slugs", () => {
   assert.match(JSON.stringify(result), /Slug partenaire invalide/);
 });
 
+test("admin partner validation accepts publication toggles", () => {
+  const result = validateAdminPartnerPayload({ isActive: false }, { partial: true });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.data.isActive, false);
+});
+
 test("admin partnership request review accepts status updates", () => {
   const result = validateAdminPartnershipRequestReviewPayload({
     status: "CONTACTED"

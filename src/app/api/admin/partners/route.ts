@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, parseLimit, readJsonBody } from "@/lib/api/http";
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
       entityId: partner.id,
       metadata: { name: partner.name, slug: partner.slug, tier: partner.tier }
     });
+    revalidatePath("/");
+    revalidatePath("/partenaires");
 
     return jsonOk({ partner }, 201);
   } catch (error) {

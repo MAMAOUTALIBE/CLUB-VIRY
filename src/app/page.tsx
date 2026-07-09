@@ -1,14 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { HomeHeroCarousel, type HomeHeroSlide } from "@/components/HomeHeroCarousel";
 import { Stagger, StaggerItem } from "@/components/Motion";
+import { PartnerLogoMarquee, type PartnerLogo } from "@/components/PartnerLogoMarquee";
 import { SectionTitle } from "@/components/SectionTitle";
 import { matches } from "@/lib/data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
-import { getPublicNews, getPublicPartners, getSiteSettings } from "@/lib/public-content";
+import { getPartnerLogo } from "@/lib/partner-logos";
+import { getPublicNews, getPublicPartners, getSiteSettings, type DisplayPartner } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -40,9 +42,17 @@ const heroSlides: HomeHeroSlide[] = [
   { src: images.supporters, objectPosition: "center 42%" }
 ];
 
+function toPartnerLogo(partner: DisplayPartner): PartnerLogo {
+  return {
+    name: partner.name,
+    logo: partner.logoUrl ?? getPartnerLogo(partner.name),
+    alt: `Logo ${partner.name}`
+  };
+}
+
 export default async function HomePage() {
   const [allNews, settings, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners()]);
-  const partnerNames = featuredPartners.map((partner) => partner.name);
+  const partnerLogos = featuredPartners.map(toPartnerLogo);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
   const clubStats = settings.club_stats;
@@ -463,6 +473,7 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+      </div>
 
       <section className="bg-white py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -491,101 +502,11 @@ export default async function HomePage() {
             </span>
           </div>
 
-          <Stagger className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 3xl:grid-cols-6 4xl:grid-cols-8">
-            {partnerNames.slice(0, 8).map((partner, index) => {
-              const TIERS: Record<string, string> = {
-                "Essonne Département": "Institutionnel",
-                "Ville de Viry-Châtillon": "Institutionnel",
-                Intersport: "Partenaire officiel",
-                "E.Leclerc": "Partenaire officiel",
-                Engie: "Partenaire officiel",
-                "Crédit Mutuel": "Partenaire officiel",
-                Nike: "Équipementier",
-                Adidas: "Équipementier"
-              };
-              const tier = TIERS[partner] ?? "Partenaire officiel";
-              const isInstitutionnel = tier === "Institutionnel";
-
-              const MONOGRAM_OVERRIDES: Record<string, string> = {
-                "Ville de Viry-Châtillon": "VC",
-                "Essonne Département": "ED",
-                "E.Leclerc": "EL",
-                "Crédit Mutuel": "CM"
-              };
-              const STOP_WORDS = new Set(["de", "du", "des", "la", "le", "les", "et", "d"]);
-              const derivedMonogram = partner
-                .replace(/[^A-Za-zÀ-ÿ]+/g, " ")
-                .split(/\s+/)
-                .filter((word) => word && !STOP_WORDS.has(word.toLowerCase()))
-                .slice(0, 2)
-                .map((word) => word[0].toUpperCase())
-                .join("");
-              const monogram = MONOGRAM_OVERRIDES[partner] ?? derivedMonogram;
-
-              return (
-                <StaggerItem key={partner}>
-                  <article
-                    className="premium-card group relative flex h-full flex-col items-center justify-center overflow-hidden rounded-2xl px-5 py-7 text-center"
-                    title={partner}
-                  >
-                    <span
-                      className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-[#f7c600]/0 blur-2xl transition-all duration-300 group-hover:bg-[#f7c600]/15"
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="pointer-events-none absolute right-3 top-2 text-[11px] font-black tabular-nums text-[#002f1d]/15 transition-colors duration-200 group-hover:text-[#664d00]/40"
-                      aria-hidden="true"
-                    >
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span
-                      className={`relative mb-4 flex h-16 w-16 items-center justify-center rounded-full shadow-[0_10px_24px_rgba(0,31,19,0.22)] transition-all duration-300 group-hover:shadow-[0_14px_30px_rgba(0,31,19,0.3)] ${
-                        isInstitutionnel
-                          ? "bg-gradient-to-br from-[#f7c600] to-[#664d00] ring-1 ring-[#664d00]/30 group-hover:ring-[#f7c600]"
-                          : "bg-gradient-to-br from-[#00351f] to-[#001c10] ring-1 ring-[#f7c600]/30 group-hover:ring-[#f7c600]"
-                      }`}
-                      aria-hidden="true"
-                    >
-                      <span className="absolute inset-1.5 rounded-full ring-1 ring-inset ring-white/10" />
-                      <span
-                        className={`text-lg font-black uppercase tracking-tight ${
-                          isInstitutionnel ? "text-[#002f1d]" : "text-[#f7c600]"
-                        }`}
-                      >
-                        {monogram}
-                      </span>
-                    </span>
-                    <h3 className="text-sm font-black uppercase leading-tight text-[#002f1d]">{partner}</h3>
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#664d00]">
-                      <BadgeCheck size={13} aria-hidden="true" />
-                      {tier}
-                    </p>
-                    <span
-                      className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-[#f7c600] transition-transform duration-300 group-hover:scale-x-100"
-                      aria-hidden="true"
-                    />
-                  </article>
-                </StaggerItem>
-              );
-            })}
-          </Stagger>
-
-          <div className="mt-8 flex flex-col items-center gap-4 rounded-xl bg-[#f7f8f4] px-6 py-7 text-center sm:flex-row sm:justify-between sm:text-left">
-            <p className="max-w-xl text-base font-bold text-slate-700">
-              Et si votre marque rejoignait le mouvement ?{" "}
-              <span className="font-black text-[#002f1d]">Votre image a toute sa place à nos côtés.</span>
-            </p>
-            <a
-              href="/partenaires"
-              className="focus-ring inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-black uppercase text-[#002f1d] underline decoration-[#f7c600] decoration-2 underline-offset-4 transition hover:text-[#00351f]"
-            >
-              Découvrir nos offres
-              <ArrowRight size={15} aria-hidden="true" />
-            </a>
-          </div>
+          <PartnerLogoMarquee partners={partnerLogos} />
         </div>
       </section>
 
+      <div className="hidden xl:block">
       <section className="club-shell py-14 text-white sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionTitle

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" role="img" aria-labelledby="title">
+  <title id="title">Adidas</title>
+  <rect width="360" height="120" fill="none"/>
+  <g fill="#050505" transform="translate(66 20)">
+    <path d="M0 54 25 39l43 50H36z"/>
+    <path d="M60 28 85 13l65 76h-32z"/>
+    <path d="M123 0 148 0l76 89h-32z"/>
+  </g>
+  <text x="91" y="108" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="800" fill="#050505">adidas</text>
+</svg>

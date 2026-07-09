@@ -196,6 +196,15 @@ select {
   animation-play-state: paused;
 }
 
+.partners-marquee__track {
+  animation: partners-marquee var(--partners-marquee-duration, 28s) linear infinite;
+  will-change: transform;
+}
+
+.partners-marquee:hover .partners-marquee__track {
+  animation-play-state: paused;
+}
+
 @keyframes marquee-scroll {
   from {
     transform: translateX(0);
@@ -205,12 +214,22 @@ select {
   }
 }
 
+@keyframes partners-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
-  .marquee__track {
+  .marquee__track,
+  .partners-marquee__track {
     animation: none;
     transform: none;
   }

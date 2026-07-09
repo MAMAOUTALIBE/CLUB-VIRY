@@ -1,13 +1,13 @@
 "use client";
 
-import { Loader2, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { showToast } from "@/components/admin/Toast";
 
 type Row = Record<string, unknown>;
 
-export type CrudFieldType = "text" | "textarea" | "url" | "date" | "datetime" | "number" | "select" | "boolean";
+export type CrudFieldType = "text" | "textarea" | "url" | "date" | "datetime" | "number" | "select" | "boolean" | "file";
 
 export type CrudField = {
   /** Clé du payload envoyé à l'API (camelCase). */
@@ -22,14 +22,23 @@ export type CrudField = {
   /** Clé correspondante dans la ligne retournée par l'API (snake_case). Défaut: snake_case de `name`. */
   rowKey?: string;
   /** Clé envoyée dans le payload (camelCase) si différente de `name`. Défaut: `name`. */
-  payloadKey?: string;
+  payloadKey?: string | false;
   /** Transforme la valeur saisie avant envoi (ex: euros -> centimes). */
   toPayload?: (raw: string) => unknown;
   /** Calcule la valeur initiale du champ lors de l'édition (ex: centimes -> euros). */
   fromRowValue?: (row: Row) => string;
+  /** Endpoint multipart pour les champs fichier. Doit retourner data[uploadResponseKey]. */
+  uploadEndpoint?: string;
+  /** Champ texte mis à jour après upload, ex: logoUrl. */
+  uploadTargetField?: string;
+  /** Clé de réponse lue dans data après upload. Défaut: url. */
+  uploadResponseKey?: string;
+  accept?: string;
+  maxBytes?: number;
 };
 
 export type CrudColumn = { label: string; render: (row: Row) => React.ReactNode };
+type AdminCrudHelpers = { reload: () => Promise<void> };
 
 type AdminCrudProps = {
   title: string;
@@ -49,7 +58,7 @@ type AdminCrudProps = {
   /** Masque le bouton de création (mode édition seule, ex: profils existants non créables ici). */
   disableCreate?: boolean;
   /** Actions supplémentaires par ligne, rendues avant le bouton « Éditer » (ex: lien vers un sous-écran). */
-  rowActions?: (row: Row) => React.ReactNode;
+  rowActions?: (row: Row, helpers: AdminCrudHelpers) => React.ReactNode;
   /** Active un bouton « Supprimer » par ligne (DELETE endpoint/[id], avec confirmation). */
   allowDelete?: boolean;
   /** Libellé d'une ligne pour la confirmation de suppression (défaut: première colonne). */
@@ -87,6 +96,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [hasMore, setHasMore] = useState(false);
@@ -158,12 +168,70 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     }
   }
 
+  async function uploadFieldFile(field: CrudField, file: File) {
+    if (!field.uploadEndpoint || !field.uploadTargetField) {
+      setFormError("Configuration d'upload manquante.");
+      return;
+    }
+
+    if (field.accept) {
+      const accepted = field.accept
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      if (accepted.length > 0 && !accepted.includes(file.type)) {
+        setFormError(`Format invalide : ${accepted.join(", ")}.`);
+        return;
+      }
+    }
+
+    if (field.maxBytes && file.size > field.maxBytes) {
+      setFormError(`Fichier trop lourd (${Math.round(field.maxBytes / 1024 / 1024)} Mo maximum).`);
+      return;
+    }
+
+    setUploadingField(field.name);
+    setFormError("");
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const res = await fetch(field.uploadEndpoint, {
+        method: "POST",
+        credentials: "same-origin",
+        body
+      });
+      const json = await res.json().catch(() => null);
+      const responseKey = field.uploadResponseKey ?? "url";
+      const uploadedValue = json?.data?.[responseKey];
+
+      if (!res.ok || !json?.ok || typeof uploadedValue !== "string") {
+        setFormError(json?.error?.message ?? "Upload impossible.");
+        showToast(json?.error?.message ?? "Upload impossible.", "error");
+        return;
+      }
+
+      setForm((current) => ({ ...current, [field.uploadTargetField as string]: uploadedValue }));
+      showToast("Logo téléversé. Enregistrez le partenaire pour publier le changement.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur réseau.";
+      setFormError(message);
+      showToast(message, "error");
+    } finally {
+      setUploadingField(null);
+    }
+  }
+
   async function submit() {
     setSaving(true);
     setFormError("");
     // payload : on n'envoie que les champs renseignés (les vides deviennent omis)
     const payload: Record<string, unknown> = {};
     for (const f of fields) {
+      if (f.type === "file" || f.payloadKey === false) {
+        continue;
+      }
       const key = f.payloadKey ?? f.name;
       const raw = form[f.name];
       if (f.type === "boolean") {
@@ -246,6 +314,48 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                 onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm((s) => ({ ...s, [f.name]: e.target.value })),
                 className: "focus-ring min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-900"
               };
+              if (f.type === "file") {
+                const targetValue = f.uploadTargetField ? form[f.uploadTargetField] : "";
+                const uploading = uploadingField === f.name;
+
+                return (
+                  <label key={f.name} className={`grid gap-1.5 text-sm font-bold text-slate-800 ${f.fullWidth ? "sm:col-span-2" : ""}`} htmlFor={id}>
+                    <span>{f.label}{f.required ? <span className="text-red-600"> *</span> : null}</span>
+                    <div className="rounded-md border border-dashed border-slate-300 bg-white p-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <input
+                          id={id}
+                          type="file"
+                          accept={f.accept}
+                          disabled={uploading}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadFieldFile(f, file);
+                            event.currentTarget.value = "";
+                          }}
+                          className="block min-h-11 max-w-full text-sm font-bold text-slate-700 file:mr-3 file:min-h-10 file:rounded-md file:border-0 file:bg-[#002f1d] file:px-4 file:text-xs file:font-black file:uppercase file:text-white hover:file:bg-[#07542f] disabled:cursor-wait disabled:opacity-70"
+                        />
+                        {uploading ? (
+                          <span className="inline-flex items-center gap-2 text-xs font-black uppercase text-[#07542f]">
+                            <Loader2 className="animate-spin" size={14} aria-hidden="true" />
+                            Envoi...
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 text-xs font-black uppercase text-slate-500">
+                            <Upload size={14} aria-hidden="true" />
+                            Fichier local
+                          </span>
+                        )}
+                      </div>
+                      {typeof targetValue === "string" && targetValue ? (
+                        <p className="mt-2 break-all text-xs font-medium text-slate-500">Logo prêt : {targetValue}</p>
+                      ) : null}
+                    </div>
+                    {f.help ? <span className="text-xs font-medium text-slate-500">{f.help}</span> : null}
+                  </label>
+                );
+              }
+
               return (
                 <label key={f.name} className={`grid gap-1.5 text-sm font-bold text-slate-800 ${f.fullWidth || f.type === "textarea" ? "sm:col-span-2" : ""}`} htmlFor={id}>
                   <span>{f.label}{f.required ? <span className="text-red-600"> *</span> : null}</span>
@@ -298,7 +408,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                   {columns.map((c) => <td key={c.label} className="px-3 py-2.5 align-top text-slate-700">{c.render(row)}</td>)}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {rowActions ? rowActions(row) : null}
+                      {rowActions ? rowActions(row, { reload: load }) : null}
                       <button onClick={() => openEdit(row)} className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">
                         <Pencil size={14} /> Éditer
                       </button>

@@ -13,6 +13,7 @@ import { listPublicEducators } from "@/lib/db/educators";
 import { listClubOfficials } from "@/lib/db/officials";
 import type { Match, NewsArticle } from "@/lib/db/types";
 import { images } from "@/lib/images";
+import { getPartnerLogo } from "@/lib/partner-logos";
 import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
 import type { StaffPerson } from "@/lib/club-pages-data";
@@ -90,13 +91,15 @@ export type DisplayPartner = { name: string; logoUrl: string | null; websiteUrl:
 
 export async function getPublicPartners(): Promise<DisplayPartner[]> {
   const rows = await readPublicDb(() => listPartnersForAdmin(100));
-  const active = (rows ?? [])
-    .filter((p) => p.is_active)
-    .sort((a, b) => a.order_index - b.order_index);
-  if (active.length > 0) {
+
+  if (rows !== null) {
+    const active = rows
+      .filter((p) => p.is_active)
+      .sort((a, b) => a.order_index - b.order_index);
     return active.map((p) => ({ name: p.name, logoUrl: p.logo_url, websiteUrl: p.website_url, tier: p.tier }));
   }
-  return mockPartners.map((name) => ({ name, logoUrl: null, websiteUrl: null, tier: null }));
+
+  return mockPartners.map((name) => ({ name, logoUrl: getPartnerLogo(name), websiteUrl: null, tier: null }));
 }
 
 export type DisplayProduct = { name: string; price: string; category: string; imageUrl: string | null; icon: LucideIcon | null };

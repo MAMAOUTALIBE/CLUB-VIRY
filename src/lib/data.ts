@@ -199,7 +199,9 @@ export const partners = [
   "Engie",
   "Crédit Mutuel",
   "Nike",
-  "Adidas"
+  "Adidas",
+  "Pro Emba",
+  "MS SOL"
 ];
 
 export const products = [

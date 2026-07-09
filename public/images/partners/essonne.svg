@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" role="img" aria-labelledby="title">
+  <title id="title">Essonne Département</title>
+  <rect width="360" height="120" fill="none"/>
+  <g fill="#1b4f9c">
+    <text x="22" y="58" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Essonne</text>
+    <text x="24" y="86" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" letter-spacing="4">DEPARTEMENT</text>
+  </g>
+  <g fill="#1b4f9c" opacity=".9">
+    <circle cx="212" cy="32" r="4"/>
+    <circle cx="226" cy="26" r="4"/>
+    <circle cx="240" cy="29" r="4"/>
+    <circle cx="251" cy="39" r="4"/>
+    <circle cx="256" cy="54" r="4"/>
+    <path d="M205 43c26-23 63-8 67 24" fill="none" stroke="#1b4f9c" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

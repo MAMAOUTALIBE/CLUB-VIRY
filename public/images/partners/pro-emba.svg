@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Pro Emba</title>
+  <desc id="desc">Logo Pro Emba materiaux de construction</desc>
+  <rect width="1200" height="760" fill="#fff"/>
+  <path d="M-56 254C322 139 691 33 1257 19" fill="none" stroke="#168336" stroke-width="31"/>
+  <path d="M-30 628C344 751 754 711 1221 503" fill="none" stroke="#004b96" stroke-width="71"/>
+
+  <g transform="translate(365 178)">
+    <path d="M172 236 252 156a30 30 0 0 1 42 0l80 80h-50l-51-51a12 12 0 0 0-17 0l-51 51z" fill="#555"/>
+    <rect x="94" y="78" width="134" height="134" rx="17" transform="rotate(-45 161 145)" fill="#db1323"/>
+    <rect x="244" y="27" width="134" height="134" rx="17" transform="rotate(-45 311 94)" fill="#19863a"/>
+    <rect x="394" y="92" width="134" height="134" rx="17" transform="rotate(-45 461 159)" fill="#004f98"/>
+  </g>
+
+  <text x="600" y="507" text-anchor="middle" fill="#004b96" font-family="Arial, Helvetica, sans-serif" font-size="142" font-weight="800" letter-spacing="-6">
+    Pro Emba
+  </text>
+  <text x="600" y="576" text-anchor="middle" fill="#3f3f3f" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="600" letter-spacing="1.2">
+    MATERIAUX DE CONSTRUCTION
+  </text>
+</svg>

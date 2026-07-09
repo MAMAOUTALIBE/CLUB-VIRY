@@ -125,8 +125,16 @@ export async function proxy(request: NextRequest) {
 
   if (sessionStatus !== "authorized") {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+
+    url.pathname = "/connexion";
     url.search = "";
+    url.searchParams.set("next", nextPath);
+
+    if (sessionStatus === "forbidden") {
+      url.searchParams.set("error", "forbidden");
+    }
+
     const redirect = NextResponse.redirect(url);
     redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
     return redirect;

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 360" role="img" aria-labelledby="title">
+  <title id="title">MS SOL</title>
+  <rect width="420" height="360" fill="none"/>
+  <g fill="none" stroke="#ed001b" stroke-width="18" stroke-linejoin="miter">
+    <path d="M88 91 210 22 332 91"/>
+    <path d="M125 91 210 49 295 91"/>
+    <path d="M125 139 210 210 295 139"/>
+    <path d="M88 139 210 238 332 139"/>
+  </g>
+  <path d="M188 89a22 22 0 0 1 44 0z" fill="#ed001b"/>
+  <text x="210" y="131" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="42" font-weight="800" fill="#1f1f1f" letter-spacing="5">MS SOL</text>
+  <text x="210" y="325" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="58" font-weight="900" fill="#ed001b" letter-spacing="9">MS SOL</text>
+</svg>

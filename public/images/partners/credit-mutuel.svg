@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" role="img" aria-labelledby="title">
+  <title id="title">Crédit Mutuel</title>
+  <rect width="420" height="120" fill="none"/>
+  <text x="28" y="72" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="900" fill="#0b3f91">Crédit</text>
+  <g transform="translate(170 34)" fill="#e30613">
+    <path d="M24 0 48 22 24 44 0 22z"/>
+    <path d="M48 0 72 22 48 44 24 22z" opacity=".82"/>
+  </g>
+  <text x="253" y="72" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="900" fill="#0b3f91">Mutuel</text>
+</svg>
