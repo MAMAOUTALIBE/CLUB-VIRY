@@ -11,7 +11,8 @@ import { getAllSettings } from "@/lib/db/settings";
 import { getPublicTeamRosterBySlug, listTeams } from "@/lib/db/teams";
 import { listPublicEducators } from "@/lib/db/educators";
 import { listClubOfficials } from "@/lib/db/officials";
-import type { Match, NewsArticle } from "@/lib/db/types";
+import { listPublicStandings } from "@/lib/db/standings";
+import type { Match, NewsArticle, Standing } from "@/lib/db/types";
 import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
 import { readPublicDb } from "@/lib/public-db";
@@ -298,6 +299,12 @@ function withoutRetiredPublicMentions(groups: OrgGroup[]): OrgGroup[] {
     ...group,
     text: group.text.replace(/,\s*futsal\b/gi, "").replace(/\s+et\s+futsal\b/gi, "")
   }));
+}
+
+/** Classements publiés, groupés par compétition (vide si aucun — la section est alors masquée). */
+export async function getPublicStandings(): Promise<Standing[]> {
+  const rows = await readPublicDb(() => listPublicStandings());
+  return rows ?? [];
 }
 
 export async function getSiteSettings(): Promise<SiteContent> {

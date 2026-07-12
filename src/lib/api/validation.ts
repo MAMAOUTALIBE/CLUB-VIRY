@@ -438,6 +438,82 @@ export function validateAdminSeasonPayload(input: unknown, options: { partial?: 
   return { ok: true, data };
 }
 
+export type AdminStandingPayload = {
+  competition?: string;
+  teamName?: string;
+  rank?: number | null;
+  played?: number;
+  won?: number;
+  drawn?: number;
+  lost?: number;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  points?: number;
+  isOwnClub?: boolean;
+  isActive?: boolean;
+};
+
+/** Valide une ligne de classement (compétition + équipe + statistiques entières >= 0). */
+export function validateAdminStandingPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminStandingPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  const partial = options.partial ?? false;
+  const data: AdminStandingPayload = {};
+
+  for (const [field, label] of [
+    ["competition", "La compétition"],
+    ["teamName", "Le nom de l'équipe"]
+  ] as const) {
+    const value = normalizeString(body[field]);
+    if (value !== undefined) {
+      if (value.length > 120) {
+        issues.push({ field, message: `${label} est trop long (120 caractères max).` });
+      } else {
+        data[field] = value;
+      }
+    } else if (!partial) {
+      issues.push({ field, message: `${label} est requis(e).` });
+    }
+  }
+
+  // Statistiques : entiers >= 0 (rank peut être null pour « non classé »).
+  const intFields = ["rank", "played", "won", "drawn", "lost", "goalsFor", "goalsAgainst", "points"] as const;
+  for (const field of intFields) {
+    const raw = body[field];
+    if (raw === undefined) continue;
+    if (field === "rank" && raw === null) {
+      data.rank = null;
+      continue;
+    }
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 0) {
+      issues.push({ field, message: "Doit être un entier positif ou nul." });
+    } else {
+      data[field] = raw;
+    }
+  }
+
+  for (const field of ["isOwnClub", "isActive"] as const) {
+    if (body[field] !== undefined) {
+      if (typeof body[field] !== "boolean") {
+        issues.push({ field, message: "Doit être un booléen." });
+      } else {
+        data[field] = body[field] as boolean;
+      }
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data };
+}
+
 const CATEGORY_GENDERS = ["MIXTE", "MASCULIN", "FEMININ"] as const;
 export type CategoryGenderValue = (typeof CATEGORY_GENDERS)[number];
 

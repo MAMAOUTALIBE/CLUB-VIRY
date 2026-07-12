@@ -68,6 +68,24 @@ export type Season = {
   updated_at: string;
 };
 
+export type Standing = {
+  id: string;
+  competition: string;
+  team_name: string;
+  rank: number | null;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  points: number;
+  is_own_club: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Category = {
   id: string;
   name: string;

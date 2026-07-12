@@ -37,7 +37,8 @@ import {
   validateRegisterPayload,
   validateReorderPayload,
   validateAdminSeasonPayload,
-  validateAdminCategoryPayload
+  validateAdminCategoryPayload,
+  validateAdminStandingPayload
 } from "../src/lib/api/validation.ts";
 import { isSameOriginRequest } from "../src/lib/api/origin.ts";
 import { getSafeWebhookUrl, isPrivateOrReservedIp } from "../src/lib/api/webhook-security.ts";
@@ -848,4 +849,26 @@ test("validateAdminCategoryPayload requires name and ageRange when not partial",
 
 test("validateAdminCategoryPayload rejects an invalid gender", () => {
   assert.equal(validateAdminCategoryPayload({ name: "X", ageRange: "U6", gender: "AUTRE" }).ok, false);
+});
+
+test("validateAdminStandingPayload accepts a valid row", () => {
+  const result = validateAdminStandingPayload({ competition: "Seniors — R1", teamName: "ES Viry", rank: 1, played: 10, won: 7, drawn: 2, lost: 1, goalsFor: 20, goalsAgainst: 8, points: 23, isOwnClub: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.teamName, "ES Viry");
+  assert.equal(result.data.rank, 1);
+});
+
+test("validateAdminStandingPayload requires competition and team when not partial", () => {
+  assert.equal(validateAdminStandingPayload({ competition: "R1" }).ok, false);
+});
+
+test("validateAdminStandingPayload rejects negative or non-integer stats", () => {
+  assert.equal(validateAdminStandingPayload({ competition: "R1", teamName: "X", points: -3 }).ok, false);
+  assert.equal(validateAdminStandingPayload({ competition: "R1", teamName: "X", won: 1.5 }).ok, false);
+});
+
+test("validateAdminStandingPayload allows a null rank (non classé)", () => {
+  const result = validateAdminStandingPayload({ rank: null }, { partial: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.rank, null);
 });

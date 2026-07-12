@@ -59,6 +59,7 @@ const POLES: Pole[] = [
       { label: "Encadrement", href: "/admin/encadrement", icon: GraduationCap },
       { label: "Direction", href: "/admin/direction", icon: Landmark },
       { label: "Matchs & calendrier", href: "/admin/calendrier", icon: CalendarDays },
+      { label: "Classements", href: "/admin/classements", icon: Trophy },
       { label: "Convocations", href: "/admin/convocations", icon: ClipboardCheck },
       { label: "Détections", href: "/admin/recrutement", icon: Target }
     ]
