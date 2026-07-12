@@ -34,7 +34,10 @@ import {
   validateRefreshSessionPayload,
   validateRecruitmentApplicationPayload,
   validateRegistrationPayload,
-  validateRegisterPayload
+  validateRegisterPayload,
+  validateReorderPayload,
+  validateAdminSeasonPayload,
+  validateAdminCategoryPayload
 } from "../src/lib/api/validation.ts";
 import { isSameOriginRequest } from "../src/lib/api/origin.ts";
 import { getSafeWebhookUrl, isPrivateOrReservedIp } from "../src/lib/api/webhook-security.ts";
@@ -786,4 +789,63 @@ test("SUPER_ADMIN can promote anyone to SUPER_ADMIN", () => {
     requestedRole: "SUPER_ADMIN"
   });
   assert.equal(guard.ok, true);
+});
+
+const UUID_A = "11111111-1111-4111-8111-111111111111";
+const UUID_B = "22222222-2222-4222-8222-222222222222";
+
+test("validateReorderPayload accepts a list of unique UUIDs", () => {
+  const result = validateReorderPayload({ ids: [UUID_A, UUID_B] });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.data.ids, [UUID_A, UUID_B]);
+});
+
+test("validateReorderPayload rejects an empty or missing list", () => {
+  assert.equal(validateReorderPayload({ ids: [] }).ok, false);
+  assert.equal(validateReorderPayload({}).ok, false);
+  assert.equal(validateReorderPayload(null).ok, false);
+});
+
+test("validateReorderPayload rejects non-UUID or duplicate ids", () => {
+  assert.equal(validateReorderPayload({ ids: ["not-a-uuid"] }).ok, false);
+  assert.equal(validateReorderPayload({ ids: [UUID_A, UUID_A] }).ok, false);
+});
+
+test("validateAdminSeasonPayload accepts a full valid season", () => {
+  const result = validateAdminSeasonPayload({ name: "2026 / 2027", startsOn: "2026-07-01", endsOn: "2027-06-30", isActive: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.name, "2026 / 2027");
+  assert.equal(result.data.isActive, true);
+});
+
+test("validateAdminSeasonPayload requires fields when not partial", () => {
+  const result = validateAdminSeasonPayload({ name: "X" });
+  assert.equal(result.ok, false);
+});
+
+test("validateAdminSeasonPayload rejects bad dates and end<=start", () => {
+  assert.equal(validateAdminSeasonPayload({ name: "Saison", startsOn: "01/07/2026", endsOn: "2027-06-30" }).ok, false);
+  assert.equal(validateAdminSeasonPayload({ name: "Saison", startsOn: "2026-07-01", endsOn: "2026-07-01" }).ok, false);
+});
+
+test("validateAdminSeasonPayload allows partial updates", () => {
+  const result = validateAdminSeasonPayload({ isActive: false }, { partial: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.isActive, false);
+});
+
+test("validateAdminCategoryPayload accepts a valid category", () => {
+  const result = validateAdminCategoryPayload({ name: "Seniors", ageRange: "R1 / R3", gender: "MASCULIN", orderIndex: 40, isActive: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.gender, "MASCULIN");
+  assert.equal(result.data.orderIndex, 40);
+});
+
+test("validateAdminCategoryPayload requires name and ageRange when not partial", () => {
+  assert.equal(validateAdminCategoryPayload({ name: "Seniors" }).ok, false);
+  assert.equal(validateAdminCategoryPayload({ ageRange: "U6 à U11" }).ok, false);
+});
+
+test("validateAdminCategoryPayload rejects an invalid gender", () => {
+  assert.equal(validateAdminCategoryPayload({ name: "X", ageRange: "U6", gender: "AUTRE" }).ok, false);
 });

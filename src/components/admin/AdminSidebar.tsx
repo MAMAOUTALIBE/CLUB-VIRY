@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   GraduationCap,
   Handshake,
+  History,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -22,6 +23,7 @@ import {
   ShoppingBag,
   Sparkles,
   Target,
+  Trash2,
   Trophy,
   UserSquare2,
   Users,
@@ -29,7 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 
 type NavItem = { label: string; href: string; icon: LucideIcon };
@@ -50,6 +52,8 @@ const POLES: Pole[] = [
     title: "Sportif",
     icon: Trophy,
     items: [
+      { label: "Saisons", href: "/admin/saisons", icon: CalendarDays },
+      { label: "Catégories", href: "/admin/categories", icon: Trophy },
       { label: "Équipes", href: "/admin/equipes", icon: Shield },
       { label: "Joueurs", href: "/admin/joueurs", icon: Users },
       { label: "Encadrement", href: "/admin/encadrement", icon: GraduationCap },
@@ -94,6 +98,8 @@ const POLES: Pole[] = [
     icon: Settings,
     items: [
       { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
+      { label: "Journal d'audit", href: "/admin/journal", icon: History },
+      { label: "Corbeille", href: "/admin/corbeille", icon: Trash2 },
       { label: "Automatisations", href: "/admin/automatisations", icon: Sparkles },
       { label: "Paramètres", href: "/admin/parametres", icon: Settings }
     ]
@@ -112,7 +118,26 @@ export function AdminSidebar() {
   const activePole = POLES.find((pole) => pole.items.some((item) => isActiveHref(pathname, item.href)))?.title ?? null;
   const [open, setOpen] = useState<Set<string>>(() => new Set(activePole ? [activePole] : []));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSeason, setActiveSeason] = useState<string | null>(null);
   const closeMobile = () => setMobileOpen(false);
+
+  // Libellé « Saison active » piloté par le CRM (repli sur un défaut si indisponible).
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/seasons?limit=100", { credentials: "same-origin" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        const seasons = json?.data?.seasons;
+        if (!cancelled && Array.isArray(seasons)) {
+          const active = seasons.find((season: { is_active?: boolean; name?: string }) => season.is_active);
+          if (active?.name) setActiveSeason(active.name);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function togglePole(title: string) {
     setOpen((current) => {
@@ -230,7 +255,7 @@ export function AdminSidebar() {
 
       <div className="mt-6 rounded-lg border border-[#f7c600]/30 bg-white/8 p-4">
         <p className="text-xs font-black uppercase text-[#f7c600]">Saison active</p>
-        <p className="mt-1 text-2xl font-black">2025 / 2026</p>
+        <p className="mt-1 text-2xl font-black">{activeSeason ?? "2025 / 2026"}</p>
       </div>
 
       <button

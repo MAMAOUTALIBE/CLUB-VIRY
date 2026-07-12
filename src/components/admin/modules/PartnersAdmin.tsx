@@ -66,6 +66,10 @@ export function PartnersAdmin() {
       listKey="partners"
       itemKey="partner"
       newLabel="Nouveau partenaire"
+      allowDelete
+      deleteMode="soft"
+      reorderEndpoint="/api/admin/partners/reorder"
+      rowLabel={(r) => `« ${String(r.name ?? "ce partenaire")} »`}
       rowActions={(row, { reload }) => <PartnerPublicationAction row={row} onDone={reload} />}
       fields={[
         { name: "name", label: "Nom", required: true, fullWidth: true, placeholder: "Intersport" },

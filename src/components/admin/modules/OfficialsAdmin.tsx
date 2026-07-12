@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminCrud } from "@/components/admin/AdminCrud";
+import { AdminCrud, imageUploadField } from "@/components/admin/AdminCrud";
 
 export function OfficialsAdmin() {
   return (
@@ -12,6 +12,8 @@ export function OfficialsAdmin() {
       itemKey="official"
       newLabel="Nouveau membre"
       allowDelete
+      deleteMode="soft"
+      reorderEndpoint="/api/admin/officials/reorder"
       rowLabel={(r) => `« ${String(r.full_name ?? "ce membre")} »`}
       fields={[
         {
@@ -34,6 +36,7 @@ export function OfficialsAdmin() {
           fullWidth: true,
           help: "Cette photo apparaît sur la fiche du membre et ne remplace pas la photo de couverture de la page. Format conseillé : portrait vertical 800 x 1000 px."
         },
+        imageUploadField({ targetField: "photoUrl", folder: "direction", label: "…ou téléverser la photo du membre" }),
         { name: "orderIndex", label: "Ordre d'affichage", type: "number", rowKey: "order_index", help: "Petit nombre = affiché en premier (le Président en 0)." },
         { name: "isActive", label: "Actif (visible sur le site)", type: "boolean", rowKey: "is_active" }
       ]}

@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminCrud } from "@/components/admin/AdminCrud";
+import { AdminCrud, imageUploadField } from "@/components/admin/AdminCrud";
 
 function euros(cents: unknown, currency: unknown): string {
   if (typeof cents !== "number") return "—";
@@ -23,6 +23,10 @@ export function ProductsAdmin() {
       listKey="products"
       itemKey="product"
       newLabel="Nouveau produit"
+      allowDelete
+      deleteMode="soft"
+      reorderEndpoint="/api/admin/shop/products/reorder"
+      rowLabel={(r) => `« ${String(r.name ?? "ce produit")} »`}
       fields={[
         { name: "name", label: "Nom du produit", required: true, fullWidth: true, placeholder: "Maillot domicile" },
         {
@@ -37,6 +41,7 @@ export function ProductsAdmin() {
         { name: "currency", label: "Devise", type: "select", options: [{ value: "EUR", label: "EUR (€)" }] },
         { name: "status", label: "Statut", type: "select", options: STATUS },
         { name: "imageUrl", label: "Image (URL)", type: "url", rowKey: "image_url", placeholder: "https://…" },
+        imageUploadField({ targetField: "imageUrl", folder: "produits", label: "…ou téléverser l'image du produit" }),
         { name: "orderIndex", label: "Ordre d'affichage", type: "number", rowKey: "order_index" },
         { name: "description", label: "Description", type: "textarea" }
       ]}
