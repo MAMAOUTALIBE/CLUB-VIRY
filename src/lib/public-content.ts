@@ -16,7 +16,26 @@ import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
 import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
-import type { StaffPerson } from "@/lib/club-pages-data";
+import {
+  conductBlocks as defaultConductBlocks,
+  ecoleFootEducators as defaultEcoleFootEducators,
+  footA11Educators as defaultFootA11Educators,
+  galerieArchives as defaultGalerieArchives,
+  installations as defaultInstallations,
+  regulationItems as defaultRegulationItems,
+  schoolProject as defaultSchoolProject,
+  stages as defaultStages,
+  trainingSlots as defaultTrainingSlots
+} from "@/lib/club-pages-data";
+import type { ConductBlock, Installation, RegulationItem, Stage, StaffPerson } from "@/lib/club-pages-data";
+
+export type TrainingSlot = { category: string; time: string; place: string };
+export type SchoolProjectStep = { year: string; title: string; text: string };
+export type ArchivePhoto = { title: string; image: string };
+export type EditorialPage = { mobileSummary: string; paragraphs: string[] };
+export type FeatureItem = { title: string; text: string; iconName: string };
+export type InscriptionsPage = { heroDescription: string; steps: string[]; features: FeatureItem[] };
+export type DetectionsPage = { heroDescription: string; categories: string[]; features: FeatureItem[] };
 
 /**
  * Couche de lecture publique du contenu éditorial.
@@ -137,6 +156,20 @@ export type SiteContent = {
   histoire: HistoireContent;
   organigramme: OrganigrammeContent;
   stade: StadeContent;
+  installations: Installation[];
+  codesConduite: { blocks: ConductBlock[]; regulation: RegulationItem[] };
+  formationEcoleEducateurs: StaffPerson[];
+  formationFootA11Educateurs: StaffPerson[];
+  formationCreneaux: TrainingSlot[];
+  formationProjet: SchoolProjectStep[];
+  formationStages: Stage[];
+  galerieArchives: ArchivePhoto[];
+  mentionsLegales: EditorialPage;
+  politiqueConfidentialite: EditorialPage;
+  boutiqueCgv: EditorialPage;
+  boutiqueLivraison: EditorialPage;
+  inscriptionsPage: InscriptionsPage;
+  detectionsPage: DetectionsPage;
 };
 
 const SETTINGS_DEFAULTS: SiteContent = {
@@ -187,6 +220,58 @@ const SETTINGS_DEFAULTS: SiteContent = {
       { src: images.stadeTribune, alt: "Tribune principale et piste d'athlétisme du Stade Henri Longuet", caption: "La tribune principale et la piste" },
       { src: images.stadeTribune2, alt: "Vue rapprochée de la tribune depuis la piste", caption: "La tribune vue depuis la piste" }
     ]
+  },
+  installations: defaultInstallations,
+  codesConduite: { blocks: defaultConductBlocks, regulation: defaultRegulationItems },
+  formationEcoleEducateurs: defaultEcoleFootEducators,
+  formationFootA11Educateurs: defaultFootA11Educators,
+  formationCreneaux: defaultTrainingSlots,
+  formationProjet: defaultSchoolProject,
+  formationStages: defaultStages,
+  galerieArchives: defaultGalerieArchives,
+  mentionsLegales: {
+    mobileSummary: "ES Viry-Châtillon Football · Stade Henri Longuet.",
+    paragraphs: [
+      "Éditeur : ES Viry-Châtillon Football.",
+      "Adresse : Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon.",
+      "Contact : esvirychatillon91170@gmail.com."
+    ]
+  },
+  politiqueConfidentialite: {
+    mobileSummary: "Les formulaires servent uniquement au traitement des demandes du club.",
+    paragraphs: [
+      "Les données collectées via les formulaires servent uniquement au traitement des demandes du club. Les règles de conservation, d'accès et de suppression seront précisées par le club."
+    ]
+  },
+  boutiqueCgv: {
+    mobileSummary: "Les conditions générales seront publiées avant l'ouverture officielle.",
+    paragraphs: ["Les conditions générales de vente seront publiées avant l'ouverture officielle de la boutique en ligne."]
+  },
+  boutiqueLivraison: {
+    mobileSummary: "Retrait au club-house ou expédition selon les options ouvertes par le club.",
+    paragraphs: [
+      "Les commandes pourront être retirées au club house ou expédiées selon les options ouvertes par le club. Les retours seront traités par le secrétariat."
+    ]
+  },
+  inscriptionsPage: {
+    heroDescription: "Rejoignez la famille Viry pour la saison 2025 / 2026.",
+    steps: ["Choisir sa catégorie", "Remplir le formulaire en ligne", "Fournir les pièces demandées", "Paiement de la licence"],
+    features: [
+      { title: "Catégories", text: "Identifier rapidement la bonne catégorie selon l'âge et le niveau.", iconName: "Users" },
+      { title: "Documents", text: "Préparer les pièces nécessaires sans perdre de temps.", iconName: "FileCheck" },
+      { title: "Accompagnement", text: "Être guidé par le club jusqu'à la validation de la licence.", iconName: "ShieldCheck" },
+      { title: "Bienvenue", text: "Intégrer un cadre familial, sérieux et ambitieux.", iconName: "Smile" }
+    ]
+  },
+  detectionsPage: {
+    heroDescription: "Tu as le talent ? Nous sommes là pour t'aider à le développer.",
+    categories: ["Football à 11", "Préformation et formation", "Seniors", "Féminines"],
+    features: [
+      { title: "Candidater", text: "Envoyer ses informations sportives de manière claire.", iconName: "Send" },
+      { title: "Observer", text: "Évaluer le potentiel, le comportement et l'état d'esprit.", iconName: "Eye" },
+      { title: "Progresser", text: "Accompagner le joueur selon son profil et sa catégorie.", iconName: "Dumbbell" },
+      { title: "Intégrer", text: "Rejoindre un groupe adapté aux ambitions du club.", iconName: "Target" }
+    ]
   }
 };
 
@@ -198,6 +283,14 @@ function pickArray<T>(raw: unknown, fallback: T[]): T[] {
 /** Retourne la chaîne stockée si non vide, sinon le défaut. */
 function pickStr(raw: unknown, fallback: string): string {
   return typeof raw === "string" && raw.trim() !== "" ? raw : fallback;
+}
+
+/** Fusionne une page éditoriale simple (résumé mobile + paragraphes) avec ses défauts. */
+function pickEditorial(raw: Record<string, unknown> | undefined, fallback: EditorialPage): EditorialPage {
+  return {
+    mobileSummary: pickStr(raw?.mobileSummary, fallback.mobileSummary),
+    paragraphs: pickArray<string>(raw?.paragraphs, fallback.paragraphs)
+  };
 }
 
 function withoutRetiredPublicMentions(groups: OrgGroup[]): OrgGroup[] {
@@ -215,6 +308,13 @@ export async function getSiteSettings(): Promise<SiteContent> {
     const hist = all.histoire as Record<string, unknown> | undefined;
     const org = all.organigramme as Record<string, unknown> | undefined;
     const stade = all.stade as Record<string, unknown> | undefined;
+    const inst = all.installations as Record<string, unknown> | undefined;
+    const cc = all.codes_conduite as Record<string, unknown> | undefined;
+    const fEdu = all.formation_educateurs as Record<string, unknown> | undefined;
+    const fCreneaux = all.formation_creneaux as Record<string, unknown> | undefined;
+    const fProjet = all.formation_projet as Record<string, unknown> | undefined;
+    const fStages = all.formation_stages as Record<string, unknown> | undefined;
+    const gal = all.galerie_archives as Record<string, unknown> | undefined;
     return {
       socials: { ...SETTINGS_DEFAULTS.socials, ...(all.socials ?? {}) },
       contact: { ...SETTINGS_DEFAULTS.contact, ...(all.contact ?? {}) },
@@ -238,6 +338,31 @@ export async function getSiteSettings(): Promise<SiteContent> {
         mapsQuery: pickStr(stade?.mapsQuery, SETTINGS_DEFAULTS.stade.mapsQuery),
         infrastructures: pickArray<string>(stade?.infrastructures, SETTINGS_DEFAULTS.stade.infrastructures),
         gallery: pickArray<StadePhoto>(stade?.gallery, SETTINGS_DEFAULTS.stade.gallery)
+      },
+      installations: pickArray<Installation>(inst?.items, SETTINGS_DEFAULTS.installations),
+      codesConduite: {
+        blocks: pickArray<ConductBlock>(cc?.blocks, SETTINGS_DEFAULTS.codesConduite.blocks),
+        regulation: pickArray<RegulationItem>(cc?.regulation, SETTINGS_DEFAULTS.codesConduite.regulation)
+      },
+      formationEcoleEducateurs: pickArray<StaffPerson>(fEdu?.ecoleFoot, SETTINGS_DEFAULTS.formationEcoleEducateurs),
+      formationFootA11Educateurs: pickArray<StaffPerson>(fEdu?.footA11, SETTINGS_DEFAULTS.formationFootA11Educateurs),
+      formationCreneaux: pickArray<TrainingSlot>(fCreneaux?.items, SETTINGS_DEFAULTS.formationCreneaux),
+      formationProjet: pickArray<SchoolProjectStep>(fProjet?.items, SETTINGS_DEFAULTS.formationProjet),
+      formationStages: pickArray<Stage>(fStages?.items, SETTINGS_DEFAULTS.formationStages),
+      galerieArchives: pickArray<ArchivePhoto>(gal?.items, SETTINGS_DEFAULTS.galerieArchives),
+      mentionsLegales: pickEditorial(all.mentions_legales as Record<string, unknown> | undefined, SETTINGS_DEFAULTS.mentionsLegales),
+      politiqueConfidentialite: pickEditorial(all.politique_confidentialite as Record<string, unknown> | undefined, SETTINGS_DEFAULTS.politiqueConfidentialite),
+      boutiqueCgv: pickEditorial(all.boutique_cgv as Record<string, unknown> | undefined, SETTINGS_DEFAULTS.boutiqueCgv),
+      boutiqueLivraison: pickEditorial(all.boutique_livraison as Record<string, unknown> | undefined, SETTINGS_DEFAULTS.boutiqueLivraison),
+      inscriptionsPage: {
+        heroDescription: pickStr((all.inscriptions_page as Record<string, unknown> | undefined)?.heroDescription, SETTINGS_DEFAULTS.inscriptionsPage.heroDescription),
+        steps: pickArray<string>((all.inscriptions_page as Record<string, unknown> | undefined)?.steps, SETTINGS_DEFAULTS.inscriptionsPage.steps),
+        features: pickArray<FeatureItem>((all.inscriptions_page as Record<string, unknown> | undefined)?.features, SETTINGS_DEFAULTS.inscriptionsPage.features)
+      },
+      detectionsPage: {
+        heroDescription: pickStr((all.detections_page as Record<string, unknown> | undefined)?.heroDescription, SETTINGS_DEFAULTS.detectionsPage.heroDescription),
+        categories: pickArray<string>((all.detections_page as Record<string, unknown> | undefined)?.categories, SETTINGS_DEFAULTS.detectionsPage.categories),
+        features: pickArray<FeatureItem>((all.detections_page as Record<string, unknown> | undefined)?.features, SETTINGS_DEFAULTS.detectionsPage.features)
       }
     } as SiteContent;
   }
@@ -994,22 +1119,6 @@ const mockOfficials: ClubOfficialsContent = {
       contactHref: "/contact",
       links: [
         { label: "Calendrier", href: "/calendrier" },
-        { label: "Contact", href: "/contact" }
-      ]
-    }),
-    buildOfficial({
-      id: "d6",
-      name: "PEREIRA Fernando",
-      category: "DIRIGEANT",
-      position: "Référent sécurité",
-      department: "Sécurité",
-      bio: "Référent sécurité du club, il veille au bon déroulement et à la sécurité lors des rencontres, manifestations et rassemblements au stade.",
-      missions: ["Veiller à la sécurité des rencontres", "Coordonner l'accueil et les accès", "Prévenir les risques lors des manifestations"],
-      availability: "Présent les jours de match et d'événement",
-      contactLabel: "Contacter le club",
-      contactHref: "/contact",
-      links: [
-        { label: "Stade Henri Longuet", href: "/le-club/stade-henri-longuet" },
         { label: "Contact", href: "/contact" }
       ]
     }),

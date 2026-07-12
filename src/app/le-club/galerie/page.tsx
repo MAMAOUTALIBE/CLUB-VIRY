@@ -3,13 +3,15 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { SectionTitle } from "@/components/SectionTitle";
 import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
 import { MediaGallery } from "@/components/MediaGallery";
-import { galerieArchives } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/galerie");
+export const dynamic = "force-dynamic"; // CMS : archives à jour immédiatement
 
-export default function GaleriePage() {
+export default async function GaleriePage() {
+  const { galerieArchives } = await getSiteSettings();
   return (
     <>
       <MobileScreen

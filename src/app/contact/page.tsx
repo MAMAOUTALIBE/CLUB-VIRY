@@ -5,11 +5,17 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/contact");
+export const dynamic = "force-dynamic"; // CMS : coordonnées à jour immédiatement après modification
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const { contact, stade } = await getSiteSettings();
+  const phones = [contact.phone1, contact.phone2].filter((value) => value && value.trim() !== "");
+  const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(stade.mapsQuery)}&output=embed`;
+
   return (
     <>
       <MobileScreen
@@ -20,9 +26,11 @@ export default function ContactPage() {
         <div className="grid gap-3 pb-2 md:grid-cols-[0.75fr_1.25fr]">
           <MobileCard>
             <div className="grid gap-2 text-sm font-bold text-slate-700">
-              <p>Stade Henri Longuet · 91170 Viry-Châtillon</p>
-              <p>01 69 24 39 50</p>
-              <p className="break-words">esvirychatillon91170@gmail.com</p>
+              <p>{contact.address}</p>
+              {phones.map((phone) => (
+                <p key={phone}><a className="hover:text-[#07542f]" href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a></p>
+              ))}
+              <p className="break-words"><a className="hover:text-[#07542f]" href={`mailto:${contact.email}`}>{contact.email}</a></p>
             </div>
           </MobileCard>
           <ContactForm />
@@ -35,16 +43,18 @@ export default function ContactPage() {
           <div className="club-panel rounded-lg p-6 text-white">
             <h2 className="text-2xl font-black uppercase text-[#f7c600]">Coordonnées</h2>
             <div className="mt-6 space-y-5">
-              <p className="flex gap-3"><MapPin className="shrink-0 text-[#f7c600]" /> Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon</p>
-              <p className="flex gap-3"><Phone className="shrink-0 text-[#f7c600]" /> 01 69 24 39 50</p>
-              <p className="flex gap-3"><Mail className="shrink-0 text-[#f7c600]" /> esvirychatillon91170@gmail.com</p>
+              <p className="flex gap-3"><MapPin className="shrink-0 text-[#f7c600]" /> {contact.address}</p>
+              {phones.map((phone) => (
+                <p className="flex gap-3" key={phone}><Phone className="shrink-0 text-[#f7c600]" /> <a className="hover:text-[#f7c600]" href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a></p>
+              ))}
+              <p className="flex gap-3"><Mail className="shrink-0 text-[#f7c600]" /> <a className="break-all hover:text-[#f7c600]" href={`mailto:${contact.email}`}>{contact.email}</a></p>
             </div>
           </div>
           <div className="official-card mt-5 overflow-hidden rounded-lg bg-white p-2">
             <iframe
               className="h-72 w-full rounded"
               title="Localisation du Stade Henri Longuet à Viry-Châtillon"
-              src="https://www.google.com/maps?q=Stade%20Henri%20Longuet%2C%20Viry-Ch%C3%A2tillon&output=embed"
+              src={mapSrc}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
             />

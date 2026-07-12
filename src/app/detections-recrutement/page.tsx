@@ -1,17 +1,20 @@
-import { Dumbbell, Eye, Send, Target } from "lucide-react";
 import { FeatureCards } from "@/components/FeatureCards";
 import { DesktopOnly, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { RecruitmentForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
+import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/detections-recrutement");
+export const dynamic = "force-dynamic"; // CMS : contenu éditorial à jour immédiatement
 
-export default function RecruitmentPage() {
-  const categories = ["Football à 11", "Formation", "Seniors", "Féminines"];
+export default async function RecruitmentPage() {
+  const { detectionsPage } = await getSiteSettings();
+  const categories = detectionsPage.categories;
   return (
     <>
       <MobileScreen
@@ -32,7 +35,7 @@ export default function RecruitmentPage() {
       </MobileScreen>
       <DesktopOnly>
       <PageHero
-        description="Tu as le talent ? Nous sommes là pour t'aider à le développer."
+        description={detectionsPage.heroDescription}
         image={images.training}
         title="Détections / Recrutement"
       />
@@ -40,7 +43,7 @@ export default function RecruitmentPage() {
         <div>
           <SectionTitle title="Catégories concernées" text="Les candidatures sont étudiées par la cellule sportive du club." />
           <ul className="space-y-3">
-            {["Football à 11", "Préformation et formation", "Seniors", "Féminines"].map((item) => (
+            {categories.map((item) => (
               <li className="club-panel rounded-lg px-5 py-4 font-black uppercase text-white" key={item}>
                 {item}
               </li>
@@ -52,15 +55,7 @@ export default function RecruitmentPage() {
       <section className="club-shell px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionTitle inverse eyebrow="Process" title="Un parcours talent clair" text="Un cadre exigeant et bienveillant pour révéler et accompagner les talents du territoire." />
-          <FeatureCards
-            inverse
-            items={[
-              { title: "Candidater", text: "Envoyer ses informations sportives de manière claire.", icon: Send },
-              { title: "Observer", text: "Évaluer le potentiel, le comportement et l'état d'esprit.", icon: Eye },
-              { title: "Progresser", text: "Accompagner le joueur selon son profil et sa catégorie.", icon: Dumbbell },
-              { title: "Intégrer", text: "Rejoindre un groupe adapté aux ambitions du club.", icon: Target }
-            ]}
-          />
+          <FeatureCards inverse items={detectionsPage.features.map((feature) => ({ title: feature.title, text: feature.text, icon: iconByName(feature.iconName) }))} />
         </div>
       </section>
       <PremiumCta

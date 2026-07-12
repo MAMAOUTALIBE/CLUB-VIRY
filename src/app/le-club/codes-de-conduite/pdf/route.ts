@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { conductBlocks, regulationItems } from "@/lib/club-pages-data";
+import type { ConductBlock, RegulationItem } from "@/lib/club-pages-data";
+import { getSiteSettings } from "@/lib/public-content";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,7 +72,7 @@ function wrapText(text: string, maxWidth: number, size: number) {
   return lines;
 }
 
-function buildContentPages() {
+function buildContentPages(conductBlocks: ConductBlock[], regulationItems: RegulationItem[]) {
   const pages: PdfPage[] = [];
   let current: PdfPage;
   let y = pageHeight - 116;
@@ -181,8 +182,8 @@ function buildContentPages() {
   return pages;
 }
 
-function buildPdf() {
-  const pages = buildContentPages();
+function buildPdf(conductBlocks: ConductBlock[], regulationItems: RegulationItem[]) {
+  const pages = buildContentPages(conductBlocks, regulationItems);
   const objects: Array<Buffer | string> = [];
   const pageObjectIds: number[] = [];
 
@@ -233,7 +234,8 @@ function buildPdf() {
 }
 
 export async function GET(request: NextRequest) {
-  const pdf = buildPdf();
+  const { codesConduite } = await getSiteSettings();
+  const pdf = buildPdf(codesConduite.blocks, codesConduite.regulation);
   const disposition = request.nextUrl.searchParams.get("download") === "1" ? "attachment" : "inline";
 
   return new Response(new Uint8Array(pdf), {

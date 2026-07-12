@@ -6,7 +6,7 @@ import { HomeHeroCarousel, type HomeHeroSlide } from "@/components/HomeHeroCarou
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PartnerLogoMarquee, type PartnerLogo } from "@/components/PartnerLogoMarquee";
 import { SectionTitle } from "@/components/SectionTitle";
-import { matches } from "@/lib/data";
+import { getCalendarPageData } from "@/lib/calendar-view";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
@@ -51,7 +51,7 @@ function toPartnerLogo(partner: DisplayPartner): PartnerLogo {
 }
 
 export default async function HomePage() {
-  const [allNews, settings, featuredPartners] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners()]);
+  const [allNews, settings, featuredPartners, calendar] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData()]);
   const partnerLogos = featuredPartners.map(toPartnerLogo);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
@@ -72,9 +72,13 @@ export default async function HomePage() {
     ["Actualités", "/actualites"]
   ];
 
-  const nextMatch = matches[0];
-  const otherMatches = matches.slice(1);
-  const homeMatches = [nextMatch, ...otherMatches].slice(0, 3);
+  // Prochains matchs : depuis le calendrier DB (matchs publiés), avec repli sur le mock
+  // partagé via getCalendarPageData — même contenu qu'auparavant en mode vitrine.
+  const homeMatches = calendar.items
+    .filter((item) => item.kind === "match")
+    .slice(0, 3)
+    .map((item) => ({ team: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", date: item.dateLabel, time: item.timeLabel, place: item.place }));
+  const nextMatch = homeMatches[0];
   const isClub = (name: string) => name.toLowerCase().includes("viry");
   const teamInitials = (name: string) =>
     name
@@ -151,19 +155,21 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <article className="rounded-lg bg-[#002f1d] p-5 text-white shadow-sm">
-            <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">Prochain match</p>
-            <h2 className="mt-2 text-2xl font-black uppercase">{nextMatch.team}</h2>
-            <p className="mt-3 text-base font-black">
-              {shortTeam(nextMatch.home)} vs {shortTeam(nextMatch.away)}
-            </p>
-            <p className="mt-1 text-sm font-bold text-white/75">
-              {nextMatch.date} · {nextMatch.time}
-            </p>
-            <Link href="/calendrier" className="focus-ring mt-4 inline-flex min-h-10 items-center gap-2 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#001c10]">
-              Calendrier <ArrowRight size={15} aria-hidden="true" />
-            </Link>
-          </article>
+          {nextMatch ? (
+            <article className="rounded-lg bg-[#002f1d] p-5 text-white shadow-sm">
+              <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">Prochain match</p>
+              <h2 className="mt-2 text-2xl font-black uppercase">{nextMatch.team}</h2>
+              <p className="mt-3 text-base font-black">
+                {shortTeam(nextMatch.home)} vs {shortTeam(nextMatch.away)}
+              </p>
+              <p className="mt-1 text-sm font-bold text-white/75">
+                {nextMatch.date} · {nextMatch.time}
+              </p>
+              <Link href="/calendrier" className="focus-ring mt-4 inline-flex min-h-10 items-center gap-2 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#001c10]">
+                Calendrier <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            </article>
+          ) : null}
 
           {leadNews ? (
             <Link href={`/actualites/${leadNews.slug}`} className="focus-ring block overflow-hidden rounded-lg bg-white shadow-sm">
@@ -296,6 +302,9 @@ export default async function HomePage() {
             </div>
 
             <div className="mt-6 grid gap-4">
+              {homeMatches.length === 0 ? (
+                <p className="rounded-2xl border border-white/12 bg-white/[0.06] p-5 text-sm font-bold text-white/75">Aucun match programmé pour le moment. Consultez le calendrier pour les prochaines dates.</p>
+              ) : null}
               {homeMatches.map((match, index) => (
                 <article
                   className={`grid gap-4 rounded-2xl border bg-white/[0.06] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:bg-white/[0.09] sm:grid-cols-[minmax(0,1fr)_minmax(13rem,0.72fr)] ${

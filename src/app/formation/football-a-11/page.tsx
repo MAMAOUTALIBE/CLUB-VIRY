@@ -4,14 +4,16 @@ import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { FeatureCards } from "@/components/FeatureCards";
 import { StaffDirectory } from "@/components/club/ClubPublicBlocks";
-import { footA11Educators } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { ClipboardList, GraduationCap, ShieldCheck } from "lucide-react";
 
 export const metadata = pageMetadata("/formation/football-a-11");
+export const dynamic = "force-dynamic"; // CMS : encadrement à jour immédiatement
 
-export default function FootballA11Page() {
+export default async function FootballA11Page() {
+  const { formationFootA11Educateurs: footA11Educators } = await getSiteSettings();
   return (
     <>
       <MobileScreen

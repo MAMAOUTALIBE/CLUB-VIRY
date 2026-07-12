@@ -3,13 +3,15 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { InstallationCards } from "@/components/club/ClubPublicBlocks";
-import { installations } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/installations");
+export const dynamic = "force-dynamic"; // CMS : installations à jour immédiatement
 
-export default function InstallationsPage() {
+export default async function InstallationsPage() {
+  const { installations } = await getSiteSettings();
   return (
     <>
       <MobileScreen

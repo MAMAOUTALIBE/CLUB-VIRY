@@ -8,7 +8,30 @@ import { upsertSetting } from "@/lib/db/settings";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_KEYS = new Set(["socials", "contact", "president", "inscriptions_banner", "club_stats", "values", "histoire", "organigramme", "stade"]);
+const ALLOWED_KEYS = new Set([
+  "socials",
+  "contact",
+  "president",
+  "inscriptions_banner",
+  "club_stats",
+  "values",
+  "histoire",
+  "organigramme",
+  "stade",
+  "installations",
+  "codes_conduite",
+  "formation_educateurs",
+  "formation_creneaux",
+  "formation_projet",
+  "formation_stages",
+  "galerie_archives",
+  "mentions_legales",
+  "politique_confidentialite",
+  "boutique_cgv",
+  "boutique_livraison",
+  "inscriptions_page",
+  "detections_page"
+]);
 
 type RouteContext = { params: Promise<{ key: string }> };
 
