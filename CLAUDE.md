@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
 
 - `src/lib/db/*` — server-only (`import "server-only"`) modules, one per domain (teams, family, registrations, recruitment-shop, content, sessions, notifications, …), re-exported from `src/lib/db/index.ts`. All DB access goes through the **service-role admin client** (`getSupabaseAdminClient()`); RLS is enforced in SQL but the app trusts its own permission checks. Shared row types live in `src/lib/db/types.ts`.
 - `src/lib/data.ts`, `src/lib/academy-data.ts`, `src/lib/club-pages-data.ts` — mock/static content used as vitrine fallback and for editorial pages.
+- **Partners** (`/partenaires`, `getPublicPartners()` in `src/lib/public-content.ts`) follow the same three-layer fallback: published `public.partners` rows → mock names from `src/lib/data.ts` mapped to bundled SVGs via `src/lib/partner-logos.ts` (name→`/images/partners/*.svg`). Partner logos are the **only feature using Supabase Storage** — the public `partner-logos` bucket (migration `20260709193000_partner_logo_storage.sql`; 2 MB, jpeg/png/webp), whose public URL is persisted to `partners.logo_url`.
 - Schema lives in `supabase/migrations/*.sql` (timestamped, append-only) + `supabase/seed.sql`. Add a new timestamped migration rather than editing an existing one.
 
 ## Frontend structure
