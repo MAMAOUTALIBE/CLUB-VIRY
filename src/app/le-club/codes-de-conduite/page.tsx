@@ -5,16 +5,20 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { ConductGrid, ConductRegulation } from "@/components/club/ClubPublicBlocks";
-import { conductBlocks, regulationItems } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/le-club/codes-de-conduite");
+export const dynamic = "force-dynamic"; // CMS : codes de conduite à jour immédiatement
 
 const conductPdfHref = "/le-club/codes-de-conduite/pdf";
 const conductPdfDownloadHref = "/le-club/codes-de-conduite/pdf?download=1";
 
-export default function CodesDeConduitePage() {
+export default async function CodesDeConduitePage() {
+  const { codesConduite } = await getSiteSettings();
+  const conductBlocks = codesConduite.blocks;
+  const regulationItems = codesConduite.regulation;
   return (
     <>
       <MobileScreen

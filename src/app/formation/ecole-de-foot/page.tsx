@@ -3,13 +3,17 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StaffDirectory, TrainingSlots } from "@/components/club/ClubPublicBlocks";
-import { ecoleFootEducators, trainingSlots } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/formation/ecole-de-foot");
+export const dynamic = "force-dynamic"; // CMS : éducateurs & créneaux à jour immédiatement
 
-export default function EcoleDeFootPage() {
+export default async function EcoleDeFootPage() {
+  const settings = await getSiteSettings();
+  const ecoleFootEducators = settings.formationEcoleEducateurs;
+  const trainingSlots = settings.formationCreneaux;
   return (
     <>
       <MobileScreen

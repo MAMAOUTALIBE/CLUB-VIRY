@@ -9,6 +9,19 @@ type SettingDef = { key: string; title: string; description?: string; fields: Fi
 
 const ICON_HELP = "Icônes : Users, Award, Shield, Building2, CalendarDays, Handshake, Dumbbell, HeartHandshake, Target, Trophy, Flag, GraduationCap, TrendingUp, Sparkles, Star…";
 
+/** Définition standard d'une page éditoriale simple : résumé mobile + paragraphes. */
+function editorialPageDef(key: string, title: string, description: string): SettingDef {
+  return {
+    key,
+    title,
+    description,
+    fields: [
+      { name: "mobileSummary", label: "Résumé (affiché sur mobile)", type: "textarea" },
+      { name: "paragraphs", label: "Paragraphes (JSON)", type: "json", help: `Liste de textes, un par paragraphe. Ex : ["Premier paragraphe.", "Second paragraphe."]` }
+    ]
+  };
+}
+
 const DEFS: SettingDef[] = [
   {
     key: "socials",
@@ -95,6 +108,88 @@ const DEFS: SettingDef[] = [
       { name: "mapsQuery", label: "Recherche Google Maps", placeholder: "Stade Henri Longuet, Viry-Châtillon", help: "Texte utilisé pour la carte intégrée." },
       { name: "infrastructures", label: "Infrastructures (JSON)", type: "json", help: `Liste de textes. Ex : ["2 terrains", "Vestiaires modernes"]` },
       { name: "gallery", label: "Galerie photos (JSON)", type: "json", help: `Ex : [{ "src": "/stade/tribune.jpg", "alt": "…", "caption": "…" }]. URLs autorisées : chemin local /…, Supabase Storage (*.supabase.co) ou Unsplash.` }
+    ]
+  },
+  {
+    key: "installations",
+    title: "Page « Installations »",
+    description: "Liste des installations de la page /le-club/installations.",
+    fields: [
+      { name: "items", label: "Installations (JSON)", type: "json", help: `Ex : [{ "name": "Stade Henri Longuet", "address": "…", "type": "Matchs officiels", "usage": "…", "teams": ["Seniors"], "image": "/…", "mapsUrl": "https://…" }]` }
+    ]
+  },
+  {
+    key: "codes_conduite",
+    title: "Page « Codes de conduite »",
+    description: "Codes de bonne conduite (par public) et règlement intérieur de la page /le-club/codes-de-conduite. Alimente aussi le PDF.",
+    fields: [
+      { name: "blocks", label: "Codes de conduite (JSON)", type: "json", help: `Ex : [{ "title": "Jeune joueur", "audience": "Joueurs", "icon": "Trophy", "intro": "…", "essentials": ["…"], "rules": ["…"] }]. ${ICON_HELP}` },
+      { name: "regulation", label: "Règlement intérieur (JSON)", type: "json", help: `Ex : [{ "title": "Adhésion", "text": "…" }]` }
+    ]
+  },
+  {
+    key: "formation_educateurs",
+    title: "Formation — éducateurs (école de foot & football à 11)",
+    description: "Annuaires affichés sur /formation/ecole-de-foot et /formation/football-a-11. Contacts centralisés via le secrétariat.",
+    fields: [
+      { name: "ecoleFoot", label: "Éducateurs école de foot (JSON)", type: "json", help: `Ex : [{ "name": "Nadia Ait Ali", "role": "Responsable", "category": "U6-U13", "pole": "Coordination", "contact": "contact via secretariat", "photo": "/…", "tags": ["…"] }]` },
+      { name: "footA11", label: "Éducateurs football à 11 (JSON)", type: "json", help: "Même format que ci-dessus." }
+    ]
+  },
+  {
+    key: "formation_creneaux",
+    title: "Formation — créneaux d'entraînement",
+    description: "Créneaux indicatifs affichés sur /formation/ecole-de-foot.",
+    fields: [
+      { name: "items", label: "Créneaux (JSON)", type: "json", help: `Ex : [{ "category": "U6-U7", "time": "Mercredi 14h00 - 15h30", "place": "Terrain synthétique" }]` }
+    ]
+  },
+  {
+    key: "formation_projet",
+    title: "Formation — projet école de foot (feuille de route)",
+    description: "Frise « objectifs structurants » de /formation/projet-ecole-de-foot.",
+    fields: [
+      { name: "items", label: "Étapes (JSON)", type: "json", help: `Ex : [{ "year": "2026", "title": "Cadre commun", "text": "…" }]` }
+    ]
+  },
+  {
+    key: "formation_stages",
+    title: "Formation — stages",
+    description: "Stages proposés sur /formation/stages.",
+    fields: [
+      { name: "items", label: "Stages (JSON)", type: "json", help: `Ex : [{ "title": "Stage vacances", "audience": "U8-U13", "dates": "Vacances scolaires", "places": "36 places", "status": "Ouvert", "description": "…" }]. status : "Ouvert", "Bientot" ou "Complet".` }
+    ]
+  },
+  {
+    key: "galerie_archives",
+    title: "Page « Galerie photos historiques »",
+    description: "Photos d'archives affichées sur /le-club/galerie (et l'aperçu sur /le-club/histoire).",
+    fields: [
+      { name: "items", label: "Photos (JSON)", type: "json", help: `Ex : [{ "title": "1964 · Équipe du collège", "image": "/historique/historique-51.jpeg" }]. Titre = légende + texte alternatif.` }
+    ]
+  },
+  editorialPageDef("mentions_legales", "Page « Mentions légales »", "Contenu de la page /mentions-legales."),
+  editorialPageDef("politique_confidentialite", "Page « Politique de confidentialité »", "Contenu de la page /politique-confidentialite."),
+  editorialPageDef("boutique_cgv", "Boutique — Conditions générales", "Contenu de la page /boutique/conditions-generales."),
+  editorialPageDef("boutique_livraison", "Boutique — Livraison & retour", "Contenu de la page /boutique/livraison-retour."),
+  {
+    key: "inscriptions_page",
+    title: "Page « Inscriptions »",
+    description: "Texte d'accroche, étapes et atouts de la page /inscriptions (le formulaire reste géré automatiquement).",
+    fields: [
+      { name: "heroDescription", label: "Accroche (sous le titre)", type: "textarea" },
+      { name: "steps", label: "Étapes « Comment s'inscrire ? » (JSON)", type: "json", help: `Liste de textes. Ex : ["Choisir sa catégorie", "Remplir le formulaire"]` },
+      { name: "features", label: "Atouts (JSON)", type: "json", help: `Ex : [{ "title": "Catégories", "text": "…", "iconName": "Users" }]. ${ICON_HELP}` }
+    ]
+  },
+  {
+    key: "detections_page",
+    title: "Page « Détections / Recrutement »",
+    description: "Texte d'accroche, catégories concernées et étapes du process de la page /detections-recrutement.",
+    fields: [
+      { name: "heroDescription", label: "Accroche (sous le titre)", type: "textarea" },
+      { name: "categories", label: "Catégories concernées (JSON)", type: "json", help: `Liste de textes. Ex : ["Football à 11", "Seniors", "Féminines"]` },
+      { name: "features", label: "Étapes du process (JSON)", type: "json", help: `Ex : [{ "title": "Candidater", "text": "…", "iconName": "Send" }]. ${ICON_HELP}` }
     ]
   }
 ];

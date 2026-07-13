@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminCrud } from "@/components/admin/AdminCrud";
+import { AdminCrud, imageUploadField } from "@/components/admin/AdminCrud";
 import type { CrudField } from "@/components/admin/AdminCrud";
 
 type TeamOption = { id: string; name: string };
@@ -46,6 +46,7 @@ export function NewsAdmin() {
     { name: "excerpt", label: "Extrait (résumé court)", type: "textarea", help: "≤ 300 caractères — affiché dans les cartes." },
     { name: "content", label: "Contenu de l'article", type: "textarea", required: true, help: "≥ 20 caractères." },
     { name: "coverImageUrl", label: "Image de couverture (URL)", type: "url", rowKey: "cover_image_url", placeholder: "https://…" },
+    imageUploadField({ targetField: "coverImageUrl", folder: "actualites", label: "…ou téléverser l'image de couverture" }),
     {
       name: "status",
       label: "Statut",
@@ -65,7 +66,7 @@ export function NewsAdmin() {
       options: [{ value: "", label: "— Aucune (pas de notification ciblée) —" }, ...teams.map((team) => ({ value: team.id, label: team.name }))],
       help: "Si une équipe est choisie, ses familles reçoivent une notification à la première publication de l'article."
     },
-    { name: "publishedAt", label: "Date de publication", type: "datetime", rowKey: "published_at", help: "Laisser vide = maintenant à la publication." },
+    { name: "publishedAt", label: "Date de publication", type: "datetime", rowKey: "published_at", help: "Vide = visible dès la publication. Une date future (avec statut « Publié ») programme la mise en ligne automatique à cette date." },
     { name: "slug", label: "Slug (lien)", help: "Optionnel — généré depuis le titre si vide." }
   ];
 
@@ -77,6 +78,10 @@ export function NewsAdmin() {
       listKey="news"
       itemKey="article"
       newLabel="Nouvel article"
+      allowDelete
+      allowBulkDelete
+      deleteMode="soft"
+      rowLabel={(r) => `« ${String(r.title ?? "cet article")} »`}
       fields={fields}
       columns={[
         { label: "Titre", render: (r) => <span className="font-bold text-[#002f1d]">{String(r.title ?? "—")}</span> },

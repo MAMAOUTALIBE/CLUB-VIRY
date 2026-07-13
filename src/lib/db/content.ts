@@ -91,10 +91,15 @@ function partnerPayloadToRow(input: AdminPartnerPayload) {
 }
 
 export async function listPublishedNews(limit = 12): Promise<NewsArticle[]> {
+  // Publication programmée : un article PUBLISHED daté dans le futur reste masqué
+  // jusqu'à sa date. Sans date (published_at null), il est visible immédiatement.
+  const nowIso = new Date().toISOString();
   const { data, error } = await getSupabaseAdminClient()
     .from("news")
     .select("*")
     .eq("status", "PUBLISHED")
+    .is("deleted_at", null)
+    .or(`published_at.is.null,published_at.lte.${nowIso}`)
     .order("published_at", { ascending: false })
     .limit(limit);
 
@@ -109,6 +114,7 @@ export async function listNewsForAdmin(limit = 50): Promise<NewsArticle[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("news")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -125,6 +131,8 @@ export async function getPublishedNewsBySlug(slug: string): Promise<NewsArticle 
     .select("*")
     .eq("slug", slug)
     .eq("status", "PUBLISHED")
+    .is("deleted_at", null)
+    .or(`published_at.is.null,published_at.lte.${new Date().toISOString()}`)
     .maybeSingle();
 
   if (error) {
@@ -351,6 +359,7 @@ export async function listActivePartners(): Promise<Partner[]> {
     .from("partners")
     .select("*")
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("order_index", { ascending: true });
 
   if (error) {
@@ -364,6 +373,7 @@ export async function listPartnersForAdmin(limit = 100): Promise<Partner[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("partners")
     .select("*")
+    .is("deleted_at", null)
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(limit);

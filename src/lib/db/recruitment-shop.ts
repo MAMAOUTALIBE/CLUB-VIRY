@@ -201,7 +201,7 @@ export async function listPublicProducts(): Promise<PublicProductsPayload> {
   const supabase = getSupabaseAdminClient();
   const [{ data: categories, error: categoriesError }, { data: products, error: productsError }] = await Promise.all([
     supabase.from("product_categories").select("*").eq("is_active", true).order("order_index", { ascending: true }),
-    supabase.from("products").select("*").eq("status", "ACTIVE").order("order_index", { ascending: true })
+    supabase.from("products").select("*").eq("status", "ACTIVE").is("deleted_at", null).order("order_index", { ascending: true })
   ]);
 
   if (categoriesError) {
@@ -245,7 +245,7 @@ export async function listShopForAdmin(limit = 100): Promise<PublicProductsPaylo
   const [{ data: categories, error: categoriesError }, { data: products, error: productsError }, { data: variants, error: variantsError }] =
     await Promise.all([
       supabase.from("product_categories").select("*").order("order_index", { ascending: true }).limit(limit),
-      supabase.from("products").select("*").order("order_index", { ascending: true }).limit(limit),
+      supabase.from("products").select("*").is("deleted_at", null).order("order_index", { ascending: true }).limit(limit),
       supabase.from("product_variants").select("*").order("created_at", { ascending: false }).limit(limit)
     ]);
 

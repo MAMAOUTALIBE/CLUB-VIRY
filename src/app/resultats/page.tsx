@@ -4,7 +4,9 @@ import { DesktopOnly, MobileCard, MobileScreen, MobileScrollableList } from "@/c
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
+import { StandingsTables } from "@/components/club/StandingsTables";
 import { images } from "@/lib/images";
+import { getPublicStandings } from "@/lib/public-content";
 import { getResultsPageData } from "@/lib/results-view";
 import { pageMetadata } from "@/lib/seo";
 
@@ -13,7 +15,7 @@ export const revalidate = 300;
 export const metadata = pageMetadata("/resultats");
 
 export default async function ResultsPage() {
-  const results = await getResultsPageData();
+  const [results, standings] = await Promise.all([getResultsPageData(), getPublicStandings()]);
 
   return (
     <>
@@ -90,6 +92,15 @@ export default async function ResultsPage() {
           })}
         </div>
       </section>
+
+      {standings.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+          <SectionTitle eyebrow="Classements" title="Classements des équipes" text="Le classement des compétitions suivies par le club, mis à jour par le secrétariat." />
+          <div className="mt-8">
+            <StandingsTables standings={standings} />
+          </div>
+        </section>
+      ) : null}
 
       <PremiumCta
         primaryHref="/calendrier"

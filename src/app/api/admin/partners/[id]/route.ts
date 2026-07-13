@@ -3,9 +3,10 @@ import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
-import { validateAdminPartnerPayload } from "@/lib/api/validation";
+import { isUuid, validateAdminPartnerPayload } from "@/lib/api/validation";
 import { updatePartner } from "@/lib/db/content";
 import { recordActivity } from "@/lib/db/foundations";
+import { softDeleteRow } from "@/lib/db/soft-delete";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,6 +56,42 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     revalidatePath("/partenaires");
 
     return jsonOk({ partner });
+  } catch (error) {
+    return handleDbError("admin/partners/[id]", error);
+  }
+}
+
+/** Suppression réversible : déplace le partenaire vers la corbeille (restaurable). */
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const admin = await getAdminContext(request, "partners:manage");
+
+  if (!admin.ok) {
+    return admin.response;
+  }
+
+  const { id } = await context.params;
+
+  if (!isUuid(id)) {
+    return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
+  }
+
+  try {
+    const trashed = await softDeleteRow("partners", id);
+
+    if (!trashed) {
+      return jsonError(404, "NOT_FOUND", "Partenaire introuvable.");
+    }
+
+    await recordActivity({
+      actorId: admin.context.user.id,
+      action: "partner.trashed",
+      entityType: "partners",
+      entityId: id
+    });
+    revalidatePath("/");
+    revalidatePath("/partenaires");
+
+    return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/partners/[id]", error);
   }

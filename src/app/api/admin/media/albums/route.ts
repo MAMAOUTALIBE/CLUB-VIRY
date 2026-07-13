@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { getAdminContext } from "@/lib/api/admin-auth";
+import { canPublishContent, getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminMediaAlbumPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
@@ -26,6 +26,10 @@ export async function POST(request: NextRequest) {
 
   if (!payload.ok) {
     return jsonError(400, "VALIDATION_ERROR", "Album media invalide.", payload.issues);
+  }
+
+  if (payload.data.status === "PUBLISHED" && !canPublishContent(admin.context)) {
+    return jsonError(403, "FORBIDDEN", "Publication non autorisée : enregistrez l'album en brouillon.");
   }
 
   try {

@@ -1,10 +1,12 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { isUuid, validateAdminOfficialPayload } from "@/lib/api/validation";
-import { deleteOfficial, updateOfficial } from "@/lib/db/officials";
+import { updateOfficial } from "@/lib/db/officials";
 import { recordActivity } from "@/lib/db/foundations";
+import { softDeleteRow } from "@/lib/db/soft-delete";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,20 +68,23 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const deleted = await deleteOfficial(id);
+    const trashed = await softDeleteRow("officials", id);
 
-    if (!deleted) {
+    if (!trashed) {
       return jsonError(404, "NOT_FOUND", "Dirigeant introuvable.");
     }
 
     await recordActivity({
       actorId: admin.context.user.id,
-      action: "official.deleted",
+      action: "official.trashed",
       entityType: "club_officials",
       entityId: id
     });
+    revalidatePath("/le-club/organigramme");
+    revalidatePath("/le-club/bureau");
+    revalidatePath("/le-club/dirigeants");
 
-    return jsonOk({ deleted: true });
+    return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/officials/[id]", error);
   }

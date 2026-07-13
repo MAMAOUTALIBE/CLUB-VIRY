@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { AdminCrud } from "@/components/admin/AdminCrud";
+import { AdminCrud, imageUploadField } from "@/components/admin/AdminCrud";
 import type { CrudField } from "@/components/admin/AdminCrud";
 
 type TeamOption = { id: string; name: string };
@@ -48,7 +48,9 @@ export function MediaAssetsAdmin() {
       help: "Si une équipe est choisie, les familles concernées reçoivent automatiquement une notification « nouvelle photo/vidéo »."
     },
     { name: "url", label: "URL du média", type: "url", required: true, fullWidth: true, placeholder: "https://… (photo ou vidéo)" },
+    imageUploadField({ targetField: "url", folder: "medias", label: "…ou téléverser une photo", help: "Pour une photo (JPEG/PNG/WebP, 5 Mo max). Pour une vidéo, collez l'URL ci-dessus." }),
     { name: "thumbnailUrl", label: "Vignette (URL)", type: "url", rowKey: "thumbnail_url", placeholder: "https://… (optionnel)" },
+    imageUploadField({ targetField: "thumbnailUrl", folder: "medias", label: "…ou téléverser une vignette" }),
     { name: "altText", label: "Texte alternatif (accessibilité)", rowKey: "alt_text", fullWidth: true, placeholder: "Description de l'image" },
     { name: "isFeatured", label: "Mis en avant", type: "boolean", rowKey: "is_featured" },
     { name: "publishedAt", label: "Date de publication", type: "datetime", rowKey: "published_at" }
@@ -64,6 +66,7 @@ export function MediaAssetsAdmin() {
       itemKey="asset"
       newLabel="Nouveau média"
       allowDelete
+      allowBulkDelete
       rowLabel={(r) => `« ${String(r.title ?? "ce média")} »`}
       fields={fields}
       columns={[

@@ -3,13 +3,15 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StageCards } from "@/components/club/ClubPublicBlocks";
-import { stages } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/formation/stages");
+export const dynamic = "force-dynamic"; // CMS : stages à jour immédiatement
 
-export default function StagesPage() {
+export default async function StagesPage() {
+  const { formationStages: stages } = await getSiteSettings();
   return (
     <>
       <MobileScreen

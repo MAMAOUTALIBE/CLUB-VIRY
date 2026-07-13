@@ -310,7 +310,20 @@ export type ProfileUpdatePayload = {
 };
 
 export type AdminUserUpdatePayload = ProfileUpdatePayload & {
-  role?: "SUPER_ADMIN" | "ADMIN_CLUB" | "DIRIGEANT" | "EDUCATEUR" | "FAMILLE" | "JOUEUR" | "MEMBRE" | "PARTENAIRE" | "VISITEUR";
+  role?:
+    | "SUPER_ADMIN"
+    | "ADMIN_CLUB"
+    | "DIRIGEANT"
+    | "EDITEUR"
+    | "RESP_SPORTIF"
+    | "RESP_BOUTIQUE"
+    | "CONTRIBUTEUR"
+    | "EDUCATEUR"
+    | "FAMILLE"
+    | "JOUEUR"
+    | "MEMBRE"
+    | "PARTENAIRE"
+    | "VISITEUR";
   status?: "ACTIVE" | "PENDING" | "SUSPENDED" | "ARCHIVED";
   email?: string;
 };
@@ -366,6 +379,258 @@ function isPublicRegistrationRole(value: unknown): value is PublicRegistrationRo
 
 export function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function isIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime());
+}
+
+export type AdminSeasonPayload = {
+  name?: string;
+  startsOn?: string;
+  endsOn?: string;
+  isActive?: boolean;
+};
+
+/** Valide une saison sportive (nom + dates début/fin au format AAAA-MM-JJ + actif). */
+export function validateAdminSeasonPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminSeasonPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  const partial = options.partial ?? false;
+  const data: AdminSeasonPayload = {};
+
+  const name = normalizeString(body.name);
+  if (name !== undefined) {
+    if (name.length < 2 || name.length > 60) {
+      issues.push({ field: "name", message: "Le nom doit contenir entre 2 et 60 caractères." });
+    } else {
+      data.name = name;
+    }
+  } else if (!partial) {
+    issues.push({ field: "name", message: "Le nom de la saison est requis." });
+  }
+
+  for (const field of ["startsOn", "endsOn"] as const) {
+    const raw = normalizeString(body[field]);
+    if (raw !== undefined) {
+      if (!isIsoDate(raw)) {
+        issues.push({ field, message: "Date invalide (format attendu : AAAA-MM-JJ)." });
+      } else {
+        data[field] = raw;
+      }
+    } else if (!partial) {
+      issues.push({ field, message: "La date est requise." });
+    }
+  }
+
+  if (data.startsOn && data.endsOn && data.endsOn <= data.startsOn) {
+    issues.push({ field: "endsOn", message: "La date de fin doit être postérieure à la date de début." });
+  }
+
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") {
+      issues.push({ field: "isActive", message: "isActive doit être un booléen." });
+    } else {
+      data.isActive = body.isActive;
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data };
+}
+
+export type AdminStandingPayload = {
+  competition?: string;
+  teamName?: string;
+  rank?: number | null;
+  played?: number;
+  won?: number;
+  drawn?: number;
+  lost?: number;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  points?: number;
+  isOwnClub?: boolean;
+  isActive?: boolean;
+};
+
+/** Valide une ligne de classement (compétition + équipe + statistiques entières >= 0). */
+export function validateAdminStandingPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminStandingPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  const partial = options.partial ?? false;
+  const data: AdminStandingPayload = {};
+
+  for (const [field, label] of [
+    ["competition", "La compétition"],
+    ["teamName", "Le nom de l'équipe"]
+  ] as const) {
+    const value = normalizeString(body[field]);
+    if (value !== undefined) {
+      if (value.length > 120) {
+        issues.push({ field, message: `${label} est trop long (120 caractères max).` });
+      } else {
+        data[field] = value;
+      }
+    } else if (!partial) {
+      issues.push({ field, message: `${label} est requis(e).` });
+    }
+  }
+
+  // Statistiques : entiers >= 0 (rank peut être null pour « non classé »).
+  const intFields = ["rank", "played", "won", "drawn", "lost", "goalsFor", "goalsAgainst", "points"] as const;
+  for (const field of intFields) {
+    const raw = body[field];
+    if (raw === undefined) continue;
+    if (field === "rank" && raw === null) {
+      data.rank = null;
+      continue;
+    }
+    if (typeof raw !== "number" || !Number.isInteger(raw) || raw < 0) {
+      issues.push({ field, message: "Doit être un entier positif ou nul." });
+    } else {
+      data[field] = raw;
+    }
+  }
+
+  for (const field of ["isOwnClub", "isActive"] as const) {
+    if (body[field] !== undefined) {
+      if (typeof body[field] !== "boolean") {
+        issues.push({ field, message: "Doit être un booléen." });
+      } else {
+        data[field] = body[field] as boolean;
+      }
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data };
+}
+
+const CATEGORY_GENDERS = ["MIXTE", "MASCULIN", "FEMININ"] as const;
+export type CategoryGenderValue = (typeof CATEGORY_GENDERS)[number];
+
+export type AdminCategoryPayload = {
+  name?: string;
+  ageRange?: string;
+  gender?: CategoryGenderValue;
+  orderIndex?: number;
+  isActive?: boolean;
+};
+
+/** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */
+export function validateAdminCategoryPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminCategoryPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  const partial = options.partial ?? false;
+  const data: AdminCategoryPayload = {};
+
+  const name = normalizeString(body.name);
+  if (name !== undefined) {
+    if (name.length < 2 || name.length > 60) {
+      issues.push({ field: "name", message: "Le nom doit contenir entre 2 et 60 caractères." });
+    } else {
+      data.name = name;
+    }
+  } else if (!partial) {
+    issues.push({ field: "name", message: "Le nom de la catégorie est requis." });
+  }
+
+  const ageRange = normalizeString(body.ageRange);
+  if (ageRange !== undefined) {
+    if (ageRange.length > 60) {
+      issues.push({ field: "ageRange", message: "La tranche d'âge est trop longue (60 caractères max)." });
+    } else {
+      data.ageRange = ageRange;
+    }
+  } else if (!partial) {
+    issues.push({ field: "ageRange", message: "La tranche d'âge est requise." });
+  }
+
+  if (body.gender !== undefined) {
+    if (typeof body.gender !== "string" || !CATEGORY_GENDERS.includes(body.gender as CategoryGenderValue)) {
+      issues.push({ field: "gender", message: "Genre invalide (MIXTE, MASCULIN ou FEMININ)." });
+    } else {
+      data.gender = body.gender as CategoryGenderValue;
+    }
+  }
+
+  if (body.orderIndex !== undefined) {
+    if (typeof body.orderIndex !== "number" || !Number.isInteger(body.orderIndex) || body.orderIndex < 0) {
+      issues.push({ field: "orderIndex", message: "L'ordre doit être un entier positif." });
+    } else {
+      data.orderIndex = body.orderIndex;
+    }
+  }
+
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") {
+      issues.push({ field: "isActive", message: "isActive doit être un booléen." });
+    } else {
+      data.isActive = body.isActive;
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data };
+}
+
+export type ReorderPayload = { ids: string[] };
+
+/** Valide le corps d'une requête de réorganisation : { ids: [uuid, …] } non vide. */
+export function validateReorderPayload(input: unknown): ValidationResult<ReorderPayload> {
+  const body = asRecord(input);
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  const ids = body.ids;
+  const issues: ValidationIssue[] = [];
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    issues.push({ field: "ids", message: "Liste d'identifiants requise." });
+  } else if (ids.length > 500) {
+    issues.push({ field: "ids", message: "Trop d'éléments (500 maximum)." });
+  } else if (!ids.every((id) => typeof id === "string" && isUuid(id))) {
+    issues.push({ field: "ids", message: "Chaque identifiant doit être un UUID valide." });
+  } else if (new Set(ids as string[]).size !== ids.length) {
+    issues.push({ field: "ids", message: "Identifiants en double." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data: { ids: ids as string[] } };
 }
 
 function isValidBirthDate(value: string): boolean {
@@ -458,6 +723,10 @@ function isAppRoleValue(value: unknown): value is NonNullable<AdminUserUpdatePay
     value === "SUPER_ADMIN" ||
     value === "ADMIN_CLUB" ||
     value === "DIRIGEANT" ||
+    value === "EDITEUR" ||
+    value === "RESP_SPORTIF" ||
+    value === "RESP_BOUTIQUE" ||
+    value === "CONTRIBUTEUR" ||
     value === "EDUCATEUR" ||
     value === "FAMILLE" ||
     value === "JOUEUR" ||

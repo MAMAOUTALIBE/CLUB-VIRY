@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Loader2, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { showToast } from "@/components/admin/Toast";
@@ -33,6 +33,10 @@ export type CrudField = {
   uploadTargetField?: string;
   /** Clé de réponse lue dans data après upload. Défaut: url. */
   uploadResponseKey?: string;
+  /** Message de succès affiché après upload. Défaut: message générique image. */
+  uploadSuccessMessage?: string;
+  /** Champs multipart supplémentaires envoyés avec le fichier (ex: { folder: "actualites" }). */
+  uploadExtraFields?: Record<string, string>;
   accept?: string;
   maxBytes?: number;
 };
@@ -61,8 +65,14 @@ type AdminCrudProps = {
   rowActions?: (row: Row, helpers: AdminCrudHelpers) => React.ReactNode;
   /** Active un bouton « Supprimer » par ligne (DELETE endpoint/[id], avec confirmation). */
   allowDelete?: boolean;
+  /** "soft" = déplacé en corbeille (restaurable), "hard" = suppression définitive. Défaut: "hard". */
+  deleteMode?: "soft" | "hard";
   /** Libellé d'une ligne pour la confirmation de suppression (défaut: première colonne). */
   rowLabel?: (row: Row) => string;
+  /** Active la réorganisation (glisser-déposer + flèches) en POSTant { ids } à cet endpoint. */
+  reorderEndpoint?: string;
+  /** Active la sélection multiple + suppression en masse (nécessite allowDelete). */
+  allowBulkDelete?: boolean;
 };
 
 function camelToSnake(s: string): string {
@@ -78,6 +88,26 @@ function toInputValue(field: CrudField, row: Row): string {
   return String(raw);
 }
 
+/**
+ * Champ « téléverser une image » prêt à l'emploi, câblé sur l'upload générique
+ * du CRM (`/api/admin/uploads`). Remplit automatiquement le champ URL cible.
+ */
+export function imageUploadField(opts: { targetField: string; folder: string; label?: string; help?: string }): CrudField {
+  return {
+    name: `${opts.targetField}__file`,
+    label: opts.label ?? "Téléverser une image",
+    type: "file",
+    fullWidth: true,
+    uploadEndpoint: "/api/admin/uploads",
+    uploadTargetField: opts.targetField,
+    uploadResponseKey: "url",
+    uploadExtraFields: { folder: opts.folder },
+    accept: "image/jpeg,image/png,image/webp",
+    maxBytes: 5 * 1024 * 1024,
+    help: opts.help ?? "JPEG, PNG ou WebP — 5 Mo max. Le champ URL se remplit automatiquement."
+  };
+}
+
 const PAGE_SIZE = 100;
 
 /** Force le paramètre `limit` d'un endpoint (en préservant les autres query params). */
@@ -88,7 +118,7 @@ function withLimit(endpoint: string, limit: number): string {
   return `${path}?${params.toString()}`;
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, rowLabel }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -100,6 +130,11 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   const [formError, setFormError] = useState("");
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [hasMore, setHasMore] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+  const canBulk = allowBulkDelete && allowDelete;
 
   const load = useCallback(async () => {
     setState("loading");
@@ -118,6 +153,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
       const list = json.data?.[listKey];
       const nextRows = Array.isArray(list) ? list : [];
       setRows(nextRows);
+      setSelected(new Set());
       setHasMore(nextRows.length >= limit);
       setState("ready");
       setMessage("");
@@ -152,7 +188,11 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     const id = row[idField];
     if (!id) return;
     const label = rowLabel ? rowLabel(row) : "cet élément";
-    if (!window.confirm(`Supprimer ${label} ? Cette action est définitive.`)) return;
+    const confirmText =
+      deleteMode === "soft"
+        ? `Déplacer ${label} vers la corbeille ? Vous pourrez le restaurer.`
+        : `Supprimer ${label} ? Cette action est définitive.`;
+    if (!window.confirm(confirmText)) return;
     try {
       const res = await fetch(`${endpoint}/${id}`, { method: "DELETE", credentials: "same-origin" });
       const json = await res.json().catch(() => null);
@@ -162,10 +202,101 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         return;
       }
       await load();
-      showToast("Supprimé.");
+      showToast(deleteMode === "soft" ? "Déplacé vers la corbeille." : "Supprimé.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Erreur réseau.");
     }
+  }
+
+  async function persistOrder(next: Row[]) {
+    if (!reorderEndpoint) return;
+    const previous = rows;
+    setRows(next); // optimiste
+    setReordering(true);
+    try {
+      const ids = next.map((r) => r[idField]).filter(Boolean);
+      const res = await fetch(reorderEndpoint, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids })
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        setRows(previous); // rollback
+        showToast(json?.error?.message ?? "Réorganisation impossible.", "error");
+        return;
+      }
+      showToast("Ordre enregistré.");
+    } catch (error) {
+      setRows(previous);
+      showToast(error instanceof Error ? error.message : "Erreur réseau.", "error");
+    } finally {
+      setReordering(false);
+    }
+  }
+
+  function moveRow(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= rows.length) return;
+    const next = [...rows];
+    [next[index], next[target]] = [next[target], next[index]];
+    void persistOrder(next);
+  }
+
+  function dropOnRow(targetIndex: number) {
+    if (dragIndex === null || dragIndex === targetIndex) {
+      setDragIndex(null);
+      return;
+    }
+    const next = [...rows];
+    const [moved] = next.splice(dragIndex, 1);
+    next.splice(targetIndex, 0, moved);
+    setDragIndex(null);
+    void persistOrder(next);
+  }
+
+  function rowId(row: Row): string | null {
+    const id = row[idField];
+    return typeof id === "string" ? id : null;
+  }
+
+  function toggleOne(id: string) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    const ids = rows.map(rowId).filter((id): id is string => Boolean(id));
+    setSelected((current) => (current.size === ids.length ? new Set() : new Set(ids)));
+  }
+
+  async function bulkDelete() {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    const verb = deleteMode === "soft" ? "déplacer vers la corbeille" : "supprimer définitivement";
+    if (!window.confirm(`Voulez-vous ${verb} ${ids.length} élément${ids.length > 1 ? "s" : ""} ?`)) return;
+    setBulkPending(true);
+    let ok = 0;
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`${endpoint}/${id}`, { method: "DELETE", credentials: "same-origin" });
+        const json = await res.json().catch(() => null);
+        if (res.ok && json?.ok) ok += 1;
+        else failed += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    setBulkPending(false);
+    await load();
+    const done = deleteMode === "soft" ? "déplacé(s) vers la corbeille" : "supprimé(s)";
+    showToast(`${ok} ${done}${failed > 0 ? ` · ${failed} échec(s)` : ""}`, failed > 0 ? "error" : "success");
   }
 
   async function uploadFieldFile(field: CrudField, file: File) {
@@ -196,6 +327,9 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     try {
       const body = new FormData();
       body.append("file", file);
+      for (const [key, value] of Object.entries(field.uploadExtraFields ?? {})) {
+        body.append(key, value);
+      }
 
       const res = await fetch(field.uploadEndpoint, {
         method: "POST",
@@ -213,7 +347,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
       }
 
       setForm((current) => ({ ...current, [field.uploadTargetField as string]: uploadedValue }));
-      showToast("Logo téléversé. Enregistrez le partenaire pour publier le changement.");
+      showToast(field.uploadSuccessMessage ?? "Image téléversée. Enregistrez la fiche pour publier le changement.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erreur réseau.";
       setFormError(message);
@@ -348,7 +482,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                         )}
                       </div>
                       {typeof targetValue === "string" && targetValue ? (
-                        <p className="mt-2 break-all text-xs font-medium text-slate-500">Logo prêt : {targetValue}</p>
+                        <p className="mt-2 break-all text-xs font-medium text-slate-500">Image prête : {targetValue}</p>
                       ) : null}
                     </div>
                     {f.help ? <span className="text-xs font-medium text-slate-500">{f.help}</span> : null}
@@ -395,19 +529,106 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         ) : state === "ready" && rows.length === 0 ? (
           <p className="rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-6 text-center text-sm font-bold text-slate-500">Aucun élément{disableCreate ? "." : ` — cliquez sur « ${newLabel} » pour en ajouter.`}</p>
         ) : (
+          <>
+          {reorderEndpoint ? (
+            <p className="mb-3 flex items-center gap-2 text-xs font-bold text-slate-500">
+              <GripVertical size={14} aria-hidden="true" /> Glissez une ligne (ou utilisez les flèches) pour changer l'ordre d'affichage sur le site.
+            </p>
+          ) : null}
+          {canBulk && selected.size > 0 ? (
+            <div className="mb-3 flex flex-wrap items-center gap-3 rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] px-4 py-2.5">
+              <span className="text-sm font-black uppercase text-[#002f1d]">{selected.size} sélectionné{selected.size > 1 ? "s" : ""}</span>
+              <button
+                onClick={() => void bulkDelete()}
+                disabled={bulkPending}
+                className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-md border border-red-200 px-3 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:cursor-wait disabled:opacity-70"
+                type="button"
+              >
+                {bulkPending ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />} {deleteMode === "soft" ? "Mettre à la corbeille" : "Supprimer"} la sélection
+              </button>
+              <button onClick={() => setSelected(new Set())} className="focus-ring text-xs font-black uppercase text-slate-500 hover:text-slate-900" type="button">
+                Tout désélectionner
+              </button>
+            </div>
+          ) : null}
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs font-black uppercase text-slate-500">
+                {canBulk ? (
+                  <th className="w-8 px-2 py-2">
+                    <input
+                      type="checkbox"
+                      aria-label="Tout sélectionner"
+                      checked={rows.length > 0 && selected.size === rows.length}
+                      onChange={toggleAll}
+                      className="h-4 w-4 cursor-pointer accent-[#002f1d]"
+                    />
+                  </th>
+                ) : null}
+                {reorderEndpoint ? <th className="w-8 px-2 py-2"><span className="sr-only">Réordonner</span></th> : null}
                 {columns.map((c) => <th key={c.label} className="px-3 py-2">{c.label}</th>)}
                 <th className="px-3 py-2 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={String(row[idField] ?? i)} className="border-b border-slate-100 hover:bg-[#fbfcf8]">
+                <tr
+                  key={String(row[idField] ?? i)}
+                  className={`border-b border-slate-100 hover:bg-[#fbfcf8] ${dragIndex === i ? "opacity-50" : ""}`}
+                  onDragOver={reorderEndpoint ? (event) => event.preventDefault() : undefined}
+                  onDrop={reorderEndpoint ? () => dropOnRow(i) : undefined}
+                >
+                  {canBulk ? (
+                    <td className="px-2 py-2.5 align-top">
+                      {rowId(row) ? (
+                        <input
+                          type="checkbox"
+                          aria-label="Sélectionner cette ligne"
+                          checked={selected.has(rowId(row) as string)}
+                          onChange={() => toggleOne(rowId(row) as string)}
+                          className="h-4 w-4 cursor-pointer accent-[#002f1d]"
+                        />
+                      ) : null}
+                    </td>
+                  ) : null}
+                  {reorderEndpoint ? (
+                    <td className="px-2 py-2.5 align-top">
+                      <span
+                        draggable
+                        onDragStart={() => setDragIndex(i)}
+                        onDragEnd={() => setDragIndex(null)}
+                        aria-label="Glisser pour réordonner"
+                        className="inline-flex cursor-grab items-center text-slate-400 hover:text-slate-700 active:cursor-grabbing"
+                      >
+                        <GripVertical size={16} aria-hidden="true" />
+                      </span>
+                    </td>
+                  ) : null}
                   {columns.map((c) => <td key={c.label} className="px-3 py-2.5 align-top text-slate-700">{c.render(row)}</td>)}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {reorderEndpoint ? (
+                        <span className="inline-flex overflow-hidden rounded-md border border-slate-300">
+                          <button
+                            onClick={() => moveRow(i, -1)}
+                            disabled={i === 0 || reordering}
+                            aria-label="Monter"
+                            className="focus-ring inline-flex items-center px-1.5 py-1.5 text-[#002f1d] hover:bg-[#fbfcf8] disabled:opacity-30"
+                            type="button"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            onClick={() => moveRow(i, 1)}
+                            disabled={i === rows.length - 1 || reordering}
+                            aria-label="Descendre"
+                            className="focus-ring inline-flex items-center border-l border-slate-300 px-1.5 py-1.5 text-[#002f1d] hover:bg-[#fbfcf8] disabled:opacity-30"
+                            type="button"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                        </span>
+                      ) : null}
                       {rowActions ? rowActions(row, { reload: load }) : null}
                       <button onClick={() => openEdit(row)} className="focus-ring inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">
                         <Pencil size={14} /> Éditer
@@ -423,6 +644,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               ))}
             </tbody>
           </table>
+          </>
         )}
       </div>
 

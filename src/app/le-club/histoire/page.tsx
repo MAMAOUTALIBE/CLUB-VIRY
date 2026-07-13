@@ -6,7 +6,6 @@ import { PalmaresFanion } from "@/components/club/PalmaresFanion";
 import { MediaGallery } from "@/components/MediaGallery";
 import { ButtonLink } from "@/components/ButtonLink";
 import { Reveal } from "@/components/Motion";
-import { galerieArchives } from "@/lib/club-pages-data";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getSiteSettings } from "@/lib/public-content";
@@ -16,7 +15,7 @@ export const metadata = pageMetadata("/le-club/histoire");
 export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function HistoryPage() {
-  const { histoire } = await getSiteSettings();
+  const { histoire, galerieArchives } = await getSiteSettings();
   const timeline = histoire.timeline;
   return (
     <>

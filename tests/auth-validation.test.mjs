@@ -34,7 +34,11 @@ import {
   validateRefreshSessionPayload,
   validateRecruitmentApplicationPayload,
   validateRegistrationPayload,
-  validateRegisterPayload
+  validateRegisterPayload,
+  validateReorderPayload,
+  validateAdminSeasonPayload,
+  validateAdminCategoryPayload,
+  validateAdminStandingPayload
 } from "../src/lib/api/validation.ts";
 import { isSameOriginRequest } from "../src/lib/api/origin.ts";
 import { getSafeWebhookUrl, isPrivateOrReservedIp } from "../src/lib/api/webhook-security.ts";
@@ -786,4 +790,118 @@ test("SUPER_ADMIN can promote anyone to SUPER_ADMIN", () => {
     requestedRole: "SUPER_ADMIN"
   });
   assert.equal(guard.ok, true);
+});
+
+const UUID_A = "11111111-1111-4111-8111-111111111111";
+const UUID_B = "22222222-2222-4222-8222-222222222222";
+
+test("validateReorderPayload accepts a list of unique UUIDs", () => {
+  const result = validateReorderPayload({ ids: [UUID_A, UUID_B] });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.data.ids, [UUID_A, UUID_B]);
+});
+
+test("validateReorderPayload rejects an empty or missing list", () => {
+  assert.equal(validateReorderPayload({ ids: [] }).ok, false);
+  assert.equal(validateReorderPayload({}).ok, false);
+  assert.equal(validateReorderPayload(null).ok, false);
+});
+
+test("validateReorderPayload rejects non-UUID or duplicate ids", () => {
+  assert.equal(validateReorderPayload({ ids: ["not-a-uuid"] }).ok, false);
+  assert.equal(validateReorderPayload({ ids: [UUID_A, UUID_A] }).ok, false);
+});
+
+test("validateAdminSeasonPayload accepts a full valid season", () => {
+  const result = validateAdminSeasonPayload({ name: "2026 / 2027", startsOn: "2026-07-01", endsOn: "2027-06-30", isActive: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.name, "2026 / 2027");
+  assert.equal(result.data.isActive, true);
+});
+
+test("validateAdminSeasonPayload requires fields when not partial", () => {
+  const result = validateAdminSeasonPayload({ name: "X" });
+  assert.equal(result.ok, false);
+});
+
+test("validateAdminSeasonPayload rejects bad dates and end<=start", () => {
+  assert.equal(validateAdminSeasonPayload({ name: "Saison", startsOn: "01/07/2026", endsOn: "2027-06-30" }).ok, false);
+  assert.equal(validateAdminSeasonPayload({ name: "Saison", startsOn: "2026-07-01", endsOn: "2026-07-01" }).ok, false);
+});
+
+test("validateAdminSeasonPayload allows partial updates", () => {
+  const result = validateAdminSeasonPayload({ isActive: false }, { partial: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.isActive, false);
+});
+
+test("validateAdminCategoryPayload accepts a valid category", () => {
+  const result = validateAdminCategoryPayload({ name: "Seniors", ageRange: "R1 / R3", gender: "MASCULIN", orderIndex: 40, isActive: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.gender, "MASCULIN");
+  assert.equal(result.data.orderIndex, 40);
+});
+
+test("validateAdminCategoryPayload requires name and ageRange when not partial", () => {
+  assert.equal(validateAdminCategoryPayload({ name: "Seniors" }).ok, false);
+  assert.equal(validateAdminCategoryPayload({ ageRange: "U6 à U11" }).ok, false);
+});
+
+test("validateAdminCategoryPayload rejects an invalid gender", () => {
+  assert.equal(validateAdminCategoryPayload({ name: "X", ageRange: "U6", gender: "AUTRE" }).ok, false);
+});
+
+test("validateAdminStandingPayload accepts a valid row", () => {
+  const result = validateAdminStandingPayload({ competition: "Seniors — R1", teamName: "ES Viry", rank: 1, played: 10, won: 7, drawn: 2, lost: 1, goalsFor: 20, goalsAgainst: 8, points: 23, isOwnClub: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.teamName, "ES Viry");
+  assert.equal(result.data.rank, 1);
+});
+
+test("validateAdminStandingPayload requires competition and team when not partial", () => {
+  assert.equal(validateAdminStandingPayload({ competition: "R1" }).ok, false);
+});
+
+test("validateAdminStandingPayload rejects negative or non-integer stats", () => {
+  assert.equal(validateAdminStandingPayload({ competition: "R1", teamName: "X", points: -3 }).ok, false);
+  assert.equal(validateAdminStandingPayload({ competition: "R1", teamName: "X", won: 1.5 }).ok, false);
+});
+
+test("validateAdminStandingPayload allows a null rank (non classé)", () => {
+  const result = validateAdminStandingPayload({ rank: null }, { partial: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.rank, null);
+});
+
+test("new CRM roles have the expected permissions", () => {
+  // Éditeur : gère ET publie
+  assert.equal(hasPermission("EDITEUR", "content:manage"), true);
+  assert.equal(hasPermission("EDITEUR", "content:publish"), true);
+  assert.equal(hasPermission("EDITEUR", "admin:access"), true);
+  // Contributeur : gère mais NE publie PAS
+  assert.equal(hasPermission("CONTRIBUTEUR", "content:manage"), true);
+  assert.equal(hasPermission("CONTRIBUTEUR", "content:publish"), false);
+  // Responsable sportif : sportif seulement
+  assert.equal(hasPermission("RESP_SPORTIF", "teams:manage"), true);
+  assert.equal(hasPermission("RESP_SPORTIF", "shop:manage"), false);
+  assert.equal(hasPermission("RESP_SPORTIF", "content:manage"), false);
+  // Responsable boutique : boutique seulement
+  assert.equal(hasPermission("RESP_BOUTIQUE", "shop:manage"), true);
+  assert.equal(hasPermission("RESP_BOUTIQUE", "teams:manage"), false);
+});
+
+test("new management roles can access the CRM shell", () => {
+  assert.equal(canAccessCrmPath("EDITEUR", "/admin/actualites"), true);
+  assert.equal(canAccessCrmPath("RESP_BOUTIQUE", "/admin/boutique"), true);
+  // un rôle sans admin:access reste bloqué hors de ses chemins éducateur
+  assert.equal(canAccessCrmPath("FAMILLE", "/admin/actualites"), false);
+});
+
+test("anti-escalation ranks the new roles below DIRIGEANT", () => {
+  // ADMIN_CLUB peut attribuer CONTRIBUTEUR (rang inférieur)
+  const ok = canAdminUpdateProfile({ actorRole: "ADMIN_CLUB", actorId: "a", targetId: "b", targetCurrentRole: "MEMBRE", requestedRole: "CONTRIBUTEUR" });
+  assert.equal(ok.ok, true);
+  // un ÉDITEUR ne peut pas gérer un DIRIGEANT (rang supérieur)
+  const ko = canAdminUpdateProfile({ actorRole: "EDITEUR", actorId: "a", targetId: "b", targetCurrentRole: "DIRIGEANT", requestedRole: "EDUCATEUR" });
+  assert.equal(ko.ok, false);
 });

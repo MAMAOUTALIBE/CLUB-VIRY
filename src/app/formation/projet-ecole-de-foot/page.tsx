@@ -4,14 +4,16 @@ import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { SchoolProjectTimeline } from "@/components/club/ClubPublicBlocks";
-import { schoolProject } from "@/lib/club-pages-data";
 import { images } from "@/lib/images";
+import { getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 import { Dumbbell, HeartHandshake, Route, ShieldCheck, Trophy, Users } from "lucide-react";
 
 export const metadata = pageMetadata("/formation/projet-ecole-de-foot");
+export const dynamic = "force-dynamic"; // CMS : feuille de route à jour immédiatement
 
-export default function ProjetEcoleDeFootPage() {
+export default async function ProjetEcoleDeFootPage() {
+  const { formationProjet: schoolProject } = await getSiteSettings();
   return (
     <>
       <MobileScreen
