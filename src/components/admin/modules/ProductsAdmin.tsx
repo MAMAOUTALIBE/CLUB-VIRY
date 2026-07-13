@@ -24,6 +24,7 @@ export function ProductsAdmin() {
       itemKey="product"
       newLabel="Nouveau produit"
       allowDelete
+      allowBulkDelete
       deleteMode="soft"
       reorderEndpoint="/api/admin/shop/products/reorder"
       rowLabel={(r) => `« ${String(r.name ?? "ce produit")} »`}

@@ -12,6 +12,7 @@ export function OfficialsAdmin() {
       itemKey="official"
       newLabel="Nouveau membre"
       allowDelete
+      allowBulkDelete
       deleteMode="soft"
       reorderEndpoint="/api/admin/officials/reorder"
       rowLabel={(r) => `« ${String(r.full_name ?? "ce membre")} »`}

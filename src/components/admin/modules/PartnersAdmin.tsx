@@ -67,6 +67,7 @@ export function PartnersAdmin() {
       itemKey="partner"
       newLabel="Nouveau partenaire"
       allowDelete
+      allowBulkDelete
       deleteMode="soft"
       reorderEndpoint="/api/admin/partners/reorder"
       rowLabel={(r) => `« ${String(r.name ?? "ce partenaire")} »`}

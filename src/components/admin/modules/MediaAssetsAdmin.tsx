@@ -66,6 +66,7 @@ export function MediaAssetsAdmin() {
       itemKey="asset"
       newLabel="Nouveau média"
       allowDelete
+      allowBulkDelete
       rowLabel={(r) => `« ${String(r.title ?? "ce média")} »`}
       fields={fields}
       columns={[

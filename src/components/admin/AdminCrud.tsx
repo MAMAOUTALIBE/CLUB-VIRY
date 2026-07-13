@@ -71,6 +71,8 @@ type AdminCrudProps = {
   rowLabel?: (row: Row) => string;
   /** Active la réorganisation (glisser-déposer + flèches) en POSTant { ids } à cet endpoint. */
   reorderEndpoint?: string;
+  /** Active la sélection multiple + suppression en masse (nécessite allowDelete). */
+  allowBulkDelete?: boolean;
 };
 
 function camelToSnake(s: string): string {
@@ -116,7 +118,7 @@ function withLimit(endpoint: string, limit: number): string {
   return `${path}?${params.toString()}`;
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -130,6 +132,9 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   const [hasMore, setHasMore] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [reordering, setReordering] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+  const canBulk = allowBulkDelete && allowDelete;
 
   const load = useCallback(async () => {
     setState("loading");
@@ -148,6 +153,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
       const list = json.data?.[listKey];
       const nextRows = Array.isArray(list) ? list : [];
       setRows(nextRows);
+      setSelected(new Set());
       setHasMore(nextRows.length >= limit);
       setState("ready");
       setMessage("");
@@ -248,6 +254,49 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     next.splice(targetIndex, 0, moved);
     setDragIndex(null);
     void persistOrder(next);
+  }
+
+  function rowId(row: Row): string | null {
+    const id = row[idField];
+    return typeof id === "string" ? id : null;
+  }
+
+  function toggleOne(id: string) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    const ids = rows.map(rowId).filter((id): id is string => Boolean(id));
+    setSelected((current) => (current.size === ids.length ? new Set() : new Set(ids)));
+  }
+
+  async function bulkDelete() {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    const verb = deleteMode === "soft" ? "déplacer vers la corbeille" : "supprimer définitivement";
+    if (!window.confirm(`Voulez-vous ${verb} ${ids.length} élément${ids.length > 1 ? "s" : ""} ?`)) return;
+    setBulkPending(true);
+    let ok = 0;
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`${endpoint}/${id}`, { method: "DELETE", credentials: "same-origin" });
+        const json = await res.json().catch(() => null);
+        if (res.ok && json?.ok) ok += 1;
+        else failed += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    setBulkPending(false);
+    await load();
+    const done = deleteMode === "soft" ? "déplacé(s) vers la corbeille" : "supprimé(s)";
+    showToast(`${ok} ${done}${failed > 0 ? ` · ${failed} échec(s)` : ""}`, failed > 0 ? "error" : "success");
   }
 
   async function uploadFieldFile(field: CrudField, file: File) {
@@ -486,9 +535,36 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               <GripVertical size={14} aria-hidden="true" /> Glissez une ligne (ou utilisez les flèches) pour changer l'ordre d'affichage sur le site.
             </p>
           ) : null}
+          {canBulk && selected.size > 0 ? (
+            <div className="mb-3 flex flex-wrap items-center gap-3 rounded-md border border-[#002f1d]/15 bg-[#fbfcf8] px-4 py-2.5">
+              <span className="text-sm font-black uppercase text-[#002f1d]">{selected.size} sélectionné{selected.size > 1 ? "s" : ""}</span>
+              <button
+                onClick={() => void bulkDelete()}
+                disabled={bulkPending}
+                className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-md border border-red-200 px-3 text-xs font-black uppercase text-red-700 hover:bg-red-50 disabled:cursor-wait disabled:opacity-70"
+                type="button"
+              >
+                {bulkPending ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />} {deleteMode === "soft" ? "Mettre à la corbeille" : "Supprimer"} la sélection
+              </button>
+              <button onClick={() => setSelected(new Set())} className="focus-ring text-xs font-black uppercase text-slate-500 hover:text-slate-900" type="button">
+                Tout désélectionner
+              </button>
+            </div>
+          ) : null}
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs font-black uppercase text-slate-500">
+                {canBulk ? (
+                  <th className="w-8 px-2 py-2">
+                    <input
+                      type="checkbox"
+                      aria-label="Tout sélectionner"
+                      checked={rows.length > 0 && selected.size === rows.length}
+                      onChange={toggleAll}
+                      className="h-4 w-4 cursor-pointer accent-[#002f1d]"
+                    />
+                  </th>
+                ) : null}
                 {reorderEndpoint ? <th className="w-8 px-2 py-2"><span className="sr-only">Réordonner</span></th> : null}
                 {columns.map((c) => <th key={c.label} className="px-3 py-2">{c.label}</th>)}
                 <th className="px-3 py-2 text-right">Action</th>
@@ -502,6 +578,19 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                   onDragOver={reorderEndpoint ? (event) => event.preventDefault() : undefined}
                   onDrop={reorderEndpoint ? () => dropOnRow(i) : undefined}
                 >
+                  {canBulk ? (
+                    <td className="px-2 py-2.5 align-top">
+                      {rowId(row) ? (
+                        <input
+                          type="checkbox"
+                          aria-label="Sélectionner cette ligne"
+                          checked={selected.has(rowId(row) as string)}
+                          onChange={() => toggleOne(rowId(row) as string)}
+                          className="h-4 w-4 cursor-pointer accent-[#002f1d]"
+                        />
+                      ) : null}
+                    </td>
+                  ) : null}
                   {reorderEndpoint ? (
                     <td className="px-2 py-2.5 align-top">
                       <span

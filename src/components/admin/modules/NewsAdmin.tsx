@@ -79,6 +79,7 @@ export function NewsAdmin() {
       itemKey="article"
       newLabel="Nouvel article"
       allowDelete
+      allowBulkDelete
       deleteMode="soft"
       rowLabel={(r) => `« ${String(r.title ?? "cet article")} »`}
       fields={fields}
