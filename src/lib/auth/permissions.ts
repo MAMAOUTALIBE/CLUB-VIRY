@@ -5,6 +5,7 @@ export type Permission =
   | "admin:manage_users"
   | "admin:view_logs"
   | "content:manage"
+  | "content:publish"
   | "teams:manage"
   | "players:manage"
   | "matches:manage"
@@ -25,6 +26,7 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "admin:manage_users",
     "admin:view_logs",
     "content:manage",
+    "content:publish",
     "teams:manage",
     "players:manage",
     "matches:manage",
@@ -44,6 +46,7 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "admin:manage_users",
     "admin:view_logs",
     "content:manage",
+    "content:publish",
     "teams:manage",
     "players:manage",
     "matches:manage",
@@ -58,6 +61,7 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "admin:access",
     "admin:view_logs",
     "content:manage",
+    "content:publish",
     "teams:manage",
     "players:manage",
     "matches:manage",
@@ -66,6 +70,14 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "partners:manage",
     "public:read"
   ],
+  // Éditeur : gère ET publie les contenus éditoriaux (actualités, médias, pages).
+  EDITEUR: ["admin:access", "content:manage", "content:publish", "public:read"],
+  // Responsable sportif : équipes, joueurs, matchs (pas de contenu ni boutique).
+  RESP_SPORTIF: ["admin:access", "teams:manage", "players:manage", "matches:manage", "public:read"],
+  // Responsable boutique : produits, commandes, paiements.
+  RESP_BOUTIQUE: ["admin:access", "shop:manage", "payments:manage", "public:read"],
+  // Contributeur : crée/modifie des contenus mais NE PEUT PAS publier (pas de content:publish).
+  CONTRIBUTEUR: ["admin:access", "content:manage", "public:read"],
   // Pas de "matches:manage" : sinon l'EDUCATEUR pourrait appeler /api/admin/matches*
   // (non scopees par equipe) et contourner l'isolation. Il gere ses matchs via
   // /api/educator/* (permission educator:manage_own_teams + controle canManageTeam).

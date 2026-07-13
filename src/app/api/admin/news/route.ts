@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { getAdminContext } from "@/lib/api/admin-auth";
+import { canPublishContent, getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, parseLimit, readJsonBody } from "@/lib/api/http";
 import { validateAdminNewsPayload } from "@/lib/api/validation";
 import { createNewsArticle, listNewsForAdmin } from "@/lib/db/content";
@@ -43,6 +43,10 @@ export async function POST(request: NextRequest) {
 
   if (!payload.ok) {
     return jsonError(400, "VALIDATION_ERROR", "Actualite invalide.", payload.issues);
+  }
+
+  if (payload.data.status === "PUBLISHED" && !canPublishContent(admin.context)) {
+    return jsonError(403, "FORBIDDEN", "Publication non autorisée : enregistrez l'article en brouillon.");
   }
 
   try {

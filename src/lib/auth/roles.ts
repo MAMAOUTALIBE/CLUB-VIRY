@@ -1,7 +1,14 @@
+// L'ordre définit le rang hiérarchique (roleRank : index bas = plus privilégié).
+// Les rôles de gestion ajoutés se placent sous DIRIGEANT et au-dessus d'EDUCATEUR ;
+// l'ordre relatif des rôles existants est conservé.
 export const APP_ROLES = [
   "SUPER_ADMIN",
   "ADMIN_CLUB",
   "DIRIGEANT",
+  "EDITEUR",
+  "RESP_SPORTIF",
+  "RESP_BOUTIQUE",
+  "CONTRIBUTEUR",
   "EDUCATEUR",
   "FAMILLE",
   "JOUEUR",
@@ -20,6 +27,10 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   SUPER_ADMIN: "Super administrateur",
   ADMIN_CLUB: "Administrateur club",
   DIRIGEANT: "Dirigeant",
+  EDITEUR: "Editeur",
+  RESP_SPORTIF: "Responsable sportif",
+  RESP_BOUTIQUE: "Responsable boutique",
+  CONTRIBUTEUR: "Contributeur",
   EDUCATEUR: "Educateur",
   FAMILLE: "Famille",
   JOUEUR: "Joueur",

@@ -5,9 +5,18 @@ import type { NextResponse } from "next/server";
 
 import { jsonError } from "@/lib/api/http";
 import type { Permission } from "@/lib/auth";
-import { getAuthContext, requirePermission } from "@/lib/auth";
+import { getAuthContext, hasPermission, requirePermission } from "@/lib/auth";
 import type { AuthContext } from "@/lib/auth/session";
 import { isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
+
+/**
+ * Un acteur peut-il publier du contenu ? (permission content:publish). Sert à
+ * empêcher un CONTRIBUTEUR de passer un contenu en PUBLISHED — il reste en brouillon.
+ */
+export function canPublishContent(context: AuthContext): boolean {
+  const role = context.profile?.role;
+  return role ? hasPermission(role, "content:publish") : false;
+}
 
 export type AdminContextResult =
   | {

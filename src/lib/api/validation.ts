@@ -310,7 +310,20 @@ export type ProfileUpdatePayload = {
 };
 
 export type AdminUserUpdatePayload = ProfileUpdatePayload & {
-  role?: "SUPER_ADMIN" | "ADMIN_CLUB" | "DIRIGEANT" | "EDUCATEUR" | "FAMILLE" | "JOUEUR" | "MEMBRE" | "PARTENAIRE" | "VISITEUR";
+  role?:
+    | "SUPER_ADMIN"
+    | "ADMIN_CLUB"
+    | "DIRIGEANT"
+    | "EDITEUR"
+    | "RESP_SPORTIF"
+    | "RESP_BOUTIQUE"
+    | "CONTRIBUTEUR"
+    | "EDUCATEUR"
+    | "FAMILLE"
+    | "JOUEUR"
+    | "MEMBRE"
+    | "PARTENAIRE"
+    | "VISITEUR";
   status?: "ACTIVE" | "PENDING" | "SUSPENDED" | "ARCHIVED";
   email?: string;
 };
@@ -710,6 +723,10 @@ function isAppRoleValue(value: unknown): value is NonNullable<AdminUserUpdatePay
     value === "SUPER_ADMIN" ||
     value === "ADMIN_CLUB" ||
     value === "DIRIGEANT" ||
+    value === "EDITEUR" ||
+    value === "RESP_SPORTIF" ||
+    value === "RESP_BOUTIQUE" ||
+    value === "CONTRIBUTEUR" ||
     value === "EDUCATEUR" ||
     value === "FAMILLE" ||
     value === "JOUEUR" ||

@@ -872,3 +872,36 @@ test("validateAdminStandingPayload allows a null rank (non classé)", () => {
   assert.equal(result.ok, true);
   assert.equal(result.data.rank, null);
 });
+
+test("new CRM roles have the expected permissions", () => {
+  // Éditeur : gère ET publie
+  assert.equal(hasPermission("EDITEUR", "content:manage"), true);
+  assert.equal(hasPermission("EDITEUR", "content:publish"), true);
+  assert.equal(hasPermission("EDITEUR", "admin:access"), true);
+  // Contributeur : gère mais NE publie PAS
+  assert.equal(hasPermission("CONTRIBUTEUR", "content:manage"), true);
+  assert.equal(hasPermission("CONTRIBUTEUR", "content:publish"), false);
+  // Responsable sportif : sportif seulement
+  assert.equal(hasPermission("RESP_SPORTIF", "teams:manage"), true);
+  assert.equal(hasPermission("RESP_SPORTIF", "shop:manage"), false);
+  assert.equal(hasPermission("RESP_SPORTIF", "content:manage"), false);
+  // Responsable boutique : boutique seulement
+  assert.equal(hasPermission("RESP_BOUTIQUE", "shop:manage"), true);
+  assert.equal(hasPermission("RESP_BOUTIQUE", "teams:manage"), false);
+});
+
+test("new management roles can access the CRM shell", () => {
+  assert.equal(canAccessCrmPath("EDITEUR", "/admin/actualites"), true);
+  assert.equal(canAccessCrmPath("RESP_BOUTIQUE", "/admin/boutique"), true);
+  // un rôle sans admin:access reste bloqué hors de ses chemins éducateur
+  assert.equal(canAccessCrmPath("FAMILLE", "/admin/actualites"), false);
+});
+
+test("anti-escalation ranks the new roles below DIRIGEANT", () => {
+  // ADMIN_CLUB peut attribuer CONTRIBUTEUR (rang inférieur)
+  const ok = canAdminUpdateProfile({ actorRole: "ADMIN_CLUB", actorId: "a", targetId: "b", targetCurrentRole: "MEMBRE", requestedRole: "CONTRIBUTEUR" });
+  assert.equal(ok.ok, true);
+  // un ÉDITEUR ne peut pas gérer un DIRIGEANT (rang supérieur)
+  const ko = canAdminUpdateProfile({ actorRole: "EDITEUR", actorId: "a", targetId: "b", targetCurrentRole: "DIRIGEANT", requestedRole: "EDUCATEUR" });
+  assert.equal(ko.ok, false);
+});

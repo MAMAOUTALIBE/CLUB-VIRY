@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 
-import { getAdminContext } from "@/lib/api/admin-auth";
+import { canPublishContent, getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { isUuid, validateAdminNewsPayload } from "@/lib/api/validation";
 import { updateNewsArticle } from "@/lib/db/content";
@@ -34,6 +34,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   if (!payload.ok) {
     return jsonError(400, "VALIDATION_ERROR", "Actualite invalide.", payload.issues);
+  }
+
+  if (payload.data.status === "PUBLISHED" && !canPublishContent(admin.context)) {
+    return jsonError(403, "FORBIDDEN", "Publication non autorisée : enregistrez l'article en brouillon.");
   }
 
   const { id } = await context.params;
