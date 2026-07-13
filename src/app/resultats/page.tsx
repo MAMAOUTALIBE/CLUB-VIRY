@@ -1,6 +1,6 @@
 import { Medal, Trophy } from "lucide-react";
 
-import { DesktopOnly, MobileCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
+import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -23,8 +23,9 @@ export default async function ResultsPage() {
         eyebrow="Scores"
         title="Résultats"
         actions={[{ href: "/calendrier", label: "Calendrier", variant: "secondary" }]}
+        scrollable
       >
-        <MobileScrollableList>
+        <div className="grid gap-3 pb-2 md:grid-cols-2 lg:grid-cols-3">
           {results.items.map((item) => (
             <MobileCard key={item.id}>
               <div className="flex items-center justify-between gap-3">
@@ -43,7 +44,13 @@ export default async function ResultsPage() {
               </div>
             </MobileCard>
           ))}
-        </MobileScrollableList>
+        </div>
+        {standings.length > 0 ? (
+          <section className="mt-5 pb-4">
+            <p className="mb-3 text-xs font-black uppercase text-[#664d00]">Classements</p>
+            <StandingsTables standings={standings} />
+          </section>
+        ) : null}
       </MobileScreen>
       <DesktopOnly>
       <PageHero description="Derniers scores publiés par le club, équipe par équipe." image={images.teamHuddle} title="Résultats">
