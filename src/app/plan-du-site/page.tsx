@@ -18,6 +18,7 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
       ["/le-club/bureau", "Le Bureau"],
       ["/le-club/dirigeants", "Les Dirigeants"],
       ["/le-club/organigramme", "Organigramme & direction"],
+      ["/le-club/entraineurs", "Les Entraîneurs"],
       ["/le-club/encadrement", "Encadrement"],
       ["/le-club/installations", "Installations"],
       ["/le-club/codes-de-conduite", "Codes de conduite"],

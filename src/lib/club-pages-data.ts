@@ -48,17 +48,59 @@ export const ecoleFootEducators: StaffPerson[] = [
 
 export const footA11Educators: StaffPerson[] = [
   { name: "Rachid Amrani", role: "Responsable technique football a 11", category: "U14-Seniors", pole: "Direction sportive", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Plan de jeu", "Suivi educateurs"] },
-  { name: "Sofiane Haddad", role: "Coach U14", category: "U14", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Perfectionnement"] },
+  // Encadrement reel : ces entrees doivent rester alignees avec `coaches` (page
+  // /le-club/entraineurs) et avec mockEducators, sans quoi le site annonce deux
+  // noms differents pour le meme poste sur deux pages du meme menu.
+  { name: "ANAS ABID", role: "Éducateur U14", category: "U14", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle },
   { name: "Thomas Leroy", role: "Coach U15", category: "U15", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Intensite"] },
-  { name: "Malik Benali", role: "Coach U16", category: "U16", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Competition"] },
-  { name: "Mehdi Diallo", role: "Coach U17-U18", category: "U17", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Projet joueur"] },
-  { name: "Yacine Traore", role: "Coach Seniors", category: "Seniors", pole: "Competition", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Performance"] },
+  { name: "BURNER Axel", role: "Entraîneur U16 D2", category: "U16", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["CFI", "BPJEPS"] },
+  { name: "JEAN ETIENNE Yoann", role: "Entraîneur U18 D3", category: "U18", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle },
+  { name: "ABDEDDAIM Khaled", role: "Entraîneur Seniors D2", category: "Seniors", pole: "Competition", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["CFI Séniors"] },
+  { name: "OUARAS Chérif", role: "Entraîneur Seniors D2", category: "Seniors", pole: "Competition", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["CFI", "BPJEPS"] },
   { name: "Philippe Martin", role: "Educateur gardiens", category: "Gardiens", pole: "Specifique", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Technique gardien"] },
   { name: "Amina Roux", role: "Preparation physique", category: "Seniors", pole: "Performance", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Prevention", "Reathletisation"] }
 ];
 
 // Les membres du bureau et les dirigeants proviennent désormais de la source unique
 // `getClubOfficials()` (src/lib/public-content.ts), partagée avec l'organigramme.
+
+/**
+ * Entraîneurs des équipes (page /le-club/entraineurs).
+ * Volontairement distinct de l'encadrement sportif (/le-club/encadrement, qui
+ * couvre l'ensemble des éducateurs, référents et coordinateurs) : ici on ne liste
+ * que les entraîneurs et leurs adjoints, équipe par équipe, avec leurs diplômes.
+ * `teamSlug` ne vaut non-null que si une fiche équipe publique existe.
+ */
+export type Coach = {
+  team: string;
+  teamSlug: string | null;
+  role: string;
+  name: string;
+  diplomas: string[];
+};
+
+export const coaches: Coach[] = [
+  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur", name: "ABDEDDAIM Khaled", diplomas: ["CFI Séniors"] },
+  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur adjoint", name: "FRIHI Fouad", diplomas: ["CFI", "Brevet de Technicien Supérieur en Sport"] },
+  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur", name: "OUARAS Chérif", diplomas: ["CFI", "BPJEPS"] },
+  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur adjoint", name: "TRAORÉ Djibril", diplomas: [] },
+  { team: "U18 D3", teamSlug: null, role: "Entraîneur", name: "JEAN ETIENNE Yoann", diplomas: [] },
+  { team: "U16 D2", teamSlug: null, role: "Entraîneur", name: "BURNER Axel", diplomas: ["CFI", "BPJEPS"] }
+];
+
+/** Regroupe les entraîneurs par équipe en conservant l'ordre de déclaration. */
+export function coachesByTeam(list: Coach[] = coaches): { team: string; teamSlug: string | null; members: Coach[] }[] {
+  const groups: { team: string; teamSlug: string | null; members: Coach[] }[] = [];
+  for (const coach of list) {
+    const existing = groups.find((group) => group.team === coach.team);
+    if (existing) {
+      existing.members.push(coach);
+    } else {
+      groups.push({ team: coach.team, teamSlug: coach.teamSlug, members: [coach] });
+    }
+  }
+  return groups;
+}
 
 export const trainingSlots = [
   { category: "U6-U7", time: "Mercredi 14h00 - 15h30", place: "Terrain synthetique" },

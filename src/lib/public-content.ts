@@ -477,10 +477,11 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
     description: mock.description,
     image: mock.image,
     coach: mock.coach,
+    // Une equipe peut n'avoir qu'un educateur : on n'affiche pas de case "Adjoint" vide.
     staff: [
       { name: mock.coach, role: "Coach principal", isHeadCoach: true },
       { name: mock.assistant, role: "Adjoint", isHeadCoach: false }
-    ],
+    ].filter((member) => member.name.trim().length > 0),
     players: mock.players.map((name) => ({ name, position: "", shirtNumber: null })),
     nextMatch: mock.nextMatch,
     media: []
@@ -540,6 +541,21 @@ const mockEducators: DisplayEducator[] = [
       { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Référent", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 48, matches: 22 }
+  },
+  {
+    id: "mock-11",
+    name: "ANAS ABID",
+    title: "Éducateur U14",
+    diploma: null,
+    slug: educatorSlug("ANAS ABID", "mock-11"),
+    joinedYear: null,
+    diplomas: [],
+    specialties: [],
+    quote: null,
+    avatar: null,
+    bio: "Éducateur de la catégorie U14.",
+    teams: [{ name: "U14", slug: "u14", category: "U14", roleTitle: "Éducateur", isHeadCoach: true }],
+    stats: { teams: 1, sessions: 0, matches: 0 }
   },
   {
     id: "mock-2",

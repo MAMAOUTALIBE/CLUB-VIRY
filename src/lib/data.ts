@@ -142,6 +142,18 @@ export const teams: Team[] = [
     players: ["A. Diallo", "M. Traoré", "S. Keita", "I. Camara", "N. Benali", "T. Martin", "K. Diop", "R. Silva"]
   },
   {
+    slug: "seniors-d2",
+    name: "Seniors D2",
+    category: "Seniors",
+    season: "2025 / 2026",
+    description: "L'équipe réserve, passerelle entre la formation et le groupe fanion.",
+    image: images.pitch,
+    coach: "ABDEDDAIM Khaled",
+    assistant: "FRIHI Fouad",
+    nextMatch: "Calendrier à confirmer",
+    players: []
+  },
+  {
     slug: "u18-r1",
     name: "U18 R1",
     category: "Formation",
@@ -164,6 +176,18 @@ export const teams: Team[] = [
     assistant: "Nabil A.",
     nextMatch: "Samedi 5 septembre à 15:00 contre Evry FC",
     players: ["R. N'Diaye", "I. Lopez", "M. Bamba", "Y. Cohen", "P. Lefort", "S. Diallo"]
+  },
+  {
+    slug: "u14",
+    name: "U14",
+    category: "Jeunes",
+    season: "2025 / 2026",
+    description: "L'entrée dans le football à 11, entre apprentissage technique et premières exigences de la compétition.",
+    image: images.youthTeam,
+    coach: "ANAS ABID",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
   },
   {
     slug: "feminines",

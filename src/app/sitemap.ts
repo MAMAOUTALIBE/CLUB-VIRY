@@ -13,6 +13,7 @@ const STATIC_ROUTES = [
   "/le-club/bureau",
   "/le-club/dirigeants",
   "/le-club/organigramme",
+  "/le-club/entraineurs",
   "/le-club/encadrement",
   "/le-club/installations",
   "/le-club/codes-de-conduite",

@@ -48,6 +48,10 @@ const PAGES: Record<string, PageSeo> = {
     title: "Codes de conduite",
     description: "Codes de conduite et reglement interieur de l'ES Viry-Chatillon Football : respect, ponctualite, responsabilite et cadre collectif."
   },
+  "/le-club/entraineurs": {
+    title: "Les Entraineurs",
+    description: "Les entraineurs de l'ES Viry-Chatillon Football : entraineurs et adjoints de chaque equipe, avec leurs diplomes federaux et l'equipe dont ils ont la charge."
+  },
   "/le-club/encadrement": {
     title: "Encadrement",
     description: "L'encadrement sportif de l'ES Viry-Chatillon Football : educateurs et entraineurs diplomes, leurs equipes encadrees et leur activite au service des licencies."
