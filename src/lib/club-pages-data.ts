@@ -39,24 +39,24 @@ export type OrgNode = { title: string; lead: string; mission: string; children?:
 const personPhoto = images.training;
 
 export const ecoleFootEducators: StaffPerson[] = [
-  { name: "Nadia Ait Ali", role: "Responsable Ecole de Foot", category: "U6-U13", pole: "Coordination", contact: "contact via secretariat", photo: personPhoto, tags: ["Accueil familles", "Projet educatif"] },
-  { name: "Karim Messaoudi", role: "Educateur U6-U7", category: "U6-U7", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Motricite", "Plaisir"] },
-  { name: "Sarah Belkacem", role: "Educatrice U8-U9", category: "U8-U9", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Technique", "Vie collective"] },
-  { name: "Ilyes Cherif", role: "Educateur U10-U11", category: "U10-U11", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Jeu court", "Autonomie"] },
-  { name: "Moussa Kone", role: "Educateur U12-U13", category: "U12-U13", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Transition foot a 11", "Exigence"] }
+  // Educateurs reels : ces 4 personnes sont aussi dans mockEducators (annuaire
+  // /le-club/encadrement). Toute correction de nom doit etre faite dans LES DEUX
+  // fichiers, sinon le site affiche deux noms differents pour le meme poste.
+  { name: "BUANGA Thismen", role: "Responsable Ecole de Foot", category: "U6-U13", pole: "Coordination", contact: "contact via secretariat", photo: personPhoto, tags: ["Accueil familles", "Projet educatif"] },
+  { name: "WILLAUME Axel", role: "Educateur U6-U7", category: "U6-U7", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Motricite", "Plaisir"] },
+  { name: "DITSIA PHUMU Nobela", role: "Educatrice U8-U9", category: "U8-U9", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Technique", "Vie collective"] },
+  { name: "COULIBALY Bagnoucou", role: "Educateur U10-U11", category: "U10-U11", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Jeu court", "Autonomie"] },
+  { name: "ROBERTO Kévin", role: "Educateur U13", category: "U13", pole: "Ecole de foot", contact: "contact via secretariat", photo: personPhoto, tags: ["Transition foot a 11", "Exigence"] }
 ];
 
 export const footA11Educators: StaffPerson[] = [
   { name: "Rachid Amrani", role: "Responsable technique football a 11", category: "U14-Seniors", pole: "Direction sportive", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Plan de jeu", "Suivi educateurs"] },
-  // Encadrement reel : ces entrees doivent rester alignees avec `coaches` (page
-  // /le-club/entraineurs) et avec mockEducators, sans quoi le site annonce deux
-  // noms differents pour le meme poste sur deux pages du meme menu.
-  { name: "ANAS ABID", role: "Éducateur U14", category: "U14", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle },
+  // Pas de personne nommee ici pour les categories qui ont deja une fiche ailleurs :
+  // les entraineurs d equipe sont sur /le-club/entraineurs (tableau `coaches`) et les
+  // educateurs de categorie sur /le-club/encadrement (mockEducators). Les dupliquer
+  // ici ferait reapparaitre le meme nom sur deux pages du meme menu, et surtout deux
+  // sources a maintenir en parallele.
   { name: "Thomas Leroy", role: "Coach U15", category: "U15", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Intensite"] },
-  { name: "BURNER Axel", role: "Entraîneur U16 D2", category: "U16", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["CFI", "BPJEPS"] },
-  { name: "JEAN ETIENNE Yoann", role: "Entraîneur U18 D3", category: "U18", pole: "Formation", contact: "contact via secretariat", photo: images.teamHuddle },
-  { name: "ABDEDDAIM Khaled", role: "Entraîneur Seniors D2", category: "Seniors", pole: "Competition", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["CFI Séniors"] },
-  { name: "OUARAS Chérif", role: "Entraîneur Seniors D2", category: "Seniors", pole: "Competition", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["CFI", "BPJEPS"] },
   { name: "Philippe Martin", role: "Educateur gardiens", category: "Gardiens", pole: "Specifique", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Technique gardien"] },
   { name: "Amina Roux", role: "Preparation physique", category: "Seniors", pole: "Performance", contact: "contact via secretariat", photo: images.teamHuddle, tags: ["Prevention", "Reathletisation"] }
 ];

@@ -178,6 +178,18 @@ export const teams: Team[] = [
     players: ["R. N'Diaye", "I. Lopez", "M. Bamba", "Y. Cohen", "P. Lefort", "S. Diallo"]
   },
   {
+    slug: "u13",
+    name: "U13",
+    category: "Jeunes",
+    season: "2025 / 2026",
+    description: "La dernière année de football à 8, tournée vers le passage au football à 11.",
+    image: images.youthTeam,
+    coach: "ROBERTO Kévin",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
+  },
+  {
     slug: "u14",
     name: "U14",
     category: "Jeunes",
