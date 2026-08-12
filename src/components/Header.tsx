@@ -28,39 +28,22 @@ const navItems = [
     children: [
       ["Histoire", "/le-club/histoire"],
       ["Galerie photos", "/le-club/galerie"],
-      ["Mot du Président", "/le-club/mot-du-president"],
-      ["Bureau", "/le-club/bureau"],
-      ["Dirigeants", "/le-club/dirigeants"],
-      ["Organigramme", "/le-club/organigramme"],
-      ["Entraîneurs", "/le-club/entraineurs"],
-      ["Encadrement", "/le-club/encadrement"],
-      ["Installations", "/le-club/installations"],
-      ["Codes de conduite", "/le-club/codes-de-conduite"],
-      ["Stade Henri Longuet", "/le-club/stade-henri-longuet"],
-      ["Partenaires", "/partenaires"]
+      ["Organisation du club", "/le-club/organigramme"],
+      ["Infrastructures du club", "/le-club/infrastructures"],
+      ["Valeurs et partenaires", "/le-club/valeurs-partenaires"]
     ]
   },
   {
-    label: "Formation",
-    href: "/formation",
+    label: "Academy",
+    href: "/academy",
     children: [
-      ["École de foot", "/formation/ecole-de-foot"],
-      ["Football à 11", "/formation/football-a-11"],
-      ["Projet école de foot", "/formation/projet-ecole-de-foot"],
-      ["Stages", "/formation/stages"]
-    ]
-  },
-  {
-    label: "Équipes",
-    href: "/equipes",
-    children: [
+      ["ES Viry Academy", "/academy"],
       ["Toutes les équipes", "/equipes"],
       ["Seniors D1", "/equipes/seniors-r1"],
       ["École de foot", "/equipes/ecole-de-foot"],
       ["Féminines", "/equipes/feminines"]
     ]
   },
-  { label: "Academy", href: "/academy" },
   {
     label: "Actu & Médias",
     href: "/actualites",
@@ -91,32 +74,20 @@ const mobileNavGroups = [
       ["Présentation", "/le-club"],
       ["Histoire", "/le-club/histoire"],
       ["Galerie photos", "/le-club/galerie"],
-      ["Mot du Président", "/le-club/mot-du-president"],
-      ["Bureau", "/le-club/bureau"],
-      ["Dirigeants", "/le-club/dirigeants"],
-      ["Organigramme", "/le-club/organigramme"],
-      ["Entraîneurs", "/le-club/entraineurs"],
-      ["Encadrement", "/le-club/encadrement"],
-      ["Installations", "/le-club/installations"],
-      ["Codes de conduite", "/le-club/codes-de-conduite"],
-      ["Stade Henri Longuet", "/le-club/stade-henri-longuet"],
-      ["Partenaires", "/partenaires"]
+      ["Organisation du club", "/le-club/organigramme"],
+      ["Infrastructures du club", "/le-club/infrastructures"],
+      ["Valeurs et partenaires", "/le-club/valeurs-partenaires"]
     ]
   },
   {
-    label: "Formation & équipes",
-    href: "/formation",
+    label: "Academy & équipes",
+    href: "/academy",
     links: [
-      ["Formation", "/formation"],
-      ["École de foot", "/formation/ecole-de-foot"],
-      ["Football à 11", "/formation/football-a-11"],
-      ["Projet école de foot", "/formation/projet-ecole-de-foot"],
-      ["Stages", "/formation/stages"],
+      ["ES Viry Academy", "/academy"],
       ["Toutes les équipes", "/equipes"],
       ["Seniors D1", "/equipes/seniors-r1"],
       ["École de foot équipes", "/equipes/ecole-de-foot"],
-      ["Féminines", "/equipes/feminines"],
-      ["Academy", "/academy"]
+      ["Féminines", "/equipes/feminines"]
     ]
   },
   {
@@ -144,7 +115,7 @@ const mobileNavGroups = [
     links: [
       ["Inscriptions", "/inscriptions"],
       ["Détections", "/detections-recrutement"],
-      ["Partenaires", "/partenaires"],
+      ["Partenaires", "/le-club/valeurs-partenaires#partenaires"],
       ["Contact", "/contact"],
       ["Espace membre", "/espace-membre"]
     ]
@@ -539,7 +510,7 @@ export function Header({ banner, socials }: HeaderProps) {
 
             <nav className="grid shrink-0 grid-cols-2 gap-2 md:grid-cols-4" aria-label="Accès rapides mobile">
               {[
-                ["Partenaires", "/partenaires"],
+                ["Partenaires", "/le-club/valeurs-partenaires#partenaires"],
                 ["Inscriptions", "/inscriptions"],
                 ["Calendrier", "/calendrier"],
                 ["Boutique", "/boutique"]

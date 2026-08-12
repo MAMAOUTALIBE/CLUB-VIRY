@@ -110,10 +110,10 @@ export const trainingSlots = [
 ];
 
 export const installations: Installation[] = [
-  { name: "Stade Henri Longuet", address: "Avenue de l'Armee Leclerc, 91170 Viry-Chatillon", type: "Matchs officiels", usage: "Terrain principal, tribune, rendez-vous seniors et jeunes", teams: ["Seniors", "U18", "U16"], image: images.stadiumAerial, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Stade+Henri+Longuet+Viry-Chatillon" },
-  { name: "Terrain synthetique", address: "Parc des sports Henri Longuet", type: "Entrainements", usage: "Ecole de foot, seances techniques, gardiens", teams: ["U6-U13", "Gardiens"], image: images.pitch, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parc+des+sports+Henri+Longuet" },
-  { name: "Club-house", address: "Stade Henri Longuet, 91170 Viry-Chatillon", type: "Permanence", usage: "Accueil familles, inscriptions, reunions educateurs", teams: ["Familles", "Bureau"], image: images.stadeTribune, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Stade+Henri+Longuet+Viry-Chatillon" },
-  { name: "Salle de reunion", address: "Complexe sportif municipal", type: "Reunions", usage: "Briefs dirigeants, formations internes, preparation evenements", teams: ["Dirigeants", "Educateurs"], image: images.stadeTribune2, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Viry-Chatillon+complexe+sportif" }
+  { name: "Stade Henri Longuet", address: "3 rue Polonceau, 91170 Viry-Châtillon", type: "Matchs officiels", usage: "Terrain principal, tribune, rendez-vous seniors et jeunes", teams: ["Seniors", "U18", "U16"], image: "/images/installations/stade-henri-longuet.png", mapsUrl: "https://www.google.com/maps/search/?api=1&query=3+rue+Polonceau+91170+Viry-Chatillon" },
+  { name: "Terrain synthetique", address: "Parc des sports Henri Longuet", type: "Entrainements", usage: "Ecole de foot, seances techniques, gardiens", teams: ["U6-U13", "Gardiens"], image: "/images/installations/terrain-synthetique.jpeg", mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parc+des+sports+Henri+Longuet" },
+  { name: "Club-house", address: "3 rue Polonceau, 91170 Viry-Châtillon", type: "Permanence", usage: "Accueil familles, inscriptions, reunions educateurs", teams: ["Familles", "Bureau"], image: "/images/installations/club-house.png", mapsUrl: "https://www.google.com/maps/search/?api=1&query=3+rue+Polonceau+91170+Viry-Chatillon" },
+  { name: "Salle de reunion", address: "Complexe sportif municipal", type: "Reunions", usage: "Briefs dirigeants, formations internes, preparation evenements", teams: ["Dirigeants", "Educateurs"], image: "/images/installations/salle-de-reunion.jpeg", mapsUrl: "https://www.google.com/maps/search/?api=1&query=Viry-Chatillon+complexe+sportif" }
 ];
 
 export const conductBlocks: ConductBlock[] = [

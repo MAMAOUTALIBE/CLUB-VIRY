@@ -37,8 +37,16 @@ const PAGES: Record<string, PageSeo> = {
     description: "Les dirigeants de l'ES Viry-Chatillon Football : administration, logistique, communication, partenariats et accompagnement quotidien du club."
   },
   "/le-club/organigramme": {
-    title: "Organigramme",
-    description: "L'organigramme de l'ES Viry-Chatillon Football : bureau executif, dirigeants, encadrement sportif et referents par categorie, de l'ecole de foot aux Seniors."
+    title: "Organisation du club",
+    description: "L'organisation de l'ES Viry-Chatillon Football : bureau executif, dirigeants, organigramme, missions des responsables et contacts utiles."
+  },
+  "/le-club/infrastructures": {
+    title: "Infrastructures du club",
+    description: "Les infrastructures de l'ES Viry-Chatillon Football : stade Henri Longuet, terrains, vestiaires, club-house, galerie, acces et informations pratiques."
+  },
+  "/le-club/valeurs-partenaires": {
+    title: "Valeurs et partenaires",
+    description: "Les valeurs, codes de conduite, reglement interieur et partenaires de l'ES Viry-Chatillon Football, ainsi que les moyens de soutenir le club."
   },
   "/le-club/installations": {
     title: "Installations",

@@ -175,7 +175,7 @@ export type SiteContent = {
 
 const SETTINGS_DEFAULTS: SiteContent = {
   socials: { facebook: "", instagram: "", youtube: "", tiktok: "", whatsapp: "" },
-  contact: { phone1: "06 29 67 04 33", phone2: "01 69 96 67 00", email: "esvirychatillon91170@gmail.com", address: "Stade Henri Longuet, 91170 Viry-Châtillon" },
+  contact: { phone1: "06 29 67 04 33", phone2: "01 69 96 67 00", email: "esvirychatillon91170@gmail.com", address: "3 rue Polonceau, 91170 Viry-Châtillon" },
   president: { name: "SAGLAM FERHAT", message: "", photoUrl: "" },
   inscriptions_banner: { text: "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !", active: true },
   club_stats: [
@@ -214,8 +214,8 @@ const SETTINGS_DEFAULTS: SiteContent = {
     ]
   },
   stade: {
-    address: "Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon",
-    mapsQuery: "Stade Henri Longuet, Viry-Châtillon",
+    address: "3 rue Polonceau, 91170 Viry-Châtillon",
+    mapsQuery: "3 rue Polonceau, 91170 Viry-Châtillon",
     infrastructures: ["2 terrains", "Vestiaires modernes", "Club house convivial", "Tribunes supporters"],
     gallery: [
       { src: images.stadeTribune, alt: "Tribune principale et piste d'athlétisme du Stade Henri Longuet", caption: "La tribune principale et la piste" },
@@ -234,7 +234,7 @@ const SETTINGS_DEFAULTS: SiteContent = {
     mobileSummary: "ES Viry-Châtillon Football · Stade Henri Longuet.",
     paragraphs: [
       "Éditeur : ES Viry-Châtillon Football.",
-      "Adresse : Stade Henri Longuet, Avenue de l'Armée Leclerc, 91170 Viry-Châtillon.",
+      "Adresse : 3 rue Polonceau, 91170 Viry-Châtillon.",
       "Contact : esvirychatillon91170@gmail.com."
     ]
   },

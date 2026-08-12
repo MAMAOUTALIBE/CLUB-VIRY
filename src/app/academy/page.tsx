@@ -17,7 +17,12 @@ import { Stagger, StaggerItem } from "@/components/Motion";
 import { AcademyCta } from "@/components/academy/AcademyCta";
 import { ReassuranceBand } from "@/components/academy/ReassuranceBand";
 import { StickyAcademyCta } from "@/components/academy/StickyAcademyCta";
+import { CoachesDirectory } from "@/components/club/CoachesDirectory";
+import { StaffDirectory, StageCards, TrainingSlots } from "@/components/club/ClubPublicBlocks";
+import { EducatorsDirectory } from "@/components/educator/EducatorsDirectory";
 import { FEATURED_FORMATIONS, PUBLICS } from "@/lib/academy-data";
+import { coachesByTeam } from "@/lib/club-pages-data";
+import { getPublicEducators, getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("/academy");
@@ -53,8 +58,10 @@ const SECONDARY_BTN =
 const DARK_BTN =
   "focus-ring inline-flex items-center justify-center gap-2 rounded-lg bg-[#002f1d] px-6 py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_12px_28px_-14px_rgba(0,31,19,0.6)] transition hover:-translate-y-0.5 hover:bg-[#07542f]";
 
-export default function AcademyPage() {
+export default async function AcademyPage() {
+  const [settings, educators] = await Promise.all([getSiteSettings(), getPublicEducators()]);
   const academyCtaHref = ACADEMY_URL || "/contact";
+  const coachGroups = coachesByTeam();
   return (
     <>
       <MobileScreen
@@ -78,6 +85,16 @@ export default function AcademyPage() {
                   </span>
                 ))}
               </div>
+            </MobileCard>
+          </div>
+          <div className="md:col-span-3 grid gap-3 md:grid-cols-2">
+            <MobileCard>
+              <p className="text-xs font-black uppercase text-[#664d00]">Encadrement sportif</p>
+              <p className="mt-2 text-sm font-bold text-slate-700">{educators.length} éducateurs et {coachGroups.length} équipes présentés dans une seule page.</p>
+            </MobileCard>
+            <MobileCard>
+              <p className="text-xs font-black uppercase text-[#664d00]">Parcours joueur</p>
+              <p className="mt-2 text-sm font-bold text-slate-700">École de foot, football à 11, projet de formation et stages.</p>
             </MobileCard>
           </div>
         </div>
@@ -132,6 +149,75 @@ export default function AcademyPage() {
 
         {/* ── Chiffres clés (bande premium, juste sous le hero) ── */}
         <ReassuranceBand />
+
+        <nav className="sticky top-[var(--header-h)] z-20 border-b border-[#07542f]/10 bg-white/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:px-8" aria-label="Sections de l'Academy">
+          <div className="mx-auto flex max-w-7xl flex-wrap gap-2">
+            {[
+              ["Projet", "#projet"],
+              ["Entraîneurs", "#entraineurs"],
+              ["Encadrement", "#encadrement"],
+              ["École de foot", "#ecole-de-foot"],
+              ["Football à 11", "#football-a-11"],
+              ["Stages", "#stages"],
+              ["Formations", "#formations"]
+            ].map(([label, href]) => (
+              <a key={href} href={href} className="focus-ring rounded-full border border-[#07542f]/20 px-3 py-2 text-xs font-black uppercase text-[#002f1d] transition hover:border-[#f7c600] hover:bg-[#f7c600]">
+                {label}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <section id="projet" className="scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle eyebrow="Projet de formation" title="Un parcours complet, du terrain à l'avenir" text="L'Academy rassemble le projet sportif du club, l'accompagnement scolaire et les compétences utiles pour aider chaque jeune à progresser durablement." />
+            <div className="mt-8 grid gap-5 md:grid-cols-3">
+              {PILLARS.map(({ icon: Icon, title, text }) => (
+                <article key={title} className="premium-card rounded-xl bg-white p-6">
+                  <Icon className="text-[#07542f]" size={30} aria-hidden="true" />
+                  <h2 className="mt-4 text-xl font-black uppercase text-[#002f1d]">{title}</h2>
+                  <p className="mt-2 leading-7 text-slate-700">{text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="entraineurs" className="scroll-mt-[calc(var(--header-h)+5rem)] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle eyebrow="Équipe par équipe" title="Les entraîneurs" text="Les entraîneurs principaux et leurs adjoints, regroupés par équipe avec leurs fonctions et diplômes." />
+            <CoachesDirectory groups={coachGroups} />
+          </div>
+        </section>
+
+        <section id="encadrement" className="scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle eyebrow="Nos éducateurs" title="L'encadrement sportif" text="Les éducateurs, référents et coordinateurs engagés dans la progression des licenciés." />
+            {educators.length > 0 ? <EducatorsDirectory educators={educators} /> : <p className="mt-8 text-slate-700">L'encadrement sera présenté prochainement.</p>}
+          </div>
+        </section>
+
+        <section id="ecole-de-foot" className="scroll-mt-[calc(var(--header-h)+5rem)] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle eyebrow="U6 à U13" title="École de foot" text="Les éducateurs référents et les créneaux indicatifs pour accompagner les premiers pas et la progression des jeunes joueurs." />
+            <StaffDirectory intro="Les échanges avec les familles passent par les canaux officiels du club." people={settings.formationEcoleEducateurs} />
+            <div className="mt-12"><TrainingSlots slots={settings.formationCreneaux} /></div>
+          </div>
+        </section>
+
+        <section id="football-a-11" className="scroll-mt-[calc(var(--header-h)+5rem)] club-shell px-4 py-16 text-white sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle inverse eyebrow="U14 à Seniors" title="Football à 11" text="Un encadrement structuré autour du projet de jeu, du suivi individuel et des exigences du collectif." />
+            <StaffDirectory intro="Les éducateurs de référence du football à 11." people={settings.formationFootA11Educateurs} />
+          </div>
+        </section>
+
+        <section id="stages" className="scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle eyebrow="Programme" title="Stages et perfectionnement" text="Les stages proposés pendant les vacances et les temps forts de la saison." />
+            <StageCards stages={settings.formationStages} />
+          </div>
+        </section>
 
         {/* ── SECTION — Formations phares ── */}
         <section id="formations" className="scroll-mt-[var(--header-h)] bg-white px-4 py-16 sm:px-6 lg:px-8">

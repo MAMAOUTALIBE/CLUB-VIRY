@@ -21,21 +21,19 @@ const columns = [
     title: "Le Club",
     links: [
       ["Histoire", "/le-club/histoire"],
-      ["Mot du président", "/le-club/mot-du-president"],
-      ["Bureau", "/le-club/bureau"],
-      ["Dirigeants", "/le-club/dirigeants"],
-      ["Organigramme", "/le-club/organigramme"],
-      ["Installations", "/le-club/installations"],
-      ["Codes de conduite", "/le-club/codes-de-conduite"]
+      ["Organisation du club", "/le-club/organigramme"],
+      ["Infrastructures du club", "/le-club/infrastructures"],
+      ["Valeurs et partenaires", "/le-club/valeurs-partenaires"]
     ]
   },
   {
-    title: "Formation",
+    title: "Academy",
     links: [
-      ["École de foot", "/formation/ecole-de-foot"],
-      ["Football à 11", "/formation/football-a-11"],
-      ["Projet école de foot", "/formation/projet-ecole-de-foot"],
-      ["Stages", "/formation/stages"],
+      ["ES Viry Academy", "/academy"],
+      ["Entraîneurs", "/academy#entraineurs"],
+      ["Encadrement", "/academy#encadrement"],
+      ["École de foot", "/academy#ecole-de-foot"],
+      ["Stages", "/academy#stages"],
       ["Toutes les équipes", "/equipes"]
     ]
   },
@@ -89,7 +87,7 @@ export function Footer({ socials, contact }: FooterProps) {
         <nav className="mt-6 grid gap-2 md:grid-cols-2 lg:grid-cols-3" aria-label="Liens essentiels">
           {[
             ["Inscriptions", "/inscriptions"],
-            ["Partenaires", "/partenaires"],
+            ["Partenaires", "/le-club/valeurs-partenaires#partenaires"],
             ["Calendrier", "/calendrier"],
             ["Actualités", "/actualites"],
             ["Boutique", "/boutique"],

@@ -242,7 +242,7 @@ export default async function OrganizationPage() {
     <>
       <MobileScreen
         eyebrow="Le Club"
-        title="Organisation"
+        title="Organisation du club"
         actions={[{ href: "/contact", label: "Contact", variant: "secondary" }]}
         scrollable
       >
@@ -271,7 +271,7 @@ export default async function OrganizationPage() {
         eyebrow="Le Club"
         description="Identifiez rapidement le bon responsable pour chaque sujet : projet sportif, licences, partenariats, communication ou événements."
         image={images.training}
-        title="L'organisation du club"
+        title="Organisation du club"
       >
         <HeroStats bureauCount={officials.bureau.length} dirigeantCount={officials.dirigeants.length} departmentCount={departments.length} />
       </PageHero>
