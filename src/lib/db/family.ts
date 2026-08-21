@@ -66,8 +66,8 @@ export async function getFamilyDashboard(profileId: string): Promise<FamilyDashb
   }
 
   const [{ data: families, error: familiesError }, { data: players, error: playersError }] = await Promise.all([
-    supabase.from("families").select("*").in("id", familyIds).order("created_at", { ascending: true }),
-    supabase.from("players").select("*").in("family_id", familyIds).order("created_at", { ascending: true })
+    supabase.from("families").select("*").in("id", familyIds).is("deleted_at", null).order("created_at", { ascending: true }),
+    supabase.from("players").select("*").in("family_id", familyIds).is("deleted_at", null).order("created_at", { ascending: true })
   ]);
 
   if (familiesError) {
@@ -90,6 +90,7 @@ export async function listFamiliesForAdmin(limit = 100): Promise<AdminFamiliesPa
   const { data: families, error: familiesError } = await supabase
     .from("families")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -106,7 +107,7 @@ export async function listFamiliesForAdmin(limit = 100): Promise<AdminFamiliesPa
 
   const [{ data: members, error: membersError }, { data: players, error: playersError }] = await Promise.all([
     supabase.from("family_members").select("*").in("family_id", familyIds).order("created_at", { ascending: false }),
-    supabase.from("players").select("*").in("family_id", familyIds).order("created_at", { ascending: false })
+    supabase.from("players").select("*").in("family_id", familyIds).is("deleted_at", null).order("created_at", { ascending: false })
   ]);
 
   if (membersError) {
@@ -128,6 +129,7 @@ export async function listPlayersForAdmin(limit = 100): Promise<AdminPlayersPayl
   const { data, error } = await getSupabaseAdminClient()
     .from("players")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -146,6 +148,7 @@ export async function getFamilyDetailForAdmin(familyId: string): Promise<AdminFa
     .from("families")
     .select("*")
     .eq("id", familyId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (familyError) {
@@ -162,7 +165,7 @@ export async function getFamilyDetailForAdmin(familyId: string): Promise<AdminFa
     { data: registrations, error: registrationsError }
   ] = await Promise.all([
     supabase.from("family_members").select("*").eq("family_id", familyId).order("created_at", { ascending: false }),
-    supabase.from("players").select("*").eq("family_id", familyId).order("created_at", { ascending: false }),
+    supabase.from("players").select("*").eq("family_id", familyId).is("deleted_at", null).order("created_at", { ascending: false }),
     supabase.from("registrations").select("*").eq("family_id", familyId).order("created_at", { ascending: false })
   ]);
 
@@ -217,6 +220,7 @@ export async function getPlayerDetailForAdmin(playerId: string): Promise<AdminPl
     .from("players")
     .select("*")
     .eq("id", playerId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (playerError) {
@@ -228,7 +232,7 @@ export async function getPlayerDetailForAdmin(playerId: string): Promise<AdminPl
   }
 
   const [{ data: family, error: familyError }, { data: registrations, error: registrationsError }] = await Promise.all([
-    player.family_id ? supabase.from("families").select("*").eq("id", player.family_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    player.family_id ? supabase.from("families").select("*").eq("id", player.family_id).is("deleted_at", null).maybeSingle() : Promise.resolve({ data: null, error: null }),
     supabase.from("registrations").select("*").eq("player_id", playerId).order("created_at", { ascending: false })
   ]);
 
@@ -338,6 +342,7 @@ export async function updatePlayerForAdmin(id: string, input: AdminPlayerUpdateP
     .from("players")
     .update(row)
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
     .maybeSingle();
 
@@ -369,4 +374,79 @@ export async function createPlayer(input: CreatePlayerInput): Promise<Player> {
   }
 
   return data as Player;
+}
+
+export type AdminCreatePlayerInput = {
+  createdBy: string;
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  gender: Player["gender"];
+  familyId?: string | null;
+  categoryId?: string | null;
+  licenseNumber?: string | null;
+  medicalNotes?: string | null;
+};
+
+/**
+ * Création d'un joueur depuis le CRM (accueil au guichet, transfert en cours de saison).
+ * Contrairement à `createPlayer` (espace famille, où le parent rattache son enfant à SA
+ * famille), la famille est ici facultative : le club enregistre d'abord le joueur, le
+ * rattachement administratif peut suivre.
+ */
+export async function createPlayerForAdmin(input: AdminCreatePlayerInput): Promise<Player> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("players")
+    .insert({
+      family_id: input.familyId ?? null,
+      created_by: input.createdBy,
+      first_name: input.firstName,
+      last_name: input.lastName,
+      birth_date: input.birthDate,
+      gender: input.gender,
+      category_id: input.categoryId ?? null,
+      license_number: input.licenseNumber ?? null,
+      medical_notes: input.medicalNotes ?? null
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(`Unable to create player: ${error.message}`);
+  }
+
+  return data as Player;
+}
+
+/**
+ * Création d'une famille depuis le CRM, sans profil rattaché.
+ * `createFamilyForProfile` reste la voie du parcours parent (elle crée aussi le
+ * `family_members` qui ouvre l'espace famille) ; ici le club ouvre un dossier
+ * administratif que le parent rejoindra ensuite.
+ */
+export async function createFamilyForAdmin(name: string): Promise<Family> {
+  const { data, error } = await getSupabaseAdminClient().from("families").insert({ name }).select("*").single();
+
+  if (error) {
+    throw new Error(`Unable to create family: ${error.message}`);
+  }
+
+  return data as Family;
+}
+
+/** Renomme une famille. Renvoie null si l'id n'existe pas ou est archivé (-> 404 côté route). */
+export async function updateFamilyForAdmin(id: string, name: string): Promise<Family | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("families")
+    .update({ name, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Unable to update family: ${error.message}`);
+  }
+
+  return (data as Family) ?? null;
 }

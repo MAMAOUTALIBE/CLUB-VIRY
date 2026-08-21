@@ -32,7 +32,11 @@ const REVALIDATE_PATHS: Record<TrashType, string[]> = {
   matches: ["/calendrier", "/resultats"],
   events: ["/calendrier"],
   albums: ["/medias"],
-  standings: ["/resultats"]
+  standings: ["/resultats"],
+  // Adhérents : aucune page publique ne les expose, rien à revalider.
+  players: [],
+  families: [],
+  subscriptions: []
 };
 
 /**

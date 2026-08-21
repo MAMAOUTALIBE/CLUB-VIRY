@@ -46,7 +46,7 @@ async function getPlayersGuardianRecipients(playerIds: string[]): Promise<Recipi
   if (playerIds.length === 0) return [];
   const supabase = getSupabaseAdminClient();
 
-  const { data: players, error: playersError } = await supabase.from("players").select("id, first_name").in("id", playerIds);
+  const { data: players, error: playersError } = await supabase.from("players").select("id, first_name").in("id", playerIds).is("deleted_at", null);
   if (playersError) console.error("getPlayersGuardianRecipients: players", playersError);
   const firstNameById = new Map((players ?? []).map((p) => [(p as { id: string }).id, (p as { first_name: string }).first_name]));
 

@@ -22,7 +22,17 @@ export async function ensureSubscription(profileId: string, type: SubscriptionTy
   const { error } = await getSupabaseAdminClient()
     .from("subscriptions")
     .upsert(
-      { profile_id: profileId, type, status: "ACTIVE", source: source ?? null, updated_at: new Date().toISOString() },
+      // `deleted_at: null` : réactiver un abonnement archivé le fait ressortir de la corbeille,
+      // sinon l'upsert ressusciterait la ligne tout en la laissant invisible partout.
+      {
+        profile_id: profileId,
+        type,
+        status: "ACTIVE",
+        source: source ?? null,
+        deleted_at: null,
+        deleted_by: null,
+        updated_at: new Date().toISOString()
+      },
       { onConflict: "profile_id,type" }
     );
 
@@ -36,6 +46,7 @@ export async function listSubscriptionsForAdmin(limit = 200): Promise<AdminSubsc
   const { data, error } = await supabase
     .from("subscriptions")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -71,6 +82,7 @@ export async function updateSubscriptionStatus(id: string, status: SubscriptionS
     .from("subscriptions")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .is("deleted_at", null)
     .select("id");
 
   if (error) {

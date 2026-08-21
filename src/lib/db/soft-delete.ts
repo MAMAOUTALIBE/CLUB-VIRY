@@ -10,13 +10,15 @@ import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
  * `deleted_at`). Chaque type déclare sa table, son libellé, la permission requise
  * pour restaurer/purger, et comment dériver un libellé lisible d'une ligne.
  */
-export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings";
+export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions";
 
 type TrashConfig = {
   table: string;
   label: string;
   permission: Permission;
   labelColumn: string;
+  /** Colonnes concaténées quand aucune colonne unique ne porte un libellé lisible (prénom + nom). */
+  labelColumns?: readonly string[];
   tracksDeletedBy?: boolean;
 };
 
@@ -31,7 +33,10 @@ export const TRASH_CONFIG: Record<TrashType, TrashConfig> = {
   matches: { table: "matches", label: "Match", permission: "teams:manage", labelColumn: "opponent_name", tracksDeletedBy: true },
   events: { table: "club_events", label: "Événement", permission: "teams:manage", labelColumn: "title", tracksDeletedBy: true },
   albums: { table: "media_albums", label: "Album", permission: "content:manage", labelColumn: "title", tracksDeletedBy: true },
-  standings: { table: "standings", label: "Classement", permission: "teams:manage", labelColumn: "team_name", tracksDeletedBy: true }
+  standings: { table: "standings", label: "Classement", permission: "teams:manage", labelColumn: "team_name", tracksDeletedBy: true },
+  players: { table: "players", label: "Joueur", permission: "players:manage", labelColumn: "last_name", labelColumns: ["first_name", "last_name"], tracksDeletedBy: true },
+  families: { table: "families", label: "Famille", permission: "players:manage", labelColumn: "name", tracksDeletedBy: true },
+  subscriptions: { table: "subscriptions", label: "Abonnement", permission: "admin:manage_users", labelColumn: "type", tracksDeletedBy: true }
 };
 
 export function isTrashType(value: unknown): value is TrashType {
@@ -61,7 +66,15 @@ export const PURGE_DEPENDENCIES: Partial<Record<TrashType, Array<{ table: string
     { table: "training_sessions", column: "team_id" }, { table: "media_assets", column: "team_id" }
   ],
   matches: [{ table: "match_callups", column: "match_id" }, { table: "match_convocations", column: "match_id" }],
-  albums: [{ table: "media_assets", column: "album_id" }]
+  albums: [{ table: "media_assets", column: "album_id" }],
+  players: [
+    { table: "team_players", column: "player_id" }, { table: "registrations", column: "player_id" },
+    { table: "player_guardians", column: "player_id" }, { table: "match_callups", column: "player_id" }
+  ],
+  families: [
+    { table: "players", column: "family_id" }, { table: "registrations", column: "family_id" },
+    { table: "family_members", column: "family_id" }
+  ]
 };
 
 export async function listPurgeDependencies(type: TrashType, id: string): Promise<PurgeDependency[]> {
@@ -145,7 +158,9 @@ export async function listTrashedByType(type: TrashType, limit = 100): Promise<T
       type,
       typeLabel: config.label,
       id: String(record.id),
-      label: String(record[config.labelColumn] ?? "—"),
+      label: config.labelColumns
+        ? config.labelColumns.map((column) => record[column]).filter(Boolean).join(" ") || "—"
+        : String(record[config.labelColumn] ?? "—"),
       deletedAt: String(record.deleted_at)
     };
   });

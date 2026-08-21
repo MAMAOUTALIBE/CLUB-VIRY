@@ -226,6 +226,7 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
     .from("players")
     .select("*")
     .eq("id", input.playerId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (playerError) {

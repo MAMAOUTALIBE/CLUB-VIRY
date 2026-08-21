@@ -2945,3 +2945,100 @@ export function validateAutomationRuleTogglePayload(input: unknown): ValidationR
 
   return { ok: true, data: { isEnabled: body.isEnabled } };
 }
+
+export type AdminPlayerCreatePayload = {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  gender: "MASCULIN" | "FEMININ" | "NON_RENSEIGNE";
+  familyId?: string | null;
+  categoryId?: string | null;
+  licenseNumber?: string | null;
+  medicalNotes?: string | null;
+};
+
+/**
+ * Création d'un joueur depuis le CRM. Identité et date de naissance obligatoires
+ * (la catégorie d'âge en dépend) ; la famille reste facultative, le club enregistre
+ * parfois le joueur avant d'avoir le dossier du responsable légal.
+ */
+export function validateAdminPlayerCreatePayload(input: unknown): ValidationResult<AdminPlayerCreatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requête doit être un objet JSON." }] };
+  }
+
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+  const birthDate = normalizeString(body.birthDate);
+  const gender = body.gender;
+  const familyId = body.familyId === null ? null : normalizeString(body.familyId);
+  const categoryId = body.categoryId === null ? null : normalizeString(body.categoryId);
+  const licenseNumber = body.licenseNumber === null ? null : normalizeString(body.licenseNumber);
+  const medicalNotes = body.medicalNotes === null ? null : normalizeString(body.medicalNotes);
+
+  if (firstName === undefined || firstName.length < 2 || firstName.length > 80) {
+    issues.push({ field: "firstName", message: "Le prénom doit faire entre 2 et 80 caractères." });
+  }
+  if (lastName === undefined || lastName.length < 2 || lastName.length > 80) {
+    issues.push({ field: "lastName", message: "Le nom doit faire entre 2 et 80 caractères." });
+  }
+  if (birthDate === undefined || !isValidBirthDate(birthDate)) {
+    issues.push({ field: "birthDate", message: "Date de naissance invalide." });
+  }
+  if (gender !== undefined && !isPersonGender(gender)) {
+    issues.push({ field: "gender", message: "Genre invalide." });
+  }
+  if (typeof familyId === "string" && !isUuid(familyId)) {
+    issues.push({ field: "familyId", message: "Famille invalide." });
+  }
+  if (typeof categoryId === "string" && !isUuid(categoryId)) {
+    issues.push({ field: "categoryId", message: "Catégorie invalide." });
+  }
+  if (typeof licenseNumber === "string" && licenseNumber.length > 40) {
+    issues.push({ field: "licenseNumber", message: "Numéro de licence trop long." });
+  }
+  if (typeof medicalNotes === "string" && medicalNotes.length > 2000) {
+    issues.push({ field: "medicalNotes", message: "Notes médicales trop longues." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      firstName: firstName as string,
+      lastName: lastName as string,
+      birthDate: birthDate as string,
+      gender: (gender as AdminPlayerCreatePayload["gender"]) ?? "NON_RENSEIGNE",
+      familyId: familyId ?? null,
+      categoryId: categoryId ?? null,
+      licenseNumber: licenseNumber ?? null,
+      medicalNotes: medicalNotes ?? null
+    }
+  };
+}
+
+export type AdminFamilyPayload = {
+  name: string;
+};
+
+export function validateAdminFamilyPayload(input: unknown): ValidationResult<AdminFamilyPayload> {
+  const body = asRecord(input);
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requête doit être un objet JSON." }] };
+  }
+
+  const name = normalizeString(body.name);
+
+  if (name === undefined || name.length < 2 || name.length > 120) {
+    return { ok: false, issues: [{ field: "name", message: "Le nom de la famille doit faire entre 2 et 120 caractères." }] };
+  }
+
+  return { ok: true, data: { name } };
+}

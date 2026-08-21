@@ -32,6 +32,8 @@ type AdminModuleBoardProps = {
   kpis?: ModuleKpi[];
   /** Si défini, affiche un bouton « Exporter CSV » pointant vers cet endpoint d'export. */
   exportHref?: string;
+  /** Si défini, affiche un bouton d'archivage par ligne (DELETE endpoint/[id], réversible via la corbeille). */
+  archiveLabel?: string;
 };
 
 function euro(cents: number): string {
@@ -117,7 +119,7 @@ function extractRows(json: unknown, dataKey: string): { ok: true; rows: Row[] } 
 }
 
 export function AdminModuleBoard(props: AdminModuleBoardProps) {
-  const { title, description, endpoint, dataKey, statuses, columns, titleFields, kpis, exportHref } = props;
+  const { title, description, endpoint, dataKey, statuses, columns, titleFields, kpis, exportHref, archiveLabel } = props;
   const statusField = props.statusField ?? "status";
   const createdAtField = props.createdAtField ?? "created_at";
 
@@ -199,6 +201,33 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Erreur réseau lors de la mise à jour.");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  // Archivage réversible (DELETE endpoint/[id]) : la ligne quitte la liste et rejoint la corbeille.
+  async function archiveRow(row: Row) {
+    const id = typeof row.id === "string" ? row.id : null;
+    if (!id || !window.confirm(`Archiver ${rowTitle(row)} ? L'élément part à la corbeille et reste restaurable.`)) {
+      return;
+    }
+    const base = endpoint.split("?")[0];
+    setSavingId(id);
+    try {
+      const response = await fetch(`${base}/${id}`, { method: "DELETE", credentials: "same-origin" });
+      const json = await response.json().catch(() => null);
+      if (response.ok && json?.ok) {
+        setRows((current) => current.filter((item) => item.id !== id));
+        setMessage("Élément archivé : restaurable depuis la corbeille.");
+        showToast("Élément archivé.");
+      } else {
+        const failMessage = `Échec de l'archivage : ${json?.error?.message ?? `HTTP ${response.status}`}`;
+        setMessage(failMessage);
+        showToast(failMessage, "error");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erreur réseau lors de l'archivage.");
     } finally {
       setSavingId(null);
     }
@@ -348,6 +377,16 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
                     ))}
                   </select>
                 </label>
+              ) : null}
+              {archiveLabel && state === "connected" && typeof row.id === "string" ? (
+                <button
+                  type="button"
+                  onClick={() => void archiveRow(row)}
+                  disabled={savingId === row.id}
+                  className="focus-ring ml-auto inline-flex min-h-9 items-center rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-slate-600 hover:border-red-300 hover:text-red-700 disabled:opacity-60"
+                >
+                  {archiveLabel}
+                </button>
               ) : null}
             </div>
             <h3 className="text-base font-black text-slate-950">{rowTitle(row)}</h3>

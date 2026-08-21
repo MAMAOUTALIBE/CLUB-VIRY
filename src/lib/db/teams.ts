@@ -273,6 +273,7 @@ export async function listAssignablePlayers(limit = 500): Promise<AssignablePlay
   const { data, error } = await getSupabaseAdminClient()
     .from("players")
     .select("id, first_name, last_name, birth_date")
+    .is("deleted_at", null)
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true })
     .limit(limit);
@@ -394,7 +395,7 @@ export async function getPublicTeamRosterBySlug(slug: string): Promise<TeamRoste
   const playerIds = rosterAssignments.map((assignment) => assignment.player_id);
   const { data: players, error: playersError } =
     playerIds.length > 0
-      ? await supabase.from("players").select("id, first_name, last_name").in("id", playerIds)
+      ? await supabase.from("players").select("id, first_name, last_name").in("id", playerIds).is("deleted_at", null)
       : { data: [], error: null };
 
   if (playersError) {
@@ -570,7 +571,7 @@ export async function getEducatorTeamRoster(
   const playerIds = rosterAssignments.map((assignment) => assignment.player_id);
   const { data: players, error: playersError } =
     playerIds.length > 0
-      ? await supabase.from("players").select("*").in("id", playerIds)
+      ? await supabase.from("players").select("*").in("id", playerIds).is("deleted_at", null)
       : { data: [], error: null };
 
   if (playersError) {
