@@ -2922,3 +2922,26 @@ export function validateAdminUserUpdatePayload(input: unknown): ValidationResult
     }
   };
 }
+
+export type AutomationRuleTogglePayload = {
+  isEnabled: boolean;
+};
+
+/**
+ * Bascule d'une automatisation. La clé de la règle voyage dans l'URL (et est vérifiée
+ * contre le catalogue par la route) : ici on ne valide que l'état demandé, qui doit
+ * être un vrai booléen — accepter "false" en chaîne activerait la règle par erreur.
+ */
+export function validateAutomationRuleTogglePayload(input: unknown): ValidationResult<AutomationRuleTogglePayload> {
+  const body = asRecord(input);
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  if (typeof body.isEnabled !== "boolean") {
+    return { ok: false, issues: [{ field: "isEnabled", message: "Le champ isEnabled doit être un booléen." }] };
+  }
+
+  return { ok: true, data: { isEnabled: body.isEnabled } };
+}

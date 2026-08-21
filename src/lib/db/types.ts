@@ -460,3 +460,21 @@ export type CreateActivityLogInput = {
   ipAddress?: string | null;
   userAgent?: string | null;
 };
+
+export type AutomationRule = {
+  key: string;
+  is_enabled: boolean;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AutomationRun = {
+  id: string;
+  rule_key: string;
+  status: "SUCCESS" | "SKIPPED" | "FAILED";
+  message: string | null;
+  affected_count: number;
+  context: Record<string, unknown>;
+  created_at: string;
+};

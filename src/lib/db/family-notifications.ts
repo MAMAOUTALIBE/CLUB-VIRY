@@ -1,5 +1,6 @@
 import "server-only";
 
+import { runAutomation } from "@/lib/db/automations";
 import { queueNotificationsBatch, type QueueNotificationInput } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { NotificationCategory } from "@/lib/db/types";
@@ -137,7 +138,7 @@ export async function notifyTeamSessionChange(
   kind: "created" | "cancelled",
   session: { startsAt: string; location?: string | null; theme?: string | null }
 ): Promise<void> {
-  try {
+  await runAutomation("team_session_change", { teamId, kind, startsAt: session.startsAt }, async () => {
     const recipients = await getTeamGuardianRecipients(teamId);
     const dateLabel = formatFrDateTime(session.startsAt);
     const subject = kind === "cancelled" ? `Séance annulée — ${dateLabel}` : `Nouvelle séance d'entraînement — ${dateLabel}`;
@@ -148,16 +149,15 @@ export async function notifyTeamSessionChange(
       link: "/espace-membre",
       payload: { kind, startsAt: session.startsAt, location: session.location ?? null, theme: session.theme ?? null, dateLabel }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("notifyTeamSessionChange failed", error);
-  }
+    return recipients.length;
+  });
 }
 
 /** Convocations enregistrées → prévient les tuteurs des joueurs convoqués (un message par enfant). */
 export async function notifyMatchCallups(matchId: string, convokedPlayerIds: string[]): Promise<void> {
-  try {
-    if (convokedPlayerIds.length === 0) return;
+  if (convokedPlayerIds.length === 0) return;
+
+  await runAutomation("match_callups", { matchId, convokedPlayers: convokedPlayerIds.length }, async () => {
     const [{ data: match }, { data: convocation }] = await Promise.all([
       getSupabaseAdminClient().from("matches").select("starts_at, opponent_name, venue").eq("id", matchId).is("deleted_at", null).maybeSingle(),
       getSupabaseAdminClient()
@@ -207,15 +207,13 @@ export async function notifyMatchCallups(matchId: string, convokedPlayerIds: str
         impedimentContact: convocationRow?.impediment_contact ?? null
       }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("family notification fan-out failed", error);
-  }
+    return recipients.length;
+  });
 }
 
 /** Nouveau média rattaché à une équipe → prévient les tuteurs des joueurs de l'équipe (CRM intelligent). */
 export async function notifyTeamMediaAdded(teamId: string, media: { type: string; title: string }): Promise<void> {
-  try {
+  await runAutomation("team_media_added", { teamId, type: media.type, title: media.title }, async () => {
     const recipients = await getTeamGuardianRecipients(teamId);
     const label = media.type === "VIDEO" ? "Nouvelle vidéo" : "Nouvelle photo";
     await fanOut(recipients, {
@@ -225,15 +223,13 @@ export async function notifyTeamMediaAdded(teamId: string, media: { type: string
       link: "/espace-membre",
       payload: { type: media.type, title: media.title }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("family notification fan-out failed", error);
-  }
+    return recipients.length;
+  });
 }
 
 /** Actualité publiée et ciblée sur une équipe → prévient les familles de l'équipe (CRM intelligent). */
 export async function notifyTeamNews(teamId: string, article: { title: string }): Promise<void> {
-  try {
+  await runAutomation("team_news_published", { teamId, title: article.title }, async () => {
     const recipients = await getTeamGuardianRecipients(teamId);
     await fanOut(recipients, {
       category: "news",
@@ -242,8 +238,6 @@ export async function notifyTeamNews(teamId: string, article: { title: string })
       link: "/espace-membre",
       payload: { title: article.title }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("family notification fan-out failed", error);
-  }
+    return recipients.length;
+  });
 }

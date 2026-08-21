@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AdminDocumentReviewPayload, AdminRegistrationReviewPayload } from "@/lib/api/validation";
+import { runAutomation } from "@/lib/db/automations";
 import { getActiveSeason, recordActivity } from "@/lib/db/foundations";
 import { getFamilyDashboard, isProfileFamilyMember } from "@/lib/db/family";
 import { queueAdminNotification, queueNotification } from "@/lib/db/notifications";
@@ -368,11 +369,11 @@ export async function reviewRegistration(id: string, input: AdminRegistrationRev
 
   // Phase 4 : à la validation, on provisionne automatiquement l'abonnement FAMILLE du parent.
   if (input.status === "VALIDATED" && data.submitted_by) {
-    try {
+    // runAutomation absorbe l'erreur : l'abonnement ne doit pas bloquer la validation du dossier.
+    await runAutomation("registration_subscription", { registrationId: data.id, profileId: data.submitted_by }, async () => {
       await ensureSubscription(data.submitted_by as string, "FAMILLE", `registration:${data.id}`);
-    } catch {
-      // l'abonnement ne doit pas bloquer la validation du dossier
-    }
+      return 1;
+    });
   }
 
   return data as Registration;

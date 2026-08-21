@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isAutomationEnabled, recordAutomationRun } from "@/lib/db/automations";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { NotificationCategory, NotificationLog, NotificationStatus } from "@/lib/db/types";
 
@@ -338,11 +339,30 @@ export async function dispatchQueuedNotifications(
   supabase: SupabaseAdminClient = getSupabaseAdminClient()
 ): Promise<NotificationDispatchSummary> {
   const boundedLimit = Math.min(Math.max(limit, 1), 50);
+
+  // Coupe-circuit CRM : désactiver l'envoi laisse les notifications en file (QUEUED),
+  // elles repartiront telles quelles à la réactivation — rien n'est perdu.
+  if (!(await isAutomationEnabled("notification_dispatch"))) {
+    await recordAutomationRun({
+      ruleKey: "notification_dispatch",
+      status: "SKIPPED",
+      message: "Règle désactivée depuis le CRM : les notifications restent en file.",
+      context: { limit: boundedLimit }
+    });
+    return { providerConfigured: false, processed: 0, sent: 0, failed: 0, skipped: 0, results: [] };
+  }
+
   const queuedNotifications = await listQueuedNotifications(boundedLimit, supabase);
   const provider = readEmailProviderConfig();
   const webhook = readWebhookConfig();
 
   if (!provider && !webhook.url) {
+    await recordAutomationRun({
+      ruleKey: "notification_dispatch",
+      status: "FAILED",
+      message: "Aucun provider email ni webhook configuré.",
+      context: { queued: queuedNotifications.length }
+    });
     return {
       providerConfigured: false,
       processed: 0,
@@ -409,12 +429,24 @@ export async function dispatchQueuedNotifications(
     }
   }
 
+  const sent = results.filter((result) => result.status === "SENT").length;
+  const failed = results.filter((result) => result.status === "FAILED").length;
+  const skipped = results.filter((result) => result.status === "SKIPPED").length;
+
+  await recordAutomationRun({
+    ruleKey: "notification_dispatch",
+    status: failed > 0 ? "FAILED" : "SUCCESS",
+    message: failed > 0 ? `${failed} envoi(s) en échec sur ${results.length}.` : null,
+    affectedCount: sent,
+    context: { processed: results.length, sent, failed, skipped }
+  });
+
   return {
     providerConfigured: true,
     processed: results.length,
-    sent: results.filter((result) => result.status === "SENT").length,
-    failed: results.filter((result) => result.status === "FAILED").length,
-    skipped: results.filter((result) => result.status === "SKIPPED").length,
+    sent,
+    failed,
+    skipped,
     results
   };
 }
