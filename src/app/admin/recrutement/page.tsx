@@ -18,12 +18,14 @@ export default function AdminRecrutementPage() {
     <>
           <AdminModuleBoard
             title="Détections / Recrutement"
-            description="Suivi des candidatures de détection : qualification, prise de contact, essais et décisions."
+            description="Suivi des candidatures de détection : qualification, prise de contact, essais et décisions. Chaque candidature peut être confiée à un membre du club, et archivée vers la corbeille si elle fait doublon."
             endpoint="/api/admin/recruitment/applications?limit=100"
             exportHref="/api/admin/exports/recruitment"
             dataKey="applications"
             statuses={statuses}
             titleFields={["first_name", "last_name"]}
+            archiveLabel="Archiver"
+            assignable
             columns={[
               { label: "Poste", field: "position" },
               { label: "Club actuel", field: "current_club" },

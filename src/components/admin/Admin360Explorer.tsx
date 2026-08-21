@@ -218,8 +218,9 @@ type CreateField = {
 type CreateConfig = { label: string; endpoint: string; fields: CreateField[]; needsFamilies?: boolean };
 
 /**
- * Création et archivage depuis la vue 360. Seuls les adhérents sont concernés : un
- * dossier d'inscription naît du formulaire public, jamais d'une saisie administrative.
+ * Création depuis la vue 360. Seuls les adhérents sont concernés : un dossier
+ * d'inscription naît du formulaire public, jamais d'une saisie administrative — il
+ * peut en revanche être archivé (doublon, dossier ouvert par erreur).
  */
 const CREATE_CONFIG: Partial<Record<ResourceKind, CreateConfig>> = {
   players: {
@@ -253,7 +254,8 @@ const CREATE_CONFIG: Partial<Record<ResourceKind, CreateConfig>> = {
 
 const ARCHIVE_ENDPOINTS: Partial<Record<ResourceKind, string>> = {
   players: "/api/admin/players",
-  families: "/api/admin/families"
+  families: "/api/admin/families",
+  registrations: "/api/admin/registrations"
 };
 
 const PAGE_SIZE = 100;

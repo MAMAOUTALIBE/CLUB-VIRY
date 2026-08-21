@@ -34,7 +34,25 @@ type AdminModuleBoardProps = {
   exportHref?: string;
   /** Si défini, affiche un bouton d'archivage par ligne (DELETE endpoint/[id], réversible via la corbeille). */
   archiveLabel?: string;
+  /** Active le sélecteur « Suivi par » (PATCH { assignedTo }) alimenté par /api/admin/assignees. */
+  assignable?: boolean;
 };
+
+type Assignee = { id: string; name: string };
+
+function extractAssignees(json: unknown): Assignee[] {
+  const data = isRecord(json) && isRecord(json.data) ? json.data : null;
+  const list = data && Array.isArray(data.assignees) ? data.assignees : [];
+
+  return list
+    .filter(isRecord)
+    .filter((entry): entry is { id: string; name: string } => typeof entry.id === "string" && typeof entry.name === "string")
+    .map((entry) => ({ id: entry.id, name: entry.name }));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
 
 function euro(cents: number): string {
   return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(cents / 100);
@@ -119,7 +137,7 @@ function extractRows(json: unknown, dataKey: string): { ok: true; rows: Row[] } 
 }
 
 export function AdminModuleBoard(props: AdminModuleBoardProps) {
-  const { title, description, endpoint, dataKey, statuses, columns, titleFields, kpis, exportHref, archiveLabel } = props;
+  const { title, description, endpoint, dataKey, statuses, columns, titleFields, kpis, exportHref, archiveLabel, assignable } = props;
   const statusField = props.statusField ?? "status";
   const createdAtField = props.createdAtField ?? "created_at";
 
@@ -131,6 +149,7 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [limit, setLimit] = useState(PAGE_SIZE);
   const [hasMore, setHasMore] = useState(false);
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
 
   const rowStatus = (row: Row) => asText(row[statusField]);
   const rowTitle = (row: Row) => {
@@ -206,6 +225,37 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
     }
   }
 
+  /** Attribue la ligne à un membre du club (PATCH { assignedTo }) ; valeur vide = retrait. */
+  async function patchAssignee(row: Row, assignedTo: string) {
+    const id = typeof row.id === "string" ? row.id : null;
+    if (!id) {
+      return;
+    }
+    const base = endpoint.split("?")[0];
+    setSavingId(id);
+    try {
+      const response = await fetch(`${base}/${id}`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedTo: assignedTo || null })
+      });
+      const json = await response.json().catch(() => null);
+      if (response.ok && json?.ok) {
+        setRows((current) => current.map((item) => (item.id === id ? { ...item, assigned_to: assignedTo || null } : item)));
+        showToast(assignedTo ? "Dossier attribué." : "Attribution retirée.");
+      } else {
+        const failMessage = `Échec de l'attribution : ${json?.error?.message ?? `HTTP ${response.status}`}`;
+        setMessage(failMessage);
+        showToast(failMessage, "error");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Erreur réseau lors de l'attribution.");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   // Archivage réversible (DELETE endpoint/[id]) : la ligne quitte la liste et rejoint la corbeille.
   async function archiveRow(row: Row) {
     const id = typeof row.id === "string" ? row.id : null;
@@ -238,6 +288,22 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!assignable) {
+      return;
+    }
+
+    // Échec silencieux : sans la liste, le sélecteur reste vide mais le tableau,
+    // lui, doit continuer de fonctionner.
+    const controller = new AbortController();
+    void fetch("/api/admin/assignees", { credentials: "same-origin", signal: controller.signal })
+      .then((response) => response.json())
+      .then((json) => setAssignees(extractAssignees(json)))
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [assignable]);
 
   const statusCounts = useMemo(
     () => statuses.map((entry) => ({ status: entry.status, label: entry.label, count: rows.filter((row) => rowStatus(row) === entry.status).length })),
@@ -374,6 +440,23 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
                   >
                     {statuses.map((entry) => (
                       <option key={entry.status} value={entry.status}>{entry.label}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              {assignable && state === "connected" && typeof row.id === "string" ? (
+                <label className="inline-flex items-center gap-1.5 text-xs font-black uppercase text-slate-500">
+                  Suivi par
+                  <select
+                    aria-label={`Attribuer ${rowTitle(row)}`}
+                    className="focus-ring rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-800 disabled:opacity-60"
+                    value={typeof row.assigned_to === "string" ? row.assigned_to : ""}
+                    disabled={savingId === row.id}
+                    onChange={(event) => void patchAssignee(row, event.target.value)}
+                  >
+                    <option value="">Personne</option>
+                    {assignees.map((assignee) => (
+                      <option key={assignee.id} value={assignee.id}>{assignee.name}</option>
                     ))}
                   </select>
                 </label>

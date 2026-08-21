@@ -983,3 +983,49 @@ test("anti-escalation also covers an invitation (role granted at creation)", () 
   });
   assert.equal(ok.ok, true);
 });
+
+test("validateAdminRecruitmentReviewPayload accepts a status alone, an assignment alone, or both", () => {
+  assert.equal(validateAdminRecruitmentReviewPayload({ status: "CONTACTED" }).ok, true);
+
+  const assigned = validateAdminRecruitmentReviewPayload({ assignedTo: "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f" });
+  assert.equal(assigned.ok, true);
+  assert.equal(assigned.data.status, undefined);
+  assert.equal(assigned.data.assignedTo, "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f");
+
+  // Corps vide : rien à enregistrer.
+  assert.equal(validateAdminRecruitmentReviewPayload({}).ok, false);
+  assert.equal(validateAdminRecruitmentReviewPayload({ assignedTo: "pas-un-uuid" }).ok, false);
+});
+
+test("un assignedTo null retire l'attribution, un champ absent la laisse intacte", () => {
+  // null explicite : on transmet null pour désattribuer.
+  const cleared = validateAdminRecruitmentReviewPayload({ status: "PENDING", assignedTo: null });
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.assignedTo, null);
+
+  // champ absent : la clé ne doit pas apparaître, sinon un simple changement de
+  // statut effacerait l'attribution au passage.
+  const untouched = validateAdminRecruitmentReviewPayload({ status: "PENDING" });
+  assert.equal(untouched.ok, true);
+  assert.equal("assignedTo" in untouched.data, false);
+});
+
+test("validateAdminRegistrationReviewPayload accepte l'attribution d'un dossier", () => {
+  const assigned = validateAdminRegistrationReviewPayload({ assignedTo: "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f" });
+  assert.equal(assigned.ok, true);
+  assert.equal(assigned.data.assignedTo, "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f");
+
+  const cleared = validateAdminRegistrationReviewPayload({ assignedTo: null });
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.assignedTo, null);
+
+  assert.equal(validateAdminRegistrationReviewPayload({ assignedTo: 42 }).ok, false);
+  assert.equal(validateAdminRegistrationReviewPayload({}).ok, false);
+});
+
+test("validateAdminContactMessageReviewPayload sait aussi retirer une attribution", () => {
+  const cleared = validateAdminContactMessageReviewPayload({ assignedTo: null });
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.assignedTo, null);
+  assert.equal(validateAdminContactMessageReviewPayload({ assignedTo: "pas-un-uuid" }).ok, false);
+});

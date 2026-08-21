@@ -230,6 +230,7 @@ export type AdminRegistrationReviewPayload = {
   status?: "DRAFT" | "SUBMITTED" | "IN_REVIEW" | "MISSING_DOCUMENTS" | "VALIDATED" | "REJECTED" | "CANCELLED";
   adminNotes?: string;
   categoryId?: string;
+  assignedTo?: string | null;
 };
 
 export type AdminDocumentReviewPayload = {
@@ -284,11 +285,12 @@ export type AdminOfficialPayload = {
 
 export type AdminRecruitmentReviewPayload = {
   status?: "PENDING" | "CONTACTED" | "TRIAL_SCHEDULED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
+  assignedTo?: string | null;
 };
 
 export type AdminContactMessageReviewPayload = {
   status?: "PENDING" | "CONTACTED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
-  assignedTo?: string;
+  assignedTo?: string | null;
   respondedAt?: string;
 };
 
@@ -2286,6 +2288,28 @@ export function validateAdminPlayerUpdatePayload(input: unknown): ValidationResu
   };
 }
 
+type AssigneeResult = { ok: true; value: string | null | undefined } | { ok: false };
+
+/**
+ * Attribution d'un dossier à un membre du club : un identifiant de profil, ou `null`
+ * explicite pour retirer l'attribution. Champ absent = attribution inchangée — sans
+ * cette distinction, enregistrer un simple changement de statut désattribuerait le
+ * dossier au passage.
+ */
+function parseAssignedTo(value: unknown): AssigneeResult {
+  if (value === undefined) {
+    return { ok: true, value: undefined };
+  }
+
+  if (value === null || value === "") {
+    return { ok: true, value: null };
+  }
+
+  const id = normalizeString(value);
+
+  return id && isUuid(id) ? { ok: true, value: id } : { ok: false };
+}
+
 export function validateAdminRegistrationReviewPayload(input: unknown): ValidationResult<AdminRegistrationReviewPayload> {
   const body = asRecord(input);
   const issues: ValidationIssue[] = [];
@@ -2297,9 +2321,15 @@ export function validateAdminRegistrationReviewPayload(input: unknown): Validati
   const status = normalizeString(body.status);
   const adminNotes = normalizeString(body.adminNotes);
   const categoryId = normalizeString(body.categoryId);
+  const assignee = parseAssignedTo(body.assignedTo);
+  const assignedTo = assignee.ok ? assignee.value : undefined;
 
-  if (!status && !adminNotes && !categoryId) {
+  if (!status && !adminNotes && !categoryId && assignedTo === undefined && assignee.ok) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (!assignee.ok) {
+    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
   }
 
   if (status && !isRegistrationStatus(status)) {
@@ -2323,7 +2353,8 @@ export function validateAdminRegistrationReviewPayload(input: unknown): Validati
     data: {
       ...(status ? { status: status as AdminRegistrationReviewPayload["status"] } : {}),
       ...(adminNotes ? { adminNotes } : {}),
-      ...(categoryId ? { categoryId } : {})
+      ...(categoryId ? { categoryId } : {}),
+      ...(assignedTo !== undefined ? { assignedTo } : {})
     }
   };
 }
@@ -2652,13 +2683,39 @@ export function validateAdminPartnershipRequestReviewPayload(
 
 export function validateAdminRecruitmentReviewPayload(input: unknown): ValidationResult<AdminRecruitmentReviewPayload> {
   const body = asRecord(input);
-  const status = body ? normalizeString(body.status) : undefined;
+  const issues: ValidationIssue[] = [];
 
-  if (!status || !isApplicationStatus(status)) {
-    return { ok: false, issues: [{ field: "status", message: "Statut candidature detection invalide." }] };
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
   }
 
-  return { ok: true, data: { status: status as AdminRecruitmentReviewPayload["status"] } };
+  const status = normalizeString(body.status);
+  const assignee = parseAssignedTo(body.assignedTo);
+  const assignedTo = assignee.ok ? assignee.value : undefined;
+
+  if (!status && assignedTo === undefined && assignee.ok) {
+    issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (!assignee.ok) {
+    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
+  }
+
+  if (status && !isApplicationStatus(status)) {
+    issues.push({ field: "status", message: "Statut candidature detection invalide." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      ...(status ? { status: status as AdminRecruitmentReviewPayload["status"] } : {}),
+      ...(assignedTo !== undefined ? { assignedTo } : {})
+    }
+  };
 }
 
 export function validateAdminContactMessageReviewPayload(input: unknown): ValidationResult<AdminContactMessageReviewPayload> {
@@ -2670,19 +2727,20 @@ export function validateAdminContactMessageReviewPayload(input: unknown): Valida
   }
 
   const status = normalizeString(body.status);
-  const assignedTo = normalizeString(body.assignedTo);
+  const assignee = parseAssignedTo(body.assignedTo);
+  const assignedTo = assignee.ok ? assignee.value : undefined;
   const respondedAt = normalizeString(body.respondedAt);
 
-  if (!status && !assignedTo && !respondedAt) {
+  if (!status && assignedTo === undefined && !respondedAt && assignee.ok) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (!assignee.ok) {
+    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
   }
 
   if (status && !isRequestStatus(status)) {
     issues.push({ field: "status", message: "Statut message contact invalide." });
-  }
-
-  if (assignedTo && !isUuid(assignedTo)) {
-    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
   }
 
   if (respondedAt && !isIsoDateTime(respondedAt)) {
@@ -2697,7 +2755,7 @@ export function validateAdminContactMessageReviewPayload(input: unknown): Valida
     ok: true,
     data: {
       ...(status ? { status: status as AdminContactMessageReviewPayload["status"] } : {}),
-      ...(assignedTo ? { assignedTo } : {}),
+      ...(assignedTo !== undefined ? { assignedTo } : {}),
       ...(respondedAt ? { respondedAt } : {})
     }
   };

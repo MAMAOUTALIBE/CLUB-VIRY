@@ -77,6 +77,7 @@ export async function listRegistrationsForProfile(profileId: string): Promise<Re
     .from("registrations")
     .select("*")
     .in("family_id", familyIds)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -90,6 +91,7 @@ export async function listRegistrationsForAdmin(limit = 100, status?: Registrati
   let query = getSupabaseAdminClient()
     .from("registrations")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -107,7 +109,7 @@ export async function listRegistrationsForAdmin(limit = 100, status?: Registrati
 }
 
 export async function countRegistrationsForAdmin(): Promise<number> {
-  const { count, error } = await getSupabaseAdminClient().from("registrations").select("id", { count: "exact", head: true });
+  const { count, error } = await getSupabaseAdminClient().from("registrations").select("id", { count: "exact", head: true }).is("deleted_at", null);
   if (error) throw new Error(`Unable to count registrations: ${error.message}`);
   return count ?? 0;
 }
@@ -336,20 +338,31 @@ export async function createRegistration(input: CreateRegistrationInput): Promis
   };
 }
 
-export async function reviewRegistration(id: string, input: AdminRegistrationReviewPayload, reviewedBy: string): Promise<Registration> {
+export async function reviewRegistration(id: string, input: AdminRegistrationReviewPayload, reviewedBy: string): Promise<Registration | null> {
+  // `is("deleted_at", null)` : un dossier archivé n'est plus modifiable — sinon une
+  // validation partie d'un écran resté ouvert ressusciterait le traitement d'un
+  // dossier que le club a justement sorti de la liste.
   const { data, error } = await getSupabaseAdminClient()
     .from("registrations")
     .update({
       ...(input.status ? { status: input.status, reviewed_at: new Date().toISOString(), reviewed_by: reviewedBy } : {}),
       ...(input.adminNotes !== undefined ? { admin_notes: input.adminNotes ?? null } : {}),
-      ...(input.categoryId !== undefined ? { category_id: input.categoryId ?? null } : {})
+      ...(input.categoryId !== undefined ? { category_id: input.categoryId ?? null } : {}),
+      ...(input.assignedTo !== undefined ? { assigned_to: input.assignedTo, assigned_at: input.assignedTo ? new Date().toISOString() : null } : {})
     })
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to review registration: ${error.message}`);
+  }
+
+  if (!data) {
+    // Dossier introuvable ou archivé : la route répond 404 plutôt que d'inventer
+    // une réussite silencieuse.
+    return null;
   }
 
   const profileEmail = await getProfileEmail(data.submitted_by as string | null);

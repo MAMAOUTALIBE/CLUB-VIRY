@@ -3,6 +3,8 @@ import "server-only";
 import type { AdminUserInvitePayload, AdminUserUpdatePayload, ProfileUpdatePayload } from "@/lib/api/validation";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { Profile, ProfileStatus } from "@/lib/db/types";
+import { hasPermission } from "@/lib/auth/permissions";
+import { APP_ROLES } from "@/lib/auth/roles";
 import type { AppRole } from "@/lib/auth/roles";
 
 /** Bannissement « permanent » côté Supabase Auth (100 ans) : GoTrue n'a pas de durée infinie. */
@@ -286,4 +288,37 @@ export async function syncAuthAccountAccess(userId: string, status: ProfileStatu
   if (error) {
     console.error("syncAuthAccountAccess failed", { userId, status, message: error.message });
   }
+}
+
+export type AssignableStaff = { id: string; name: string; role: AppRole };
+
+/**
+ * Membres du club à qui un dossier peut être attribué : comptes actifs dont le rôle
+ * ouvre le CRM. Un compte suspendu ou une famille n'apparaissent pas — attribuer un
+ * dossier à quelqu'un qui ne peut pas y accéder revient à le perdre.
+ */
+export async function listAssignableStaff(): Promise<AssignableStaff[]> {
+  const staffRoles = APP_ROLES.filter((role) => hasPermission(role, "admin:access"));
+  const { data, error } = await getSupabaseAdminClient()
+    .from("profiles")
+    .select("id,first_name,last_name,display_name,email,role")
+    .eq("status", "ACTIVE")
+    .in("role", staffRoles)
+    .order("last_name", { ascending: true });
+
+  if (error) {
+    throw new Error(`Unable to fetch assignable staff: ${error.message}`);
+  }
+
+  return (data ?? []).map((row) => {
+    const record = row as Record<string, unknown>;
+    const fullName = [record.first_name, record.last_name].filter(Boolean).join(" ").trim();
+    const displayName = typeof record.display_name === "string" ? record.display_name.trim() : "";
+
+    return {
+      id: String(record.id),
+      name: fullName || displayName || String(record.email ?? "Compte club"),
+      role: record.role as AppRole
+    };
+  });
 }

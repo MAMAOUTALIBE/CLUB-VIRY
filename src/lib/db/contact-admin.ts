@@ -3,6 +3,7 @@ import "server-only";
 import type { AdminContactMessageReviewPayload, AdminNotificationUpdatePayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { queueAdminNotification } from "@/lib/db/notifications";
+import { SOFT_DELETABLE_TABLES } from "@/lib/db/soft-delete";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { ActivityLog, ContactMessage, NotificationLog, Registration } from "@/lib/db/types";
 
@@ -147,8 +148,18 @@ export async function reviewContactMessage(id: string, input: AdminContactMessag
   return data as ContactMessage;
 }
 
+/**
+ * Les compteurs du tableau de bord ignorent la corbeille : un dossier archivé ne doit
+ * plus peser dans « Dossiers à traiter », sinon le chiffre ne correspond plus à ce que
+ * l'écran affiche. Le filtre ne s'applique qu'aux tables qui portent `deleted_at`.
+ */
+function countQuery(table: string) {
+  const query = getSupabaseAdminClient().from(table).select("*", { count: "exact", head: true });
+  return SOFT_DELETABLE_TABLES.has(table) ? query.is("deleted_at", null) : query;
+}
+
 async function countRows(table: string): Promise<number> {
-  const { count, error } = await getSupabaseAdminClient().from(table).select("*", { count: "exact", head: true });
+  const { count, error } = await countQuery(table);
 
   if (error) {
     throw new Error(`Unable to count ${table}: ${error.message}`);
@@ -158,10 +169,7 @@ async function countRows(table: string): Promise<number> {
 }
 
 async function countRowsByEq(table: string, column: string, value: string): Promise<number> {
-  const { count, error } = await getSupabaseAdminClient()
-    .from(table)
-    .select("*", { count: "exact", head: true })
-    .eq(column, value);
+  const { count, error } = await countQuery(table).eq(column, value);
 
   if (error) {
     throw new Error(`Unable to count ${table}: ${error.message}`);
@@ -185,10 +193,7 @@ async function sumSucceededPaymentCents(): Promise<number> {
 }
 
 async function countRowsByIn(table: string, column: string, values: readonly string[]): Promise<number> {
-  const { count, error } = await getSupabaseAdminClient()
-    .from(table)
-    .select("*", { count: "exact", head: true })
-    .in(column, values);
+  const { count, error } = await countQuery(table).in(column, values);
 
   if (error) {
     throw new Error(`Unable to count ${table}: ${error.message}`);
@@ -245,10 +250,8 @@ async function monthlyCounts(table: string, dateColumn: string, months: number):
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
 
-  const { data, error } = await getSupabaseAdminClient()
-    .from(table)
-    .select(dateColumn)
-    .gte(dateColumn, start.toISOString());
+  const baseQuery = getSupabaseAdminClient().from(table).select(dateColumn).gte(dateColumn, start.toISOString());
+  const { data, error } = await (SOFT_DELETABLE_TABLES.has(table) ? baseQuery.is("deleted_at", null) : baseQuery);
 
   if (error) {
     throw new Error(`Unable to bucket ${table}: ${error.message}`);
@@ -404,6 +407,7 @@ export async function listRegistrationsForExport(limit = 1000): Promise<Registra
   const { data, error } = await getSupabaseAdminClient()
     .from("registrations")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 

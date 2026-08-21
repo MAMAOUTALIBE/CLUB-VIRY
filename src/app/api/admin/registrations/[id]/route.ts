@@ -2,9 +2,10 @@ import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
-import { validateAdminRegistrationReviewPayload } from "@/lib/api/validation";
+import { isUuid, validateAdminRegistrationReviewPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { getRegistrationDetailForAdmin, reviewRegistration } from "@/lib/db/registrations";
+import { softDeleteRow } from "@/lib/db/soft-delete";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,15 +61,54 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const registration = await reviewRegistration(id, payload.data, admin.context.user.id);
+
+    if (!registration) {
+      return jsonError(404, "NOT_FOUND", "Dossier introuvable ou archive.");
+    }
+
     await recordActivity({
       actorId: admin.context.user.id,
-      action: "registration.reviewed",
+      action: payload.data.assignedTo !== undefined ? "registration.assigned" : "registration.reviewed",
       entityType: "registrations",
       entityId: registration.id,
-      metadata: { status: registration.status }
+      metadata: { status: registration.status, assignedTo: registration.assigned_to ?? null }
     });
 
     return jsonOk({ registration });
+  } catch (error) {
+    return handleDbError("admin/registrations/[id]", error);
+  }
+}
+
+/** Archive un dossier (corbeille) : les documents et paiements liés restent intacts. */
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const admin = await getAdminContext(request, "registrations:manage");
+
+  if (!admin.ok) {
+    return admin.response;
+  }
+
+  const { id } = await context.params;
+
+  if (!isUuid(id)) {
+    return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
+  }
+
+  try {
+    const trashed = await softDeleteRow("registrations", id, admin.context.user.id);
+
+    if (!trashed) {
+      return jsonError(404, "NOT_FOUND", "Dossier introuvable.");
+    }
+
+    await recordActivity({
+      actorId: admin.context.user.id,
+      action: "registration.trashed",
+      entityType: "registrations",
+      entityId: id
+    });
+
+    return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/registrations/[id]", error);
   }

@@ -10,7 +10,7 @@ import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
  * `deleted_at`). Chaque type déclare sa table, son libellé, la permission requise
  * pour restaurer/purger, et comment dériver un libellé lisible d'une ligne.
  */
-export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions";
+export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment";
 
 type TrashConfig = {
   table: string;
@@ -19,6 +19,12 @@ type TrashConfig = {
   labelColumn: string;
   /** Colonnes concaténées quand aucune colonne unique ne porte un libellé lisible (prénom + nom). */
   labelColumns?: readonly string[];
+  /**
+   * Libellé emprunté à une table liée, quand la ligne elle-même n'en porte aucun.
+   * Un dossier d'inscription n'a que des identifiants : sans le nom du joueur, la
+   * corbeille afficherait des UUID et personne ne saurait ce qu'il restaure.
+   */
+  labelRelation?: { table: string; foreignKey: string; columns: readonly string[] };
   tracksDeletedBy?: boolean;
 };
 
@@ -36,8 +42,27 @@ export const TRASH_CONFIG: Record<TrashType, TrashConfig> = {
   standings: { table: "standings", label: "Classement", permission: "teams:manage", labelColumn: "team_name", tracksDeletedBy: true },
   players: { table: "players", label: "Joueur", permission: "players:manage", labelColumn: "last_name", labelColumns: ["first_name", "last_name"], tracksDeletedBy: true },
   families: { table: "families", label: "Famille", permission: "players:manage", labelColumn: "name", tracksDeletedBy: true },
-  subscriptions: { table: "subscriptions", label: "Abonnement", permission: "admin:manage_users", labelColumn: "type", tracksDeletedBy: true }
+  subscriptions: { table: "subscriptions", label: "Abonnement", permission: "admin:manage_users", labelColumn: "type", tracksDeletedBy: true },
+  registrations: {
+    table: "registrations",
+    label: "Dossier d'inscription",
+    permission: "registrations:manage",
+    labelColumn: "id",
+    labelRelation: { table: "players", foreignKey: "player_id", columns: ["first_name", "last_name"] },
+    tracksDeletedBy: true
+  },
+  recruitment: {
+    table: "recruitment_applications",
+    label: "Candidature détection",
+    permission: "players:manage",
+    labelColumn: "last_name",
+    labelColumns: ["first_name", "last_name"],
+    tracksDeletedBy: true
+  }
 };
+
+/** Tables porteuses d'une colonne `deleted_at`, dérivées de la configuration ci-dessus. */
+export const SOFT_DELETABLE_TABLES: ReadonlySet<string> = new Set(Object.values(TRASH_CONFIG).map((config) => config.table));
 
 export function isTrashType(value: unknown): value is TrashType {
   return typeof value === "string" && value in TRASH_CONFIG;
@@ -74,6 +99,9 @@ export const PURGE_DEPENDENCIES: Partial<Record<TrashType, Array<{ table: string
   families: [
     { table: "players", column: "family_id" }, { table: "registrations", column: "family_id" },
     { table: "family_members", column: "family_id" }
+  ],
+  registrations: [
+    { table: "registration_documents", column: "registration_id" }, { table: "payments", column: "registration_id" }
   ]
 };
 
@@ -152,18 +180,73 @@ export async function listTrashedByType(type: TrashType, limit = 100): Promise<T
     throw new Error(`Unable to list trashed ${config.table}: ${error.message}`);
   }
 
-  return (data ?? []).map((row) => {
-    const record = row as Record<string, unknown>;
-    return {
-      type,
-      typeLabel: config.label,
-      id: String(record.id),
-      label: config.labelColumns
-        ? config.labelColumns.map((column) => record[column]).filter(Boolean).join(" ") || "—"
-        : String(record[config.labelColumn] ?? "—"),
-      deletedAt: String(record.deleted_at)
-    };
-  });
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const relatedLabels = await fetchRelatedLabels(config, rows);
+
+  return rows.map((record) => ({
+    type,
+    typeLabel: config.label,
+    id: String(record.id),
+    label: rowLabel(config, record, relatedLabels),
+    deletedAt: String(record.deleted_at)
+  }));
+}
+
+/** Résout en une seule requête les libellés empruntés à une table liée (clé étrangère → libellé). */
+async function fetchRelatedLabels(config: TrashConfig, rows: Record<string, unknown>[]): Promise<Map<string, string>> {
+  const relation = config.labelRelation;
+  const labels = new Map<string, string>();
+
+  if (!relation || rows.length === 0) {
+    return labels;
+  }
+
+  const ids = [...new Set(rows.map((row) => row[relation.foreignKey]).filter((value): value is string => typeof value === "string"))];
+
+  if (ids.length === 0) {
+    return labels;
+  }
+
+  const { data, error } = await getSupabaseAdminClient()
+    .from(relation.table)
+    .select(["id", ...relation.columns].join(","))
+    .in("id", ids);
+
+  if (error) {
+    // La corbeille doit rester consultable même si la table liée est illisible :
+    // on retombe sur le libellé brut de la ligne plutôt que d'échouer.
+    console.error(`Unable to fetch trash labels from ${relation.table}: ${error.message}`);
+    return labels;
+  }
+
+  for (const row of (data ?? []) as unknown as Record<string, unknown>[]) {
+    const label = relation.columns.map((column) => row[column]).filter(Boolean).join(" ").trim();
+
+    if (typeof row.id === "string" && label) {
+      labels.set(row.id, label);
+    }
+  }
+
+  return labels;
+}
+
+function rowLabel(config: TrashConfig, record: Record<string, unknown>, relatedLabels: Map<string, string>): string {
+  const relation = config.labelRelation;
+
+  if (relation) {
+    const key = record[relation.foreignKey];
+    const related = typeof key === "string" ? relatedLabels.get(key) : undefined;
+
+    if (related) {
+      return related;
+    }
+  }
+
+  if (config.labelColumns) {
+    return config.labelColumns.map((column) => record[column]).filter(Boolean).join(" ") || "—";
+  }
+
+  return String(record[config.labelColumn] ?? "—");
 }
 
 /** Agrège la corbeille de tous les types, triée par date de suppression décroissante. */

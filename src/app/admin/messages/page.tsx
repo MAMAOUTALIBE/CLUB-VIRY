@@ -17,12 +17,13 @@ export default function AdminMessagesPage() {
     <>
           <AdminModuleBoard
             title="Messages contact"
-            description="Boîte de réception des messages envoyés depuis le formulaire de contact du site."
+            description="Boîte de réception des messages envoyés depuis le formulaire de contact du site. Attribuez un message pour savoir qui répond."
             endpoint="/api/admin/contact-requests?limit=100"
             exportHref="/api/admin/exports/contact-requests"
             dataKey="messages"
             statuses={statuses}
             titleFields={["full_name", "subject"]}
+            assignable
             columns={[
               { label: "Sujet", field: "subject" },
               { label: "Email", field: "email" },

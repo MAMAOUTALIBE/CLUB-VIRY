@@ -169,6 +169,7 @@ export async function listRecruitmentApplicationsForAdmin(limit = 100): Promise<
   const { data, error } = await getSupabaseAdminClient()
     .from("recruitment_applications")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -182,19 +183,27 @@ export async function listRecruitmentApplicationsForAdmin(limit = 100): Promise<
 export async function reviewRecruitmentApplication(
   id: string,
   input: AdminRecruitmentReviewPayload
-): Promise<RecruitmentApplication> {
+): Promise<RecruitmentApplication | null> {
+  // Une candidature archivée n'est plus modifiable : la retirer du tableau doit
+  // aussi la retirer du circuit de décision.
   const { data, error } = await getSupabaseAdminClient()
     .from("recruitment_applications")
-    .update({ status: input.status })
+    .update({
+      ...(input.status ? { status: input.status } : {}),
+      ...(input.assignedTo !== undefined
+        ? { assigned_to: input.assignedTo, assigned_at: input.assignedTo ? new Date().toISOString() : null }
+        : {})
+    })
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to review recruitment application: ${error.message}`);
   }
 
-  return data as RecruitmentApplication;
+  return (data as RecruitmentApplication | null) ?? null;
 }
 
 export async function listPublicProducts(): Promise<PublicProductsPayload> {
