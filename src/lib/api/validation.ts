@@ -328,6 +328,20 @@ export type AdminUserUpdatePayload = ProfileUpdatePayload & {
   email?: string;
 };
 
+export type AdminUserInvitePayload = {
+  email: string;
+  role: NonNullable<AdminUserUpdatePayload["role"]>;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  phone?: string;
+};
+
+export type PasswordUpdatePayload = {
+  accessToken: string;
+  password: string;
+};
+
 type ValidationResult<T> =
   | {
       ok: true;
@@ -830,6 +844,40 @@ export function validatePasswordResetPayload(input: unknown): ValidationResult<P
   }
 
   return { ok: true, data: { email } };
+}
+
+/**
+ * Définition du mot de passe depuis un lien d'invitation ou de réinitialisation.
+ * Le jeton arrive dans le fragment de l'URL (jamais envoyé au serveur par le
+ * navigateur) : c'est la page qui le relit et le poste ici. On exige la même
+ * politique de mot de passe qu'à l'inscription.
+ */
+export function validatePasswordUpdatePayload(input: unknown): ValidationResult<PasswordUpdatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const accessToken = normalizeString(body.accessToken);
+  const password = normalizeString(body.password);
+
+  if (!accessToken || accessToken.length < 20) {
+    issues.push({ field: "accessToken", message: "Lien invalide ou expire." });
+  }
+
+  if (!password) {
+    issues.push({ field: "password", message: "Mot de passe obligatoire." });
+  } else {
+    issues.push(...getPasswordIssues(password));
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data: { accessToken: accessToken as string, password: password as string } };
 }
 
 export function validateRefreshSessionPayload(input: unknown): ValidationResult<RefreshSessionPayload> {
@@ -2919,6 +2967,57 @@ export function validateAdminUserUpdatePayload(input: unknown): ValidationResult
       ...(role ? { role: role as AdminUserUpdatePayload["role"] } : {}),
       ...(status ? { status: status as AdminUserUpdatePayload["status"] } : {}),
       ...(email ? { email } : {})
+    }
+  };
+}
+
+/**
+ * Invitation d'un compte depuis le CRM. Email et rôle sont obligatoires : inviter
+ * sans rôle créerait un compte muet (MEMBRE par défaut) qu'il faudrait rouvrir
+ * aussitôt. VISITEUR est refusé — c'est précisément l'absence de compte.
+ */
+export function validateAdminUserInvitePayload(input: unknown): ValidationResult<AdminUserInvitePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const email = normalizeEmail(body.email);
+  const role = normalizeString(body.role);
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+  const displayName = normalizeString(body.displayName);
+  const phone = normalizeString(body.phone);
+
+  if (!email || !isValidEmail(email)) {
+    issues.push({ field: "email", message: "Adresse email invalide." });
+  }
+
+  if (!role || !isAppRoleValue(role)) {
+    issues.push({ field: "role", message: "Role invalide." });
+  } else if (role === "VISITEUR") {
+    issues.push({ field: "role", message: "Le role Visiteur ne correspond a aucun compte." });
+  }
+
+  if (phone && (phone.length < 6 || phone.length > 32)) {
+    issues.push({ field: "phone", message: "Telephone invalide." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      email: email as string,
+      role: role as AdminUserInvitePayload["role"],
+      ...(firstName ? { firstName } : {}),
+      ...(lastName ? { lastName } : {}),
+      ...(displayName ? { displayName } : {}),
+      ...(phone ? { phone } : {})
     }
   };
 }

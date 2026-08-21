@@ -7,9 +7,9 @@ export const metadata = {
 
 export default function AdminUtilisateursPage() {
   return (
-    <>
-          <UtilisateursAdmin />
-          <PermissionsReference />
-    </>
+    <div className="grid gap-6">
+      <UtilisateursAdmin />
+      <PermissionsReference />
+    </div>
   );
 }

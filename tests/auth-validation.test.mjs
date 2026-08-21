@@ -22,6 +22,7 @@ import {
   validateAdminTeamPayload,
   validateAdminTeamPlayerPayload,
   validateAdminTeamStaffPayload,
+  validateAdminUserInvitePayload,
   validateAdminUserUpdatePayload,
   validateChildPayload,
   validateContactMessagePayload,
@@ -34,6 +35,7 @@ import {
   validateRefreshSessionPayload,
   validateRecruitmentApplicationPayload,
   validateRegistrationPayload,
+  validatePasswordUpdatePayload,
   validateRegisterPayload,
   validateReorderPayload,
   validateAdminSeasonPayload,
@@ -916,4 +918,68 @@ test("anti-escalation ranks the new roles below DIRIGEANT", () => {
   // un ÉDITEUR ne peut pas gérer un DIRIGEANT (rang supérieur)
   const ko = canAdminUpdateProfile({ actorRole: "EDITEUR", actorId: "a", targetId: "b", targetCurrentRole: "DIRIGEANT", requestedRole: "EDUCATEUR" });
   assert.equal(ko.ok, false);
+});
+
+test("validateAdminUserInvitePayload requires an email and a role", () => {
+  assert.equal(validateAdminUserInvitePayload({ email: "coach@club.fr" }).ok, false);
+  assert.equal(validateAdminUserInvitePayload({ role: "EDUCATEUR" }).ok, false);
+  assert.equal(validateAdminUserInvitePayload({ email: "pas-un-email", role: "EDUCATEUR" }).ok, false);
+});
+
+test("validateAdminUserInvitePayload normalises the email and keeps the optional identity", () => {
+  const result = validateAdminUserInvitePayload({
+    email: " Coach@Club.FR ",
+    role: "EDUCATEUR",
+    firstName: " Malik ",
+    lastName: "Benali",
+    displayName: "",
+    phone: "0601020304"
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.data.email, "coach@club.fr");
+  assert.equal(result.data.role, "EDUCATEUR");
+  assert.equal(result.data.firstName, "Malik");
+  assert.equal(result.data.lastName, "Benali");
+  assert.equal(result.data.displayName, undefined);
+  assert.equal(result.data.phone, "0601020304");
+});
+
+test("validateAdminUserInvitePayload refuses the VISITEUR role", () => {
+  // VISITEUR = absence de compte : l'inviter creerait un compte sans acces.
+  const result = validateAdminUserInvitePayload({ email: "visiteur@club.fr", role: "VISITEUR" });
+  assert.equal(result.ok, false);
+  assert.equal(result.issues.some((issue) => issue.field === "role"), true);
+});
+
+test("validatePasswordUpdatePayload enforces the token and the password policy", () => {
+  assert.equal(validatePasswordUpdatePayload({ accessToken: "court", password: "MotDePasse1" }).ok, false);
+  assert.equal(validatePasswordUpdatePayload({ accessToken: "a".repeat(40), password: "faible" }).ok, false);
+  assert.equal(validatePasswordUpdatePayload({ accessToken: "a".repeat(40), password: "motdepasse123" }).ok, false);
+
+  const result = validatePasswordUpdatePayload({ accessToken: "a".repeat(40), password: "MotDePasse1" });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.password, "MotDePasse1");
+});
+
+test("anti-escalation also covers an invitation (role granted at creation)", () => {
+  // La route d'invitation appelle la garde avec le role demande en role cible :
+  // un ADMIN_CLUB ne peut donc pas inviter un autre ADMIN_CLUB.
+  const ko = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "a",
+    targetId: "",
+    targetCurrentRole: "ADMIN_CLUB",
+    requestedRole: "ADMIN_CLUB"
+  });
+  assert.equal(ko.ok, false);
+
+  const ok = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "a",
+    targetId: "",
+    targetCurrentRole: "EDUCATEUR",
+    requestedRole: "EDUCATEUR"
+  });
+  assert.equal(ok.ok, true);
 });
