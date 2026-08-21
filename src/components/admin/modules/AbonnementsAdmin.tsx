@@ -22,7 +22,6 @@ export function AbonnementsAdmin() {
         { label: "Email", field: "profile_email" },
         { label: "Source", field: "source" }
       ]}
-      demo={[]}
     />
   );
 }

@@ -32,6 +32,66 @@ main {
   min-width: 0;
 }
 
+/* Le verrouillage du viewport est volontairement limité aux routes CRM. */
+html:has(.crm-layout),
+body:has(.crm-layout) {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body:has(.crm-layout) > [data-public-chrome] {
+  display: none !important;
+}
+
+body:has(.crm-layout) > .root-content {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.crm-layout {
+  --crm-sidebar-w: 240px;
+  --crm-header-h: 64px;
+  --crm-footer-h: 38px;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: #f4f6f5;
+  color: #0f172a;
+}
+
+.crm-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; width: var(--crm-sidebar-w); height: 100dvh; overflow: hidden; background: #00351f; transition: width 180ms ease, transform 180ms ease; }
+.crm-header { position: fixed; inset: 0 0 auto var(--crm-sidebar-w); z-index: 40; display: flex; height: var(--crm-header-h); min-width: 0; align-items: center; gap: .75rem; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,.97); padding: 0 1rem; box-shadow: 0 4px 18px rgb(15 23 42 / .06); backdrop-filter: blur(12px); transition: left 180ms ease; }
+.crm-main { position: fixed; inset: var(--crm-header-h) 0 var(--crm-footer-h) var(--crm-sidebar-w); min-width: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; transition: left 180ms ease; }
+.crm-footer { position: fixed; inset: auto 0 0 var(--crm-sidebar-w); z-index: 40; display: flex; height: var(--crm-footer-h); align-items: center; justify-content: center; border-top: 1px solid #e2e8f0; background: white; padding: 0 .75rem; text-align: center; font-size: .75rem; color: #64748b; transition: left 180ms ease; }
+.crm-layout--collapsed { --crm-sidebar-w: 76px; }
+.crm-nav-link { display: flex; min-height: 44px; align-items: center; gap: .75rem; border-radius: .65rem; padding: .6rem .75rem; color: rgba(255,255,255,.9); font-size: .9rem; font-weight: 700; transition: background-color 150ms ease, color 150ms ease; }
+.crm-nav-link:hover { background: rgba(255,255,255,.1); color: white; }
+.crm-nav-link:focus-visible,
+.crm-header-button:focus-visible,
+.crm-header a:focus-visible,
+.crm-header input:focus-visible,
+.crm-sidebar a:focus-visible,
+.crm-sidebar button:focus-visible { outline: 2px solid #ffd300; outline-offset: 2px; }
+.crm-nav-link--active { background: rgba(5,133,78,.72); color: #ffd300; box-shadow: inset 3px 0 #ffd300; }
+.crm-header-button { display: flex; width: 44px; height: 44px; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: .65rem; color: #0f172a; }
+.crm-header-button:hover { background: #f1f5f9; }
+.crm-overlay { display: none; }
+
+@media (max-width: 1023px) {
+  .crm-layout { --crm-sidebar-w: 0px; }
+  .crm-sidebar { width: min(86vw, 280px); transform: translateX(-105%); box-shadow: 18px 0 45px rgba(0,0,0,.25); }
+  .crm-sidebar--mobile-open { transform: translateX(0); }
+  .crm-overlay { position: fixed; inset: 0; z-index: 45; display: block; background: rgba(2,20,13,.58); backdrop-filter: blur(2px); }
+}
+
+@media (max-width: 639px) {
+  .crm-header { gap: .35rem; padding-inline: .5rem; }
+  .crm-main > div { padding-inline: .75rem; }
+  .crm-footer { font-size: .68rem; }
+}
+
 /* Dissuasion du téléchargement des images : pas de glisser-déposer ni de sélection
    (le menu contextuel et les raccourcis Ctrl+S/Ctrl+P sont gérés par ImageProtection,
    l'anti-hotlink / accès direct par le proxy). */

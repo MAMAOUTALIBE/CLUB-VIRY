@@ -1,8 +1,10 @@
 "use client";
 
-import { Check, Loader2, Save } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { validateHomeHeroSetting, type HomeHeroSlide as HeroSlideForm } from "@/lib/home-hero";
+import { validateAnnouncementsSetting, type SiteAnnouncement } from "@/lib/announcements";
 
 type Field = { name: string; label: string; type?: "text" | "url" | "textarea" | "boolean" | "json"; placeholder?: string; help?: string };
 type SettingDef = { key: string; title: string; description?: string; fields: Field[] };
@@ -317,6 +319,71 @@ function SettingCard({ def, value, onAuth }: { def: SettingDef; value: Record<st
   );
 }
 
+const blankHeroSlide = (): HeroSlideForm => ({ id: crypto.randomUUID(), title: "", description: "", imageUrl: "", buttonLabel: "", buttonHref: "", active: true, startAt: "", endAt: "" });
+
+const blankAnnouncement = (): SiteAnnouncement => ({ id: crypto.randomUUID(), message: "", type: "info", linkLabel: "", linkHref: "", active: true, startAt: "", endAt: "", priority: 50 });
+
+function AnnouncementsAdmin({ value, onAuth }: { value: Record<string, unknown> | undefined; onAuth: () => void }) {
+  const [items, setItems] = useState<SiteAnnouncement[]>(Array.isArray(value?.items) ? value.items as SiteAnnouncement[] : []);
+  const [lastValue, setLastValue] = useState(value); const [saving, setSaving] = useState(false); const [done, setDone] = useState(false); const [error, setError] = useState("");
+  if (value !== lastValue) { setLastValue(value); setItems(Array.isArray(value?.items) ? value.items as SiteAnnouncement[] : []); }
+  const update = <K extends keyof SiteAnnouncement>(index: number, key: K, next: SiteAnnouncement[K]) => setItems((current) => current.map((item, i) => i === index ? { ...item, [key]: next } : item));
+  const move = (index: number, direction: -1 | 1) => setItems((current) => { const target = index + direction; if (target < 0 || target >= current.length) return current; const next = [...current]; [next[index], next[target]] = [next[target], next[index]]; return next; });
+  async function save() {
+    setError(""); setDone(false); const validation = validateAnnouncementsSetting({ items });
+    if (!validation.ok) { setError(validation.issues[0]?.message ?? "Les annonces sont invalides."); return; }
+    setSaving(true);
+    try { const res = await fetch("/api/admin/settings/announcements", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) }); if (res.status === 401) { onAuth(); return; } const json = await res.json().catch(() => null); if (!res.ok || !json?.ok) { setError(json?.error?.details?.[0]?.message ?? json?.error?.message ?? "Échec de l'enregistrement."); return; } setDone(true); window.setTimeout(() => setDone(false), 2500); } catch (e) { setError(e instanceof Error ? e.message : "Erreur réseau."); } finally { setSaving(false); }
+  }
+  return <section id="annonces" className="scroll-mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-black uppercase text-[#002f1d]">Annonces temporaires</h2><p className="mt-1 text-sm text-slate-600">Affichées au-dessus de la navigation, par priorité décroissante puis dans l’ordre ci-dessous. Le bandeau inscriptions reste ensuite affiché sur ordinateur.</p></div><button type="button" disabled={items.length >= 20} onClick={() => setItems((current) => [...current, blankAnnouncement()])} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#002f1d] px-4 text-sm font-black uppercase text-white disabled:opacity-50"><Plus size={17}/> Ajouter</button></div>
+    <div className="mt-5 grid gap-4">{items.map((item, index) => <fieldset key={item.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4"><legend className="px-2 text-sm font-black uppercase text-[#002f1d]">Annonce {index + 1}</legend><div className="mb-4 flex items-center gap-2"><button type="button" aria-label={`Monter l’annonce ${index + 1}`} disabled={index === 0} onClick={() => move(index,-1)} className="focus-ring rounded border bg-white p-2 disabled:opacity-40"><ArrowUp size={17}/></button><button type="button" aria-label={`Descendre l’annonce ${index + 1}`} disabled={index === items.length - 1} onClick={() => move(index,1)} className="focus-ring rounded border bg-white p-2 disabled:opacity-40"><ArrowDown size={17}/></button><label className="ml-2 flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={item.active} onChange={(e) => update(index,"active",e.target.checked)}/> Active</label><button type="button" onClick={() => setItems((current) => current.filter((_,i) => i !== index))} className="focus-ring ml-auto inline-flex items-center gap-1 rounded px-3 py-2 text-sm font-bold text-red-700"><Trash2 size={17}/> Supprimer</button></div>
+      <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm font-bold sm:col-span-2">Message<textarea rows={2} maxLength={280} value={item.message} onChange={(e) => update(index,"message",e.target.value)} className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2"/></label><label className="grid gap-1 text-sm font-bold">Style<select value={item.type} onChange={(e) => update(index,"type",e.target.value as SiteAnnouncement["type"])} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3"><option value="info">Information</option><option value="important">Important</option><option value="urgent">Urgent</option></select></label><label className="grid gap-1 text-sm font-bold">Priorité (0–100)<input type="number" min={0} max={100} step={1} value={item.priority} onChange={(e) => update(index,"priority",Number(e.target.value))} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3"/></label>{([ ["linkLabel","Libellé du lien","text"], ["linkHref","Lien interne /… ou HTTPS","text"], ["startAt","Début d’affichage","datetime-local"], ["endAt","Fin d’affichage","datetime-local"] ] as const).map(([key,label,type]) => <label key={key} className="grid gap-1 text-sm font-bold">{label}<input type={type} value={item[key]} onChange={(e) => update(index,key,e.target.value)} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3"/></label>)}</div></fieldset>)}</div>
+    {items.length === 0 ? <p className="mt-4 text-sm font-bold text-slate-500">Aucune annonce : aucun espace ne sera réservé sur le site.</p> : null}{error ? <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p> : null}<div className="mt-4 flex items-center gap-3"><button type="button" disabled={saving} onClick={() => void save()} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] disabled:opacity-70">{saving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>} Enregistrer</button>{done ? <span className="inline-flex items-center gap-1 text-sm font-black text-emerald-700"><Check size={16}/> Enregistré</span> : null}</div></section>;
+}
+
+function HeroSlidesAdmin({ value, onAuth }: { value: Record<string, unknown> | undefined; onAuth: () => void }) {
+  const initial = Array.isArray(value?.slides) ? (value.slides as HeroSlideForm[]) : [];
+  const [slides, setSlides] = useState<HeroSlideForm[]>(initial);
+  const [lastValue, setLastValue] = useState(value);
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  if (value !== lastValue) {
+    setLastValue(value);
+    setSlides(Array.isArray(value?.slides) ? (value.slides as HeroSlideForm[]) : []);
+  }
+  const update = <K extends keyof HeroSlideForm>(index: number, key: K, next: HeroSlideForm[K]) => setSlides((current) => current.map((slide, i) => i === index ? { ...slide, [key]: next } : slide));
+  const move = (index: number, direction: -1 | 1) => setSlides((current) => {
+    const target = index + direction;
+    if (target < 0 || target >= current.length) return current;
+    const next = [...current];
+    [next[index], next[target]] = [next[target], next[index]];
+    return next;
+  });
+  async function save() {
+    setError(""); setDone(false);
+    const validation = validateHomeHeroSetting({ slides });
+    if (!validation.ok) { setError(validation.issues[0]?.message ?? "Le carrousel est invalide."); return; }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/settings/home_hero", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slides }) });
+      if (res.status === 401) { onAuth(); return; }
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) { setError(json?.error?.details?.[0]?.message ?? json?.error?.message ?? "Échec de l'enregistrement."); return; }
+      setDone(true); window.setTimeout(() => setDone(false), 2500);
+    } catch (e) { setError(e instanceof Error ? e.message : "Erreur réseau."); } finally { setSaving(false); }
+  }
+  return <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-black uppercase text-[#002f1d]">Carrousel de l’accueil</h2><p className="mt-1 text-sm text-slate-600">Les diapositives sont affichées dans cet ordre. Les dates sont optionnelles. Images : chemin local /…, images.unsplash.com ou stockage *.supabase.co.</p></div><button type="button" disabled={slides.length >= 12} onClick={() => setSlides((current) => [...current, blankHeroSlide()])} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#002f1d] px-4 text-sm font-black uppercase text-white disabled:cursor-not-allowed disabled:opacity-50"><Plus size={17}/> Ajouter</button></div>
+    <div className="mt-5 grid gap-4">{slides.map((slide, index) => <fieldset key={slide.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4"><legend className="px-2 text-sm font-black uppercase text-[#002f1d]">Diapositive {index + 1}</legend>
+      <div className="mb-4 flex flex-wrap items-center gap-2"><button type="button" aria-label={`Monter la diapositive ${index + 1}`} disabled={index === 0} onClick={() => move(index, -1)} className="focus-ring rounded border bg-white p-2 disabled:opacity-40"><ArrowUp size={17}/></button><button type="button" aria-label={`Descendre la diapositive ${index + 1}`} disabled={index === slides.length - 1} onClick={() => move(index, 1)} className="focus-ring rounded border bg-white p-2 disabled:opacity-40"><ArrowDown size={17}/></button><label className="ml-2 flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={slide.active} onChange={(e) => update(index, "active", e.target.checked)}/> Active</label><button type="button" onClick={() => setSlides((current) => current.filter((_, i) => i !== index))} className="focus-ring ml-auto inline-flex items-center gap-1 rounded px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={17}/> Supprimer</button></div>
+      <div className="grid gap-3 sm:grid-cols-2">{([ ["title", "Titre", "text"], ["imageUrl", "Image (URL ou chemin /…)", "text"], ["buttonLabel", "Texte du bouton", "text"], ["buttonHref", "Lien du bouton", "text"], ["startAt", "Début d’affichage", "datetime-local"], ["endAt", "Fin d’affichage", "datetime-local"] ] as const).map(([key,label,type]) => <label key={key} className="grid gap-1 text-sm font-bold">{label}<input type={type} value={slide[key]} onChange={(e) => update(index,key,e.target.value)} className="focus-ring min-h-11 rounded-md border border-slate-300 bg-white px-3"/></label>)}<label className="grid gap-1 text-sm font-bold sm:col-span-2">Description<textarea rows={3} value={slide.description} onChange={(e) => update(index,"description",e.target.value)} className="focus-ring rounded-md border border-slate-300 bg-white px-3 py-2"/></label></div>
+    </fieldset>)}</div>
+    {slides.length === 0 ? <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm font-bold text-amber-900">Aucune diapositive configurée. Le site utilisera le carrousel par défaut jusqu’au premier enregistrement.</p> : null}
+    {error ? <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p> : null}<div className="mt-4 flex items-center gap-3"><button type="button" disabled={saving} onClick={() => void save()} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] disabled:opacity-70">{saving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>} Enregistrer</button>{done ? <span className="inline-flex items-center gap-1 text-sm font-black text-emerald-700"><Check size={16}/> Enregistré</span> : null}</div>
+  </section>;
+}
+
 export function SettingsAdmin() {
   const [settings, setSettings] = useState<Record<string, Record<string, unknown>>>({});
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -368,7 +435,7 @@ export function SettingsAdmin() {
       ) : null}
       {message ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{message}</p> : null}
 
-      {state === "ready" ? DEFS.map((def) => <SettingCard key={def.key} def={def} value={settings[def.key]} onAuth={() => setState("auth")} />) : null}
+      {state === "ready" ? <><AnnouncementsAdmin value={settings.announcements} onAuth={() => setState("auth")} /><HeroSlidesAdmin value={settings.home_hero} onAuth={() => setState("auth")} />{DEFS.map((def) => <SettingCard key={def.key} def={def} value={settings[def.key]} onAuth={() => setState("auth")} />)}</> : null}
     </div>
   );
 }

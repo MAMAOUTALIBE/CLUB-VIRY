@@ -29,7 +29,6 @@ type AdminModuleBoardProps = {
   titleFields: string[];
   statusField?: string;
   createdAtField?: string;
-  demo: Row[];
   kpis?: ModuleKpi[];
   /** Si défini, affiche un bouton « Exporter CSV » pointant vers cet endpoint d'export. */
   exportHref?: string;

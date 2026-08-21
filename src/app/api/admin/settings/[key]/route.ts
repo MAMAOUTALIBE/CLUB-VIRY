@@ -4,34 +4,12 @@ import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { recordActivity } from "@/lib/db/foundations";
 import { upsertSetting } from "@/lib/db/settings";
+import { validateHomeHeroSetting } from "@/lib/home-hero";
+import { isAllowedSettingKey } from "@/lib/settings-keys";
+import { validateAnnouncementsSetting } from "@/lib/announcements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ALLOWED_KEYS = new Set([
-  "socials",
-  "contact",
-  "president",
-  "inscriptions_banner",
-  "club_stats",
-  "values",
-  "histoire",
-  "organigramme",
-  "stade",
-  "installations",
-  "codes_conduite",
-  "formation_educateurs",
-  "formation_creneaux",
-  "formation_projet",
-  "formation_stages",
-  "galerie_archives",
-  "mentions_legales",
-  "politique_confidentialite",
-  "boutique_cgv",
-  "boutique_livraison",
-  "inscriptions_page",
-  "detections_page"
-]);
 
 type RouteContext = { params: Promise<{ key: string }> };
 
@@ -44,7 +22,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const { key } = await context.params;
 
-  if (!ALLOWED_KEYS.has(key)) {
+  if (!isAllowedSettingKey(key)) {
     return jsonError(400, "VALIDATION_ERROR", "Clé de paramètre inconnue.");
   }
 
@@ -54,8 +32,21 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     return jsonError(400, "INVALID_JSON", "Le corps doit être un objet JSON.");
   }
 
+  let settingValue = body as Record<string, unknown>;
+  if (key === "home_hero") {
+    const validation = validateHomeHeroSetting(body);
+    if (!validation.ok) {
+      return jsonError(400, "VALIDATION_ERROR", "Le carrousel contient des données invalides.", validation.issues);
+    }
+    settingValue = { slides: validation.slides };
+  } else if (key === "announcements") {
+    const validation = validateAnnouncementsSetting(body);
+    if (!validation.ok) return jsonError(400, "VALIDATION_ERROR", "Les annonces contiennent des données invalides.", validation.issues);
+    settingValue = { items: validation.announcements };
+  }
+
   try {
-    await upsertSetting(key, body as Record<string, unknown>);
+    await upsertSetting(key, settingValue);
     await recordActivity({
       actorId: admin.context.user.id,
       action: "settings.updated",

@@ -17,6 +17,8 @@ import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
 import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
+import { getVisibleHeroSlides, validateHomeHeroSetting, type HomeHeroSlide } from "@/lib/home-hero";
+import { getVisibleAnnouncements, validateAnnouncementsSetting, type SiteAnnouncement } from "@/lib/announcements";
 import {
   conductBlocks as defaultConductBlocks,
   ecoleFootEducators as defaultEcoleFootEducators,
@@ -152,6 +154,8 @@ export type SiteContent = {
   contact: { phone1: string; phone2: string; email: string; address: string };
   president: { name: string; message: string; photoUrl: string };
   inscriptions_banner: { text: string; active: boolean };
+  homeHero: HomeHeroSlide[];
+  announcements: SiteAnnouncement[];
   club_stats: DisplayStat[];
   values: DisplayValue[];
   histoire: HistoireContent;
@@ -178,6 +182,12 @@ const SETTINGS_DEFAULTS: SiteContent = {
   contact: { phone1: "06 29 67 04 33", phone2: "01 69 96 67 00", email: "esvirychatillon91170@gmail.com", address: "3 rue Polonceau, 91170 Viry-Châtillon" },
   president: { name: "SAGLAM FERHAT", message: "", photoUrl: "" },
   inscriptions_banner: { text: "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !", active: true },
+  homeHero: [
+    { id: "stadium", title: "Une passion, notre force", description: "Porté par un nouveau bureau nouvellement nommé, notre club ouvre un nouveau chapitre.", imageUrl: images.stadiumHero, buttonLabel: "Découvrir le club", buttonHref: "/le-club", active: true, startAt: "", endAt: "", objectPosition: "center 90%" },
+    { id: "tribune", title: "Notre stade", description: "Le Stade Henri Longuet, maison de toutes les générations du club.", imageUrl: images.stadeTribune, buttonLabel: "Voir les installations", buttonHref: "/le-club/infrastructures", active: true, startAt: "", endAt: "", objectPosition: "center center" },
+    { id: "team", title: "Grandir ensemble", description: "Des équipes unies par le travail, le respect et la passion du football.", imageUrl: images.teamHuddle, buttonLabel: "Nos équipes", buttonHref: "/equipes", active: true, startAt: "", endAt: "", objectPosition: "center 48%" }
+  ],
+  announcements: [],
   club_stats: [
     { label: "Licenciés", value: "+600", iconName: "Users" },
     { label: "Éducateurs", value: "50", iconName: "Award" },
@@ -294,6 +304,11 @@ function pickEditorial(raw: Record<string, unknown> | undefined, fallback: Edito
   };
 }
 
+function parseHeroSlides(raw: unknown): HomeHeroSlide[] | null {
+  const validation = validateHomeHeroSetting({ slides: raw });
+  return validation.ok ? validation.slides : null;
+}
+
 function withoutRetiredPublicMentions(groups: OrgGroup[]): OrgGroup[] {
   return groups.map((group) => ({
     ...group,
@@ -327,6 +342,11 @@ export async function getSiteSettings(): Promise<SiteContent> {
       contact: { ...SETTINGS_DEFAULTS.contact, ...(all.contact ?? {}) },
       president: { ...SETTINGS_DEFAULTS.president, ...(all.president ?? {}) },
       inscriptions_banner: { ...SETTINGS_DEFAULTS.inscriptions_banner, ...(all.inscriptions_banner ?? {}) },
+      homeHero: getVisibleHeroSlides(parseHeroSlides((all.home_hero as Record<string, unknown> | undefined)?.slides), SETTINGS_DEFAULTS.homeHero),
+      announcements: (() => {
+        const validation = validateAnnouncementsSetting(all.announcements);
+        return getVisibleAnnouncements(validation.ok ? validation.announcements : null);
+      })(),
       club_stats: pickArray<DisplayStat>(stats?.items, SETTINGS_DEFAULTS.club_stats),
       values: pickArray<DisplayValue>(vals?.items, SETTINGS_DEFAULTS.values),
       histoire: {

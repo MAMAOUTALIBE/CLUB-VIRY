@@ -1,272 +1,43 @@
 "use client";
 
-import {
-  BadgeEuro,
-  Bell,
-  CalendarDays,
-  Camera,
-  ChevronDown,
-  ClipboardCheck,
-  GraduationCap,
-  Handshake,
-  History,
-  Landmark,
-  LayoutDashboard,
-  LogOut,
-  Mail,
-  Menu,
-  Newspaper,
-  Send,
-  Settings,
-  Shield,
-  ShieldCheck,
-  ShoppingBag,
-  Sparkles,
-  Target,
-  Trash2,
-  Trophy,
-  UserSquare2,
-  Users,
-  X
-} from "lucide-react";
+import { ArrowLeft, BadgeEuro, Camera, ChevronRight, ClipboardCheck, LayoutDashboard, LogOut, Megaphone, Newspaper, Settings, Trophy } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 
-type NavItem = { label: string; href: string; icon: LucideIcon };
-type Pole = { title: string; icon: LucideIcon; items: NavItem[] };
-
-// Navigation regroupée par pôles (cf. docs/REFONTE-CRM-2026.md). Tous les liens pointent vers
-// des pages existantes : ce regroupement est purement organisationnel (non destructif).
-const POLES: Pole[] = [
-  {
-    title: "Club & contenus",
-    icon: Newspaper,
-    items: [
-      { label: "Actualités", href: "/admin/actualites", icon: Newspaper },
-      { label: "Médias", href: "/admin/medias", icon: Camera }
-    ]
-  },
-  {
-    title: "Sportif",
-    icon: Trophy,
-    items: [
-      { label: "Saisons", href: "/admin/saisons", icon: CalendarDays },
-      { label: "Catégories", href: "/admin/categories", icon: Trophy },
-      { label: "Équipes", href: "/admin/equipes", icon: Shield },
-      { label: "Joueurs", href: "/admin/joueurs", icon: Users },
-      { label: "Encadrement", href: "/admin/encadrement", icon: GraduationCap },
-      { label: "Direction", href: "/admin/direction", icon: Landmark },
-      { label: "Matchs & calendrier", href: "/admin/calendrier", icon: CalendarDays },
-      { label: "Classements", href: "/admin/classements", icon: Trophy },
-      { label: "Convocations", href: "/admin/convocations", icon: ClipboardCheck },
-      { label: "Détections", href: "/admin/recrutement", icon: Target }
-    ]
-  },
-  {
-    title: "Familles & licenciés",
-    icon: UserSquare2,
-    items: [
-      { label: "Familles", href: "/admin/familles", icon: UserSquare2 },
-      { label: "Inscriptions", href: "/admin/inscriptions", icon: ClipboardCheck },
-      { label: "Abonnements", href: "/admin/abonnements", icon: Bell }
-    ]
-  },
-  {
-    title: "Partenaires",
-    icon: Handshake,
-    items: [{ label: "Partenaires", href: "/admin/partenaires", icon: Handshake }]
-  },
-  {
-    title: "Business",
-    icon: BadgeEuro,
-    items: [
-      { label: "Boutique", href: "/admin/boutique", icon: ShoppingBag },
-      { label: "Finances", href: "/admin/finances", icon: BadgeEuro }
-    ]
-  },
-  {
-    title: "Communication",
-    icon: Mail,
-    items: [
-      { label: "Messages", href: "/admin/messages", icon: Mail },
-      { label: "File d'envoi", href: "/admin/communication", icon: Send }
-    ]
-  },
-  {
-    title: "Administration",
-    icon: Settings,
-    items: [
-      { label: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
-      { label: "Journal d'audit", href: "/admin/journal", icon: History },
-      { label: "Corbeille", href: "/admin/corbeille", icon: Trash2 },
-      { label: "Automatisations", href: "/admin/automatisations", icon: Sparkles },
-      { label: "Paramètres", href: "/admin/parametres", icon: Settings }
-    ]
-  }
+type NavGroup = { label: string; icon: LucideIcon; href?: string; children?: { label: string; href: string }[] };
+const NAVIGATION: NavGroup[] = [
+  { label: "Tableau de bord", icon: LayoutDashboard, href: "/admin" },
+  { label: "Communication", icon: Megaphone, children: [{ label: "Actualités", href: "/admin/actualites" }, { label: "Messages", href: "/admin/messages" }, { label: "File d’envoi", href: "/admin/communication" }, { label: "Automatisations", href: "/admin/automatisations" }] },
+  { label: "Sportif", icon: Trophy, children: [{ label: "Calendrier", href: "/admin/calendrier" }, { label: "Équipes", href: "/admin/equipes" }, { label: "Joueurs", href: "/admin/joueurs" }, { label: "Encadrement", href: "/admin/encadrement" }, { label: "Convocations", href: "/admin/convocations" }, { label: "Classements", href: "/admin/classements" }, { label: "Catégories", href: "/admin/categories" }, { label: "Saisons", href: "/admin/saisons" }, { label: "Détections", href: "/admin/recrutement" }] },
+  { label: "Inscriptions", icon: ClipboardCheck, children: [{ label: "Dossiers", href: "/admin/inscriptions" }, { label: "Familles", href: "/admin/familles" }, { label: "Abonnements", href: "/admin/abonnements" }] },
+  { label: "Contenu du site", icon: Newspaper, children: [{ label: "Direction", href: "/admin/direction" }, { label: "Partenaires", href: "/admin/partenaires" }] },
+  { label: "Médias", icon: Camera, href: "/admin/medias" },
+  { label: "Commercial", icon: BadgeEuro, children: [{ label: "Boutique", href: "/admin/boutique" }, { label: "Finances", href: "/admin/finances" }] },
+  { label: "Configuration", icon: Settings, children: [{ label: "Utilisateurs", href: "/admin/utilisateurs" }, { label: "Journal d’audit", href: "/admin/journal" }, { label: "Corbeille", href: "/admin/corbeille" }, { label: "Paramètres", href: "/admin/parametres" }] }
 ];
+const isActive = (path: string, href: string) => href === "/admin" ? path === href : path === href || path.startsWith(`${href}/`);
 
-function isActiveHref(pathname: string, href: string): boolean {
-  if (href === "/admin") {
-    return pathname === "/admin";
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-export function AdminSidebar() {
+export function AdminSidebar({ collapsed, mobileOpen, educatorOnly, onClose, onExpand }: { collapsed: boolean; mobileOpen: boolean; educatorOnly: boolean; onClose: () => void; onExpand: () => void }) {
   const pathname = usePathname();
-  const activePole = POLES.find((pole) => pole.items.some((item) => isActiveHref(pathname, item.href)))?.title ?? null;
-  const [open, setOpen] = useState<Set<string>>(() => new Set(activePole ? [activePole] : []));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeSeason, setActiveSeason] = useState<string | null>(null);
-  const closeMobile = () => setMobileOpen(false);
-
-  // Libellé « Saison active » piloté par le CRM (repli sur un défaut si indisponible).
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/admin/seasons?limit=100", { credentials: "same-origin" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        const seasons = json?.data?.seasons;
-        if (!cancelled && Array.isArray(seasons)) {
-          const active = seasons.find((season: { is_active?: boolean; name?: string }) => season.is_active);
-          if (active?.name) setActiveSeason(active.name);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  function togglePole(title: string) {
-    setOpen((current) => {
-      const next = new Set(current);
-      if (next.has(title)) {
-        next.delete(title);
-      } else {
-        next.add(title);
-      }
-      return next;
-    });
-  }
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
-    window.location.href = "/";
-  }
-
-  const pilotageActive = pathname === "/admin";
-
-  return (
-    <aside className="border-b border-white/10 bg-[#002f1d] px-4 py-4 text-white lg:border-b-0 lg:border-r lg:py-5">
-      {/* Barre mobile : logo compact + bouton menu (la nav devient un drawer repliable) */}
-      <div className="flex items-center justify-between lg:hidden">
-        <Link className="focus-ring flex items-center gap-2 rounded-md px-1" href="/admin" onClick={closeMobile}>
-          <div className="flex size-9 items-center justify-center rounded-md bg-[#f7c600] text-[#002f1d]">
-            <ShieldCheck size={20} aria-hidden="true" />
-          </div>
-          <span className="text-base font-black uppercase">CRM Club</span>
-        </Link>
-        <button
-          type="button"
-          aria-expanded={mobileOpen}
-          aria-controls="admin-nav-panel"
-          onClick={() => setMobileOpen((value) => !value)}
-          className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-white/20 px-3 py-2 text-xs font-black uppercase text-white/90 hover:bg-white/10"
-        >
-          {mobileOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-          {mobileOpen ? "Fermer" : "Menu"}
-        </button>
-      </div>
-
-      {/* Logo (desktop uniquement) */}
-      <Link className="focus-ring hidden items-center gap-3 rounded-md px-1 lg:flex" href="/admin">
-        <div className="flex size-11 items-center justify-center rounded-md bg-[#f7c600] text-[#002f1d]">
-          <ShieldCheck size={24} aria-hidden="true" />
-        </div>
-        <div>
-          <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">ES Viry-Chatillon</p>
-          <p className="text-lg font-black uppercase">CRM Club</p>
-        </div>
-      </Link>
-
-      {/* Panneau de navigation : drawer sur mobile, toujours visible en lg+ */}
-      <div id="admin-nav-panel" className={`${mobileOpen ? "block" : "hidden"} lg:block`}>
-      <nav className="mt-5 grid gap-1 lg:mt-7" aria-label="Navigation CRM">
-        <Link
-          aria-current={pilotageActive ? "page" : undefined}
-          onClick={closeMobile}
-          className={`focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-black uppercase transition-colors ${
-            pilotageActive ? "bg-[#f7c600] text-[#002f1d] shadow-sm" : "text-white hover:bg-white/10"
-          }`}
-          href="/admin"
-        >
-          <LayoutDashboard size={18} aria-hidden="true" /> Pilotage
-        </Link>
-
-        {POLES.map((pole) => {
-          const PoleIcon = pole.icon;
-          const isOpen = open.has(pole.title);
-          const hasActive = pole.items.some((item) => isActiveHref(pathname, item.href));
-          const panelId = `pole-${pole.title.replace(/\s+/g, "-").replace(/[^a-zA-Z-]/g, "")}`;
-
-          return (
-            <div key={pole.title}>
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                aria-controls={panelId}
-                onClick={() => togglePole(pole.title)}
-                className={`focus-ring mt-1 flex min-h-10 w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-black uppercase tracking-wide transition-colors ${
-                  hasActive ? "text-[#f7c600]" : "text-white/55 hover:text-white"
-                }`}
-              >
-                <PoleIcon size={15} aria-hidden="true" />
-                <span className="flex-1 text-left">{pole.title}</span>
-                <ChevronDown size={14} aria-hidden="true" className={`shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isOpen ? (
-                <div id={panelId} className="ml-2 grid gap-1 border-l border-white/10 pl-2">
-                  {pole.items.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActiveHref(pathname, item.href);
-                    return (
-                      <Link
-                        aria-current={active ? "page" : undefined}
-                        onClick={closeMobile}
-                        className={`focus-ring flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                          active ? "bg-[#f7c600] text-[#002f1d] shadow-sm" : "text-white/82 hover:bg-white/10 hover:text-white"
-                        }`}
-                        href={item.href}
-                        key={item.href}
-                      >
-                        <Icon size={17} aria-hidden="true" />
-                        <span>{item.label}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </nav>
-
-      <div className="mt-6 rounded-lg border border-[#f7c600]/30 bg-white/8 p-4">
-        <p className="text-xs font-black uppercase text-[#f7c600]">Saison active</p>
-        <p className="mt-1 text-2xl font-black">{activeSeason ?? "2025 / 2026"}</p>
-      </div>
-
-      <button
-        className="focus-ring mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-white/20 px-3 py-2 text-sm font-black uppercase text-white/90 transition-colors hover:bg-white/10"
-        onClick={() => void handleLogout()}
-        type="button"
-      >
-        <LogOut size={18} aria-hidden="true" /> Se déconnecter
-      </button>
-      </div>
-    </aside>
-  );
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const logout = async () => { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null); window.location.href = "/"; };
+  const visibleNavigation: NavGroup[] = educatorOnly ? [{ label: "Convocations", icon: ClipboardCheck, href: "/admin/convocations" }] : NAVIGATION;
+  const selected = visibleNavigation.find((group) => group.label === selectedGroup && group.children);
+  return <aside id="crm-sidebar" className={`crm-sidebar ${collapsed ? "crm-sidebar--collapsed" : ""} ${mobileOpen ? "crm-sidebar--mobile-open" : ""}`} aria-label={educatorOnly ? "Navigation CRM éducateur" : "Navigation principale du CRM"}>
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(2,55,35,.91),rgba(1,35,24,.84)),url('/stade/imagepelouse.webp')] bg-cover bg-center bg-no-repeat" />
+    <div className="relative flex h-full min-h-0 flex-col px-3 py-4">
+      <button id="crm-sidebar-close" className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-lg text-2xl text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd300] lg:hidden" onClick={onClose} aria-label="Fermer le menu" type="button">×</button>
+      <Link href={educatorOnly ? "/admin/convocations" : "/admin"} onClick={onClose} className="focus-ring mx-auto flex flex-col items-center rounded-lg text-center"><Image src="/club-logo.svg" width={76} height={76} alt="Logo E.S. Viry-Châtillon" priority className={collapsed ? "lg:size-12" : ""} /><span className={`mt-2 text-sm font-black tracking-wide text-white ${collapsed ? "lg:hidden" : ""}`}>{educatorOnly ? "CRM ÉDUCATEUR" : "E.S. VIRY-CHÂTILLON"}</span></Link>
+      <nav className="mt-5 min-h-0 flex-1 space-y-1" aria-label="Rubriques CRM">{selected ? <><button type="button" onClick={() => setSelectedGroup(null)} className="crm-nav-link mb-2 w-full"><ArrowLeft size={20} aria-hidden /><span>Retour</span></button><p className="px-3 pb-2 text-xs font-black uppercase tracking-wide text-[#ffd300]">{selected.label}</p>{selected.children?.map((item) => <Link key={item.href} href={item.href} onClick={onClose} aria-current={isActive(pathname, item.href) ? "page" : undefined} className={`crm-nav-link ${isActive(pathname, item.href) ? "crm-nav-link--active" : ""}`}>{item.label}</Link>)}</> : visibleNavigation.map((group) => {
+        const Icon = group.icon; const active = group.href ? isActive(pathname, group.href) : group.children?.some((item) => isActive(pathname, item.href));
+        if (group.href) return <Link key={group.label} href={group.href} onClick={onClose} aria-current={active ? "page" : undefined} title={collapsed ? group.label : undefined} className={`crm-nav-link ${active ? "crm-nav-link--active" : ""}`}><Icon size={20} aria-hidden /><span className={collapsed ? "lg:hidden" : ""}>{group.label}</span></Link>;
+        return <button key={group.label} type="button" onClick={() => { if (collapsed) onExpand(); setSelectedGroup(group.label); }} aria-label={`Ouvrir ${group.label}`} title={collapsed ? group.label : undefined} className={`crm-nav-link w-full ${active ? "crm-nav-link--active" : ""}`}><Icon size={20} aria-hidden /><span className={`flex-1 text-left ${collapsed ? "lg:hidden" : ""}`}>{group.label}</span><ChevronRight size={16} aria-hidden className={collapsed ? "lg:hidden" : ""} /></button>;
+      })}</nav>
+      <div className={`mt-3 border-t border-white/15 pt-3 text-center text-white ${collapsed ? "lg:hidden" : ""}`}><p className="text-lg font-black text-[#ffd300]">#ESVC</p><p className="mt-1 text-xs text-white/75">Un club, une ville, une passion</p></div>
+      <button onClick={() => void logout()} type="button" className="focus-ring mt-3 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 px-3 text-sm font-bold text-white hover:bg-white/10"><LogOut size={18} aria-hidden /><span className={collapsed ? "lg:hidden" : ""}>Se déconnecter</span></button>
+    </div>
+  </aside>;
 }

@@ -7,11 +7,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MotionDiv } from "@/components/Motion";
 import { socialItems } from "@/lib/socials";
+import type { SiteAnnouncement } from "@/lib/announcements";
 
 const DEFAULT_ANNOUNCEMENT =
   "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !";
 
 type HeaderProps = {
+  announcements?: SiteAnnouncement[];
   banner?: { text?: string; active?: boolean };
   socials?: Record<string, string>;
 };
@@ -135,7 +137,7 @@ function menuDomId(href: string) {
   return href.replace(/[^a-zA-Z0-9_-]/g, "-") || "home";
 }
 
-export function Header({ banner, socials }: HeaderProps) {
+export function Header({ announcements = [], banner, socials }: HeaderProps) {
   const announcement = banner?.text?.trim() || DEFAULT_ANNOUNCEMENT;
   const bannerActive = banner?.active !== false;
   const [open, setOpen] = useState(false);
@@ -286,6 +288,18 @@ export function Header({ banner, socials }: HeaderProps) {
         scrolled ? "bg-[#00120b]/94 shadow-2xl backdrop-blur-xl" : "bg-[#00120b]/98 shadow-xl"
       }`}
     >
+      {announcements.length > 0 ? (
+        <ul aria-label="Annonces du club" className="divide-y divide-white/15">
+          {announcements.map((item) => {
+            const colors = item.type === "urgent" ? "bg-red-700 text-white" : item.type === "important" ? "bg-[#f7c600] text-[#001c10]" : "bg-[#07542f] text-white";
+            return <li key={item.id} className={`${colors} px-4 py-2 text-center text-xs font-bold sm:text-sm`}>
+              <span>{item.message}</span>
+              {item.linkHref && item.linkLabel ? <Link href={item.linkHref} className="focus-ring ml-2 inline-flex rounded-sm underline decoration-2 underline-offset-2 hover:no-underline">{item.linkLabel}<span aria-hidden="true">&nbsp;→</span></Link> : null}
+            </li>;
+          })}
+        </ul>
+      ) : null}
+      {/* Les annonces temporaires prioritaires précèdent toujours le bandeau d'inscription historique. */}
       <div className="hidden border-b border-[#f7c600]/20 bg-black/30 text-xs font-bold lg:block">
         <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-2.5 2xl:px-8 3xl:px-10">
           {bannerActive ? (
