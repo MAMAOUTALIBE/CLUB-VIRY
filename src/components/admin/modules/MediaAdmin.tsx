@@ -25,6 +25,10 @@ export function MediaAdmin() {
       listKey="albums"
       itemKey="album"
       newLabel="Nouvel album"
+      allowDelete
+      allowBulkDelete
+      deleteMode="soft"
+      rowLabel={(r) => `l'album « ${String(r.title ?? "sans titre")} »`}
       fields={[
         { name: "title", label: "Titre de l'album", required: true, fullWidth: true, placeholder: "Tournoi U11 2026" },
         { name: "coverImageUrl", label: "Image de couverture (URL)", type: "url", rowKey: "cover_image_url", placeholder: "https://…" },

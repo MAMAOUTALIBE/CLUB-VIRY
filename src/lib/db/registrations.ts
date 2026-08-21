@@ -105,6 +105,12 @@ export async function listRegistrationsForAdmin(limit = 100, status?: Registrati
   return (data ?? []) as Registration[];
 }
 
+export async function countRegistrationsForAdmin(): Promise<number> {
+  const { count, error } = await getSupabaseAdminClient().from("registrations").select("id", { count: "exact", head: true });
+  if (error) throw new Error(`Unable to count registrations: ${error.message}`);
+  return count ?? 0;
+}
+
 export async function getRegistrationForProfile(profileId: string, registrationId: string): Promise<RegistrationBundle | null> {
   const supabase = getSupabaseAdminClient();
   const { data: registration, error: registrationError } = await supabase

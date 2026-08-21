@@ -455,6 +455,18 @@ test("admin news validation rejects short content", () => {
   assert.match(JSON.stringify(result), /Contenu invalide/);
 });
 
+test("admin news validation reports a short required title only once", () => {
+  const result = validateAdminNewsPayload({
+    title: "x",
+    content: "Un contenu suffisamment long pour isoler la validation du titre."
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.issues.filter((issue) => issue.field === "title").length, 1);
+  }
+});
+
 test("admin news validation accepts a publishable article", () => {
   const result = validateAdminNewsPayload({
     title: "Victoire des Seniors R1",

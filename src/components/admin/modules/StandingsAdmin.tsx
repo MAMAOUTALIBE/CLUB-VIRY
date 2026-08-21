@@ -13,6 +13,7 @@ export function StandingsAdmin() {
       newLabel="Nouvelle ligne"
       allowDelete
       allowBulkDelete
+      deleteMode="soft"
       rowLabel={(r) => `« ${String(r.team_name ?? "cette ligne")} »`}
       fields={[
         { name: "competition", label: "Compétition", required: true, fullWidth: true, placeholder: "Seniors — Régional 1 Poule A" },

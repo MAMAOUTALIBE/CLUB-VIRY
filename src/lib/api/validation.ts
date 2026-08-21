@@ -1751,7 +1751,7 @@ export function validateAdminNewsPayload(input: unknown, options: { partial?: bo
   const seoTitle = normalizeString(body.seoTitle);
   const seoDescription = normalizeString(body.seoDescription);
 
-  if (!options.partial && (!title || title.length < 3 || title.length > 180)) {
+  if (!options.partial && !title) {
     issues.push({ field: "title", message: "Titre invalide." });
   }
 

@@ -21,6 +21,8 @@ export function CategoriesAdmin() {
       listKey="categories"
       itemKey="category"
       newLabel="Nouvelle catégorie"
+      allowDelete
+      deleteMode="soft"
       fields={[
         { name: "name", label: "Nom", required: true, fullWidth: true, placeholder: "Seniors" },
         { name: "ageRange", label: "Tranche d'âge", rowKey: "age_range", required: true, placeholder: "U6 à U11" },

@@ -5,7 +5,8 @@ import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { isUuid, validateAdminStandingPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
-import { deleteStanding, updateStanding } from "@/lib/db/standings";
+import { softDeleteRow } from "@/lib/db/soft-delete";
+import { updateStanding } from "@/lib/db/standings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,21 +74,21 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const deleted = await deleteStanding(id);
+    const trashed = await softDeleteRow("standings", id, admin.context.user.id);
 
-    if (!deleted) {
+    if (!trashed) {
       return jsonError(404, "NOT_FOUND", "Ligne de classement introuvable.");
     }
 
     await recordActivity({
       actorId: admin.context.user.id,
-      action: "standing.deleted",
+      action: "standing.trashed",
       entityType: "standings",
       entityId: id
     });
     revalidatePath("/resultats");
 
-    return jsonOk({ deleted: true });
+    return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/standings/[id]", error);
   }

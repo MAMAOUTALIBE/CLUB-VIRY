@@ -8,6 +8,7 @@ export async function listCategoriesForAdmin(limit = 100): Promise<Category[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("categories")
     .select("*")
+    .is("deleted_at", null)
     .order("order_index", { ascending: true })
     .order("name", { ascending: true })
     .limit(limit);
@@ -48,6 +49,7 @@ export async function updateCategory(id: string, input: AdminCategoryPayload): P
     .from("categories")
     .update(categoryPayloadToRow(input))
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
     .maybeSingle();
 

@@ -8,7 +8,7 @@ import { requirePermission } from "@/lib/auth";
 import type { AuthContext } from "@/lib/auth/session";
 import { recordActivity } from "@/lib/db/foundations";
 import type { TrashType } from "@/lib/db/soft-delete";
-import { TRASH_CONFIG, isTrashType, purgeRow, restoreRow } from "@/lib/db/soft-delete";
+import { TRASH_CONFIG, isTrashType, listPurgeDependencies, purgeRow, restoreRow } from "@/lib/db/soft-delete";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,14 @@ const REVALIDATE_PATHS: Record<TrashType, string[]> = {
   news: ["/", "/actualites"],
   partners: ["/", "/partenaires"],
   products: ["/boutique"],
-  officials: ["/le-club/organigramme", "/le-club/bureau", "/le-club/dirigeants"]
+  officials: ["/le-club/organigramme", "/le-club/bureau", "/le-club/dirigeants"],
+  seasons: ["/equipes"],
+  categories: ["/equipes"],
+  teams: ["/equipes", "/calendrier"],
+  matches: ["/calendrier", "/resultats"],
+  events: ["/calendrier"],
+  albums: ["/medias"],
+  standings: ["/resultats"]
 };
 
 /**
@@ -96,6 +103,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   try {
+    const dependencies = await listPurgeDependencies(auth.type, id);
+    if (dependencies.length > 0) {
+      return jsonError(409, "CONFLICT", "Suppression définitive impossible : des données dépendent encore de cet élément.", dependencies);
+    }
     const purged = await purgeRow(auth.type, id);
 
     if (!purged) {

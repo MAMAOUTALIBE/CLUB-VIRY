@@ -19,6 +19,8 @@ export function TeamsAdmin() {
       listKey="teams"
       itemKey="team"
       newLabel="Nouvelle équipe"
+      allowDelete
+      deleteMode="soft"
       rowActions={(r) =>
         r.id ? (
           <Link

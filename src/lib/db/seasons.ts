@@ -8,6 +8,7 @@ export async function listSeasonsForAdmin(limit = 50): Promise<Season[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("seasons")
     .select("*")
+    .is("deleted_at", null)
     .order("starts_on", { ascending: false })
     .limit(limit);
 
@@ -72,6 +73,7 @@ export async function updateSeason(id: string, input: AdminSeasonPayload): Promi
     .from("seasons")
     .update(seasonPayloadToRow(input))
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
     .maybeSingle();
 

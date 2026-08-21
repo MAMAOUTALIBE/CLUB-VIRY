@@ -10,6 +10,7 @@ export async function getActiveSeason(): Promise<Season | null> {
     .from("seasons")
     .select("*")
     .eq("is_active", true)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) {
@@ -26,6 +27,7 @@ export async function listActiveCategories(): Promise<Category[]> {
     .from("categories")
     .select("*")
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("order_index", { ascending: true });
 
   if (error) {

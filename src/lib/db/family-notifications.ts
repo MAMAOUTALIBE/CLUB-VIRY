@@ -159,7 +159,7 @@ export async function notifyMatchCallups(matchId: string, convokedPlayerIds: str
   try {
     if (convokedPlayerIds.length === 0) return;
     const [{ data: match }, { data: convocation }] = await Promise.all([
-      getSupabaseAdminClient().from("matches").select("starts_at, opponent_name, venue").eq("id", matchId).maybeSingle(),
+      getSupabaseAdminClient().from("matches").select("starts_at, opponent_name, venue").eq("id", matchId).is("deleted_at", null).maybeSingle(),
       getSupabaseAdminClient()
         .from("match_convocations")
         .select("meeting_at, meeting_location, event_location, return_estimate_at, instructions, outfit, transport, coach_comment, impediment_contact, event_type_name")
