@@ -1178,22 +1178,6 @@ const mockOfficials: ClubOfficialsContent = {
       ]
     }),
     buildOfficial({
-      id: "d3",
-      name: "FOL Stéphane",
-      category: "DIRIGEANT",
-      position: "Responsable partenariats et sponsoring",
-      department: "Partenariats",
-      bio: "Développe les relations avec les entreprises et soutiens du territoire, et accompagne les partenaires qui souhaitent s'associer au club.",
-      missions: ["Accueillir et fidéliser les partenaires", "Construire les offres de sponsoring", "Suivre les engagements et contreparties"],
-      availability: "Rendez-vous partenaires sur demande",
-      contactLabel: "Devenir partenaire",
-      contactHref: "/partenaires",
-      links: [
-        { label: "Partenaires", href: "/partenaires" },
-        { label: "Contact", href: "/contact" }
-      ]
-    }),
-    buildOfficial({
       id: "d4",
       name: "FRIHI Fouad & CARRIC Cédric",
       category: "DIRIGEANT",
