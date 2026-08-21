@@ -18,6 +18,8 @@ export function SeasonsAdmin() {
       listKey="seasons"
       itemKey="season"
       newLabel="Nouvelle saison"
+      allowDelete
+      deleteMode="soft"
       fields={[
         { name: "name", label: "Nom de la saison", required: true, fullWidth: true, placeholder: "2026 / 2027" },
         { name: "startsOn", label: "Début", type: "date", rowKey: "starts_on", required: true },

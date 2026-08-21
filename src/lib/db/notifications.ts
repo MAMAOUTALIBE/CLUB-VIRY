@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isAutomationEnabled, recordAutomationRun } from "@/lib/db/automations";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { NotificationCategory, NotificationLog, NotificationStatus } from "@/lib/db/types";
 
@@ -294,6 +295,15 @@ function renderNotificationEmailHtml(notification: NotificationLog): string {
   addLine("Message éducateur", "coachComment");
   addLine("Empêchement", "impedimentContact");
 
+  // Message libre d'une campagne du club : rendu en paragraphes, pas en « label : valeur ».
+  const freeText = typeof payload.body === "string" ? payload.body.trim() : "";
+  const freeTextHtml = freeText
+    ? freeText
+        .split(/\n{2,}/)
+        .map((paragraph) => `<p style="margin:0 0 12px;color:#334155;line-height:1.6">${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+        .join("\n    ")
+    : "";
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://esvirychatillonfootball.org";
   const link = typeof notification.link === "string" && notification.link ? `${siteUrl}${notification.link}` : siteUrl;
 
@@ -301,6 +311,7 @@ function renderNotificationEmailHtml(notification: NotificationLog): string {
   <div style="background:#002f1d;color:#f7c600;padding:16px 20px;font-weight:bold;font-size:18px">ES Viry-Châtillon Football</div>
   <div style="padding:20px;border:1px solid #e2e8f0;border-top:0">
     <h1 style="font-size:18px;color:#002f1d;margin:0 0 12px">${subject}</h1>
+    ${freeTextHtml}
     ${lines.join("\n    ")}
     <p style="margin:20px 0 0"><a href="${escapeHtml(link)}" style="background:#f7c600;color:#002f1d;text-decoration:none;font-weight:bold;padding:10px 18px;border-radius:6px;display:inline-block">Voir dans mon espace</a></p>
   </div>
@@ -338,11 +349,30 @@ export async function dispatchQueuedNotifications(
   supabase: SupabaseAdminClient = getSupabaseAdminClient()
 ): Promise<NotificationDispatchSummary> {
   const boundedLimit = Math.min(Math.max(limit, 1), 50);
+
+  // Coupe-circuit CRM : désactiver l'envoi laisse les notifications en file (QUEUED),
+  // elles repartiront telles quelles à la réactivation — rien n'est perdu.
+  if (!(await isAutomationEnabled("notification_dispatch"))) {
+    await recordAutomationRun({
+      ruleKey: "notification_dispatch",
+      status: "SKIPPED",
+      message: "Règle désactivée depuis le CRM : les notifications restent en file.",
+      context: { limit: boundedLimit }
+    });
+    return { providerConfigured: false, processed: 0, sent: 0, failed: 0, skipped: 0, results: [] };
+  }
+
   const queuedNotifications = await listQueuedNotifications(boundedLimit, supabase);
   const provider = readEmailProviderConfig();
   const webhook = readWebhookConfig();
 
   if (!provider && !webhook.url) {
+    await recordAutomationRun({
+      ruleKey: "notification_dispatch",
+      status: "FAILED",
+      message: "Aucun provider email ni webhook configuré.",
+      context: { queued: queuedNotifications.length }
+    });
     return {
       providerConfigured: false,
       processed: 0,
@@ -409,12 +439,24 @@ export async function dispatchQueuedNotifications(
     }
   }
 
+  const sent = results.filter((result) => result.status === "SENT").length;
+  const failed = results.filter((result) => result.status === "FAILED").length;
+  const skipped = results.filter((result) => result.status === "SKIPPED").length;
+
+  await recordAutomationRun({
+    ruleKey: "notification_dispatch",
+    status: failed > 0 ? "FAILED" : "SUCCESS",
+    message: failed > 0 ? `${failed} envoi(s) en échec sur ${results.length}.` : null,
+    affectedCount: sent,
+    context: { processed: results.length, sent, failed, skipped }
+  });
+
   return {
     providerConfigured: true,
     processed: results.length,
-    sent: results.filter((result) => result.status === "SENT").length,
-    failed: results.filter((result) => result.status === "FAILED").length,
-    skipped: results.filter((result) => result.status === "SKIPPED").length,
+    sent,
+    failed,
+    skipped,
     results
   };
 }

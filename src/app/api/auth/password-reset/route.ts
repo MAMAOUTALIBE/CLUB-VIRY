@@ -31,7 +31,9 @@ export async function POST(request: NextRequest) {
     return jsonError(400, "VALIDATION_ERROR", "Demande invalide.", payload.issues);
   }
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin}/espace-membre`;
+  // Le lien doit atterrir sur la page qui sait consommer le jeton de récupération ;
+  // l'espace membre, lui, ignorait le fragment et laissait l'utilisateur sans recours.
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin}/definir-mot-de-passe`;
   const { error } = await getSupabaseClient().auth.resetPasswordForEmail(payload.data.email, {
     redirectTo
   });

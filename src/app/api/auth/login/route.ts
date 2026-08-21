@@ -4,6 +4,9 @@ import type { NextRequest } from "next/server";
 import { jsonError, readJsonBody } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateLoginPayload } from "@/lib/api/validation";
+import { getSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
+import { isBlockedProfileStatus } from "@/lib/db/profiles";
+import type { ProfileStatus } from "@/lib/db/types";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -36,8 +39,45 @@ export async function POST(request: NextRequest) {
 
   if (error || !data.session) {
     // Message générique : ne révèle pas si le compte existe (anti-énumération)
-    // et ne propage pas l'erreur interne Supabase.
-    return jsonError(401, "AUTH_FAILED", "Identifiants invalides.");
+    // et ne propage pas l'erreur interne Supabase. Supabase refuse un compte banni
+    // AVANT de vérifier le mot de passe : distinguer ce cas laisserait justement
+    // énumérer les adresses du club. D'où le renvoi vers le club, affiché à tout le
+    // monde — il oriente le compte désactivé sans rien révéler aux autres.
+    return jsonError(401, "AUTH_FAILED", "Identifiants invalides. Si votre compte a ete desactive par le club, contactez le secretariat.");
+  }
+
+  // Un compte suspendu, archivé ou en attente ne doit pas ouvrir de session, même
+  // avec le bon mot de passe : le statut du profil fait foi dès la connexion.
+  if (isSupabaseAdminConfigured) {
+    const supabaseAdmin = getSupabaseAdminClient();
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("status")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("login profile lookup error:", profileError.message);
+      return jsonError(500, "SUPABASE_ERROR", "Une erreur interne est survenue. Reessayez plus tard.");
+    }
+
+    if (profile && profile.status !== "ACTIVE") {
+      // La session vient d'être créée côté Supabase : on la révoque pour ne pas
+      // laisser un jeton de rafraîchissement valide derrière un refus.
+      const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(data.session.access_token, "global");
+
+      if (signOutError) {
+        console.error("login signOut error:", signOutError.message);
+      }
+
+      return jsonError(
+        403,
+        "FORBIDDEN",
+        isBlockedProfileStatus(profile.status as ProfileStatus)
+          ? "Ce compte a ete desactive. Contactez le club."
+          : "Ce compte est en attente de validation par le club."
+      );
+    }
   }
 
   const response = NextResponse.json(

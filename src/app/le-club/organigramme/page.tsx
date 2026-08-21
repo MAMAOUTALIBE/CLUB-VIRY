@@ -147,23 +147,6 @@ function OfficialProfileCard({ official, featured = false }: { official: Display
   );
 }
 
-function Spotlight({ president }: { president: DisplayOfficial | null }) {
-  if (!president) return null;
-
-  return (
-    <section className="club-shell px-4 py-14 text-white sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div>
-          <p className="text-sm font-black uppercase text-[#f7c600]">Direction</p>
-          <div className="gold-divider mb-4 mt-2" aria-hidden="true" />
-          <h2 className="text-3xl font-black uppercase sm:text-4xl">Un point d'entrée clair pour comprendre le club</h2>
-        </div>
-        <OfficialProfileCard official={president} featured />
-      </div>
-    </section>
-  );
-}
-
 function OfficialsSection({ title, text, officials, featured }: { title: string; text: string; officials: DisplayOfficial[]; featured?: boolean }) {
   if (officials.length === 0) return null;
 
@@ -233,8 +216,6 @@ function ContactGuide({ items }: { items: ContactGuideItem[] }) {
 export default async function OrganizationPage() {
   const [{ organigramme }, officials] = await Promise.all([getSiteSettings(), getClubOfficials()]);
   const allOfficials = [...officials.bureau, ...officials.dirigeants];
-  const president = officials.bureau.find((official) => /pr[ée]sident/i.test(official.position) && !/vice/i.test(official.position)) ?? null;
-  const carouselOfficials = president ? allOfficials.filter((official) => official.id !== president.id) : allOfficials;
   const departments = uniqueDepartments(allOfficials);
   const contactGuide = buildContactGuide(allOfficials);
 
@@ -286,11 +267,9 @@ export default async function OrganizationPage() {
         </div>
       </section>
 
-      <Spotlight president={president} />
-
       <section id="tous-les-responsables" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionTitle eyebrow="Carte des rôles" title="Une direction lisible, profil par profil" text="Cliquez sur un responsable pour consulter ses missions, son périmètre et les meilleurs chemins de contact." />
-        <OfficialsCarousel officials={carouselOfficials} />
+        <OfficialsCarousel officials={allOfficials} />
       </section>
 
       <ContactGuide items={contactGuide} />

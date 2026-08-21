@@ -48,6 +48,10 @@ export function CalendarAdmin() {
         listKey="matches"
         itemKey="match"
         newLabel="Nouveau match"
+        allowDelete
+        allowBulkDelete
+        deleteMode="soft"
+        rowLabel={(r) => `le match contre « ${String(r.opponent_name ?? "cet adversaire")} »`}
         fields={[
           { name: "opponentName", label: "Adversaire", required: true, rowKey: "opponent_name", placeholder: "FC Massy" },
           { name: "location", label: "Lieu", type: "select", options: LOCATION },
@@ -75,6 +79,10 @@ export function CalendarAdmin() {
         listKey="events"
         itemKey="event"
         newLabel="Nouvel événement"
+        allowDelete
+        allowBulkDelete
+        deleteMode="soft"
+        rowLabel={(r) => `l'événement « ${String(r.title ?? "sans titre")} »`}
         fields={[
           { name: "title", label: "Titre", required: true, fullWidth: true, placeholder: "Tournoi U11" },
           { name: "type", label: "Type", type: "select", options: EVENT_TYPE },

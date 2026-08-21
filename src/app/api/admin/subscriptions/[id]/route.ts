@@ -4,6 +4,7 @@ import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { isUuid } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
+import { softDeleteRow } from "@/lib/db/soft-delete";
 import { updateSubscriptionStatus } from "@/lib/db/subscriptions";
 
 export const runtime = "nodejs";
@@ -50,6 +51,39 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       metadata: { status }
     });
     return jsonOk({ updated: true });
+  } catch (error) {
+    return handleDbError("admin/subscriptions/[id]", error);
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const admin = await getAdminContext(request, "admin:manage_users");
+
+  if (!admin.ok) {
+    return admin.response;
+  }
+
+  const { id } = await context.params;
+
+  if (!isUuid(id)) {
+    return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
+  }
+
+  try {
+    const trashed = await softDeleteRow("subscriptions", id, admin.context.user.id);
+
+    if (!trashed) {
+      return jsonError(404, "NOT_FOUND", "Abonnement introuvable.");
+    }
+
+    await recordActivity({
+      actorId: admin.context.user.id,
+      action: "subscription.trashed",
+      entityType: "subscriptions",
+      entityId: id
+    });
+
+    return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/subscriptions/[id]", error);
   }

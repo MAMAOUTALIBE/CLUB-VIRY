@@ -230,6 +230,7 @@ export type AdminRegistrationReviewPayload = {
   status?: "DRAFT" | "SUBMITTED" | "IN_REVIEW" | "MISSING_DOCUMENTS" | "VALIDATED" | "REJECTED" | "CANCELLED";
   adminNotes?: string;
   categoryId?: string;
+  assignedTo?: string | null;
 };
 
 export type AdminDocumentReviewPayload = {
@@ -284,11 +285,12 @@ export type AdminOfficialPayload = {
 
 export type AdminRecruitmentReviewPayload = {
   status?: "PENDING" | "CONTACTED" | "TRIAL_SCHEDULED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
+  assignedTo?: string | null;
 };
 
 export type AdminContactMessageReviewPayload = {
   status?: "PENDING" | "CONTACTED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
-  assignedTo?: string;
+  assignedTo?: string | null;
   respondedAt?: string;
 };
 
@@ -326,6 +328,28 @@ export type AdminUserUpdatePayload = ProfileUpdatePayload & {
     | "VISITEUR";
   status?: "ACTIVE" | "PENDING" | "SUSPENDED" | "ARCHIVED";
   email?: string;
+};
+
+export type AdminCampaignPayload = {
+  subject: string;
+  body: string;
+  audienceType: "ALL_MEMBERS" | "ROLE" | "TEAM" | "CATEGORY";
+  audienceId?: string;
+  link?: string;
+};
+
+export type AdminUserInvitePayload = {
+  email: string;
+  role: NonNullable<AdminUserUpdatePayload["role"]>;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  phone?: string;
+};
+
+export type PasswordUpdatePayload = {
+  accessToken: string;
+  password: string;
 };
 
 type ValidationResult<T> =
@@ -830,6 +854,40 @@ export function validatePasswordResetPayload(input: unknown): ValidationResult<P
   }
 
   return { ok: true, data: { email } };
+}
+
+/**
+ * Définition du mot de passe depuis un lien d'invitation ou de réinitialisation.
+ * Le jeton arrive dans le fragment de l'URL (jamais envoyé au serveur par le
+ * navigateur) : c'est la page qui le relit et le poste ici. On exige la même
+ * politique de mot de passe qu'à l'inscription.
+ */
+export function validatePasswordUpdatePayload(input: unknown): ValidationResult<PasswordUpdatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const accessToken = normalizeString(body.accessToken);
+  const password = normalizeString(body.password);
+
+  if (!accessToken || accessToken.length < 20) {
+    issues.push({ field: "accessToken", message: "Lien invalide ou expire." });
+  }
+
+  if (!password) {
+    issues.push({ field: "password", message: "Mot de passe obligatoire." });
+  } else {
+    issues.push(...getPasswordIssues(password));
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data: { accessToken: accessToken as string, password: password as string } };
 }
 
 export function validateRefreshSessionPayload(input: unknown): ValidationResult<RefreshSessionPayload> {
@@ -1751,7 +1809,7 @@ export function validateAdminNewsPayload(input: unknown, options: { partial?: bo
   const seoTitle = normalizeString(body.seoTitle);
   const seoDescription = normalizeString(body.seoDescription);
 
-  if (!options.partial && (!title || title.length < 3 || title.length > 180)) {
+  if (!options.partial && !title) {
     issues.push({ field: "title", message: "Titre invalide." });
   }
 
@@ -2238,6 +2296,28 @@ export function validateAdminPlayerUpdatePayload(input: unknown): ValidationResu
   };
 }
 
+type AssigneeResult = { ok: true; value: string | null | undefined } | { ok: false };
+
+/**
+ * Attribution d'un dossier à un membre du club : un identifiant de profil, ou `null`
+ * explicite pour retirer l'attribution. Champ absent = attribution inchangée — sans
+ * cette distinction, enregistrer un simple changement de statut désattribuerait le
+ * dossier au passage.
+ */
+function parseAssignedTo(value: unknown): AssigneeResult {
+  if (value === undefined) {
+    return { ok: true, value: undefined };
+  }
+
+  if (value === null || value === "") {
+    return { ok: true, value: null };
+  }
+
+  const id = normalizeString(value);
+
+  return id && isUuid(id) ? { ok: true, value: id } : { ok: false };
+}
+
 export function validateAdminRegistrationReviewPayload(input: unknown): ValidationResult<AdminRegistrationReviewPayload> {
   const body = asRecord(input);
   const issues: ValidationIssue[] = [];
@@ -2249,9 +2329,15 @@ export function validateAdminRegistrationReviewPayload(input: unknown): Validati
   const status = normalizeString(body.status);
   const adminNotes = normalizeString(body.adminNotes);
   const categoryId = normalizeString(body.categoryId);
+  const assignee = parseAssignedTo(body.assignedTo);
+  const assignedTo = assignee.ok ? assignee.value : undefined;
 
-  if (!status && !adminNotes && !categoryId) {
+  if (!status && !adminNotes && !categoryId && assignedTo === undefined && assignee.ok) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (!assignee.ok) {
+    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
   }
 
   if (status && !isRegistrationStatus(status)) {
@@ -2275,7 +2361,8 @@ export function validateAdminRegistrationReviewPayload(input: unknown): Validati
     data: {
       ...(status ? { status: status as AdminRegistrationReviewPayload["status"] } : {}),
       ...(adminNotes ? { adminNotes } : {}),
-      ...(categoryId ? { categoryId } : {})
+      ...(categoryId ? { categoryId } : {}),
+      ...(assignedTo !== undefined ? { assignedTo } : {})
     }
   };
 }
@@ -2604,13 +2691,39 @@ export function validateAdminPartnershipRequestReviewPayload(
 
 export function validateAdminRecruitmentReviewPayload(input: unknown): ValidationResult<AdminRecruitmentReviewPayload> {
   const body = asRecord(input);
-  const status = body ? normalizeString(body.status) : undefined;
+  const issues: ValidationIssue[] = [];
 
-  if (!status || !isApplicationStatus(status)) {
-    return { ok: false, issues: [{ field: "status", message: "Statut candidature detection invalide." }] };
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
   }
 
-  return { ok: true, data: { status: status as AdminRecruitmentReviewPayload["status"] } };
+  const status = normalizeString(body.status);
+  const assignee = parseAssignedTo(body.assignedTo);
+  const assignedTo = assignee.ok ? assignee.value : undefined;
+
+  if (!status && assignedTo === undefined && assignee.ok) {
+    issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (!assignee.ok) {
+    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
+  }
+
+  if (status && !isApplicationStatus(status)) {
+    issues.push({ field: "status", message: "Statut candidature detection invalide." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      ...(status ? { status: status as AdminRecruitmentReviewPayload["status"] } : {}),
+      ...(assignedTo !== undefined ? { assignedTo } : {})
+    }
+  };
 }
 
 export function validateAdminContactMessageReviewPayload(input: unknown): ValidationResult<AdminContactMessageReviewPayload> {
@@ -2622,19 +2735,20 @@ export function validateAdminContactMessageReviewPayload(input: unknown): Valida
   }
 
   const status = normalizeString(body.status);
-  const assignedTo = normalizeString(body.assignedTo);
+  const assignee = parseAssignedTo(body.assignedTo);
+  const assignedTo = assignee.ok ? assignee.value : undefined;
   const respondedAt = normalizeString(body.respondedAt);
 
-  if (!status && !assignedTo && !respondedAt) {
+  if (!status && assignedTo === undefined && !respondedAt && assignee.ok) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
+  }
+
+  if (!assignee.ok) {
+    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
   }
 
   if (status && !isRequestStatus(status)) {
     issues.push({ field: "status", message: "Statut message contact invalide." });
-  }
-
-  if (assignedTo && !isUuid(assignedTo)) {
-    issues.push({ field: "assignedTo", message: "Identifiant responsable invalide." });
   }
 
   if (respondedAt && !isIsoDateTime(respondedAt)) {
@@ -2649,7 +2763,7 @@ export function validateAdminContactMessageReviewPayload(input: unknown): Valida
     ok: true,
     data: {
       ...(status ? { status: status as AdminContactMessageReviewPayload["status"] } : {}),
-      ...(assignedTo ? { assignedTo } : {}),
+      ...(assignedTo !== undefined ? { assignedTo } : {}),
       ...(respondedAt ? { respondedAt } : {})
     }
   };
@@ -2921,4 +3035,243 @@ export function validateAdminUserUpdatePayload(input: unknown): ValidationResult
       ...(email ? { email } : {})
     }
   };
+}
+
+const CAMPAIGN_AUDIENCE_TYPES = ["ALL_MEMBERS", "ROLE", "TEAM", "CATEGORY"] as const;
+
+/**
+ * Campagne de communication. Le public ciblé exige sa cible (rôle, équipe ou
+ * catégorie) ; « tout le club » n'en prend aucune — accepter une cible orpheline
+ * enverrait le message à un public différent de celui affiché à l'écran.
+ *
+ * Le lien est relatif au site : une campagne ne doit pas pouvoir pousser les familles
+ * vers un domaine tiers depuis un email signé du club.
+ */
+export function validateAdminCampaignPayload(input: unknown): ValidationResult<AdminCampaignPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const subject = normalizeString(body.subject);
+  const message = normalizeString(body.body);
+  const audienceType = normalizeString(body.audienceType);
+  const audienceId = normalizeString(body.audienceId);
+  const link = normalizeString(body.link);
+
+  if (!subject || subject.length > 160) {
+    issues.push({ field: "subject", message: "Objet obligatoire (160 caracteres maximum)." });
+  }
+
+  if (!message || message.length > 5000) {
+    issues.push({ field: "body", message: "Message obligatoire (5000 caracteres maximum)." });
+  }
+
+  if (!audienceType || !(CAMPAIGN_AUDIENCE_TYPES as readonly string[]).includes(audienceType)) {
+    issues.push({ field: "audienceType", message: "Public invalide." });
+  } else if (audienceType === "ALL_MEMBERS") {
+    if (audienceId) {
+      issues.push({ field: "audienceId", message: "Le public « tout le club » ne prend pas de cible." });
+    }
+  } else if (!audienceId) {
+    issues.push({ field: "audienceId", message: "Cible obligatoire pour ce public." });
+  } else if (audienceType === "ROLE") {
+    if (!isAppRoleValue(audienceId)) {
+      issues.push({ field: "audienceId", message: "Role invalide." });
+    }
+  } else if (!isUuid(audienceId)) {
+    issues.push({ field: "audienceId", message: "Identifiant de cible invalide." });
+  }
+
+  if (link && (!link.startsWith("/") || link.startsWith("//"))) {
+    issues.push({ field: "link", message: "Le lien doit etre un chemin interne au site (ex. /actualites)." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      subject: subject as string,
+      body: message as string,
+      audienceType: audienceType as AdminCampaignPayload["audienceType"],
+      ...(audienceId ? { audienceId } : {}),
+      ...(link ? { link } : {})
+    }
+  };
+}
+
+/**
+ * Invitation d'un compte depuis le CRM. Email et rôle sont obligatoires : inviter
+ * sans rôle créerait un compte muet (MEMBRE par défaut) qu'il faudrait rouvrir
+ * aussitôt. VISITEUR est refusé — c'est précisément l'absence de compte.
+ */
+export function validateAdminUserInvitePayload(input: unknown): ValidationResult<AdminUserInvitePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const email = normalizeEmail(body.email);
+  const role = normalizeString(body.role);
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+  const displayName = normalizeString(body.displayName);
+  const phone = normalizeString(body.phone);
+
+  if (!email || !isValidEmail(email)) {
+    issues.push({ field: "email", message: "Adresse email invalide." });
+  }
+
+  if (!role || !isAppRoleValue(role)) {
+    issues.push({ field: "role", message: "Role invalide." });
+  } else if (role === "VISITEUR") {
+    issues.push({ field: "role", message: "Le role Visiteur ne correspond a aucun compte." });
+  }
+
+  if (phone && (phone.length < 6 || phone.length > 32)) {
+    issues.push({ field: "phone", message: "Telephone invalide." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      email: email as string,
+      role: role as AdminUserInvitePayload["role"],
+      ...(firstName ? { firstName } : {}),
+      ...(lastName ? { lastName } : {}),
+      ...(displayName ? { displayName } : {}),
+      ...(phone ? { phone } : {})
+    }
+  };
+}
+
+export type AutomationRuleTogglePayload = {
+  isEnabled: boolean;
+};
+
+/**
+ * Bascule d'une automatisation. La clé de la règle voyage dans l'URL (et est vérifiée
+ * contre le catalogue par la route) : ici on ne valide que l'état demandé, qui doit
+ * être un vrai booléen — accepter "false" en chaîne activerait la règle par erreur.
+ */
+export function validateAutomationRuleTogglePayload(input: unknown): ValidationResult<AutomationRuleTogglePayload> {
+  const body = asRecord(input);
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  if (typeof body.isEnabled !== "boolean") {
+    return { ok: false, issues: [{ field: "isEnabled", message: "Le champ isEnabled doit être un booléen." }] };
+  }
+
+  return { ok: true, data: { isEnabled: body.isEnabled } };
+}
+
+export type AdminPlayerCreatePayload = {
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  gender: "MASCULIN" | "FEMININ" | "NON_RENSEIGNE";
+  familyId?: string | null;
+  categoryId?: string | null;
+  licenseNumber?: string | null;
+  medicalNotes?: string | null;
+};
+
+/**
+ * Création d'un joueur depuis le CRM. Identité et date de naissance obligatoires
+ * (la catégorie d'âge en dépend) ; la famille reste facultative, le club enregistre
+ * parfois le joueur avant d'avoir le dossier du responsable légal.
+ */
+export function validateAdminPlayerCreatePayload(input: unknown): ValidationResult<AdminPlayerCreatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requête doit être un objet JSON." }] };
+  }
+
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+  const birthDate = normalizeString(body.birthDate);
+  const gender = body.gender;
+  const familyId = body.familyId === null ? null : normalizeString(body.familyId);
+  const categoryId = body.categoryId === null ? null : normalizeString(body.categoryId);
+  const licenseNumber = body.licenseNumber === null ? null : normalizeString(body.licenseNumber);
+  const medicalNotes = body.medicalNotes === null ? null : normalizeString(body.medicalNotes);
+
+  if (firstName === undefined || firstName.length < 2 || firstName.length > 80) {
+    issues.push({ field: "firstName", message: "Le prénom doit faire entre 2 et 80 caractères." });
+  }
+  if (lastName === undefined || lastName.length < 2 || lastName.length > 80) {
+    issues.push({ field: "lastName", message: "Le nom doit faire entre 2 et 80 caractères." });
+  }
+  if (birthDate === undefined || !isValidBirthDate(birthDate)) {
+    issues.push({ field: "birthDate", message: "Date de naissance invalide." });
+  }
+  if (gender !== undefined && !isPersonGender(gender)) {
+    issues.push({ field: "gender", message: "Genre invalide." });
+  }
+  if (typeof familyId === "string" && !isUuid(familyId)) {
+    issues.push({ field: "familyId", message: "Famille invalide." });
+  }
+  if (typeof categoryId === "string" && !isUuid(categoryId)) {
+    issues.push({ field: "categoryId", message: "Catégorie invalide." });
+  }
+  if (typeof licenseNumber === "string" && licenseNumber.length > 40) {
+    issues.push({ field: "licenseNumber", message: "Numéro de licence trop long." });
+  }
+  if (typeof medicalNotes === "string" && medicalNotes.length > 2000) {
+    issues.push({ field: "medicalNotes", message: "Notes médicales trop longues." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      firstName: firstName as string,
+      lastName: lastName as string,
+      birthDate: birthDate as string,
+      gender: (gender as AdminPlayerCreatePayload["gender"]) ?? "NON_RENSEIGNE",
+      familyId: familyId ?? null,
+      categoryId: categoryId ?? null,
+      licenseNumber: licenseNumber ?? null,
+      medicalNotes: medicalNotes ?? null
+    }
+  };
+}
+
+export type AdminFamilyPayload = {
+  name: string;
+};
+
+export function validateAdminFamilyPayload(input: unknown): ValidationResult<AdminFamilyPayload> {
+  const body = asRecord(input);
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requête doit être un objet JSON." }] };
+  }
+
+  const name = normalizeString(body.name);
+
+  if (name === undefined || name.length < 2 || name.length > 120) {
+    return { ok: false, issues: [{ field: "name", message: "Le nom de la famille doit faire entre 2 et 120 caractères." }] };
+  }
+
+  return { ok: true, data: { name } };
 }

@@ -1,6 +1,5 @@
 import { Download } from "lucide-react";
 import { Admin360Explorer } from "@/components/admin/Admin360Explorer";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export const metadata = {
   title: "CRM Inscriptions"
@@ -8,10 +7,7 @@ export const metadata = {
 
 export default function AdminRegistrationsPage() {
   return (
-    <div className="crm-shell-page min-h-screen bg-[#f4f6f1] text-slate-950">
-      <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
-        <AdminSidebar />
-        <main id="contenu" className="px-4 py-5 sm:px-6 lg:px-8">
+    <>
           <div className="mb-4 flex justify-end">
             <a
               href="/api/admin/exports/registrations"
@@ -26,8 +22,6 @@ export default function AdminRegistrationsPage() {
             kind="registrations"
             title="Inscriptions"
           />
-        </main>
-      </div>
-    </div>
+    </>
   );
 }

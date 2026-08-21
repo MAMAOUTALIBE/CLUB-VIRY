@@ -39,7 +39,20 @@ type DetailView = {
   stats: Array<{ label: string; value: string }>;
   sections: Array<{ title: string; items: DetailItem[] }>;
   player?: PlayerForm;
+  assignedTo?: string;
 };
+
+type Assignee = { id: string; name: string };
+
+function extractAssignees(payload: unknown): Assignee[] {
+  const data = isObject(payload) && isObject(payload.data) ? payload.data : null;
+  const list = data && Array.isArray(data.assignees) ? data.assignees : [];
+
+  return list
+    .filter(isObject)
+    .filter((entry): entry is { id: string; name: string } => typeof entry.id === "string" && typeof entry.name === "string")
+    .map((entry) => ({ id: entry.id, name: entry.name }));
+}
 
 type ApiFailure = {
   ok: false;
@@ -214,6 +227,7 @@ function buildDetail(kind: DetailKind, payload: unknown): DetailView {
 
   return {
     adminNotes: optionalString(registration.admin_notes) ?? "",
+    assignedTo: optionalString(registration.assigned_to) ?? "",
     title: `Dossier ${optionalString(registration.id)?.slice(0, 8) ?? ""}`,
     subtitle: [
       player ? `Joueur : ${optionalString(player.first_name) ?? ""} ${optionalString(player.last_name) ?? ""}`.trim() : null,
@@ -246,6 +260,8 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
     "Document a corriger. Merci de deposer une version conforme."
   );
   const [playerForm, setPlayerForm] = useState<PlayerForm | null>(null);
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
+  const [assignedTo, setAssignedTo] = useState("");
 
   const visibleSections = useMemo(() => detail?.sections.filter((section) => section.items.length > 0) ?? [], [detail]);
 
@@ -270,6 +286,7 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       const nextDetail = buildDetail(kind, payload);
       setDetail(nextDetail);
       setAdminNotes(nextDetail.adminNotes ?? "");
+      setAssignedTo(nextDetail.assignedTo ?? "");
       setPlayerForm(nextDetail.player ?? null);
       setStatus("loaded");
       setMessage("Fiche 360 chargee depuis le backend.");
@@ -350,10 +367,31 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
     void patchAdmin(`/api/admin/registration-documents/${documentId}`, body);
   }, [documentRejectionReason, patchAdmin]);
 
+  const assignRegistration = useCallback((nextAssignee: string) => {
+    setAssignedTo(nextAssignee);
+    void patchAdmin(endpoint, { assignedTo: nextAssignee || null });
+  }, [endpoint, patchAdmin]);
+
   useEffect(() => {
     const timeout = window.setTimeout(() => void loadDetail(), 0);
     return () => window.clearTimeout(timeout);
   }, [loadDetail]);
+
+  useEffect(() => {
+    if (kind !== "registration") {
+      return;
+    }
+
+    // Échec silencieux : sans la liste, le sélecteur reste vide mais la revue du
+    // dossier, elle, doit rester possible.
+    const controller = new AbortController();
+    void fetch("/api/admin/assignees", { credentials: "same-origin", signal: controller.signal })
+      .then((response) => response.json())
+      .then((payload) => setAssignees(extractAssignees(payload)))
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [kind]);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -404,6 +442,20 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
               ))}
             </div>
           </div>
+          <label className="mt-4 block max-w-md">
+            <span className="text-xs font-black uppercase text-slate-500">Suivi par</span>
+            <select
+              className="focus-ring mt-2 min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-900 disabled:opacity-70"
+              disabled={actionStatus === "loading"}
+              onChange={(event) => assignRegistration(event.target.value)}
+              value={assignedTo}
+            >
+              <option value="">Personne pour l&apos;instant</option>
+              {assignees.map((assignee) => (
+                <option key={assignee.id} value={assignee.id}>{assignee.name}</option>
+              ))}
+            </select>
+          </label>
           <label className="mt-4 block">
             <span className="text-xs font-black uppercase text-slate-500">Note admin transmise au dossier</span>
             <textarea

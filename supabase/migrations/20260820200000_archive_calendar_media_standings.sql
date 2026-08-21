@@ -1,0 +1,12 @@
+alter table public.matches add column if not exists deleted_at timestamptz;
+alter table public.matches add column if not exists deleted_by uuid references public.profiles(id) on delete set null;
+alter table public.club_events add column if not exists deleted_at timestamptz;
+alter table public.club_events add column if not exists deleted_by uuid references public.profiles(id) on delete set null;
+alter table public.media_albums add column if not exists deleted_at timestamptz;
+alter table public.media_albums add column if not exists deleted_by uuid references public.profiles(id) on delete set null;
+alter table public.standings add column if not exists deleted_at timestamptz;
+alter table public.standings add column if not exists deleted_by uuid references public.profiles(id) on delete set null;
+create index if not exists matches_not_deleted_idx on public.matches (starts_at) where deleted_at is null;
+create index if not exists club_events_not_deleted_idx on public.club_events (starts_at) where deleted_at is null;
+create index if not exists media_albums_not_deleted_idx on public.media_albums (created_at desc) where deleted_at is null;
+create index if not exists standings_not_deleted_idx on public.standings (competition, rank) where deleted_at is null;

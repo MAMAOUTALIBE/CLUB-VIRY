@@ -4,6 +4,8 @@ export type Permission =
   | "admin:access"
   | "admin:manage_users"
   | "admin:view_logs"
+  | "automations:manage"
+  | "communication:manage"
   | "content:manage"
   | "content:publish"
   | "teams:manage"
@@ -25,6 +27,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "admin:access",
     "admin:manage_users",
     "admin:view_logs",
+    "automations:manage",
+    "communication:manage",
     "content:manage",
     "content:publish",
     "teams:manage",
@@ -45,6 +49,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "admin:access",
     "admin:manage_users",
     "admin:view_logs",
+    "automations:manage",
+    "communication:manage",
     "content:manage",
     "content:publish",
     "teams:manage",
@@ -60,6 +66,8 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
   DIRIGEANT: [
     "admin:access",
     "admin:view_logs",
+    "automations:manage",
+    "communication:manage",
     "content:manage",
     "content:publish",
     "teams:manage",

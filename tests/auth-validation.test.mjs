@@ -22,6 +22,8 @@ import {
   validateAdminTeamPayload,
   validateAdminTeamPlayerPayload,
   validateAdminTeamStaffPayload,
+  validateAdminCampaignPayload,
+  validateAdminUserInvitePayload,
   validateAdminUserUpdatePayload,
   validateChildPayload,
   validateContactMessagePayload,
@@ -34,6 +36,7 @@ import {
   validateRefreshSessionPayload,
   validateRecruitmentApplicationPayload,
   validateRegistrationPayload,
+  validatePasswordUpdatePayload,
   validateRegisterPayload,
   validateReorderPayload,
   validateAdminSeasonPayload,
@@ -453,6 +456,18 @@ test("admin news validation rejects short content", () => {
 
   assert.equal(result.ok, false);
   assert.match(JSON.stringify(result), /Contenu invalide/);
+});
+
+test("admin news validation reports a short required title only once", () => {
+  const result = validateAdminNewsPayload({
+    title: "x",
+    content: "Un contenu suffisamment long pour isoler la validation du titre."
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.issues.filter((issue) => issue.field === "title").length, 1);
+  }
 });
 
 test("admin news validation accepts a publishable article", () => {
@@ -904,4 +919,161 @@ test("anti-escalation ranks the new roles below DIRIGEANT", () => {
   // un ÉDITEUR ne peut pas gérer un DIRIGEANT (rang supérieur)
   const ko = canAdminUpdateProfile({ actorRole: "EDITEUR", actorId: "a", targetId: "b", targetCurrentRole: "DIRIGEANT", requestedRole: "EDUCATEUR" });
   assert.equal(ko.ok, false);
+});
+
+test("validateAdminUserInvitePayload requires an email and a role", () => {
+  assert.equal(validateAdminUserInvitePayload({ email: "coach@club.fr" }).ok, false);
+  assert.equal(validateAdminUserInvitePayload({ role: "EDUCATEUR" }).ok, false);
+  assert.equal(validateAdminUserInvitePayload({ email: "pas-un-email", role: "EDUCATEUR" }).ok, false);
+});
+
+test("validateAdminUserInvitePayload normalises the email and keeps the optional identity", () => {
+  const result = validateAdminUserInvitePayload({
+    email: " Coach@Club.FR ",
+    role: "EDUCATEUR",
+    firstName: " Malik ",
+    lastName: "Benali",
+    displayName: "",
+    phone: "0601020304"
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.data.email, "coach@club.fr");
+  assert.equal(result.data.role, "EDUCATEUR");
+  assert.equal(result.data.firstName, "Malik");
+  assert.equal(result.data.lastName, "Benali");
+  assert.equal(result.data.displayName, undefined);
+  assert.equal(result.data.phone, "0601020304");
+});
+
+test("validateAdminUserInvitePayload refuses the VISITEUR role", () => {
+  // VISITEUR = absence de compte : l'inviter creerait un compte sans acces.
+  const result = validateAdminUserInvitePayload({ email: "visiteur@club.fr", role: "VISITEUR" });
+  assert.equal(result.ok, false);
+  assert.equal(result.issues.some((issue) => issue.field === "role"), true);
+});
+
+test("validatePasswordUpdatePayload enforces the token and the password policy", () => {
+  assert.equal(validatePasswordUpdatePayload({ accessToken: "court", password: "MotDePasse1" }).ok, false);
+  assert.equal(validatePasswordUpdatePayload({ accessToken: "a".repeat(40), password: "faible" }).ok, false);
+  assert.equal(validatePasswordUpdatePayload({ accessToken: "a".repeat(40), password: "motdepasse123" }).ok, false);
+
+  const result = validatePasswordUpdatePayload({ accessToken: "a".repeat(40), password: "MotDePasse1" });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.password, "MotDePasse1");
+});
+
+test("anti-escalation also covers an invitation (role granted at creation)", () => {
+  // La route d'invitation appelle la garde avec le role demande en role cible :
+  // un ADMIN_CLUB ne peut donc pas inviter un autre ADMIN_CLUB.
+  const ko = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "a",
+    targetId: "",
+    targetCurrentRole: "ADMIN_CLUB",
+    requestedRole: "ADMIN_CLUB"
+  });
+  assert.equal(ko.ok, false);
+
+  const ok = canAdminUpdateProfile({
+    actorRole: "ADMIN_CLUB",
+    actorId: "a",
+    targetId: "",
+    targetCurrentRole: "EDUCATEUR",
+    requestedRole: "EDUCATEUR"
+  });
+  assert.equal(ok.ok, true);
+});
+
+test("validateAdminRecruitmentReviewPayload accepts a status alone, an assignment alone, or both", () => {
+  assert.equal(validateAdminRecruitmentReviewPayload({ status: "CONTACTED" }).ok, true);
+
+  const assigned = validateAdminRecruitmentReviewPayload({ assignedTo: "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f" });
+  assert.equal(assigned.ok, true);
+  assert.equal(assigned.data.status, undefined);
+  assert.equal(assigned.data.assignedTo, "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f");
+
+  // Corps vide : rien à enregistrer.
+  assert.equal(validateAdminRecruitmentReviewPayload({}).ok, false);
+  assert.equal(validateAdminRecruitmentReviewPayload({ assignedTo: "pas-un-uuid" }).ok, false);
+});
+
+test("un assignedTo null retire l'attribution, un champ absent la laisse intacte", () => {
+  // null explicite : on transmet null pour désattribuer.
+  const cleared = validateAdminRecruitmentReviewPayload({ status: "PENDING", assignedTo: null });
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.assignedTo, null);
+
+  // champ absent : la clé ne doit pas apparaître, sinon un simple changement de
+  // statut effacerait l'attribution au passage.
+  const untouched = validateAdminRecruitmentReviewPayload({ status: "PENDING" });
+  assert.equal(untouched.ok, true);
+  assert.equal("assignedTo" in untouched.data, false);
+});
+
+test("validateAdminRegistrationReviewPayload accepte l'attribution d'un dossier", () => {
+  const assigned = validateAdminRegistrationReviewPayload({ assignedTo: "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f" });
+  assert.equal(assigned.ok, true);
+  assert.equal(assigned.data.assignedTo, "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f");
+
+  const cleared = validateAdminRegistrationReviewPayload({ assignedTo: null });
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.assignedTo, null);
+
+  assert.equal(validateAdminRegistrationReviewPayload({ assignedTo: 42 }).ok, false);
+  assert.equal(validateAdminRegistrationReviewPayload({}).ok, false);
+});
+
+test("validateAdminContactMessageReviewPayload sait aussi retirer une attribution", () => {
+  const cleared = validateAdminContactMessageReviewPayload({ assignedTo: null });
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.assignedTo, null);
+  assert.equal(validateAdminContactMessageReviewPayload({ assignedTo: "pas-un-uuid" }).ok, false);
+});
+
+test("validateAdminCampaignPayload exige un objet, un message et un public", () => {
+  assert.equal(validateAdminCampaignPayload({ body: "Bonjour", audienceType: "ALL_MEMBERS" }).ok, false);
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", audienceType: "ALL_MEMBERS" }).ok, false);
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Bonjour", audienceType: "TOUT_LE_MONDE" }).ok, false);
+
+  const result = validateAdminCampaignPayload({ subject: " AG du club ", body: "Bonjour a tous", audienceType: "ALL_MEMBERS" });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.subject, "AG du club");
+  assert.equal(result.data.audienceId, undefined);
+});
+
+test("validateAdminCampaignPayload lie le public a sa cible", () => {
+  // « tout le club » ne prend pas de cible : une cible orpheline enverrait a un
+  // public different de celui affiche a l'ecran.
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "ALL_MEMBERS", audienceId: "EDUCATEUR" }).ok, false);
+  // un public cible en exige une
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "TEAM" }).ok, false);
+  // role : valeur du referentiel de roles, pas un uuid
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "ROLE", audienceId: "PAS_UN_ROLE" }).ok, false);
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "ROLE", audienceId: "EDUCATEUR" }).ok, true);
+  // equipe / categorie : uuid
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "TEAM", audienceId: "EDUCATEUR" }).ok, false);
+  assert.equal(
+    validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "TEAM", audienceId: "3f1c2d4e-5a6b-4c7d-8e9f-0a1b2c3d4e5f" }).ok,
+    true
+  );
+});
+
+test("validateAdminCampaignPayload refuse un lien hors du site", () => {
+  // Un email signe du club ne doit pas pousser les familles vers un domaine tiers.
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "ALL_MEMBERS", link: "https://exemple.test" }).ok, false);
+  assert.equal(validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "ALL_MEMBERS", link: "//exemple.test" }).ok, false);
+
+  const result = validateAdminCampaignPayload({ subject: "AG", body: "Texte", audienceType: "ALL_MEMBERS", link: "/actualites" });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.link, "/actualites");
+});
+
+test("seuls les roles de direction pilotent la communication", () => {
+  assert.equal(hasPermission("SUPER_ADMIN", "communication:manage"), true);
+  assert.equal(hasPermission("ADMIN_CLUB", "communication:manage"), true);
+  assert.equal(hasPermission("DIRIGEANT", "communication:manage"), true);
+  // Un editeur publie des actualites mais n'ecrit pas a toutes les familles.
+  assert.equal(hasPermission("EDITEUR", "communication:manage"), false);
+  assert.equal(hasPermission("EDUCATEUR", "communication:manage"), false);
 });

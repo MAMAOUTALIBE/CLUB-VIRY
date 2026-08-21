@@ -106,6 +106,7 @@ export async function listTeams(): Promise<Team[]> {
     .from("teams")
     .select("*")
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("order_index", { ascending: true });
 
   if (error) {
@@ -119,6 +120,7 @@ export async function listTeamsForAdmin(limit = 100): Promise<Team[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("teams")
     .select("*")
+    .is("deleted_at", null)
     .order("order_index", { ascending: true })
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -132,7 +134,7 @@ export async function listTeamsForAdmin(limit = 100): Promise<Team[]> {
 
 export async function getTeamBySlug(slug: string): Promise<TeamDetail | null> {
   const supabase = getSupabaseAdminClient();
-  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("slug", slug).maybeSingle();
+  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("slug", slug).is("deleted_at", null).maybeSingle();
 
   if (teamError) {
     throw new Error(`Unable to fetch team: ${teamError.message}`);
@@ -144,7 +146,7 @@ export async function getTeamBySlug(slug: string): Promise<TeamDetail | null> {
 
   const [{ data: staff, error: staffError }, { data: matches, error: matchesError }] = await Promise.all([
     supabase.from("team_staff").select("*").eq("team_id", team.id).order("is_head_coach", { ascending: false }),
-    supabase.from("matches").select("*").eq("team_id", team.id).order("starts_at", { ascending: true })
+    supabase.from("matches").select("*").eq("team_id", team.id).is("deleted_at", null).order("starts_at", { ascending: true })
   ]);
 
   if (staffError) {
@@ -166,6 +168,7 @@ export async function listMatches(limit = 20): Promise<Match[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("matches")
     .select("*")
+    .is("deleted_at", null)
     .order("starts_at", { ascending: true })
     .limit(limit);
 
@@ -174,6 +177,23 @@ export async function listMatches(limit = 20): Promise<Match[]> {
   }
 
   return (data ?? []) as Match[];
+}
+
+export async function listUpcomingMatches(limit = 20): Promise<Match[]> {
+  const { data, error } = await getSupabaseAdminClient().from("matches").select("*")
+    .is("deleted_at", null).gte("starts_at", new Date().toISOString()).in("status", ["SCHEDULED", "POSTPONED"])
+    .order("starts_at", { ascending: true }).limit(limit);
+  if (error) throw new Error(`Unable to fetch upcoming matches: ${error.message}`);
+  return (data ?? []) as Match[];
+}
+
+export async function countUpcomingMatches(): Promise<number> {
+  const { count, error } = await getSupabaseAdminClient().from("matches")
+    .select("id", { count: "exact", head: true }).gte("starts_at", new Date().toISOString())
+    .is("deleted_at", null)
+    .in("status", ["SCHEDULED", "POSTPONED"]);
+  if (error) throw new Error(`Unable to count upcoming matches: ${error.message}`);
+  return count ?? 0;
 }
 
 export async function createTeam(input: AdminTeamPayload): Promise<Team> {
@@ -196,7 +216,7 @@ export async function createTeam(input: AdminTeamPayload): Promise<Team> {
 }
 
 export async function updateTeam(id: string, input: AdminTeamPayload): Promise<Team> {
-  const { data, error } = await getSupabaseAdminClient().from("teams").update(teamPayloadToRow(input)).eq("id", id).select("*").single();
+  const { data, error } = await getSupabaseAdminClient().from("teams").update(teamPayloadToRow(input)).eq("id", id).is("deleted_at", null).select("*").single();
 
   if (error) {
     throw new Error(`Unable to update team: ${error.message}`);
@@ -253,6 +273,7 @@ export async function listAssignablePlayers(limit = 500): Promise<AssignablePlay
   const { data, error } = await getSupabaseAdminClient()
     .from("players")
     .select("id, first_name, last_name, birth_date")
+    .is("deleted_at", null)
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true })
     .limit(limit);
@@ -336,7 +357,7 @@ export async function getPublicTeamRosterBySlug(slug: string): Promise<TeamRoste
   const supabase = getSupabaseAdminClient();
   // Cohérence de visibilité : une équipe désactivée (absente du listing) ne doit pas
   // rester consultable par URL directe — même filtre is_active que listTeams().
-  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("slug", slug).eq("is_active", true).maybeSingle();
+  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("slug", slug).eq("is_active", true).is("deleted_at", null).maybeSingle();
 
   if (teamError) {
     throw new Error(`Unable to fetch public team: ${teamError.message}`);
@@ -349,7 +370,7 @@ export async function getPublicTeamRosterBySlug(slug: string): Promise<TeamRoste
   const [{ data: staff, error: staffError }, { data: matches, error: matchesError }, { data: assignments, error: assignmentsError }] =
     await Promise.all([
       supabase.from("team_staff").select("*").eq("team_id", team.id).order("is_head_coach", { ascending: false }),
-      supabase.from("matches").select("*").eq("team_id", team.id).order("starts_at", { ascending: true }),
+      supabase.from("matches").select("*").eq("team_id", team.id).is("deleted_at", null).order("starts_at", { ascending: true }),
       supabase
         .from("team_players")
         .select("*")
@@ -374,7 +395,7 @@ export async function getPublicTeamRosterBySlug(slug: string): Promise<TeamRoste
   const playerIds = rosterAssignments.map((assignment) => assignment.player_id);
   const { data: players, error: playersError } =
     playerIds.length > 0
-      ? await supabase.from("players").select("id, first_name, last_name").in("id", playerIds)
+      ? await supabase.from("players").select("id, first_name, last_name").in("id", playerIds).is("deleted_at", null)
       : { data: [], error: null };
 
   if (playersError) {
@@ -429,6 +450,7 @@ async function getTeamsByIds(teamIds: string[]): Promise<Team[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("teams")
     .select("*")
+    .is("deleted_at", null)
     .in("id", teamIds)
     .order("order_index", { ascending: true });
 
@@ -466,6 +488,7 @@ async function getTeamMatchesByTeamIds(teamIds: string[]): Promise<Match[]> {
     .from("matches")
     .select("*")
     .in("team_id", teamIds)
+    .is("deleted_at", null)
     .order("starts_at", { ascending: true })
     .limit(100);
 
@@ -515,7 +538,7 @@ export async function getEducatorTeamRoster(
   }
 
   const supabase = getSupabaseAdminClient();
-  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("id", teamId).maybeSingle();
+  const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("id", teamId).is("deleted_at", null).maybeSingle();
 
   if (teamError) {
     throw new Error(`Unable to fetch educator team: ${teamError.message}`);
@@ -528,7 +551,7 @@ export async function getEducatorTeamRoster(
   const [{ data: staff, error: staffError }, { data: matches, error: matchesError }, { data: assignments, error: assignmentsError }] =
     await Promise.all([
       supabase.from("team_staff").select("*").eq("team_id", teamId).order("is_head_coach", { ascending: false }),
-      supabase.from("matches").select("*").eq("team_id", teamId).order("starts_at", { ascending: true }),
+      supabase.from("matches").select("*").eq("team_id", teamId).is("deleted_at", null).order("starts_at", { ascending: true }),
       supabase.from("team_players").select("*").eq("team_id", teamId).order("created_at", { ascending: true })
     ]);
 
@@ -548,7 +571,7 @@ export async function getEducatorTeamRoster(
   const playerIds = rosterAssignments.map((assignment) => assignment.player_id);
   const { data: players, error: playersError } =
     playerIds.length > 0
-      ? await supabase.from("players").select("*").in("id", playerIds)
+      ? await supabase.from("players").select("*").in("id", playerIds).is("deleted_at", null)
       : { data: [], error: null };
 
   if (playersError) {
@@ -604,19 +627,20 @@ export async function createMatchForEducator(
   return createMatch(input);
 }
 
-export async function updateMatch(id: string, input: AdminMatchPayload): Promise<Match> {
+export async function updateMatch(id: string, input: AdminMatchPayload): Promise<Match | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("matches")
     .update(matchPayloadToRow(input))
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to update match: ${error.message}`);
   }
 
-  return data as Match;
+  return (data as Match | null) ?? null;
 }
 
 export async function updateMatchForEducator(
@@ -625,7 +649,7 @@ export async function updateMatchForEducator(
   canManageAllTeams: boolean,
   input: AdminMatchPayload
 ): Promise<Match | null> {
-  const { data: existingMatch, error } = await getSupabaseAdminClient().from("matches").select("*").eq("id", matchId).maybeSingle();
+  const { data: existingMatch, error } = await getSupabaseAdminClient().from("matches").select("*").eq("id", matchId).is("deleted_at", null).maybeSingle();
 
   if (error) {
     throw new Error(`Unable to fetch educator match: ${error.message}`);

@@ -10,6 +10,7 @@ export type ApiErrorCode =
   | "AUTH_REQUIRED"
   | "AUTH_FAILED"
   | "CONFIGURATION_ERROR"
+  | "CONFLICT"
   | "FORBIDDEN"
   | "INVALID_JSON"
   | "NOT_FOUND"

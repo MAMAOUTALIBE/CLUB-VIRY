@@ -313,7 +313,7 @@ export async function setSessionAttendanceForEducator(
 // ----------------- CONVOCATIONS -----------------
 
 async function getMatchTeamIfManaged(matchId: string, profileId: string, canManageAllTeams: boolean): Promise<{ matchId: string; teamId: string | null } | null> {
-  const { data, error } = await getSupabaseAdminClient().from("matches").select("id, team_id").eq("id", matchId).maybeSingle();
+  const { data, error } = await getSupabaseAdminClient().from("matches").select("id, team_id").eq("id", matchId).is("deleted_at", null).maybeSingle();
 
   if (error) {
     throw new Error(`Unable to fetch match: ${error.message}`);

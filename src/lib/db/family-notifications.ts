@@ -1,5 +1,6 @@
 import "server-only";
 
+import { runAutomation } from "@/lib/db/automations";
 import { queueNotificationsBatch, type QueueNotificationInput } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { NotificationCategory } from "@/lib/db/types";
@@ -12,7 +13,7 @@ import type { NotificationCategory } from "@/lib/db/types";
  * Règle d'or : une notification ne doit JAMAIS faire échouer l'action métier (try/catch large).
  */
 
-type Recipient = { profileId: string; email: string | null; childFirstName?: string };
+export type Recipient = { profileId: string; email: string | null; childFirstName?: string };
 
 function formatFrDateTime(iso: string | null | undefined): string {
   if (!iso) return "à venir";
@@ -45,7 +46,7 @@ async function getPlayersGuardianRecipients(playerIds: string[]): Promise<Recipi
   if (playerIds.length === 0) return [];
   const supabase = getSupabaseAdminClient();
 
-  const { data: players, error: playersError } = await supabase.from("players").select("id, first_name").in("id", playerIds);
+  const { data: players, error: playersError } = await supabase.from("players").select("id, first_name").in("id", playerIds).is("deleted_at", null);
   if (playersError) console.error("getPlayersGuardianRecipients: players", playersError);
   const firstNameById = new Map((players ?? []).map((p) => [(p as { id: string }).id, (p as { first_name: string }).first_name]));
 
@@ -84,7 +85,7 @@ async function getPreferenceMap(profileIds: string[], category: NotificationCate
   return map;
 }
 
-type NotifyInput = {
+export type NotifyInput = {
   category: NotificationCategory;
   template: string;
   subject: string;
@@ -92,9 +93,13 @@ type NotifyInput = {
   payload?: Record<string, unknown>;
 };
 
-/** Met en file in-app (toujours) + email (si opt-in & email connu) pour chaque destinataire, en UN seul insert. */
-async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void> {
-  if (recipients.length === 0) return;
+/**
+ * Met en file in-app (toujours) + email (si opt-in & email connu) pour chaque
+ * destinataire, en UN seul insert. Exporté pour les campagnes du CRM : elles visent
+ * un autre public, mais doivent respecter les mêmes préférences.
+ */
+export async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<{ inApp: number; emails: number }> {
+  if (recipients.length === 0) return { inApp: 0, emails: 0 };
   const profileIds = Array.from(new Set(recipients.map((r) => r.profileId)));
   const prefs = await getPreferenceMap(profileIds, input.category);
 
@@ -129,6 +134,9 @@ async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void
   }
 
   await queueNotificationsBatch(rows);
+
+  const emails = rows.filter((row) => row.channel === "email").length;
+  return { inApp: rows.length - emails, emails };
 }
 
 /** Séance d'entraînement créée ou annulée → prévient les tuteurs de l'équipe. */
@@ -137,7 +145,7 @@ export async function notifyTeamSessionChange(
   kind: "created" | "cancelled",
   session: { startsAt: string; location?: string | null; theme?: string | null }
 ): Promise<void> {
-  try {
+  await runAutomation("team_session_change", { teamId, kind, startsAt: session.startsAt }, async () => {
     const recipients = await getTeamGuardianRecipients(teamId);
     const dateLabel = formatFrDateTime(session.startsAt);
     const subject = kind === "cancelled" ? `Séance annulée — ${dateLabel}` : `Nouvelle séance d'entraînement — ${dateLabel}`;
@@ -148,18 +156,17 @@ export async function notifyTeamSessionChange(
       link: "/espace-membre",
       payload: { kind, startsAt: session.startsAt, location: session.location ?? null, theme: session.theme ?? null, dateLabel }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("notifyTeamSessionChange failed", error);
-  }
+    return recipients.length;
+  });
 }
 
 /** Convocations enregistrées → prévient les tuteurs des joueurs convoqués (un message par enfant). */
 export async function notifyMatchCallups(matchId: string, convokedPlayerIds: string[]): Promise<void> {
-  try {
-    if (convokedPlayerIds.length === 0) return;
+  if (convokedPlayerIds.length === 0) return;
+
+  await runAutomation("match_callups", { matchId, convokedPlayers: convokedPlayerIds.length }, async () => {
     const [{ data: match }, { data: convocation }] = await Promise.all([
-      getSupabaseAdminClient().from("matches").select("starts_at, opponent_name, venue").eq("id", matchId).maybeSingle(),
+      getSupabaseAdminClient().from("matches").select("starts_at, opponent_name, venue").eq("id", matchId).is("deleted_at", null).maybeSingle(),
       getSupabaseAdminClient()
         .from("match_convocations")
         .select("meeting_at, meeting_location, event_location, return_estimate_at, instructions, outfit, transport, coach_comment, impediment_contact, event_type_name")
@@ -207,15 +214,13 @@ export async function notifyMatchCallups(matchId: string, convokedPlayerIds: str
         impedimentContact: convocationRow?.impediment_contact ?? null
       }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("family notification fan-out failed", error);
-  }
+    return recipients.length;
+  });
 }
 
 /** Nouveau média rattaché à une équipe → prévient les tuteurs des joueurs de l'équipe (CRM intelligent). */
 export async function notifyTeamMediaAdded(teamId: string, media: { type: string; title: string }): Promise<void> {
-  try {
+  await runAutomation("team_media_added", { teamId, type: media.type, title: media.title }, async () => {
     const recipients = await getTeamGuardianRecipients(teamId);
     const label = media.type === "VIDEO" ? "Nouvelle vidéo" : "Nouvelle photo";
     await fanOut(recipients, {
@@ -225,15 +230,13 @@ export async function notifyTeamMediaAdded(teamId: string, media: { type: string
       link: "/espace-membre",
       payload: { type: media.type, title: media.title }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("family notification fan-out failed", error);
-  }
+    return recipients.length;
+  });
 }
 
 /** Actualité publiée et ciblée sur une équipe → prévient les familles de l'équipe (CRM intelligent). */
 export async function notifyTeamNews(teamId: string, article: { title: string }): Promise<void> {
-  try {
+  await runAutomation("team_news_published", { teamId, title: article.title }, async () => {
     const recipients = await getTeamGuardianRecipients(teamId);
     await fanOut(recipients, {
       category: "news",
@@ -242,8 +245,6 @@ export async function notifyTeamNews(teamId: string, article: { title: string })
       link: "/espace-membre",
       payload: { title: article.title }
     });
-  } catch (error) {
-    // Une notif ne doit jamais casser l'action métier — mais on trace l'échec.
-    console.error("family notification fan-out failed", error);
-  }
+    return recipients.length;
+  });
 }

@@ -81,6 +81,13 @@ héberger sur le VPS).
    ```
 4. Renforce l'auth si besoin (déjà reflété dans `supabase/config.toml` : mot de passe
    ≥ 10 caractères, mélange lettres/chiffres, re-auth pour changement de mot de passe).
+5. **Authentication → URL Configuration** : ajoute
+   `https://esvirychatillonfootball.org/definir-mot-de-passe` aux *Redirect URLs*.
+   C'est la page qui reçoit les liens d'invitation et de réinitialisation ; sans cette
+   entrée **exacte**, Supabase renvoie vers l'accueil et le lien devient inutilisable.
+6. **Authentication → Emails (SMTP)** : renseigne un serveur d'envoi, sinon les
+   invitations envoyées depuis le CRM ne partiront pas. Dans ce cas le CRM affiche à la
+   place un lien personnel à transmettre à la main — dépannage, pas fonctionnement normal.
 
 > Alternative — **Supabase auto-hébergé sur le VPS** : possible mais nettement plus lourd
 > (stack Supabase Docker + réseau `supabase-esviry` + `docker-compose.crm.yml`). À ne
@@ -185,6 +192,10 @@ curl -fsS https://$D/api/backend/health                          # publicSupabas
 Supabase (Auth → Users), puis renseigne son `role`/`status=ACTIVE` dans la table `profiles`
 (voir `supabase/seed.sql` pour la structure). Connexion ensuite via
 `https://esvirychatillonfootball.org/connexion`.
+
+Les comptes **suivants** n'ont plus besoin de Supabase : `/admin/utilisateurs` → *Inviter*
+envoie l'invitation par email, et le bouton *Désactiver* coupe l'accès d'un compte (session
+en cours comprise) sans effacer son historique.
 
 ---
 

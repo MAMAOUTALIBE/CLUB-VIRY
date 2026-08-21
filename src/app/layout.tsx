@@ -75,16 +75,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body>
         <ImageProtection />
         <a
+          data-public-chrome
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-[#f7c600] focus:px-4 focus:py-2 focus:text-sm focus:font-black focus:uppercase focus:text-[#002f1d]"
           href="#contenu"
         >
           Aller au contenu
         </a>
-        <Header banner={settings.inscriptions_banner} socials={settings.socials} />
-        <main id="contenu" tabIndex={-1}>
+        <div data-public-chrome><Header announcements={settings.announcements} banner={settings.inscriptions_banner} socials={settings.socials} /></div>
+        <main className="root-content" id="contenu" tabIndex={-1}>
           {children}
         </main>
-        <Footer socials={settings.socials} contact={settings.contact} />
+        <div data-public-chrome><Footer socials={settings.socials} contact={settings.contact} /></div>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(sportsClubJsonLd) }} />
       </body>
     </html>

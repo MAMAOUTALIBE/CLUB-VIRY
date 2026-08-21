@@ -10,6 +10,7 @@ export async function listPublicStandings(): Promise<Standing[]> {
     .from("standings")
     .select("*")
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("competition", { ascending: true })
     .order("rank", { ascending: true, nullsFirst: false });
 
@@ -24,6 +25,7 @@ export async function listStandingsForAdmin(limit = 300): Promise<Standing[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("standings")
     .select("*")
+    .is("deleted_at", null)
     .order("competition", { ascending: true })
     .order("rank", { ascending: true, nullsFirst: false })
     .limit(limit);
@@ -71,6 +73,7 @@ export async function updateStanding(id: string, input: AdminStandingPayload): P
     .from("standings")
     .update(standingPayloadToRow(input))
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
     .maybeSingle();
 
@@ -79,19 +82,4 @@ export async function updateStanding(id: string, input: AdminStandingPayload): P
   }
 
   return (data as Standing | null) ?? null;
-}
-
-/** Suppression définitive (les classements sont éphémères, pas de corbeille). */
-export async function deleteStanding(id: string): Promise<boolean> {
-  const { data, error } = await getSupabaseAdminClient()
-    .from("standings")
-    .delete()
-    .eq("id", id)
-    .select("id");
-
-  if (error) {
-    throw new Error(`Unable to delete standing: ${error.message}`);
-  }
-
-  return (data ?? []).length > 0;
 }

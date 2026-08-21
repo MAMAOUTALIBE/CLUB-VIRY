@@ -3,6 +3,7 @@ import "server-only";
 import type { AdminEventPayload } from "@/lib/api/validation";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { ClubEvent, Match } from "@/lib/db/types";
+import { dedupeRowsById } from "@/lib/publication-activity";
 
 export type CalendarRange = {
   limit?: number;
@@ -53,10 +54,10 @@ export async function listPublicCalendar(range: CalendarRange = {}): Promise<Pub
   const supabase = getSupabaseAdminClient();
   const limit = range.limit ?? 50;
   const eventsQuery = applyDateRange(
-    supabase.from("club_events").select("*").eq("visibility", "PUBLIC").order("starts_at", { ascending: true }).limit(limit),
+    supabase.from("club_events").select("*").eq("visibility", "PUBLIC").is("deleted_at", null).order("starts_at", { ascending: true }).limit(limit),
     range
   );
-  const matchesQuery = applyDateRange(supabase.from("matches").select("*").order("starts_at", { ascending: true }).limit(limit), range);
+  const matchesQuery = applyDateRange(supabase.from("matches").select("*").is("deleted_at", null).order("starts_at", { ascending: true }).limit(limit), range);
 
   const [{ data: events, error: eventsError }, { data: matches, error: matchesError }] = await Promise.all([eventsQuery, matchesQuery]);
 
@@ -74,10 +75,17 @@ export async function listPublicCalendar(range: CalendarRange = {}): Promise<Pub
   };
 }
 
+export async function listPublicCalendarRangeExact(from: string, to: string): Promise<PublicCalendarPayload> {
+  const pageSize = 1000;
+  async function eventsPages() { const rows: ClubEvent[] = []; for (let offset = 0; ; offset += pageSize) { const { data, error } = await getSupabaseAdminClient().from("club_events").select("*").eq("visibility", "PUBLIC").is("deleted_at", null).gte("starts_at", from).lte("starts_at", to).order("starts_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + pageSize - 1); if (error) throw new Error(`Unable to fetch exact calendar events: ${error.message}`); rows.push(...((data ?? []) as ClubEvent[])); if ((data ?? []).length < pageSize) return dedupeRowsById(rows); } }
+  async function matchPages() { const rows: Match[] = []; for (let offset = 0; ; offset += pageSize) { const { data, error } = await getSupabaseAdminClient().from("matches").select("*").is("deleted_at", null).gte("starts_at", from).lte("starts_at", to).order("starts_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + pageSize - 1); if (error) throw new Error(`Unable to fetch exact calendar matches: ${error.message}`); rows.push(...((data ?? []) as Match[])); if ((data ?? []).length < pageSize) return dedupeRowsById(rows); } }
+  const [events, matches] = await Promise.all([eventsPages(), matchPages()]); return { events, matches };
+}
+
 export async function listEventsForAdmin(range: CalendarRange = {}): Promise<ClubEvent[]> {
   const limit = range.limit ?? 100;
   const query = applyDateRange(
-    getSupabaseAdminClient().from("club_events").select("*").order("starts_at", { ascending: true }).limit(limit),
+    getSupabaseAdminClient().from("club_events").select("*").is("deleted_at", null).order("starts_at", { ascending: true }).limit(limit),
     range
   );
   const { data, error } = await query;
@@ -108,17 +116,18 @@ export async function createEvent(input: AdminEventPayload, actorId: string): Pr
   return data as ClubEvent;
 }
 
-export async function updateEvent(id: string, input: AdminEventPayload): Promise<ClubEvent> {
+export async function updateEvent(id: string, input: AdminEventPayload): Promise<ClubEvent | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("club_events")
     .update(eventPayloadToRow(input))
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to update calendar event: ${error.message}`);
   }
 
-  return data as ClubEvent;
+  return (data as ClubEvent | null) ?? null;
 }

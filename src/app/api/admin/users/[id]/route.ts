@@ -5,7 +5,7 @@ import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { validateAdminUserUpdatePayload } from "@/lib/api/validation";
 import { canAdminUpdateProfile } from "@/lib/auth";
 import { recordActivity } from "@/lib/db/foundations";
-import { getProfileForAdmin, updateProfileForAdmin } from "@/lib/db/profiles";
+import { getProfileForAdmin, syncAuthAccountAccess, updateProfileForAdmin } from "@/lib/db/profiles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,6 +66,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const profile = await updateProfileForAdmin(id, payload.data);
+
+    if (payload.data.status !== undefined) {
+      // Désactiver un compte doit couper l'accès tout de suite, y compris pour une
+      // session déjà ouverte : on répercute le statut sur Supabase Auth.
+      await syncAuthAccountAccess(profile.id, profile.status);
+    }
+
     await recordActivity({
       actorId: admin.context.user.id,
       action: "profile.updated",

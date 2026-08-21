@@ -12,6 +12,7 @@ import { recordActivity } from "@/lib/db/foundations";
 import { queueAdminNotification } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { MediaAlbum, MediaAsset, NewsArticle, Partner, PartnershipRequest } from "@/lib/db/types";
+import { effectivePublicationTimestamps, getPublicationActivityWindow } from "@/lib/publication-activity";
 
 export type MediaPayload = {
   albums: MediaAlbum[];
@@ -108,6 +109,34 @@ export async function listPublishedNews(limit = 12): Promise<NewsArticle[]> {
   }
 
   return (data ?? []) as NewsArticle[];
+}
+
+export async function countPublishedNews(): Promise<number> {
+  const nowIso = new Date().toISOString();
+  const { count, error } = await getSupabaseAdminClient()
+    .from("news")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "PUBLISHED")
+    .is("deleted_at", null)
+    .or(`published_at.is.null,published_at.lte.${nowIso}`);
+  if (error) throw new Error(`Unable to count published news: ${error.message}`);
+  return count ?? 0;
+}
+
+export async function listPublishedNewsTimestampsForActivity(now = new Date()): Promise<string[]> {
+  const window = getPublicationActivityWindow(now);
+  async function fetchRows(immediate: boolean) {
+    const rows: Array<{ id: string; published_at: string | null; created_at: string }> = []; const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+      const base = getSupabaseAdminClient().from("news").select("id,published_at,created_at").eq("status", "PUBLISHED").is("deleted_at", null);
+      const scoped = immediate ? base.is("published_at", null).gte("created_at", window.startIso).lt("created_at", window.endExclusiveIso) : base.not("published_at", "is", null).gte("published_at", window.startIso).lt("published_at", window.endExclusiveIso);
+      const { data, error } = await scoped.order(immediate ? "created_at" : "published_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + pageSize - 1);
+      if (error) throw new Error(`Unable to fetch publication activity: ${error.message}`);
+      rows.push(...(data ?? [])); if ((data ?? []).length < pageSize) return rows;
+    }
+  }
+  const [dated, immediate] = await Promise.all([fetchRows(false), fetchRows(true)]);
+  return effectivePublicationTimestamps([...dated, ...immediate]);
 }
 
 export async function listNewsForAdmin(limit = 50): Promise<NewsArticle[]> {
@@ -230,7 +259,7 @@ export async function listTeamMedia(teamId: string, limit = 12): Promise<MediaAs
 export async function listPublicMedia(): Promise<MediaPayload> {
   const supabase = getSupabaseAdminClient();
   const [{ data: albums, error: albumsError }, { data: assets, error: assetsError }] = await Promise.all([
-    supabase.from("media_albums").select("*").eq("status", "PUBLISHED").order("published_at", { ascending: false }),
+    supabase.from("media_albums").select("*").eq("status", "PUBLISHED").is("deleted_at", null).order("published_at", { ascending: false }),
     supabase.from("media_assets").select("*").order("created_at", { ascending: false }).limit(60)
   ]);
 
@@ -251,7 +280,7 @@ export async function listPublicMedia(): Promise<MediaPayload> {
 export async function listMediaForAdmin(limit = 100): Promise<MediaPayload> {
   const supabase = getSupabaseAdminClient();
   const [{ data: albums, error: albumsError }, { data: assets, error: assetsError }] = await Promise.all([
-    supabase.from("media_albums").select("*").order("created_at", { ascending: false }).limit(limit),
+    supabase.from("media_albums").select("*").is("deleted_at", null).order("created_at", { ascending: false }).limit(limit),
     supabase.from("media_assets").select("*").order("created_at", { ascending: false }).limit(limit)
   ]);
 
@@ -286,19 +315,20 @@ export async function createMediaAlbum(input: AdminMediaAlbumPayload): Promise<M
   return data as MediaAlbum;
 }
 
-export async function updateMediaAlbum(id: string, input: AdminMediaAlbumPayload): Promise<MediaAlbum> {
+export async function updateMediaAlbum(id: string, input: AdminMediaAlbumPayload): Promise<MediaAlbum | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("media_albums")
     .update(mediaAlbumPayloadToRow(input))
     .eq("id", id)
+    .is("deleted_at", null)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to update media album: ${error.message}`);
   }
 
-  return data as MediaAlbum;
+  return (data as MediaAlbum | null) ?? null;
 }
 
 export async function createMediaAsset(input: AdminMediaAssetPayload): Promise<MediaAsset> {

@@ -7,6 +7,7 @@ import type { ApiErrorCode } from "@/lib/api/http";
 import { getBearerToken } from "@/lib/api/http";
 import { getSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
 import type { Profile } from "@/lib/db/types";
+import { isBlockedProfileStatus } from "@/lib/db/profiles";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 
 export type AuthContext = {
@@ -62,6 +63,19 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContextR
     }
 
     profile = profileData as Profile | null;
+
+    // Un compte désactivé garde un jeton valide jusqu'à son expiration : le statut
+    // du profil fait foi à chaque requête, comme le proxy le fait déjà pour /admin.
+    if (profile && profile.status !== "ACTIVE") {
+      return {
+        ok: false,
+        status: 403,
+        code: "FORBIDDEN",
+        message: isBlockedProfileStatus(profile.status)
+          ? "Ce compte a ete desactive. Contactez le club."
+          : "Ce compte est en attente de validation par le club."
+      };
+    }
   }
 
   return {

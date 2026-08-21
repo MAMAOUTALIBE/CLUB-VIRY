@@ -2,9 +2,10 @@ import type { NextRequest } from "next/server";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
-import { validateAdminTeamPayload } from "@/lib/api/validation";
+import { isUuid, validateAdminTeamPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
 import { updateTeam } from "@/lib/db/teams";
+import { softDeleteRow } from "@/lib/db/soft-delete";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,4 +51,16 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   } catch (error) {
     return handleDbError("admin/teams/[id]", error);
   }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const admin = await getAdminContext(request, "teams:manage");
+  if (!admin.ok) return admin.response;
+  const { id } = await context.params;
+  if (!isUuid(id)) return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
+  try {
+    if (!await softDeleteRow("teams", id, admin.context.user.id)) return jsonError(404, "NOT_FOUND", "Équipe introuvable.");
+    await recordActivity({ actorId: admin.context.user.id, action: "team.trashed", entityType: "teams", entityId: id });
+    return jsonOk({ trashed: true });
+  } catch (error) { return handleDbError("admin/teams/[id] DELETE", error); }
 }

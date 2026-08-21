@@ -1,10 +1,12 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
-import { validateAdminEventPayload } from "@/lib/api/validation";
+import { isUuid, validateAdminEventPayload } from "@/lib/api/validation";
 import { updateEvent } from "@/lib/db/calendar";
 import { recordActivity } from "@/lib/db/foundations";
+import { softDeleteRow } from "@/lib/db/soft-delete";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,9 +37,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   const { id } = await context.params;
+  if (!isUuid(id)) return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
 
   try {
     const event = await updateEvent(id, payload.data);
+    if (!event) return jsonError(404, "NOT_FOUND", "Événement introuvable.");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "calendar.event.updated",
@@ -51,6 +55,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     });
 
     return jsonOk({ event });
+  } catch (error) {
+    return handleDbError("admin/calendar/events/[id]", error);
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const admin = await getAdminContext(request, "matches:manage");
+  if (!admin.ok) return admin.response;
+  const { id } = await context.params;
+  if (!isUuid(id)) return jsonError(400, "VALIDATION_ERROR", "Identifiant invalide.");
+  try {
+    const trashed = await softDeleteRow("events", id, admin.context.user.id);
+    if (!trashed) return jsonError(404, "NOT_FOUND", "Événement introuvable.");
+    await recordActivity({ actorId: admin.context.user.id, action: "calendar.event.trashed", entityType: "club_events", entityId: id });
+    revalidatePath("/calendrier");
+    return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/calendar/events/[id]", error);
   }

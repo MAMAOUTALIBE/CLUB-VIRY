@@ -3,7 +3,7 @@ import "server-only";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { NotificationCategory, NotificationLog } from "@/lib/db/types";
 
-export const NOTIFICATION_CATEGORIES: NotificationCategory[] = ["convocation", "session", "media", "news", "event"];
+export const NOTIFICATION_CATEGORIES: NotificationCategory[] = ["convocation", "session", "media", "news", "event", "club"];
 
 export function isNotificationCategory(value: unknown): value is NotificationCategory {
   return typeof value === "string" && (NOTIFICATION_CATEGORIES as string[]).includes(value);

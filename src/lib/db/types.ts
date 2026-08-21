@@ -164,6 +164,9 @@ export type Registration = {
   submitted_at: string | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
+  assigned_to: string | null;
+  assigned_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -333,6 +336,9 @@ export type RecruitmentApplication = {
   category_id: string | null;
   message: string | null;
   status: ApplicationStatus;
+  assigned_to: string | null;
+  assigned_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -430,7 +436,7 @@ export type ContactMessage = {
   updated_at: string;
 };
 
-export type NotificationCategory = "convocation" | "session" | "media" | "news" | "event";
+export type NotificationCategory = "convocation" | "session" | "media" | "news" | "event" | "club";
 
 export type NotificationLog = {
   id: string;
@@ -459,4 +465,42 @@ export type CreateActivityLogInput = {
   metadata?: Record<string, unknown>;
   ipAddress?: string | null;
   userAgent?: string | null;
+};
+
+export type AutomationRule = {
+  key: string;
+  is_enabled: boolean;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AutomationRun = {
+  id: string;
+  rule_key: string;
+  status: "SUCCESS" | "SKIPPED" | "FAILED";
+  message: string | null;
+  affected_count: number;
+  context: Record<string, unknown>;
+  created_at: string;
+};
+
+export type CampaignAudienceType = "ALL_MEMBERS" | "ROLE" | "TEAM" | "CATEGORY";
+export type CampaignStatus = "DRAFT" | "SENT";
+
+export type CommunicationCampaign = {
+  id: string;
+  subject: string;
+  body: string;
+  audience_type: CampaignAudienceType;
+  audience_id: string | null;
+  link: string | null;
+  status: CampaignStatus;
+  recipient_count: number;
+  email_count: number;
+  created_by: string | null;
+  sent_at: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
 };

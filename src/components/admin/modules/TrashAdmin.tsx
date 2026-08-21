@@ -101,7 +101,7 @@ export function TrashAdmin() {
             <Trash2 size={22} aria-hidden="true" /> Corbeille
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
-            Contenus supprimés (actualités, partenaires, produits, dirigeants). Restaurez-les pour les remettre en ligne, ou supprimez-les définitivement.
+            Éléments archivés accessibles selon vos permissions : contenus, partenaires, boutique ou structure sportive. Restaurez-les ou supprimez-les définitivement.
           </p>
         </div>
         <button onClick={() => void load()} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 px-3 text-sm font-black uppercase text-slate-700 hover:border-[#f7c600]" type="button">
