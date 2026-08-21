@@ -23,7 +23,8 @@ const CATEGORIES: Record<string, { label: string; icon: LucideIcon }> = {
   session: { label: "Entraînements", icon: CalendarDays },
   media: { label: "Photos & médias", icon: Camera },
   news: { label: "Actualités", icon: Megaphone },
-  event: { label: "Événements", icon: Bell }
+  event: { label: "Événements", icon: Bell },
+  club: { label: "Vie du club", icon: Megaphone }
 };
 
 function relativeFr(iso: string): string {
@@ -322,6 +323,8 @@ export function MemberSpace() {
               const Icon = cat.icon;
               const isUnread = !notif.read_at;
               const line = notifLine(notif);
+              // Message libre d'une campagne du club : il EST le contenu de la notification.
+              const body = payloadText(notif.payload, "body");
               return (
                 <div key={notif.id} className={`flex items-start gap-3 rounded-lg border p-3 ${isUnread ? "border-[#f7c600]/60 bg-[#fffdf3]" : "border-slate-200 bg-white"}`}>
                   <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#07542f]/10 text-[#07542f]" aria-hidden="true">
@@ -329,6 +332,7 @@ export function MemberSpace() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-black text-[#002f1d]">{notif.subject ?? cat.label}</p>
+                    {body ? <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{body}</p> : null}
                     {line ? <p className="text-xs font-semibold text-slate-600">{line}</p> : null}
                     <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">{cat.label} · {relativeFr(notif.created_at)}</p>
                   </div>

@@ -330,6 +330,14 @@ export type AdminUserUpdatePayload = ProfileUpdatePayload & {
   email?: string;
 };
 
+export type AdminCampaignPayload = {
+  subject: string;
+  body: string;
+  audienceType: "ALL_MEMBERS" | "ROLE" | "TEAM" | "CATEGORY";
+  audienceId?: string;
+  link?: string;
+};
+
 export type AdminUserInvitePayload = {
   email: string;
   role: NonNullable<AdminUserUpdatePayload["role"]>;
@@ -3025,6 +3033,74 @@ export function validateAdminUserUpdatePayload(input: unknown): ValidationResult
       ...(role ? { role: role as AdminUserUpdatePayload["role"] } : {}),
       ...(status ? { status: status as AdminUserUpdatePayload["status"] } : {}),
       ...(email ? { email } : {})
+    }
+  };
+}
+
+const CAMPAIGN_AUDIENCE_TYPES = ["ALL_MEMBERS", "ROLE", "TEAM", "CATEGORY"] as const;
+
+/**
+ * Campagne de communication. Le public ciblé exige sa cible (rôle, équipe ou
+ * catégorie) ; « tout le club » n'en prend aucune — accepter une cible orpheline
+ * enverrait le message à un public différent de celui affiché à l'écran.
+ *
+ * Le lien est relatif au site : une campagne ne doit pas pouvoir pousser les familles
+ * vers un domaine tiers depuis un email signé du club.
+ */
+export function validateAdminCampaignPayload(input: unknown): ValidationResult<AdminCampaignPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
+  }
+
+  const subject = normalizeString(body.subject);
+  const message = normalizeString(body.body);
+  const audienceType = normalizeString(body.audienceType);
+  const audienceId = normalizeString(body.audienceId);
+  const link = normalizeString(body.link);
+
+  if (!subject || subject.length > 160) {
+    issues.push({ field: "subject", message: "Objet obligatoire (160 caracteres maximum)." });
+  }
+
+  if (!message || message.length > 5000) {
+    issues.push({ field: "body", message: "Message obligatoire (5000 caracteres maximum)." });
+  }
+
+  if (!audienceType || !(CAMPAIGN_AUDIENCE_TYPES as readonly string[]).includes(audienceType)) {
+    issues.push({ field: "audienceType", message: "Public invalide." });
+  } else if (audienceType === "ALL_MEMBERS") {
+    if (audienceId) {
+      issues.push({ field: "audienceId", message: "Le public « tout le club » ne prend pas de cible." });
+    }
+  } else if (!audienceId) {
+    issues.push({ field: "audienceId", message: "Cible obligatoire pour ce public." });
+  } else if (audienceType === "ROLE") {
+    if (!isAppRoleValue(audienceId)) {
+      issues.push({ field: "audienceId", message: "Role invalide." });
+    }
+  } else if (!isUuid(audienceId)) {
+    issues.push({ field: "audienceId", message: "Identifiant de cible invalide." });
+  }
+
+  if (link && (!link.startsWith("/") || link.startsWith("//"))) {
+    issues.push({ field: "link", message: "Le lien doit etre un chemin interne au site (ex. /actualites)." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      subject: subject as string,
+      body: message as string,
+      audienceType: audienceType as AdminCampaignPayload["audienceType"],
+      ...(audienceId ? { audienceId } : {}),
+      ...(link ? { link } : {})
     }
   };
 }

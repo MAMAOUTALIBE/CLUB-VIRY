@@ -38,7 +38,8 @@ const REVALIDATE_PATHS: Record<TrashType, string[]> = {
   families: [],
   subscriptions: [],
   registrations: [],
-  recruitment: []
+  recruitment: [],
+  campaigns: []
 };
 
 /**

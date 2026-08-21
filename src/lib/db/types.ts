@@ -436,7 +436,7 @@ export type ContactMessage = {
   updated_at: string;
 };
 
-export type NotificationCategory = "convocation" | "session" | "media" | "news" | "event";
+export type NotificationCategory = "convocation" | "session" | "media" | "news" | "event" | "club";
 
 export type NotificationLog = {
   id: string;
@@ -483,4 +483,24 @@ export type AutomationRun = {
   affected_count: number;
   context: Record<string, unknown>;
   created_at: string;
+};
+
+export type CampaignAudienceType = "ALL_MEMBERS" | "ROLE" | "TEAM" | "CATEGORY";
+export type CampaignStatus = "DRAFT" | "SENT";
+
+export type CommunicationCampaign = {
+  id: string;
+  subject: string;
+  body: string;
+  audience_type: CampaignAudienceType;
+  audience_id: string | null;
+  link: string | null;
+  status: CampaignStatus;
+  recipient_count: number;
+  email_count: number;
+  created_by: string | null;
+  sent_at: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
 };

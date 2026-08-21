@@ -13,7 +13,7 @@ import type { NotificationCategory } from "@/lib/db/types";
  * Règle d'or : une notification ne doit JAMAIS faire échouer l'action métier (try/catch large).
  */
 
-type Recipient = { profileId: string; email: string | null; childFirstName?: string };
+export type Recipient = { profileId: string; email: string | null; childFirstName?: string };
 
 function formatFrDateTime(iso: string | null | undefined): string {
   if (!iso) return "à venir";
@@ -85,7 +85,7 @@ async function getPreferenceMap(profileIds: string[], category: NotificationCate
   return map;
 }
 
-type NotifyInput = {
+export type NotifyInput = {
   category: NotificationCategory;
   template: string;
   subject: string;
@@ -93,9 +93,13 @@ type NotifyInput = {
   payload?: Record<string, unknown>;
 };
 
-/** Met en file in-app (toujours) + email (si opt-in & email connu) pour chaque destinataire, en UN seul insert. */
-async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void> {
-  if (recipients.length === 0) return;
+/**
+ * Met en file in-app (toujours) + email (si opt-in & email connu) pour chaque
+ * destinataire, en UN seul insert. Exporté pour les campagnes du CRM : elles visent
+ * un autre public, mais doivent respecter les mêmes préférences.
+ */
+export async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<{ inApp: number; emails: number }> {
+  if (recipients.length === 0) return { inApp: 0, emails: 0 };
   const profileIds = Array.from(new Set(recipients.map((r) => r.profileId)));
   const prefs = await getPreferenceMap(profileIds, input.category);
 
@@ -130,6 +134,9 @@ async function fanOut(recipients: Recipient[], input: NotifyInput): Promise<void
   }
 
   await queueNotificationsBatch(rows);
+
+  const emails = rows.filter((row) => row.channel === "email").length;
+  return { inApp: rows.length - emails, emails };
 }
 
 /** Séance d'entraînement créée ou annulée → prévient les tuteurs de l'équipe. */
