@@ -6,6 +6,7 @@ import type { NextRequest } from "next/server";
 import type { ApiErrorCode } from "@/lib/api/http";
 import { getBearerToken } from "@/lib/api/http";
 import { getSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/db/supabase-admin";
+import { ensurePermissionsFresh } from "@/lib/auth/permission-overrides";
 import type { Profile } from "@/lib/db/types";
 import { isBlockedProfileStatus } from "@/lib/db/profiles";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
@@ -77,6 +78,10 @@ export async function getAuthContext(request: NextRequest): Promise<AuthContextR
       };
     }
   }
+
+  // Rafraîchit les permissions effectives (surcharges éditables) avant tout contrôle
+  // d'accès synchrone en aval. TTL-gardé : quasi gratuit hors expiration.
+  await ensurePermissionsFresh();
 
   return {
     ok: true,

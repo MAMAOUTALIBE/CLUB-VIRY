@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { isSameOriginRequest } from "@/lib/api/origin";
 import { canAccessCrmPath } from "@/lib/auth/permissions";
+import { ensurePermissionsFresh } from "@/lib/auth/permission-overrides";
 import { isAppRole } from "@/lib/auth/roles";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -83,7 +84,8 @@ async function getAdminSessionStatus(token: string | undefined, pathname: string
       return "forbidden";
     }
 
-    return canAccessCrmPath(profile.role, pathname) ? "authorized" : "forbidden";
+    await ensurePermissionsFresh();
+  return canAccessCrmPath(profile.role, pathname) ? "authorized" : "forbidden";
   } catch {
     return "invalid";
   }

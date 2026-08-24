@@ -2,6 +2,7 @@ import type { ValidationIssue } from "@/lib/api/http";
 import type { CustomFieldEntity, CustomFieldType } from "@/lib/custom-fields";
 import type { ReferenceListKind } from "@/lib/reference-lists";
 import type { MessageChannel, ReminderStatus } from "@/lib/messaging";
+import type { Permission } from "@/lib/auth/permissions";
 
 export const PUBLIC_REGISTRATION_ROLES = ["FAMILLE", "JOUEUR", "MEMBRE"] as const;
 
@@ -1132,6 +1133,38 @@ export function validateAdminSavedViewPayload(input: unknown, options: { partial
 
   if (issues.length > 0) return { ok: false, issues };
   return { ok: true, data };
+}
+
+// --- Permissions des rôles (Phase K) -----------------------------------------
+
+// Valeurs runtime dupliquées volontairement du catalogue (alias @/ non résolu par le runner de tests).
+const PERMISSION_VALUES = [
+  "admin:access", "admin:manage_users", "admin:view_logs", "automations:manage", "communication:manage",
+  "content:manage", "content:publish", "teams:manage", "players:manage", "matches:manage",
+  "registrations:manage", "documents:review", "payments:manage", "shop:manage", "partners:manage",
+  "family:manage_own", "player:view_own", "educator:manage_own_teams", "partner:view_own", "public:read"
+] as const satisfies readonly Permission[];
+
+export type RolePermissionsPayload = { permissions: Permission[] };
+
+export function validateRolePermissionsPayload(input: unknown): ValidationResult<RolePermissionsPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+
+  if (!Array.isArray(body.permissions)) {
+    issues.push({ field: "permissions", message: "La liste des permissions doit être un tableau." });
+    return { ok: false, issues };
+  }
+  const valid = new Set(PERMISSION_VALUES as readonly string[]);
+  const invalid = (body.permissions as unknown[]).filter((p) => typeof p !== "string" || !valid.has(p));
+  if (invalid.length > 0) {
+    issues.push({ field: "permissions", message: "Une ou plusieurs permissions sont inconnues." });
+  }
+  if (issues.length > 0) return { ok: false, issues };
+
+  const permissions = Array.from(new Set(body.permissions as string[])) as Permission[];
+  return { ok: true, data: { permissions } };
 }
 
 /** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */

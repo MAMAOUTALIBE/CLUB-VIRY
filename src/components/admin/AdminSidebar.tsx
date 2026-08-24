@@ -16,7 +16,7 @@ const NAVIGATION: NavGroup[] = [
   { label: "Contenu du site", icon: Newspaper, children: [{ label: "Direction", href: "/admin/direction" }, { label: "Partenaires", href: "/admin/partenaires" }] },
   { label: "Médias", icon: Camera, href: "/admin/medias" },
   { label: "Commercial", icon: BadgeEuro, children: [{ label: "Boutique", href: "/admin/boutique" }, { label: "Finances", href: "/admin/finances" }] },
-  { label: "Configuration", icon: Settings, children: [{ label: "Utilisateurs", href: "/admin/utilisateurs" }, { label: "Champs personnalisés", href: "/admin/champs" }, { label: "Référentiels", href: "/admin/referentiels" }, { label: "Journal d’audit", href: "/admin/journal" }, { label: "Corbeille", href: "/admin/corbeille" }, { label: "Paramètres", href: "/admin/parametres" }] }
+  { label: "Configuration", icon: Settings, children: [{ label: "Utilisateurs", href: "/admin/utilisateurs" }, { label: "Rôles & permissions", href: "/admin/roles" }, { label: "Champs personnalisés", href: "/admin/champs" }, { label: "Référentiels", href: "/admin/referentiels" }, { label: "Journal d’audit", href: "/admin/journal" }, { label: "Corbeille", href: "/admin/corbeille" }, { label: "Paramètres", href: "/admin/parametres" }] }
 ];
 const isActive = (path: string, href: string) => href === "/admin" ? path === href : path === href || path.startsWith(`${href}/`);
 

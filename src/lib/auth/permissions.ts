@@ -97,8 +97,67 @@ export const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
   VISITEUR: ["public:read"]
 };
 
+// Libellés lisibles des permissions (écran d'administration des rôles).
+export const PERMISSION_LABELS: Record<Permission, string> = {
+  "admin:access": "Accès au CRM",
+  "admin:manage_users": "Gérer les utilisateurs",
+  "admin:view_logs": "Voir le journal d'audit",
+  "automations:manage": "Automatisations & configuration",
+  "communication:manage": "Communication (messages, campagnes)",
+  "content:manage": "Gérer les contenus",
+  "content:publish": "Publier les contenus",
+  "teams:manage": "Gérer les équipes",
+  "players:manage": "Gérer les joueurs",
+  "matches:manage": "Gérer les matchs",
+  "registrations:manage": "Gérer les inscriptions",
+  "documents:review": "Valider les documents",
+  "payments:manage": "Gérer les paiements",
+  "shop:manage": "Gérer la boutique",
+  "partners:manage": "Gérer les partenaires",
+  "family:manage_own": "Gérer sa famille",
+  "player:view_own": "Voir ses infos joueur",
+  "educator:manage_own_teams": "Gérer ses équipes (éducateur)",
+  "partner:view_own": "Espace partenaire",
+  "public:read": "Lecture publique"
+};
+
+export const ALL_PERMISSIONS = Object.keys(PERMISSION_LABELS) as Permission[];
+
+/** Rôle jamais modifiable : garde-fou anti-verrouillage (garde toutes ses permissions). */
+export const LOCKED_ROLES: readonly AppRole[] = ["SUPER_ADMIN"];
+
+// --- Surcouche de permissions effectives (Phase K) ---------------------------
+// Le code (ROLE_PERMISSIONS) reste la source de vérité par défaut. Une surcharge
+// optionnelle (chargée depuis la base côté serveur) peut la remplacer par rôle.
+// `hasPermission` lit cette map, qui vaut les défauts au démarrage (donc comportement
+// identique à l'existant tant qu'aucune surcharge n'est appliquée / si la base est vide).
+const effectivePermissions: Record<AppRole, Set<Permission>> = Object.fromEntries(
+  (Object.keys(ROLE_PERMISSIONS) as AppRole[]).map((role) => [role, new Set(ROLE_PERMISSIONS[role])])
+) as Record<AppRole, Set<Permission>>;
+
+/**
+ * Applique un jeu de surcharges (role -> permissions). Rôles absents = défauts du code.
+ * SUPER_ADMIN est toujours forcé à ses permissions par défaut (verrouillé).
+ */
+export function applyPermissionOverrides(overrides: Partial<Record<AppRole, readonly Permission[]>>): void {
+  for (const role of Object.keys(ROLE_PERMISSIONS) as AppRole[]) {
+    const override = LOCKED_ROLES.includes(role) ? undefined : overrides[role];
+    effectivePermissions[role] = new Set(override ?? ROLE_PERMISSIONS[role]);
+  }
+}
+
+/** Réinitialise toutes les permissions effectives aux valeurs par défaut du code. */
+export function resetPermissionOverrides(): void {
+  applyPermissionOverrides({});
+}
+
+/** Permissions effectives d'un rôle, dans l'ordre du catalogue. */
+export function getEffectivePermissions(role: AppRole): Permission[] {
+  return ALL_PERMISSIONS.filter((permission) => effectivePermissions[role]?.has(permission));
+}
+
 export function hasPermission(role: AppRole, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[role].includes(permission);
+  return effectivePermissions[role]?.has(permission) ?? false;
 }
 
 const EDUCATOR_CRM_PATHS = ["/admin/convocations"] as const;
