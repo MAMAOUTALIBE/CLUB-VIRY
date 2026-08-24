@@ -49,6 +49,7 @@ export function getFallbackTeams(): Team[] {
     gender: "MIXTE",
     description: team.description,
     cover_image_url: team.image,
+    pool: team.pool,
     order_index: index,
     is_active: true,
     created_at: now,

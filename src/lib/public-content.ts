@@ -449,7 +449,7 @@ export async function getPublicTeams(): Promise<DisplayTeam[]> {
         name: t.name,
         category: t.age_range ?? t.level ?? "Équipe",
         level: t.level ?? "",
-        pool: null,
+        pool: t.pool ?? null,
         season: DEFAULT_SEASON,
         description: t.description ?? "",
         image: t.cover_image_url || images.teamHuddle
@@ -474,7 +474,7 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
       name: roster.team.name,
       category: roster.team.age_range ?? roster.team.level ?? "Équipe",
       level: roster.team.level ?? "",
-      pool: null,
+      pool: roster.team.pool ?? null,
       season: DEFAULT_SEASON,
       description: roster.team.description ?? "",
       image: roster.team.cover_image_url || images.teamHuddle,

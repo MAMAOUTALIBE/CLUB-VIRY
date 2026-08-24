@@ -196,6 +196,7 @@ export type Team = {
   gender: CategoryGender;
   description: string | null;
   cover_image_url: string | null;
+  pool: string | null;
   order_index: number;
   is_active: boolean;
   created_at: string;
