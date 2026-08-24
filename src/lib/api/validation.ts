@@ -1076,6 +1076,64 @@ export function validateAdminReminderPayload(input: unknown, options: { partial?
   return { ok: true, data };
 }
 
+// --- Vues enregistrées (Phase J) ---------------------------------------------
+
+export type AdminSavedViewPayload = {
+  scope?: string;
+  name?: string;
+  config?: Record<string, unknown>;
+  isShared?: boolean;
+  orderIndex?: number;
+};
+
+export function validateAdminSavedViewPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminSavedViewPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  const partial = options.partial ?? false;
+  const data: AdminSavedViewPayload = {};
+
+  const scope = normalizeString(body.scope);
+  if (scope !== undefined) {
+    if (!/^[a-z0-9_-]+$/.test(scope) || scope.length > 60) issues.push({ field: "scope", message: "Portée invalide." });
+    else data.scope = scope;
+  } else if (!partial) {
+    issues.push({ field: "scope", message: "La portée (module) est requise." });
+  }
+
+  const name = normalizeString(body.name);
+  if (name !== undefined) {
+    if (name.length < 2 || name.length > 60) issues.push({ field: "name", message: "Le nom doit contenir entre 2 et 60 caractères." });
+    else data.name = name;
+  } else if (!partial) {
+    issues.push({ field: "name", message: "Le nom de la vue est requis." });
+  }
+
+  if (body.config !== undefined) {
+    const config = asRecord(body.config);
+    if (!config) {
+      issues.push({ field: "config", message: "La configuration doit être un objet." });
+    } else if (JSON.stringify(config).length > 8000) {
+      issues.push({ field: "config", message: "Configuration trop volumineuse." });
+    } else {
+      data.config = config;
+    }
+  }
+
+  if (body.isShared !== undefined) {
+    if (typeof body.isShared !== "boolean") issues.push({ field: "isShared", message: "« Partagée » doit être vrai ou faux." });
+    else data.isShared = body.isShared;
+  }
+
+  if (body.orderIndex !== undefined) {
+    if (typeof body.orderIndex !== "number" || !Number.isInteger(body.orderIndex) || body.orderIndex < 0) issues.push({ field: "orderIndex", message: "L'ordre doit être un entier positif." });
+    else data.orderIndex = body.orderIndex;
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data };
+}
+
 /** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */
 export function validateAdminCategoryPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminCategoryPayload> {
   const body = asRecord(input);

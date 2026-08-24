@@ -18,3 +18,5 @@ export * from "@/lib/db/custom-fields";
 export * from "@/lib/db/reference-lists";
 
 export * from "@/lib/db/messaging";
+
+export * from "@/lib/db/saved-views";

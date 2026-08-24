@@ -627,3 +627,17 @@ export type ScheduledReminder = {
   created_at: string;
   updated_at: string;
 };
+
+// --- Vues enregistrées (Phase J) ---------------------------------------------
+
+export type SavedView = {
+  id: string;
+  scope: string;
+  name: string;
+  owner_id: string | null;
+  is_shared: boolean;
+  config: Record<string, unknown>;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+};

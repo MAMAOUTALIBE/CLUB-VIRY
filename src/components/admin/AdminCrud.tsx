@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, GripVertical, Loader2, Pencil, Plus, RefreshCw, Tra
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomFieldsFieldset } from "@/components/admin/CustomFieldsFieldset";
 import { TagsFieldset } from "@/components/admin/TagsFieldset";
+import { ViewsToolbar } from "@/components/admin/ViewsToolbar";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { showToast } from "@/components/admin/Toast";
 
@@ -79,6 +80,8 @@ type AdminCrudProps = {
   customFieldsEntity?: string;
   /** Opt-in : affiche l'encart « Tags » de cette entité (ex: "partner") dans le formulaire. */
   tagsEntity?: string;
+  /** Opt-in : active la barre recherche + colonnes + vues enregistrées (clé de portée, ex: "partners"). */
+  viewsScope?: string;
 };
 
 function camelToSnake(s: string): string {
@@ -124,7 +127,7 @@ function withLimit(endpoint: string, limit: number): string {
   return `${path}?${params.toString()}`;
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity, tagsEntity }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity, tagsEntity, viewsScope }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -144,6 +147,14 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   // Valeurs des champs personnalisés collectées par l'encart opt-in, persistées après l'enregistrement principal.
   const customValuesRef = useRef<Record<string, unknown> | null>(null);
   const tagsRef = useRef<string[] | null>(null);
+  // Phase J : recherche + colonnes masquées (actives seulement si viewsScope est fourni).
+  const [search, setSearch] = useState("");
+  const [hiddenCols, setHiddenCols] = useState<string[]>([]);
+  const filtering = Boolean(viewsScope) && search.trim() !== "";
+  const searchNeedle = search.trim().toLowerCase();
+  const displayRows = filtering ? rows.filter((r) => JSON.stringify(Object.values(r)).toLowerCase().includes(searchNeedle)) : rows;
+  const visibleColumns = viewsScope ? columns.filter((c) => !hiddenCols.includes(c.label)) : columns;
+  const canReorder = Boolean(reorderEndpoint) && !filtering;
 
   const load = useCallback(async () => {
     setState("loading");
@@ -581,6 +592,18 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         </div>
       ) : null}
 
+      {viewsScope ? (
+        <ViewsToolbar
+          scope={viewsScope}
+          columnLabels={columns.map((c) => c.label)}
+          search={search}
+          onSearchChange={setSearch}
+          hiddenColumns={hiddenCols}
+          onToggleColumn={(label) => setHiddenCols((h) => (h.includes(label) ? h.filter((x) => x !== label) : [...h, label]))}
+          onApply={(cfg) => { setSearch(typeof cfg.search === "string" ? cfg.search : ""); setHiddenCols(Array.isArray(cfg.hiddenColumns) ? cfg.hiddenColumns : []); }}
+          buildConfig={() => ({ search, hiddenColumns: hiddenCols })}
+        />
+      ) : null}
       {/* Liste */}
       <div className="mt-5 overflow-x-auto">
         {state === "loading" ? (
@@ -589,7 +612,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           <p className="rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-6 text-center text-sm font-bold text-slate-500">Aucun élément{disableCreate ? "." : ` — cliquez sur « ${newLabel} » pour en ajouter.`}</p>
         ) : (
           <>
-          {reorderEndpoint ? (
+          {canReorder ? (
             <p className="mb-3 flex items-center gap-2 text-xs font-bold text-slate-500">
               <GripVertical size={14} aria-hidden="true" /> Glissez une ligne (ou utilisez les flèches) pour changer l'ordre d'affichage sur le site.
             </p>
@@ -624,18 +647,18 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                     />
                   </th>
                 ) : null}
-                {reorderEndpoint ? <th className="w-8 px-2 py-2"><span className="sr-only">Réordonner</span></th> : null}
-                {columns.map((c) => <th key={c.label} className="px-3 py-2">{c.label}</th>)}
+                {canReorder ? <th className="w-8 px-2 py-2"><span className="sr-only">Réordonner</span></th> : null}
+                {visibleColumns.map((c) => <th key={c.label} className="px-3 py-2">{c.label}</th>)}
                 <th className="px-3 py-2 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, i) => (
+              {displayRows.map((row, i) => (
                 <tr
                   key={String(row[idField] ?? i)}
                   className={`border-b border-slate-100 hover:bg-[#fbfcf8] ${dragIndex === i ? "opacity-50" : ""}`}
-                  onDragOver={reorderEndpoint ? (event) => event.preventDefault() : undefined}
-                  onDrop={reorderEndpoint ? () => dropOnRow(i) : undefined}
+                  onDragOver={canReorder ? (event) => event.preventDefault() : undefined}
+                  onDrop={canReorder ? () => dropOnRow(i) : undefined}
                 >
                   {canBulk ? (
                     <td className="px-2 py-2.5 align-top">
@@ -650,7 +673,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                       ) : null}
                     </td>
                   ) : null}
-                  {reorderEndpoint ? (
+                  {canReorder ? (
                     <td className="px-2 py-2.5 align-top">
                       <span
                         draggable
@@ -663,10 +686,10 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                       </span>
                     </td>
                   ) : null}
-                  {columns.map((c) => <td key={c.label} className="px-3 py-2.5 align-top text-slate-700">{c.render(row)}</td>)}
+                  {visibleColumns.map((c) => <td key={c.label} className="px-3 py-2.5 align-top text-slate-700">{c.render(row)}</td>)}
                   <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {reorderEndpoint ? (
+                      {canReorder ? (
                         <span className="inline-flex overflow-hidden rounded-md border border-slate-300">
                           <button
                             onClick={() => moveRow(i, -1)}
@@ -679,7 +702,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                           </button>
                           <button
                             onClick={() => moveRow(i, 1)}
-                            disabled={i === rows.length - 1 || reordering}
+                            disabled={i === displayRows.length - 1 || reordering}
                             aria-label="Descendre"
                             className="focus-ring inline-flex items-center border-l border-slate-300 px-1.5 py-1.5 text-[#002f1d] hover:bg-[#fbfcf8] disabled:opacity-30"
                             type="button"

@@ -72,6 +72,7 @@ export function PartnersAdmin() {
       reorderEndpoint="/api/admin/partners/reorder"
       customFieldsEntity="partner"
       tagsEntity="partner"
+      viewsScope="partners"
       rowLabel={(r) => `« ${String(r.name ?? "ce partenaire")} »`}
       rowActions={(row, { reload }) => <PartnerPublicationAction row={row} onDone={reload} />}
       fields={[
