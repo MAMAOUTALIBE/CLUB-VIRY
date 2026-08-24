@@ -44,7 +44,7 @@ export function getFallbackTeams(): Team[] {
     category_id: null,
     name: team.name,
     slug: team.slug,
-    level: null,
+    level: team.level || null,
     age_range: team.category,
     gender: "MIXTE",
     description: team.description,
@@ -80,9 +80,9 @@ export function getFallbackMatches(limit = 20): Match[] {
 export function getFallbackRecentResults(): Match[] {
   const now = new Date().toISOString();
   const rows: Array<[string, string, string, number, number]> = [
-    ["Seniors D1", "COMPACT", "2026-06-14T18:00:00+02:00", 2, 1],
-    ["U18 R1", "Brétigny FC", "2026-06-08T15:00:00+02:00", 1, 1],
-    ["U15 R1", "Evry FC", "2026-06-07T15:00:00+02:00", 3, 0]
+    ["Seniors A", "COMPACT", "2026-06-14T18:00:00+02:00", 2, 1],
+    ["U18 A", "Brétigny FC", "2026-06-08T15:00:00+02:00", 1, 1],
+    ["U16 A", "Evry FC", "2026-06-07T15:00:00+02:00", 3, 0]
   ];
 
   return rows.map(([competition, opponent, startsAt, homeScore, awayScore], index) => ({

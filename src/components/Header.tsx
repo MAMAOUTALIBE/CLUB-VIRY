@@ -41,7 +41,7 @@ const navItems = [
     children: [
       ["ES Viry Academy", "/academy"],
       ["Toutes les équipes", "/equipes"],
-      ["Seniors D1", "/equipes/seniors-r1"],
+      ["Seniors A", "/equipes/seniors-a"],
       ["École de foot", "/equipes/ecole-de-foot"],
       ["Féminines", "/equipes/feminines"]
     ]
@@ -87,7 +87,7 @@ const mobileNavGroups = [
     links: [
       ["ES Viry Academy", "/academy"],
       ["Toutes les équipes", "/equipes"],
-      ["Seniors D1", "/equipes/seniors-r1"],
+      ["Seniors A", "/equipes/seniors-a"],
       ["École de foot équipes", "/equipes/ecole-de-foot"],
       ["Féminines", "/equipes/feminines"]
     ]

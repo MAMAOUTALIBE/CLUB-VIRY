@@ -404,7 +404,7 @@ export async function getPublicAlbums(): Promise<DisplayAlbum[]> {
   return mockNews.map((n) => ({ title: n.title, image: n.image }));
 }
 
-export type DisplayTeam = { slug: string; name: string; category: string; season: string; description: string; image: string };
+export type DisplayTeam = { slug: string; name: string; category: string; level: string; pool: string | null; season: string; description: string; image: string };
 export type DisplayTeamStaff = { name: string; role: string; isHeadCoach: boolean };
 export type DisplayTeamPlayer = { name: string; position: string; shirtNumber: number | null };
 export type DisplayTeamMedia = { type: string; url: string; thumbnail: string | null; title: string };
@@ -448,6 +448,8 @@ export async function getPublicTeams(): Promise<DisplayTeam[]> {
         slug: t.slug,
         name: t.name,
         category: t.age_range ?? t.level ?? "Équipe",
+        level: t.level ?? "",
+        pool: null,
         season: DEFAULT_SEASON,
         description: t.description ?? "",
         image: t.cover_image_url || images.teamHuddle
@@ -455,7 +457,7 @@ export async function getPublicTeams(): Promise<DisplayTeam[]> {
   }
   return mockTeams
     .filter((t) => isPublicTeamVisible(t.slug))
-    .map((t) => ({ slug: t.slug, name: t.name, category: t.category, season: t.season, description: t.description, image: t.image }));
+    .map((t) => ({ slug: t.slug, name: t.name, category: t.category, level: t.level, pool: t.pool, season: t.season, description: t.description, image: t.image }));
 }
 
 export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDetail | null> {
@@ -471,6 +473,8 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
       slug: roster.team.slug,
       name: roster.team.name,
       category: roster.team.age_range ?? roster.team.level ?? "Équipe",
+      level: roster.team.level ?? "",
+      pool: null,
       season: DEFAULT_SEASON,
       description: roster.team.description ?? "",
       image: roster.team.cover_image_url || images.teamHuddle,
@@ -493,6 +497,8 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
     slug: mock.slug,
     name: mock.name,
     category: mock.category,
+    level: mock.level,
+    pool: mock.pool,
     season: mock.season,
     description: mock.description,
     image: mock.image,
@@ -557,8 +563,8 @@ const mockEducators: DisplayEducator[] = [
     avatar: null,
     bio: "Éducateur diplômé, en charge de la coordination sportive et de la formation des jeunes catégories.",
     teams: [
-      { name: "Seniors D1", slug: "seniors-r1", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true },
-      { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Référent", isHeadCoach: false }
+      { name: "Seniors A", slug: "seniors-a", category: "Seniors", roleTitle: "Entraîneur principal", isHeadCoach: true },
+      { name: "U18 A", slug: "u18-a", category: "U18", roleTitle: "Référent", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 48, matches: 22 }
   },
@@ -574,7 +580,7 @@ const mockEducators: DisplayEducator[] = [
     quote: null,
     avatar: null,
     bio: "Éducateur de la catégorie U14.",
-    teams: [{ name: "U14", slug: "u14", category: "U14", roleTitle: "Éducateur", isHeadCoach: true }],
+    teams: [{ name: "U14 A", slug: "u14-a", category: "U14", roleTitle: "Éducateur", isHeadCoach: true }],
     stats: { teams: 1, sessions: 0, matches: 0 }
   },
   {
@@ -589,7 +595,7 @@ const mockEducators: DisplayEducator[] = [
     quote: null,
     avatar: null,
     bio: "Éducateur de la catégorie U14.",
-    teams: [{ name: "U14", slug: "u14", category: "U14", roleTitle: "Éducateur", isHeadCoach: false }],
+    teams: [{ name: "U14 A", slug: "u14-a", category: "U14", roleTitle: "Éducateur", isHeadCoach: false }],
     stats: { teams: 1, sessions: 0, matches: 0 }
   },
   {
@@ -694,7 +700,7 @@ const mockEducators: DisplayEducator[] = [
     quote: "La progression vient de l'exigence répétée à l'entraînement.",
     avatar: null,
     bio: "Référent de la catégorie U15, il accompagne les joueurs dans les premières exigences de la compétition à 11.",
-    teams: [{ name: "U15 R1", slug: "u15-r1", category: "U15", roleTitle: "Entraîneur principal", isHeadCoach: true }],
+    teams: [{ name: "U16 A", slug: "u16-a", category: "U16", roleTitle: "Entraîneur principal", isHeadCoach: true }],
     stats: { teams: 1, sessions: 36, matches: 18 }
   },
   {
@@ -710,8 +716,8 @@ const mockEducators: DisplayEducator[] = [
     avatar: null,
     bio: "Elle assure le lien entre les catégories U15 et U18 pour harmoniser les principes de jeu et le suivi individuel.",
     teams: [
-      { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Adjointe", isHeadCoach: false },
-      { name: "U15 R1", slug: "u15-r1", category: "U15", roleTitle: "Référente préformation", isHeadCoach: false }
+      { name: "U18 A", slug: "u18-a", category: "U18", roleTitle: "Adjointe", isHeadCoach: false },
+      { name: "U16 A", slug: "u16-a", category: "U16", roleTitle: "Référente préformation", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 42, matches: 20 }
   },
@@ -743,8 +749,8 @@ const mockEducators: DisplayEducator[] = [
     avatar: null,
     bio: "Il suit les gardiens des catégories compétition avec un travail spécifique sur les appuis, la relance et la communication.",
     teams: [
-      { name: "Seniors D1", slug: "seniors-r1", category: "Seniors", roleTitle: "Référent gardiens", isHeadCoach: false },
-      { name: "U18", slug: "u18-r1", category: "U18", roleTitle: "Référent gardiens", isHeadCoach: false }
+      { name: "Seniors A", slug: "seniors-a", category: "Seniors", roleTitle: "Référent gardiens", isHeadCoach: false },
+      { name: "U18 A", slug: "u18-a", category: "U18", roleTitle: "Référent gardiens", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 34, matches: 16 }
   }

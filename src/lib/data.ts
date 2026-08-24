@@ -18,6 +18,10 @@ export type Team = {
   slug: string;
   name: string;
   category: string;
+  /** Niveau de championnat (ex. "D2"). Chaine vide pour les categories sans championnat classe. */
+  level: string;
+  /** Poule du championnat, ou null tant que le district ne l'a pas publiee. */
+  pool: string | null;
   season: string;
   description: string;
   image: string;
@@ -58,7 +62,7 @@ export const values = [
 
 export const matches = [
   {
-    team: "Seniors D1",
+    team: "Seniors A",
     home: "ES Viry-Châtillon",
     away: "COMPACT",
     date: "Sam. 5 sept.",
@@ -66,7 +70,7 @@ export const matches = [
     place: "Stade Henri Longuet"
   },
   {
-    team: "U18 R1",
+    team: "U18 A",
     home: "ES Viry-Châtillon",
     away: "Brétigny FC",
     date: "Dim. 6 sept.",
@@ -74,7 +78,7 @@ export const matches = [
     place: "Stade Henri Longuet"
   },
   {
-    team: "U15 R1",
+    team: "U16 A",
     home: "ES Viry-Châtillon",
     away: "Evry FC",
     date: "Sam. 5 sept.",
@@ -87,7 +91,7 @@ export const matches = [
 // et le datePublished du JSON-LD NewsArticle.
 export const news = [
   {
-    title: "Victoire des Seniors D1 !",
+    title: "Victoire des Seniors A !",
     date: "24 mai 2026",
     isoDate: "2026-05-24",
     category: "Équipes",
@@ -130,57 +134,109 @@ export const news = [
 
 export const teams: Team[] = [
   {
-    slug: "seniors-r1",
-    name: "Seniors D1",
+    slug: "seniors-a",
+    name: "Seniors A",
     category: "Seniors",
+    level: "D2",
+    pool: null,
     season: "2025 / 2026",
-    description: "L'équipe fanion porte les couleurs jaune et verte au niveau départemental (D1).",
+    description: "L'équipe fanion du club, engagée en Départemental 2.",
     image: images.teamHuddle,
-    coach: "Yanis B.",
-    assistant: "Mourad S.",
-    nextMatch: "Samedi 5 septembre à 18:00 contre COMPACT",
-    players: ["A. Diallo", "M. Traoré", "S. Keita", "I. Camara", "N. Benali", "T. Martin", "K. Diop", "R. Silva"]
-  },
-  {
-    slug: "seniors-d2",
-    name: "Seniors D2",
-    category: "Seniors",
-    season: "2025 / 2026",
-    description: "L'équipe réserve, passerelle entre la formation et le groupe fanion.",
-    image: images.pitch,
     coach: "ABDEDDAIM Khaled",
     assistant: "FRIHI Fouad",
     nextMatch: "Calendrier à confirmer",
     players: []
   },
   {
-    slug: "u18-r1",
-    name: "U18 R1",
-    category: "Formation",
+    slug: "seniors-b",
+    name: "Seniors B",
+    category: "Seniors",
+    level: "D3",
+    pool: null,
     season: "2025 / 2026",
-    description: "Un groupe de formation exigeant, préparé pour franchir les étapes seniors.",
-    image: images.training,
-    coach: "Karim M.",
-    assistant: "Lina R.",
-    nextMatch: "Dimanche 6 septembre à 15:00 contre Brétigny FC",
-    players: ["L. Mendy", "A. Petit", "J. Morel", "F. Sylla", "D. Sow", "B. Kone"]
+    description: "L'équipe réserve, engagée en Départemental 3 : la passerelle entre la formation et le groupe fanion.",
+    image: images.pitch,
+    coach: "OUARAS Chérif",
+    assistant: "TRAORÉ Djibril",
+    nextMatch: "Calendrier à confirmer",
+    players: []
   },
   {
-    slug: "u15-r1",
-    name: "U15 R1",
-    category: "Jeunes",
+    slug: "u18-a",
+    name: "U18 A",
+    category: "Formation",
+    level: "D3",
+    pool: "Poule à confirmer",
     season: "2025 / 2026",
-    description: "Une génération encadrée avec rigueur, plaisir et progression individuelle.",
+    description: "Le groupe de fin de formation, engagé en Départemental 3, dernière marche avant les seniors.",
+    image: images.training,
+    coach: "JEAN ETIENNE Yoann",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
+  },
+  {
+    slug: "u16-a",
+    name: "U16 A",
+    category: "Jeunes",
+    level: "D2",
+    pool: null,
+    season: "2025 / 2026",
+    description: "Le groupe compétition de la catégorie U16, engagé en Départemental 2.",
     image: images.youthTeam,
-    coach: "Thomas R.",
-    assistant: "Nabil A.",
-    nextMatch: "Samedi 5 septembre à 15:00 contre Evry FC",
-    players: ["R. N'Diaye", "I. Lopez", "M. Bamba", "Y. Cohen", "P. Lefort", "S. Diallo"]
+    coach: "BURNER Axel",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
+  },
+  {
+    slug: "u16-b",
+    name: "U16 B",
+    category: "Jeunes",
+    level: "D4",
+    pool: "Poule à confirmer",
+    season: "2025 / 2026",
+    description: "Le second groupe U16, engagé en Départemental 4, pour continuer à jouer et à progresser.",
+    image: images.youthTeam,
+    coach: "À confirmer",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
+  },
+  {
+    slug: "u14-a",
+    name: "U14 A",
+    category: "Jeunes",
+    level: "D2",
+    pool: null,
+    season: "2025 / 2026",
+    description: "L'entrée dans le football à 11, en Départemental 2, entre apprentissage technique et exigences de la compétition.",
+    image: images.youthTeam,
+    coach: "ANAS ABID",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
+  },
+  {
+    slug: "u14-b",
+    name: "U14 B",
+    category: "Jeunes",
+    level: "D4",
+    pool: "Poule à confirmer",
+    season: "2025 / 2026",
+    description: "Le second groupe U14, engagé en Départemental 4, pour offrir du temps de jeu à tous les joueurs de la catégorie.",
+    image: images.youthTeam,
+    coach: "À confirmer",
+    assistant: "",
+    nextMatch: "Calendrier à confirmer",
+    players: []
   },
   {
     slug: "u13",
     name: "U13",
     category: "Jeunes",
+    level: "",
+    pool: null,
     season: "2025 / 2026",
     description: "La dernière année de football à 8, tournée vers le passage au football à 11.",
     image: images.youthTeam,
@@ -190,21 +246,11 @@ export const teams: Team[] = [
     players: []
   },
   {
-    slug: "u14",
-    name: "U14",
-    category: "Jeunes",
-    season: "2025 / 2026",
-    description: "L'entrée dans le football à 11, entre apprentissage technique et premières exigences de la compétition.",
-    image: images.youthTeam,
-    coach: "ANAS ABID",
-    assistant: "",
-    nextMatch: "Calendrier à confirmer",
-    players: []
-  },
-  {
     slug: "feminines",
     name: "Féminines",
     category: "Féminines",
+    level: "",
+    pool: null,
     season: "2025 / 2026",
     description: "Le développement du football féminin avec ambition et accompagnement.",
     image: images.pitch,
@@ -217,6 +263,8 @@ export const teams: Team[] = [
     slug: "ecole-de-foot",
     name: "École de foot",
     category: "U6 à U11",
+    level: "",
+    pool: null,
     season: "2025 / 2026",
     description: "L'apprentissage des fondamentaux dans un cadre familial et structurant.",
     image: images.youthTeam,
