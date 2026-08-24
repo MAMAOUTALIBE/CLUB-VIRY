@@ -71,6 +71,13 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <p className="text-xs font-black uppercase text-[#664d00]">Coach</p>
             <h2 className="mt-1 text-xl font-black uppercase text-[#002f1d]">{team.coach}</h2>
           </MobileCard>
+          {team.level ? (
+            <MobileCard>
+              <p className="text-xs font-black uppercase text-[#664d00]">Championnat</p>
+              <h2 className="mt-1 text-xl font-black uppercase text-[#002f1d]">{team.level}</h2>
+              {team.pool ? <p className="mt-1 text-sm font-bold text-slate-600">{team.pool}</p> : null}
+            </MobileCard>
+          ) : null}
           <MobileCard>
             <p className="text-xs font-black uppercase text-[#664d00]">Prochain match</p>
             <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{team.nextMatch}</h2>
@@ -96,7 +103,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[1.3fr_0.7fr] lg:px-8">
         <div className="official-card rounded-lg bg-white p-6">
           <h2 className="text-3xl font-black uppercase text-[#002f1d]">Fiche équipe</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <p className="text-sm font-black uppercase text-slate-500">Coach principal</p>
               <p className="mt-1 font-black">{team.coach}</p>
@@ -104,6 +111,11 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <div>
               <p className="text-sm font-black uppercase text-slate-500">Catégorie</p>
               <p className="mt-1 font-black">{team.category}</p>
+            </div>
+            <div>
+              <p className="text-sm font-black uppercase text-slate-500">Championnat</p>
+              <p className="mt-1 font-black">{team.level || "Non concerné"}</p>
+              {team.pool ? <p className="mt-1 text-sm font-bold text-slate-600">{team.pool}</p> : null}
             </div>
             <div>
               <p className="text-sm font-black uppercase text-slate-500">Prochain match</p>

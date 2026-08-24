@@ -30,7 +30,7 @@ export function TeamsAdmin() {
         ) : null
       }
       fields={[
-        { name: "name", label: "Nom de l'équipe", required: true, fullWidth: true, placeholder: "Seniors D1" },
+        { name: "name", label: "Nom de l'équipe", required: true, fullWidth: true, placeholder: "Seniors A" },
         { name: "gender", label: "Genre", type: "select", options: GENDER },
         { name: "level", label: "Niveau", placeholder: "Départemental D1" },
         { name: "ageRange", label: "Catégorie d'âge", rowKey: "age_range", placeholder: "Seniors / U18 / U15…" },

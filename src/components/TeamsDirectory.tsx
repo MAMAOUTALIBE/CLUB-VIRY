@@ -10,6 +10,10 @@ type TeamCard = {
   slug: string;
   name: string;
   category: string;
+  /** Niveau de championnat (ex. "D2"), vide pour les categories sans championnat classe. */
+  level: string;
+  /** Poule du championnat, ou null quand elle n'est pas connue / pas concernee. */
+  pool: string | null;
   season: string;
   description: string;
   image: string;
@@ -78,11 +82,15 @@ export function TeamsDirectory({ teams }: { teams: TeamCard[] }) {
               <div className="relative h-56 overflow-hidden">
                 <Image src={team.image} alt={team.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, (max-width: 1920px) 25vw, 18vw" className="object-cover transition group-hover:scale-105" />
                 <span className="absolute left-4 top-4 z-[1] rounded bg-[#f7c600] px-3 py-1 text-xs font-black uppercase text-[#002f1d]">{team.season}</span>
+                {team.level ? (
+                  <span className="absolute right-4 top-4 z-[1] rounded bg-[#002f1d] px-3 py-1 text-xs font-black uppercase text-[#f7c600]">{team.level}</span>
+                ) : null}
               </div>
               <div className="p-5">
                 <p className="text-sm font-black uppercase text-[#664d00]">{team.category}</p>
                 <h2 className="text-2xl font-black uppercase text-[#002f1d]">{team.name}</h2>
                 <p className="mt-2 text-sm text-slate-700">{team.description}</p>
+                {team.pool ? <p className="mt-2 text-xs font-bold uppercase text-slate-500">{team.pool}</p> : null}
                 <p className="mt-4 text-xs font-black uppercase text-[#002f1d]">Voir la fiche équipe</p>
               </div>
             </Link>

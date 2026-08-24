@@ -80,12 +80,13 @@ export type Coach = {
 };
 
 export const coaches: Coach[] = [
-  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur", name: "ABDEDDAIM Khaled", diplomas: ["CFI Séniors"] },
-  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur adjoint", name: "FRIHI Fouad", diplomas: ["CFI", "Brevet de Technicien Supérieur en Sport"] },
-  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur", name: "OUARAS Chérif", diplomas: ["CFI", "BPJEPS"] },
-  { team: "Seniors D2", teamSlug: "seniors-d2", role: "Entraîneur adjoint", name: "TRAORÉ Djibril", diplomas: [] },
-  { team: "U18 D3", teamSlug: null, role: "Entraîneur", name: "JEAN ETIENNE Yoann", diplomas: [] },
-  { team: "U16 D2", teamSlug: null, role: "Entraîneur", name: "BURNER Axel", diplomas: ["CFI", "BPJEPS"] }
+  { team: "Seniors A — D2", teamSlug: "seniors-a", role: "Entraîneur", name: "ABDEDDAIM Khaled", diplomas: ["CFI Séniors"] },
+  { team: "Seniors A — D2", teamSlug: "seniors-a", role: "Entraîneur adjoint", name: "FRIHI Fouad", diplomas: ["CFI", "Brevet de Technicien Supérieur en Sport"] },
+  { team: "Seniors B — D3", teamSlug: "seniors-b", role: "Entraîneur", name: "OUARAS Chérif", diplomas: ["CFI", "BPJEPS"] },
+  { team: "Seniors B — D3", teamSlug: "seniors-b", role: "Entraîneur adjoint", name: "TRAORÉ Djibril", diplomas: [] },
+  { team: "U18 A — D3", teamSlug: "u18-a", role: "Entraîneur", name: "JEAN ETIENNE Yoann", diplomas: [] },
+  { team: "U16 A — D2", teamSlug: "u16-a", role: "Entraîneur", name: "BURNER Axel", diplomas: ["CFI", "BPJEPS"] },
+  { team: "U14 A — D2", teamSlug: "u14-a", role: "Éducateur", name: "ANAS ABID", diplomas: ["CFI"] }
 ];
 
 /** Regroupe les entraîneurs par équipe en conservant l'ordre de déclaration. */

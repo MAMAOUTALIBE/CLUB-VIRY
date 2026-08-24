@@ -112,6 +112,17 @@ const nextConfig: NextConfig = {
         headers: securityHeaders
       }
     ];
+  },
+  // Anciens slugs d'equipes (avant le passage aux libelles A / B de la saison en cours) :
+  // on les redirige pour ne pas casser les liens externes et le referencement.
+  async redirects() {
+    return [
+      { source: "/equipes/seniors-r1", destination: "/equipes/seniors-a", permanent: true },
+      { source: "/equipes/seniors-d2", destination: "/equipes/seniors-b", permanent: true },
+      { source: "/equipes/u18-r1", destination: "/equipes/u18-a", permanent: true },
+      { source: "/equipes/u15-r1", destination: "/equipes/u16-a", permanent: true },
+      { source: "/equipes/u14", destination: "/equipes/u14-a", permanent: true }
+    ];
   }
 };
 

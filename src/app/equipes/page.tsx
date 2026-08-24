@@ -22,8 +22,9 @@ export default async function TeamsPage() {
         <MobileScrollableList>
           {teams.map((team) => (
             <MobileLinkCard href={`/equipes/${team.slug}`} key={team.slug}>
-              <p className="text-xs font-black uppercase text-[#664d00]">{team.category}</p>
+              <p className="text-xs font-black uppercase text-[#664d00]">{team.level ? `${team.category} · ${team.level}` : team.category}</p>
               <h2 className="mt-1 text-lg font-black uppercase text-[#002f1d]">{team.name}</h2>
+              {team.pool ? <p className="mt-1 text-xs font-bold uppercase text-slate-500">{team.pool}</p> : null}
             </MobileLinkCard>
           ))}
         </MobileScrollableList>
