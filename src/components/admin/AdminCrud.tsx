@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, GripVertical, Loader2, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomFieldsFieldset } from "@/components/admin/CustomFieldsFieldset";
+import { TagsFieldset } from "@/components/admin/TagsFieldset";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { showToast } from "@/components/admin/Toast";
 
@@ -76,6 +77,8 @@ type AdminCrudProps = {
   allowBulkDelete?: boolean;
   /** Opt-in : affiche l'encart « Champs personnalisés » de cette entité (ex: "partner") dans le formulaire. */
   customFieldsEntity?: string;
+  /** Opt-in : affiche l'encart « Tags » de cette entité (ex: "partner") dans le formulaire. */
+  tagsEntity?: string;
 };
 
 function camelToSnake(s: string): string {
@@ -121,7 +124,7 @@ function withLimit(endpoint: string, limit: number): string {
   return `${path}?${params.toString()}`;
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity, tagsEntity }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -140,6 +143,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   const canBulk = allowBulkDelete && allowDelete;
   // Valeurs des champs personnalisés collectées par l'encart opt-in, persistées après l'enregistrement principal.
   const customValuesRef = useRef<Record<string, unknown> | null>(null);
+  const tagsRef = useRef<string[] | null>(null);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -175,6 +179,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
 
   function openNew() {
     customValuesRef.current = null;
+    tagsRef.current = null;
     const blank: Record<string, string> = {};
     for (const f of fields) blank[f.name] = f.type === "boolean" ? "true" : f.type === "select" && f.options?.[0] ? f.options[0].value : "";
     setForm(blank);
@@ -184,6 +189,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
 
   function openEdit(row: Row) {
     customValuesRef.current = null;
+    tagsRef.current = null;
     const next: Record<string, string> = {};
     for (const f of fields) next[f.name] = f.fromRowValue ? f.fromRowValue(row) : toInputValue(f, row);
     setForm(next);
@@ -415,6 +421,21 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           }
         }
       }
+      if (tagsEntity && tagsRef.current) {
+        const savedId = (id as string | undefined) ?? (json?.data?.[itemKey]?.[idField] as string | undefined);
+        if (savedId) {
+          const tagRes = await fetch("/api/admin/tags", {
+            method: "PUT",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ entityType: tagsEntity, entityId: savedId, itemIds: tagsRef.current })
+          });
+          const tagJson = await tagRes.json().catch(() => null);
+          if (!tagRes.ok || !tagJson?.ok) {
+            showToast(tagJson?.error?.message ?? "Fiche enregistrée, mais échec des tags.", "error");
+          }
+        }
+      }
       setEditing(null);
       await load();
       showToast("Enregistré.");
@@ -540,6 +561,14 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               entity={customFieldsEntity}
               recordId={(editing[idField] as string) ?? null}
               onChange={(v) => { customValuesRef.current = v; }}
+            />
+          ) : null}
+          {tagsEntity ? (
+            <TagsFieldset
+              key={`tags-${tagsEntity}-${(editing[idField] as string) ?? "new"}`}
+              entity={tagsEntity}
+              recordId={(editing[idField] as string) ?? null}
+              onChange={(ids) => { tagsRef.current = ids; }}
             />
           ) : null}
           {formError ? <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{formError}</p> : null}

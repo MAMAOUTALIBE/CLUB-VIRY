@@ -40,6 +40,8 @@ const REVALIDATE_PATHS: Record<TrashType, string[]> = {
   registrations: [],
   // Champs personnalisés : configuration CRM, aucune page publique.
   custom_fields: [],
+  reference_lists: [],
+  reference_items: [],
   recruitment: [],
   campaigns: []
 };

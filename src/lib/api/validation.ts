@@ -1,5 +1,6 @@
 import type { ValidationIssue } from "@/lib/api/http";
 import type { CustomFieldEntity, CustomFieldType } from "@/lib/custom-fields";
+import type { ReferenceListKind } from "@/lib/reference-lists";
 
 export const PUBLIC_REGISTRATION_ROLES = ["FAMILLE", "JOUEUR", "MEMBRE"] as const;
 
@@ -733,6 +734,181 @@ export function validateCustomFieldValuesPayload(input: unknown): ValidationResu
     return { ok: false, issues };
   }
   return { ok: true, data: { entityType: body.entityType as CustomFieldEntity, entityId: entityId as string, values: values as Record<string, unknown> } };
+}
+
+// --- Référentiels dynamiques (Phase H) ---------------------------------------
+
+const RL_KIND_VALUES = ["STATUS", "TAG", "STAGE", "CATEGORY", "LABEL"] as const satisfies readonly ReferenceListKind[];
+
+export type AdminReferenceListPayload = {
+  key?: string;
+  name?: string;
+  description?: string;
+  kind?: ReferenceListKind;
+  appliesTo?: string[];
+  orderIndex?: number;
+};
+
+export function validateAdminReferenceListPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminReferenceListPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  const partial = options.partial ?? false;
+  const data: AdminReferenceListPayload = {};
+
+  const key = normalizeString(body.key);
+  if (key !== undefined) {
+    if (!/^[a-z][a-z0-9_]*$/.test(key) || key.length > 50) {
+      issues.push({ field: "key", message: "La clé doit commencer par une lettre et ne contenir que minuscules, chiffres et « _ » (50 max)." });
+    } else {
+      data.key = key;
+    }
+  } else if (!partial) {
+    issues.push({ field: "key", message: "La clé technique est requise (ex : etapes_recrutement)." });
+  }
+
+  const name = normalizeString(body.name);
+  if (name !== undefined) {
+    if (name.length < 2 || name.length > 80) issues.push({ field: "name", message: "Le nom doit contenir entre 2 et 80 caractères." });
+    else data.name = name;
+  } else if (!partial) {
+    issues.push({ field: "name", message: "Le nom de la liste est requis." });
+  }
+
+  const description = normalizeString(body.description);
+  if (description !== undefined) {
+    if (description.length > 300) issues.push({ field: "description", message: "La description est trop longue (300 max)." });
+    else data.description = description;
+  } else if (body.description === "" || body.description === null) {
+    data.description = "";
+  }
+
+  if (body.kind !== undefined) {
+    if (typeof body.kind !== "string" || !(RL_KIND_VALUES as readonly string[]).includes(body.kind)) {
+      issues.push({ field: "kind", message: "Type de liste invalide." });
+    } else {
+      data.kind = body.kind as ReferenceListKind;
+    }
+  } else if (!partial) {
+    data.kind = "LABEL";
+  }
+
+  if (body.appliesTo !== undefined) {
+    if (!Array.isArray(body.appliesTo) || !body.appliesTo.every((v) => cfIsEntity(v))) {
+      issues.push({ field: "appliesTo", message: "Les fiches concernées sont invalides." });
+    } else {
+      data.appliesTo = Array.from(new Set(body.appliesTo as string[]));
+    }
+  }
+
+  if (body.orderIndex !== undefined) {
+    if (typeof body.orderIndex !== "number" || !Number.isInteger(body.orderIndex) || body.orderIndex < 0) {
+      issues.push({ field: "orderIndex", message: "L'ordre doit être un entier positif." });
+    } else {
+      data.orderIndex = body.orderIndex;
+    }
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data };
+}
+
+export type AdminReferenceItemPayload = {
+  listId?: string;
+  value?: string;
+  label?: string;
+  color?: string;
+  orderIndex?: number;
+  isActive?: boolean;
+  isDefault?: boolean;
+};
+
+export function validateAdminReferenceItemPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminReferenceItemPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  const partial = options.partial ?? false;
+  const data: AdminReferenceItemPayload = {};
+
+  if (body.listId !== undefined) {
+    if (typeof body.listId !== "string" || !isUuid(body.listId)) issues.push({ field: "listId", message: "Liste invalide." });
+    else data.listId = body.listId;
+  } else if (!partial) {
+    issues.push({ field: "listId", message: "La liste est requise." });
+  }
+
+  const value = normalizeString(body.value);
+  if (value !== undefined) {
+    if (!/^[a-z0-9][a-z0-9_-]*$/.test(value) || value.length > 50) {
+      issues.push({ field: "value", message: "La valeur doit être en minuscules (lettres, chiffres, « - » ou « _ »), 50 max." });
+    } else {
+      data.value = value;
+    }
+  } else if (!partial) {
+    issues.push({ field: "value", message: "La valeur technique est requise (ex : contacte)." });
+  }
+
+  const label = normalizeString(body.label);
+  if (label !== undefined) {
+    if (label.length < 1 || label.length > 80) issues.push({ field: "label", message: "Le libellé doit contenir entre 1 et 80 caractères." });
+    else data.label = label;
+  } else if (!partial) {
+    issues.push({ field: "label", message: "Le libellé est requis." });
+  }
+
+  const color = normalizeString(body.color);
+  if (color !== undefined) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) issues.push({ field: "color", message: "La couleur doit être un code hexadécimal (ex : #f7c600)." });
+    else data.color = color;
+  } else if (body.color === "" || body.color === null) {
+    data.color = "";
+  }
+
+  if (body.orderIndex !== undefined) {
+    if (typeof body.orderIndex !== "number" || !Number.isInteger(body.orderIndex) || body.orderIndex < 0) issues.push({ field: "orderIndex", message: "L'ordre doit être un entier positif." });
+    else data.orderIndex = body.orderIndex;
+  }
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") issues.push({ field: "isActive", message: "« Actif » doit être vrai ou faux." });
+    else data.isActive = body.isActive;
+  }
+  if (body.isDefault !== undefined) {
+    if (typeof body.isDefault !== "boolean") issues.push({ field: "isDefault", message: "« Par défaut » doit être vrai ou faux." });
+    else data.isDefault = body.isDefault;
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data };
+}
+
+export type EntityTagsPayload = {
+  entityType: CustomFieldEntity;
+  entityId: string;
+  itemIds: string[];
+};
+
+export function validateEntityTagsPayload(input: unknown): ValidationResult<EntityTagsPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+
+  if (!cfIsEntity(body.entityType)) issues.push({ field: "entityType", message: "Type de fiche invalide." });
+  const entityId = normalizeString(body.entityId);
+  if (!entityId || !isUuid(entityId)) issues.push({ field: "entityId", message: "Identifiant de fiche invalide." });
+
+  let itemIds: string[] = [];
+  if (!Array.isArray(body.itemIds)) {
+    issues.push({ field: "itemIds", message: "La liste des tags doit être un tableau." });
+  } else if (body.itemIds.length > 100) {
+    issues.push({ field: "itemIds", message: "Trop de tags (100 maximum)." });
+  } else if (!body.itemIds.every((id) => typeof id === "string" && isUuid(id))) {
+    issues.push({ field: "itemIds", message: "Chaque tag doit être un identifiant valide." });
+  } else {
+    itemIds = Array.from(new Set(body.itemIds as string[]));
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data: { entityType: body.entityType as CustomFieldEntity, entityId: entityId as string, itemIds } };
 }
 
 /** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */

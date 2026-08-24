@@ -10,7 +10,7 @@ import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
  * `deleted_at`). Chaque type déclare sa table, son libellé, la permission requise
  * pour restaurer/purger, et comment dériver un libellé lisible d'une ligne.
  */
-export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment" | "campaigns" | "custom_fields";
+export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment" | "campaigns" | "custom_fields" | "reference_lists" | "reference_items";
 
 type TrashConfig = {
   table: string;
@@ -69,6 +69,20 @@ export const TRASH_CONFIG: Record<TrashType, TrashConfig> = {
   custom_fields: {
     table: "custom_field_definitions",
     label: "Champ personnalisé",
+    permission: "automations:manage",
+    labelColumn: "label",
+    tracksDeletedBy: true
+  },
+  reference_lists: {
+    table: "reference_lists",
+    label: "Liste de référence",
+    permission: "automations:manage",
+    labelColumn: "name",
+    tracksDeletedBy: true
+  },
+  reference_items: {
+    table: "reference_items",
+    label: "Valeur de référence",
     permission: "automations:manage",
     labelColumn: "label",
     tracksDeletedBy: true

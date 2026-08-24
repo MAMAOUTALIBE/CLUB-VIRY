@@ -546,3 +546,45 @@ export type CustomFieldValue = {
   created_at: string;
   updated_at: string;
 };
+
+// --- Référentiels dynamiques (Phase H) ---------------------------------------
+
+export type ReferenceListKind = "STATUS" | "TAG" | "STAGE" | "CATEGORY" | "LABEL";
+
+export type ReferenceList = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  kind: ReferenceListKind;
+  applies_to: string[];
+  is_system: boolean;
+  order_index: number;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReferenceItem = {
+  id: string;
+  list_id: string;
+  value: string;
+  label: string;
+  color: string | null;
+  order_index: number;
+  is_active: boolean;
+  is_default: boolean;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EntityTag = {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  item_id: string;
+  created_at: string;
+};
