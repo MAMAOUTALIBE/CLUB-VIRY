@@ -1,6 +1,7 @@
 import type { ValidationIssue } from "@/lib/api/http";
 import type { CustomFieldEntity, CustomFieldType } from "@/lib/custom-fields";
 import type { ReferenceListKind } from "@/lib/reference-lists";
+import type { MessageChannel, ReminderStatus } from "@/lib/messaging";
 
 export const PUBLIC_REGISTRATION_ROLES = ["FAMILLE", "JOUEUR", "MEMBRE"] as const;
 
@@ -909,6 +910,170 @@ export function validateEntityTagsPayload(input: unknown): ValidationResult<Enti
 
   if (issues.length > 0) return { ok: false, issues };
   return { ok: true, data: { entityType: body.entityType as CustomFieldEntity, entityId: entityId as string, itemIds } };
+}
+
+// --- Messagerie : modèles + rappels (Phase I) --------------------------------
+
+const MSG_CHANNEL_VALUES = ["EMAIL", "SMS", "IN_APP"] as const satisfies readonly MessageChannel[];
+const REMINDER_STATUS_VALUES = ["PENDING", "SENT", "CANCELLED"] as const satisfies readonly ReminderStatus[];
+
+export type AdminMessageTemplatePayload = {
+  key?: string;
+  name?: string;
+  channel?: MessageChannel;
+  subject?: string;
+  body?: string;
+  description?: string;
+  orderIndex?: number;
+  isActive?: boolean;
+};
+
+export function validateAdminMessageTemplatePayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminMessageTemplatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  const partial = options.partial ?? false;
+  const data: AdminMessageTemplatePayload = {};
+
+  const key = normalizeString(body.key);
+  if (key !== undefined) {
+    if (!/^[a-z][a-z0-9_]*$/.test(key) || key.length > 50) issues.push({ field: "key", message: "Clé invalide (minuscules, chiffres, « _ », 50 max)." });
+    else data.key = key;
+  } else if (!partial) {
+    issues.push({ field: "key", message: "La clé technique est requise." });
+  }
+
+  const name = normalizeString(body.name);
+  if (name !== undefined) {
+    if (name.length < 2 || name.length > 80) issues.push({ field: "name", message: "Le nom doit contenir entre 2 et 80 caractères." });
+    else data.name = name;
+  } else if (!partial) {
+    issues.push({ field: "name", message: "Le nom du modèle est requis." });
+  }
+
+  if (body.channel !== undefined) {
+    if (typeof body.channel !== "string" || !(MSG_CHANNEL_VALUES as readonly string[]).includes(body.channel)) issues.push({ field: "channel", message: "Canal invalide." });
+    else data.channel = body.channel as MessageChannel;
+  } else if (!partial) {
+    data.channel = "EMAIL";
+  }
+
+  const subject = normalizeString(body.subject);
+  if (subject !== undefined) {
+    if (subject.length > 200) issues.push({ field: "subject", message: "L'objet est trop long (200 max)." });
+    else data.subject = subject;
+  } else if (body.subject === "" || body.subject === null) {
+    data.subject = "";
+  }
+
+  const content = normalizeString(body.body);
+  if (content !== undefined) {
+    if (content.length > 5000) issues.push({ field: "body", message: "Le corps est trop long (5000 max)." });
+    else data.body = content;
+  } else if (!partial) {
+    issues.push({ field: "body", message: "Le corps du message est requis." });
+  }
+
+  const description = normalizeString(body.description);
+  if (description !== undefined) {
+    if (description.length > 300) issues.push({ field: "description", message: "La description est trop longue (300 max)." });
+    else data.description = description;
+  } else if (body.description === "" || body.description === null) {
+    data.description = "";
+  }
+
+  if (body.orderIndex !== undefined) {
+    if (typeof body.orderIndex !== "number" || !Number.isInteger(body.orderIndex) || body.orderIndex < 0) issues.push({ field: "orderIndex", message: "L'ordre doit être un entier positif." });
+    else data.orderIndex = body.orderIndex;
+  }
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") issues.push({ field: "isActive", message: "« Actif » doit être vrai ou faux." });
+    else data.isActive = body.isActive;
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data };
+}
+
+export type AdminReminderPayload = {
+  title?: string;
+  channel?: MessageChannel;
+  templateId?: string;
+  subject?: string;
+  body?: string;
+  runAt?: string;
+  recipientEmail?: string;
+  status?: ReminderStatus;
+};
+
+export function validateAdminReminderPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminReminderPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  const partial = options.partial ?? false;
+  const data: AdminReminderPayload = {};
+
+  const title = normalizeString(body.title);
+  if (title !== undefined) {
+    if (title.length < 2 || title.length > 120) issues.push({ field: "title", message: "Le titre doit contenir entre 2 et 120 caractères." });
+    else data.title = title;
+  } else if (!partial) {
+    issues.push({ field: "title", message: "Le titre du rappel est requis." });
+  }
+
+  if (body.channel !== undefined) {
+    if (typeof body.channel !== "string" || !(MSG_CHANNEL_VALUES as readonly string[]).includes(body.channel)) issues.push({ field: "channel", message: "Canal invalide." });
+    else data.channel = body.channel as MessageChannel;
+  } else if (!partial) {
+    data.channel = "IN_APP";
+  }
+
+  if (body.templateId !== undefined && body.templateId !== null && body.templateId !== "") {
+    if (typeof body.templateId !== "string" || !isUuid(body.templateId)) issues.push({ field: "templateId", message: "Modèle invalide." });
+    else data.templateId = body.templateId;
+  } else if (body.templateId === "" || body.templateId === null) {
+    data.templateId = "";
+  }
+
+  const subject = normalizeString(body.subject);
+  if (subject !== undefined) {
+    if (subject.length > 200) issues.push({ field: "subject", message: "L'objet est trop long (200 max)." });
+    else data.subject = subject;
+  } else if (body.subject === "" || body.subject === null) {
+    data.subject = "";
+  }
+
+  const content = normalizeString(body.body);
+  if (content !== undefined) {
+    if (content.length > 5000) issues.push({ field: "body", message: "Le message est trop long (5000 max)." });
+    else data.body = content;
+  } else if (body.body === "" || body.body === null) {
+    data.body = "";
+  }
+
+  const runAt = normalizeString(body.runAt);
+  if (runAt !== undefined) {
+    if (Number.isNaN(Date.parse(runAt))) issues.push({ field: "runAt", message: "Date d'échéance invalide." });
+    else data.runAt = runAt;
+  } else if (!partial) {
+    issues.push({ field: "runAt", message: "La date d'échéance est requise." });
+  }
+
+  const email = normalizeEmail(body.recipientEmail);
+  if (email !== undefined) {
+    if (!isValidEmail(email)) issues.push({ field: "recipientEmail", message: "Adresse e-mail invalide." });
+    else data.recipientEmail = email;
+  } else if (body.recipientEmail === "" || body.recipientEmail === null) {
+    data.recipientEmail = "";
+  }
+
+  if (body.status !== undefined) {
+    if (typeof body.status !== "string" || !(REMINDER_STATUS_VALUES as readonly string[]).includes(body.status)) issues.push({ field: "status", message: "Statut invalide." });
+    else data.status = body.status as ReminderStatus;
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data };
 }
 
 /** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */

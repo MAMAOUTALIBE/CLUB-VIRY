@@ -42,6 +42,8 @@ const REVALIDATE_PATHS: Record<TrashType, string[]> = {
   custom_fields: [],
   reference_lists: [],
   reference_items: [],
+  message_templates: [],
+  reminders: [],
   recruitment: [],
   campaigns: []
 };

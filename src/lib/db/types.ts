@@ -588,3 +588,42 @@ export type EntityTag = {
   item_id: string;
   created_at: string;
 };
+
+// --- Messagerie : modèles + rappels (Phase I) --------------------------------
+
+export type MessageChannel = "EMAIL" | "SMS" | "IN_APP";
+export type ReminderStatus = "PENDING" | "SENT" | "CANCELLED";
+
+export type MessageTemplate = {
+  id: string;
+  key: string;
+  name: string;
+  channel: MessageChannel;
+  subject: string | null;
+  body: string;
+  description: string | null;
+  is_active: boolean;
+  order_index: number;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ScheduledReminder = {
+  id: string;
+  title: string;
+  channel: MessageChannel;
+  template_id: string | null;
+  subject: string | null;
+  body: string | null;
+  run_at: string;
+  recipient_email: string | null;
+  status: ReminderStatus;
+  sent_at: string | null;
+  created_by: string | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
