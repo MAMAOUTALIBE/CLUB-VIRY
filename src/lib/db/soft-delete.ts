@@ -10,7 +10,7 @@ import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
  * `deleted_at`). Chaque type déclare sa table, son libellé, la permission requise
  * pour restaurer/purger, et comment dériver un libellé lisible d'une ligne.
  */
-export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment" | "campaigns" | "custom_fields" | "reference_lists" | "reference_items" | "message_templates" | "reminders";
+export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment" | "campaigns" | "custom_fields" | "reference_lists" | "reference_items" | "message_templates" | "reminders" | "scheduled_automations";
 
 type TrashConfig = {
   table: string;
@@ -99,6 +99,13 @@ export const TRASH_CONFIG: Record<TrashType, TrashConfig> = {
     label: "Rappel planifié",
     permission: "communication:manage",
     labelColumn: "title",
+    tracksDeletedBy: true
+  },
+  scheduled_automations: {
+    table: "scheduled_automations",
+    label: "Automatisation planifiée",
+    permission: "automations:manage",
+    labelColumn: "name",
     tracksDeletedBy: true
   }
 };

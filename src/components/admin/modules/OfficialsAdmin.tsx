@@ -8,6 +8,7 @@ export function OfficialsAdmin() {
       title="Direction — bureau & dirigeants"
       description="Gérez les personnes affichées sur la page publique Organigramme. Catégorie « Bureau exécutif » = Président, Trésorier, Secrétaire… ; « Dirigeant » = autres responsables. Les membres « actifs » sont visibles sur le site, triés par ordre d'affichage."
       endpoint="/api/admin/officials"
+      viewsScope="officials"
       listKey="officials"
       itemKey="official"
       newLabel="Nouveau membre"

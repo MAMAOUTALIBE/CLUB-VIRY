@@ -8,6 +8,7 @@ export function StandingsAdmin() {
       title="Classements"
       description="Saisissez les classements des équipes (une ligne = une équipe dans une compétition). Ils s'affichent sur la page /resultats du site, regroupés par compétition. Cochez « Notre club » pour surligner l'ES Viry."
       endpoint="/api/admin/standings"
+      viewsScope="standings"
       listKey="standings"
       itemKey="standing"
       newLabel="Nouvelle ligne"

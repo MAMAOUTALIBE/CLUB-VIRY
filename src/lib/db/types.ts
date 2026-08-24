@@ -641,3 +641,23 @@ export type SavedView = {
   created_at: string;
   updated_at: string;
 };
+
+// --- Automatisations planifiées (fin de chantier) ----------------------------
+
+export type ScheduledAutomation = {
+  id: string;
+  name: string;
+  condition_key: string;
+  threshold_days: number;
+  channel: MessageChannel;
+  template_id: string | null;
+  recipient_email: string | null;
+  is_active: boolean;
+  last_run_at: string | null;
+  last_match_count: number | null;
+  created_by: string | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+};

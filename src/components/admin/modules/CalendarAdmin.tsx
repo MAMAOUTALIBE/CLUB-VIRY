@@ -45,6 +45,7 @@ export function CalendarAdmin() {
         title="Matchs"
         description="Programmez les matchs et saisissez les résultats. Ils apparaissent sur le calendrier et l'accueil du site."
         endpoint="/api/admin/matches"
+      viewsScope="matches"
         listKey="matches"
         itemKey="match"
         newLabel="Nouveau match"

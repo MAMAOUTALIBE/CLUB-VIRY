@@ -20,6 +20,7 @@ export function ProductsAdmin() {
       description="Gérez les articles de la boutique. Les produits « En vente » apparaissent sur la page /boutique du site."
       listEndpoint="/api/admin/shop"
       endpoint="/api/admin/shop/products"
+      viewsScope="products"
       listKey="products"
       itemKey="product"
       newLabel="Nouveau produit"

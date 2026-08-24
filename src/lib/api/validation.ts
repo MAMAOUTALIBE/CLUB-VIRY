@@ -3,6 +3,7 @@ import type { CustomFieldEntity, CustomFieldType } from "@/lib/custom-fields";
 import type { ReferenceListKind } from "@/lib/reference-lists";
 import type { MessageChannel, ReminderStatus } from "@/lib/messaging";
 import type { Permission } from "@/lib/auth/permissions";
+import type { ScheduledConditionKey } from "@/lib/scheduled-automations";
 
 export const PUBLIC_REGISTRATION_ROLES = ["FAMILLE", "JOUEUR", "MEMBRE"] as const;
 
@@ -1165,6 +1166,78 @@ export function validateRolePermissionsPayload(input: unknown): ValidationResult
 
   const permissions = Array.from(new Set(body.permissions as string[])) as Permission[];
   return { ok: true, data: { permissions } };
+}
+
+// --- Automatisations planifiées (fin de chantier) ----------------------------
+
+const SCHEDULED_CONDITION_VALUES = ["registrations_stale", "recruitment_stale"] as const satisfies readonly ScheduledConditionKey[];
+
+export type AdminScheduledAutomationPayload = {
+  name?: string;
+  conditionKey?: ScheduledConditionKey;
+  thresholdDays?: number;
+  channel?: MessageChannel;
+  templateId?: string;
+  recipientEmail?: string;
+  isActive?: boolean;
+};
+
+export function validateAdminScheduledAutomationPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminScheduledAutomationPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  const partial = options.partial ?? false;
+  const data: AdminScheduledAutomationPayload = {};
+
+  const name = normalizeString(body.name);
+  if (name !== undefined) {
+    if (name.length < 2 || name.length > 120) issues.push({ field: "name", message: "Le nom doit contenir entre 2 et 120 caractères." });
+    else data.name = name;
+  } else if (!partial) {
+    issues.push({ field: "name", message: "Le nom est requis." });
+  }
+
+  if (body.conditionKey !== undefined) {
+    if (typeof body.conditionKey !== "string" || !(SCHEDULED_CONDITION_VALUES as readonly string[]).includes(body.conditionKey)) issues.push({ field: "conditionKey", message: "Condition inconnue." });
+    else data.conditionKey = body.conditionKey as ScheduledConditionKey;
+  } else if (!partial) {
+    issues.push({ field: "conditionKey", message: "La condition est requise." });
+  }
+
+  if (body.thresholdDays !== undefined) {
+    if (typeof body.thresholdDays !== "number" || !Number.isInteger(body.thresholdDays) || body.thresholdDays < 0 || body.thresholdDays > 3650) issues.push({ field: "thresholdDays", message: "Le seuil (jours) doit être un entier entre 0 et 3650." });
+    else data.thresholdDays = body.thresholdDays;
+  }
+
+  if (body.channel !== undefined) {
+    if (typeof body.channel !== "string" || !(MSG_CHANNEL_VALUES as readonly string[]).includes(body.channel)) issues.push({ field: "channel", message: "Canal invalide." });
+    else data.channel = body.channel as MessageChannel;
+  } else if (!partial) {
+    data.channel = "IN_APP";
+  }
+
+  if (body.templateId !== undefined && body.templateId !== null && body.templateId !== "") {
+    if (typeof body.templateId !== "string" || !isUuid(body.templateId)) issues.push({ field: "templateId", message: "Modèle invalide." });
+    else data.templateId = body.templateId;
+  } else if (body.templateId === "" || body.templateId === null) {
+    data.templateId = "";
+  }
+
+  const email = normalizeEmail(body.recipientEmail);
+  if (email !== undefined) {
+    if (!isValidEmail(email)) issues.push({ field: "recipientEmail", message: "Adresse e-mail invalide." });
+    else data.recipientEmail = email;
+  } else if (body.recipientEmail === "" || body.recipientEmail === null) {
+    data.recipientEmail = "";
+  }
+
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") issues.push({ field: "isActive", message: "« Actif » doit être vrai ou faux." });
+    else data.isActive = body.isActive;
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data };
 }
 
 /** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */

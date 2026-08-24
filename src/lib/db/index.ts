@@ -20,3 +20,5 @@ export * from "@/lib/db/reference-lists";
 export * from "@/lib/db/messaging";
 
 export * from "@/lib/db/saved-views";
+
+export * from "@/lib/db/scheduled-automations";
