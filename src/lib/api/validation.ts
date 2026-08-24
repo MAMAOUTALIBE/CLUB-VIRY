@@ -1,4 +1,5 @@
 import type { ValidationIssue } from "@/lib/api/http";
+import type { CustomFieldEntity, CustomFieldType } from "@/lib/custom-fields";
 
 export const PUBLIC_REGISTRATION_ROLES = ["FAMILLE", "JOUEUR", "MEMBRE"] as const;
 
@@ -561,6 +562,178 @@ export type AdminCategoryPayload = {
   orderIndex?: number;
   isActive?: boolean;
 };
+
+// Valeurs runtime dupliquées VOLONTAIREMENT du catalogue @/lib/custom-fields :
+// validation.ts est chargé par le runner de tests (--experimental-strip-types) qui ne
+// résout pas l'alias @/ à l'exécution. `satisfies` garantit qu'aucune valeur n'est erronée.
+const CF_ENTITY_VALUES = ["player", "family", "partner", "recruitment_application", "team", "news"] as const satisfies readonly CustomFieldEntity[];
+const CF_TYPE_VALUES = ["TEXT", "TEXTAREA", "NUMBER", "BOOLEAN", "DATE", "SELECT", "MULTISELECT", "EMAIL", "PHONE", "URL"] as const satisfies readonly CustomFieldType[];
+
+function cfIsEntity(value: unknown): value is CustomFieldEntity {
+  return typeof value === "string" && (CF_ENTITY_VALUES as readonly string[]).includes(value);
+}
+
+function cfTypeHasOptions(type: string): boolean {
+  return type === "SELECT" || type === "MULTISELECT";
+}
+
+// --- Champs personnalisés (Phase G) ------------------------------------------
+
+export type AdminCustomFieldPayload = {
+  entityType?: CustomFieldEntity;
+  key?: string;
+  label?: string;
+  type?: CustomFieldType;
+  options?: string[];
+  required?: boolean;
+  helpText?: string;
+  orderIndex?: number;
+  isActive?: boolean;
+};
+
+/**
+ * Valide la définition d'un champ personnalisé. `entityType` et `type` sont figés
+ * à la création (partial=false) ; en édition on autorise le partiel mais on ne
+ * change jamais l'entité (clé structurante) — la route ignore ce champ en PATCH.
+ */
+export function validateAdminCustomFieldPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminCustomFieldPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+  const partial = options.partial ?? false;
+  const data: AdminCustomFieldPayload = {};
+
+  if (body.entityType !== undefined) {
+    if (!cfIsEntity(body.entityType)) {
+      issues.push({ field: "entityType", message: "Type de fiche invalide." });
+    } else {
+      data.entityType = body.entityType;
+    }
+  } else if (!partial) {
+    issues.push({ field: "entityType", message: "Le type de fiche est requis." });
+  }
+
+  const key = normalizeString(body.key);
+  if (key !== undefined) {
+    if (!/^[a-z][a-z0-9_]*$/.test(key) || key.length > 50) {
+      issues.push({ field: "key", message: "La clé doit commencer par une lettre et ne contenir que minuscules, chiffres et « _ » (50 max)." });
+    } else {
+      data.key = key;
+    }
+  } else if (!partial) {
+    issues.push({ field: "key", message: "La clé technique est requise (ex : numero_licence)." });
+  }
+
+  const label = normalizeString(body.label);
+  if (label !== undefined) {
+    if (label.length < 2 || label.length > 80) {
+      issues.push({ field: "label", message: "Le libellé doit contenir entre 2 et 80 caractères." });
+    } else {
+      data.label = label;
+    }
+  } else if (!partial) {
+    issues.push({ field: "label", message: "Le libellé est requis." });
+  }
+
+  if (body.type !== undefined) {
+    if (typeof body.type !== "string" || !(CF_TYPE_VALUES as readonly string[]).includes(body.type)) {
+      issues.push({ field: "type", message: "Type de champ invalide." });
+    } else {
+      data.type = body.type as CustomFieldType;
+    }
+  } else if (!partial) {
+    data.type = "TEXT";
+  }
+
+  if (body.options !== undefined) {
+    const list = normalizeStringList(body.options, 100, 80);
+    data.options = list ?? [];
+  }
+  // Un champ à choix (SELECT/MULTISELECT) doit proposer au moins une option.
+  const effectiveType = data.type ?? (partial ? undefined : "TEXT");
+  if (effectiveType && cfTypeHasOptions(effectiveType)) {
+    const opts = data.options ?? (partial ? undefined : []);
+    if (opts !== undefined && opts.length === 0) {
+      issues.push({ field: "options", message: "Un champ « liste » doit proposer au moins une option." });
+    }
+  }
+
+  if (body.required !== undefined) {
+    if (typeof body.required !== "boolean") {
+      issues.push({ field: "required", message: "« Obligatoire » doit être vrai ou faux." });
+    } else {
+      data.required = body.required;
+    }
+  }
+
+  const helpText = normalizeString(body.helpText);
+  if (helpText !== undefined) {
+    if (helpText.length > 300) {
+      issues.push({ field: "helpText", message: "L'aide est trop longue (300 caractères max)." });
+    } else {
+      data.helpText = helpText;
+    }
+  } else if (body.helpText === "" || body.helpText === null) {
+    data.helpText = "";
+  }
+
+  if (body.orderIndex !== undefined) {
+    if (typeof body.orderIndex !== "number" || !Number.isInteger(body.orderIndex) || body.orderIndex < 0) {
+      issues.push({ field: "orderIndex", message: "L'ordre doit être un entier positif." });
+    } else {
+      data.orderIndex = body.orderIndex;
+    }
+  }
+
+  if (body.isActive !== undefined) {
+    if (typeof body.isActive !== "boolean") {
+      issues.push({ field: "isActive", message: "« Actif » doit être vrai ou faux." });
+    } else {
+      data.isActive = body.isActive;
+    }
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+  return { ok: true, data };
+}
+
+export type CustomFieldValuesPayload = {
+  entityType: CustomFieldEntity;
+  entityId: string;
+  values: Record<string, unknown>;
+};
+
+/** Valide un enregistrement de valeurs de champs personnalisés pour une fiche. */
+export function validateCustomFieldValuesPayload(input: unknown): ValidationResult<CustomFieldValuesPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  if (!cfIsEntity(body.entityType)) {
+    issues.push({ field: "entityType", message: "Type de fiche invalide." });
+  }
+  const entityId = normalizeString(body.entityId);
+  if (!entityId || !isUuid(entityId)) {
+    issues.push({ field: "entityId", message: "Identifiant de fiche invalide." });
+  }
+  const values = asRecord(body.values);
+  if (!values) {
+    issues.push({ field: "values", message: "Les valeurs doivent être un objet." });
+  } else if (Object.keys(values).length > 200) {
+    issues.push({ field: "values", message: "Trop de valeurs (200 maximum)." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+  return { ok: true, data: { entityType: body.entityType as CustomFieldEntity, entityId: entityId as string, values: values as Record<string, unknown> } };
+}
 
 /** Valide une catégorie (nom + tranche d'âge + genre MIXTE/MASCULIN/FEMININ + ordre + actif). */
 export function validateAdminCategoryPayload(input: unknown, options: { partial?: boolean } = {}): ValidationResult<AdminCategoryPayload> {

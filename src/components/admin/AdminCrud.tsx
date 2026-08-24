@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowDown, ArrowUp, GripVertical, Loader2, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CustomFieldsFieldset } from "@/components/admin/CustomFieldsFieldset";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { showToast } from "@/components/admin/Toast";
 
@@ -73,6 +74,8 @@ type AdminCrudProps = {
   reorderEndpoint?: string;
   /** Active la sélection multiple + suppression en masse (nécessite allowDelete). */
   allowBulkDelete?: boolean;
+  /** Opt-in : affiche l'encart « Champs personnalisés » de cette entité (ex: "partner") dans le formulaire. */
+  customFieldsEntity?: string;
 };
 
 function camelToSnake(s: string): string {
@@ -118,7 +121,7 @@ function withLimit(endpoint: string, limit: number): string {
   return `${path}?${params.toString()}`;
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -135,6 +138,8 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkPending, setBulkPending] = useState(false);
   const canBulk = allowBulkDelete && allowDelete;
+  // Valeurs des champs personnalisés collectées par l'encart opt-in, persistées après l'enregistrement principal.
+  const customValuesRef = useRef<Record<string, unknown> | null>(null);
 
   const load = useCallback(async () => {
     setState("loading");
@@ -169,6 +174,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   }, [load]);
 
   function openNew() {
+    customValuesRef.current = null;
     const blank: Record<string, string> = {};
     for (const f of fields) blank[f.name] = f.type === "boolean" ? "true" : f.type === "select" && f.options?.[0] ? f.options[0].value : "";
     setForm(blank);
@@ -177,6 +183,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   }
 
   function openEdit(row: Row) {
+    customValuesRef.current = null;
     const next: Record<string, string> = {};
     for (const f of fields) next[f.name] = f.fromRowValue ? f.fromRowValue(row) : toInputValue(f, row);
     setForm(next);
@@ -393,6 +400,21 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         setFormError(`${json?.error?.message ?? "Échec de l'enregistrement."}${details ? " — " + details : ""}`);
         return;
       }
+      if (customFieldsEntity && customValuesRef.current) {
+        const savedId = (id as string | undefined) ?? (json?.data?.[itemKey]?.[idField] as string | undefined);
+        if (savedId) {
+          const cfRes = await fetch("/api/admin/custom-fields/values", {
+            method: "PUT",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ entityType: customFieldsEntity, entityId: savedId, values: customValuesRef.current })
+          });
+          const cfJson = await cfRes.json().catch(() => null);
+          if (!cfRes.ok || !cfJson?.ok) {
+            showToast(cfJson?.error?.message ?? "Fiche enregistrée, mais échec des champs personnalisés.", "error");
+          }
+        }
+      }
       setEditing(null);
       await load();
       showToast("Enregistré.");
@@ -512,6 +534,14 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               );
             })}
           </div>
+          {customFieldsEntity ? (
+            <CustomFieldsFieldset
+              key={`${customFieldsEntity}-${(editing[idField] as string) ?? "new"}`}
+              entity={customFieldsEntity}
+              recordId={(editing[idField] as string) ?? null}
+              onChange={(v) => { customValuesRef.current = v; }}
+            />
+          ) : null}
           {formError ? <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{formError}</p> : null}
           <div className="mt-4 flex gap-2">
             <button onClick={() => void submit()} disabled={saving} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:cursor-wait disabled:opacity-70" type="button">

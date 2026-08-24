@@ -10,7 +10,7 @@ import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
  * `deleted_at`). Chaque type déclare sa table, son libellé, la permission requise
  * pour restaurer/purger, et comment dériver un libellé lisible d'une ligne.
  */
-export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment" | "campaigns";
+export type TrashType = "news" | "partners" | "products" | "officials" | "seasons" | "categories" | "teams" | "matches" | "events" | "albums" | "standings" | "players" | "families" | "subscriptions" | "registrations" | "recruitment" | "campaigns" | "custom_fields";
 
 type TrashConfig = {
   table: string;
@@ -64,6 +64,13 @@ export const TRASH_CONFIG: Record<TrashType, TrashConfig> = {
     permission: "players:manage",
     labelColumn: "last_name",
     labelColumns: ["first_name", "last_name"],
+    tracksDeletedBy: true
+  },
+  custom_fields: {
+    table: "custom_field_definitions",
+    label: "Champ personnalisé",
+    permission: "automations:manage",
+    labelColumn: "label",
     tracksDeletedBy: true
   }
 };

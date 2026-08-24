@@ -505,3 +505,44 @@ export type CommunicationCampaign = {
   created_at: string;
   updated_at: string;
 };
+
+// --- Champs personnalisés (Phase G) ------------------------------------------
+
+export type CustomFieldType =
+  | "TEXT"
+  | "TEXTAREA"
+  | "NUMBER"
+  | "BOOLEAN"
+  | "DATE"
+  | "SELECT"
+  | "MULTISELECT"
+  | "EMAIL"
+  | "PHONE"
+  | "URL";
+
+export type CustomFieldDefinition = {
+  id: string;
+  entity_type: string;
+  key: string;
+  label: string;
+  type: CustomFieldType;
+  options: string[];
+  required: boolean;
+  help_text: string | null;
+  order_index: number;
+  is_active: boolean;
+  deleted_at: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CustomFieldValue = {
+  id: string;
+  field_id: string;
+  entity_type: string;
+  entity_id: string;
+  value: unknown;
+  created_at: string;
+  updated_at: string;
+};

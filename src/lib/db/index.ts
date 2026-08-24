@@ -12,3 +12,5 @@ export * from "@/lib/db/content";
 export * from "@/lib/db/contact-admin";
 export * from "@/lib/db/recruitment-shop";
 export * from "@/lib/db/types";
+
+export * from "@/lib/db/custom-fields";

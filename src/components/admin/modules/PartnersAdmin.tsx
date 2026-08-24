@@ -70,6 +70,7 @@ export function PartnersAdmin() {
       allowBulkDelete
       deleteMode="soft"
       reorderEndpoint="/api/admin/partners/reorder"
+      customFieldsEntity="partner"
       rowLabel={(r) => `« ${String(r.name ?? "ce partenaire")} »`}
       rowActions={(row, { reload }) => <PartnerPublicationAction row={row} onDone={reload} />}
       fields={[
