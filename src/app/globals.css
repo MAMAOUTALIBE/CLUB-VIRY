@@ -198,6 +198,15 @@ select {
   background-size: 38px 38px;
 }
 
+.sports-hub::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 42%;
+  height: 25rem;
+  background: linear-gradient(90deg, #002f21 0%, rgba(0, 47, 33, .58) 48%, rgba(0, 47, 33, .76) 100%), url("/stade/tribune.jpg") center 35% / cover no-repeat;
+  opacity: .55;
+}
+
 .light-sweep {
   position: relative;
   overflow: hidden;

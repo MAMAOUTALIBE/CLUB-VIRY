@@ -26,6 +26,15 @@ function editorialPageDef(key: string, title: string, description: string): Sett
 
 const DEFS: SettingDef[] = [
   {
+    key: "home_sports",
+    title: "Accueil — planning des entraînements",
+    description: "Gérez le libellé de semaine et tous les créneaux affichés dans la grande section sportive de l’accueil. Les matchs et résultats se gèrent dans Sportif → Calendrier ; l’actualité mise en avant dans Communication → Actualités.",
+    fields: [
+      { name: "weekLabel", label: "Semaine affichée", placeholder: "Semaine du 2 au 6 septembre 2026" },
+      { name: "trainingSchedule", label: "Planning complet (JSON)", type: "json", help: "Chaque ligne contient category, subtitle, accent et days (5 tableaux, de lundi à vendredi). Pour supprimer un créneau, retirez-le de son tableau. Pour supprimer une catégorie, retirez sa ligne." }
+    ]
+  },
+  {
     key: "socials",
     title: "Réseaux sociaux",
     description: "Renseignez les URLs : les icônes deviennent cliquables sur le site (header + footer). Laissez vide = icône décorative.",
@@ -276,7 +285,7 @@ function SettingCard({ def, value, onAuth }: { def: SettingDef; value: Record<st
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section id={def.key} className="scroll-mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <h2 className="text-xl font-black uppercase text-[#002f1d]">{def.title}</h2>
       {def.description ? <p className="mt-1 text-sm text-slate-600">{def.description}</p> : null}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

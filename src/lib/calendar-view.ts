@@ -15,6 +15,10 @@ export type CalendarDisplayItem = {
   place: string;
   dayOfMonth?: number;
   startsAt?: string;
+  status?: MatchStatus;
+  location?: MatchLocation;
+  homeScore?: number | null;
+  awayScore?: number | null;
 };
 
 export type CalendarPageData = {
@@ -123,6 +127,10 @@ export function calendarApiToItems(data: { events?: ClubEvent[]; matches?: Match
       place: match.venue ?? "Lieu à confirmer",
       dayOfMonth: date?.getDate(),
       startsAt: match.starts_at
+      ,status: match.status
+      ,location: match.location
+      ,homeScore: match.home_score
+      ,awayScore: match.away_score
     };
   });
 
@@ -161,6 +169,10 @@ export function getFallbackCalendarItems(): CalendarDisplayItem[] {
     timeLabel: match.time,
     place: match.place,
     dayOfMonth: dayFromLabel(match.date)
+    ,status: "SCHEDULED"
+    ,location: "HOME"
+    ,homeScore: null
+    ,awayScore: null
   }));
 }
 

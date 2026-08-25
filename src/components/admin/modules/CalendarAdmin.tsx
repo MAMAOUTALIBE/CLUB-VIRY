@@ -43,7 +43,7 @@ export function CalendarAdmin() {
     <div className="grid gap-6">
       <AdminCrud
         title="Matchs"
-        description="Programmez les matchs et saisissez les résultats. Ils apparaissent sur le calendrier et l'accueil du site."
+        description="Créez, modifiez ou supprimez les prochains matchs et les résultats affichés sur l’accueil. Un match « Terminé » avec ses deux scores apparaît dans Derniers résultats ; les autres apparaissent dans Prochains matchs."
         endpoint="/api/admin/matches"
       viewsScope="matches"
         listKey="matches"

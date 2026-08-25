@@ -11,14 +11,14 @@ type NavGroup = { label: string; icon: LucideIcon; href?: string; children?: { l
 const NAVIGATION: NavGroup[] = [
   { label: "Tableau de bord", icon: LayoutDashboard, href: "/admin" },
   { label: "Communication", icon: Megaphone, children: [{ label: "Actualités", href: "/admin/actualites" }, { label: "Messages", href: "/admin/messages" }, { label: "File d’envoi", href: "/admin/communication" }, { label: "Automatisations", href: "/admin/automatisations" }, { label: "Modèles de messages", href: "/admin/modeles" }, { label: "Rappels planifiés", href: "/admin/rappels" }, { label: "Relances automatiques", href: "/admin/relances" }] },
-  { label: "Sportif", icon: Trophy, children: [{ label: "Calendrier", href: "/admin/calendrier" }, { label: "Équipes", href: "/admin/equipes" }, { label: "Joueurs", href: "/admin/joueurs" }, { label: "Encadrement", href: "/admin/encadrement" }, { label: "Convocations", href: "/admin/convocations" }, { label: "Classements", href: "/admin/classements" }, { label: "Catégories", href: "/admin/categories" }, { label: "Saisons", href: "/admin/saisons" }, { label: "Détections", href: "/admin/recrutement" }] },
+  { label: "Sportif", icon: Trophy, children: [{ label: "Accueil sportif", href: "/admin/parametres#home_sports" }, { label: "Calendrier", href: "/admin/calendrier" }, { label: "Équipes", href: "/admin/equipes" }, { label: "Joueurs", href: "/admin/joueurs" }, { label: "Encadrement", href: "/admin/encadrement" }, { label: "Convocations", href: "/admin/convocations" }, { label: "Classements", href: "/admin/classements" }, { label: "Catégories", href: "/admin/categories" }, { label: "Saisons", href: "/admin/saisons" }, { label: "Détections", href: "/admin/recrutement" }] },
   { label: "Inscriptions", icon: ClipboardCheck, children: [{ label: "Dossiers", href: "/admin/inscriptions" }, { label: "Familles", href: "/admin/familles" }, { label: "Abonnements", href: "/admin/abonnements" }] },
   { label: "Contenu du site", icon: Newspaper, children: [{ label: "Direction", href: "/admin/direction" }, { label: "Partenaires", href: "/admin/partenaires" }] },
   { label: "Médias", icon: Camera, href: "/admin/medias" },
   { label: "Commercial", icon: BadgeEuro, children: [{ label: "Boutique", href: "/admin/boutique" }, { label: "Finances", href: "/admin/finances" }] },
   { label: "Configuration", icon: Settings, children: [{ label: "Utilisateurs", href: "/admin/utilisateurs" }, { label: "Rôles & permissions", href: "/admin/roles" }, { label: "Champs personnalisés", href: "/admin/champs" }, { label: "Référentiels", href: "/admin/referentiels" }, { label: "Journal d’audit", href: "/admin/journal" }, { label: "Corbeille", href: "/admin/corbeille" }, { label: "Paramètres", href: "/admin/parametres" }] }
 ];
-const isActive = (path: string, href: string) => href === "/admin" ? path === href : path === href || path.startsWith(`${href}/`);
+const isActive = (path: string, href: string) => { const base = href.split("#")[0]; return base === "/admin" ? path === base : path === base || path.startsWith(`${base}/`); };
 
 export function AdminSidebar({ collapsed, mobileOpen, educatorOnly, onClose, onExpand }: { collapsed: boolean; mobileOpen: boolean; educatorOnly: boolean; onClose: () => void; onExpand: () => void }) {
   const pathname = usePathname();

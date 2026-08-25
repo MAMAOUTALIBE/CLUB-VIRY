@@ -42,6 +42,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const match = await updateMatch(id, payload.data);
     if (!match) return jsonError(404, "NOT_FOUND", "Match introuvable.");
+    revalidatePath("/");
+    revalidatePath("/calendrier");
+    revalidatePath("/resultats");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "match.updated",
@@ -67,6 +70,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     await recordActivity({ actorId: admin.context.user.id, action: "match.trashed", entityType: "matches", entityId: id });
     revalidatePath("/calendrier");
     revalidatePath("/resultats");
+    revalidatePath("/");
     return jsonOk({ trashed: true });
   } catch (error) {
     return handleDbError("admin/matches/[id]", error);

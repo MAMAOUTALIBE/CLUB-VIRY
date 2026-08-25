@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CalendarDays, Clock, Flag, Handshake, HeartHandshake, MapPin, Sparkles, Ticket, Trophy, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Clock, Handshake, MapPin, Sparkles, Ticket, Trophy } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { HomeHeroCarousel } from "@/components/HomeHeroCarousel";
+import { HomeSportsHub } from "@/components/HomeSportsHub";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { PartnerLogoMarquee, type PartnerLogo } from "@/components/PartnerLogoMarquee";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -12,6 +13,7 @@ import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
 import { getPublicNews, getPublicPartners, getSiteSettings, type DisplayPartner } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
+import type { FeaturedNews, RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -47,62 +49,26 @@ export default async function HomePage() {
   const values = settings.values;
   const heroSlides = settings.homeHero;
   const heroLead = heroSlides[0];
-  const quickActions = [
-    { label: "Inscriptions", href: "/inscriptions", icon: Users, text: "Rejoindre le club" },
-    { label: "Détections", href: "/detections-recrutement", icon: Flag, text: "Montrer son talent" },
-    { label: "Calendrier", href: "/calendrier", icon: CalendarDays, text: "Suivre les matchs" },
-    { label: "Partenaires", href: "/partenaires", icon: HeartHandshake, text: "Associer son image" }
-  ];
-  const mobileActions = [
-    ["Inscriptions", "/inscriptions"],
-    ["Calendrier", "/calendrier"],
-    ["Partenaires", "/partenaires"],
-    ["Équipes", "/equipes"],
-    ["Boutique", "/boutique"],
-    ["Actualités", "/actualites"]
-  ];
-
   // Prochains matchs : depuis le calendrier DB (matchs publiés), avec repli sur le mock
   // partagé via getCalendarPageData — même contenu qu'auparavant en mode vitrine.
   const homeMatches = calendar.items
-    .filter((item) => item.kind === "match")
+    .filter((item) => item.kind === "match" && item.status !== "FINISHED" && item.status !== "CANCELLED")
     .slice(0, 3)
     .map((item) => ({ team: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", date: item.dateLabel, time: item.timeLabel, place: item.place }));
-  const nextMatch = homeMatches[0];
+  const sportsMatches: UpcomingMatch[] = homeMatches.map((match) => ({ category: match.team, home: match.home, away: match.away, date: match.date, time: match.time, venue: match.place }));
+  const sportsResults: RecentResult[] = calendar.items
+    .filter((item) => item.kind === "match" && item.status === "FINISHED" && item.homeScore != null && item.awayScore != null)
+    .slice(-3)
+    .reverse()
+    .map((item) => ({ category: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", homeScore: item.homeScore as number, awayScore: item.awayScore as number, date: item.dateLabel, venue: item.place }));
+  const sportsNews: FeaturedNews = { badge: "À la une", title: leadNews.title, description: leadNews.excerpt, date: leadNews.date, category: leadNews.category, image: leadNews.image, href: `/actualites/${leadNews.slug}` };
   const isClub = (name: string) => name.toLowerCase().includes("viry");
-  const teamInitials = (name: string) =>
-    name
-      .replace(/^ES\s+/i, "")
-      .split(/[\s-]+/)
-      .filter(Boolean)
-      .map((word) => word[0])
-      .join("")
-      .slice(0, 3)
-      .toUpperCase();
   const shortTeam = (name: string) => (isClub(name) ? "ES Viry" : name);
-  // Écusson : UNE coquille commune (verre sombre + cerclage or fin) pour les deux camps.
-  // Le logo club entre en object-contain ; l'adversaire sans logo affiche son monogramme
-  // en LETTRES OR sur le même fond — jamais un disque jaune plein (équilibre garanti).
+  const teamInitials = (name: string) => name.replace(/^ES\s+/i, "").split(/[\s-]+/).filter(Boolean).map((word) => word[0]).join("").slice(0, 3).toUpperCase();
   const crest = (name: string, size: "sm" | "lg") => {
     const dim = size === "lg" ? "h-16 w-16 sm:h-[84px] sm:w-[84px]" : "h-9 w-9";
-    const shell = `${dim} shrink-0 rounded-full bg-[#001c10]/65 backdrop-blur-sm ring-1 ring-[#f7c600]/55 [box-shadow:inset_0_1px_0_rgba(255,255,255,0.12),0_8px_24px_-8px_rgba(0,0,0,0.55)]`;
-    return isClub(name) ? (
-      <img
-        src="/club-logo.svg"
-        alt=""
-        aria-hidden="true"
-        className={`${shell} object-contain ${size === "lg" ? "p-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]" : "p-1"}`}
-        width={84}
-        height={84}
-      />
-    ) : (
-      <span
-        aria-hidden="true"
-        className={`${shell} flex items-center justify-center font-black tracking-tight text-[#ffd84d] ${size === "lg" ? "text-xl sm:text-3xl" : "text-[11px]"}`}
-      >
-        {teamInitials(name)}
-      </span>
-    );
+    const shell = `${dim} shrink-0 rounded-full bg-[#001c10]/65 ring-1 ring-[#f7c600]/55`;
+    return isClub(name) ? <img src="/club-logo.svg" alt="" aria-hidden="true" className={`${shell} object-contain p-1`} width={84} height={84} /> : <span aria-hidden="true" className={`${shell} flex items-center justify-center text-[11px] font-black text-[#ffd84d]`}>{teamInitials(name)}</span>;
   };
 
   return (
@@ -130,49 +96,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="space-y-4 px-4 py-5">
-          <div className="grid grid-cols-2 gap-3">
-            {mobileActions.map(([label, href]) => (
-              <Link key={href} href={href} className="focus-ring rounded-lg border border-[#002f1d]/10 bg-white px-4 py-4 shadow-sm">
-                <span className="block text-sm font-black uppercase text-[#002f1d]">{label}</span>
-              </Link>
-            ))}
-          </div>
-
-          {nextMatch ? (
-            <article className="rounded-lg bg-[#002f1d] p-5 text-white shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#f7c600]">Prochain match</p>
-              <h2 className="mt-2 text-2xl font-black uppercase">{nextMatch.team}</h2>
-              <p className="mt-3 text-base font-black">
-                {shortTeam(nextMatch.home)} vs {shortTeam(nextMatch.away)}
-              </p>
-              <p className="mt-1 text-sm font-bold text-white/75">
-                {nextMatch.date} · {nextMatch.time}
-              </p>
-              <Link href="/calendrier" className="focus-ring mt-4 inline-flex min-h-10 items-center gap-2 rounded-md bg-[#f7c600] px-4 text-xs font-black uppercase text-[#001c10]">
-                Calendrier <ArrowRight size={15} aria-hidden="true" />
-              </Link>
-            </article>
-          ) : null}
-
-          {leadNews ? (
-            <Link href={`/actualites/${leadNews.slug}`} className="focus-ring block overflow-hidden rounded-lg bg-white shadow-sm">
-              <div className="relative h-40">
-                <Image src={leadNews.image} alt={leadNews.title} fill sizes="100vw" className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/75 to-transparent" aria-hidden="true" />
-                <span className="absolute left-3 top-3 rounded-full bg-[#002f1d]/90 px-3 py-1 text-[11px] font-black uppercase text-[#f7c600]">
-                  À la une
-                </span>
-              </div>
-              <div className="p-5">
-                <h2 className="text-xl font-black uppercase leading-tight text-[#002f1d]">{leadNews.title}</h2>
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-black uppercase text-[#664d00]">
-                  Lire <ArrowRight size={14} aria-hidden="true" />
-                </span>
-              </div>
-            </Link>
-          ) : null}
-        </div>
+        <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} news={sportsNews} />
       </section>
 
       <div className="hidden xl:block">
@@ -208,34 +132,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
-        <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 3xl:gap-5">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <StaggerItem key={action.label}>
-                <Link
-                  href={action.href}
-                  className="focus-ring premium-card group relative flex h-full items-center gap-4 overflow-hidden rounded-2xl bg-white p-5"
-                >
-                  <span className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-[#f7c600] transition-transform duration-300 group-hover:scale-x-100" aria-hidden="true" />
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#00351f] to-[#001c10] text-[#f7c600] ring-1 ring-[#f7c600]/30 transition duration-300 group-hover:scale-105 group-hover:ring-[#f7c600]" aria-hidden="true">
-                    <Icon size={24} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-[#664d00]">Accès rapide</p>
-                    <h2 className="mt-1 text-lg font-black uppercase leading-tight text-[#002f1d]">{action.label}</h2>
-                    <p className="mt-1 text-sm font-bold text-slate-600">{action.text}</p>
-                  </div>
-                  <ArrowUpRight size={18} className="shrink-0 text-[#002f1d]/30 transition duration-300 group-hover:translate-x-0.5 group-hover:text-[#f7c600]" aria-hidden="true" />
-                </Link>
-              </StaggerItem>
-            );
-          })}
-        </Stagger>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl items-stretch gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 3xl:grid-cols-[1.18fr_0.82fr] 3xl:gap-8">
+      <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} news={sportsNews} />
+      <section className="hidden">
         {/* ── Prochains matchs : affichage compact en liste ── */}
         <div className="club-panel relative overflow-hidden rounded-3xl p-5 text-white sm:p-7">
           <div className="stadium-grid pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />

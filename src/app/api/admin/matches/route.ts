@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, parseLimit, readJsonBody } from "@/lib/api/http";
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const match = await createMatch(payload.data);
+    revalidatePath("/");
+    revalidatePath("/calendrier");
+    revalidatePath("/resultats");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "match.created",
