@@ -25,9 +25,11 @@ export default async function NewsPage() {
       <MobileScreen
         eyebrow="Actualités"
         title="Vie du club"
+        scrollable
         actions={[{ href: "/calendrier", label: "Calendrier", variant: "secondary" }]}
       >
         <div className="flex h-full min-h-0 flex-col gap-3">
+          <LiveVideo />
           {leadNews ? (
             <MobileLinkCard href={`/actualites/${leadNews.slug}`}>
               <p className="text-xs font-black uppercase text-[#664d00]">À la une · {leadNews.date}</p>
