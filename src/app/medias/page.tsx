@@ -18,6 +18,10 @@ export default async function MediaPage() {
       title: "Rencontre institutionnelle avec la Ville de Viry-Châtillon",
       image: "/actualites/rencontre-institutionnelle-viry-chatillon.png"
     },
+    {
+      title: "Rencontre institutionnelle à la mairie de Viry-Châtillon",
+      image: "/actualites/rencontre-institutionnelle-mairie-viry-chatillon.png"
+    },
     ...publicAlbums
   ];
   return (
