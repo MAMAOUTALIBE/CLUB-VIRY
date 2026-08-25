@@ -12,7 +12,14 @@ export const metadata = pageMetadata("/medias");
 export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 
 export default async function MediaPage() {
-  const albums = await getPublicAlbums();
+  const publicAlbums = await getPublicAlbums();
+  const albums = [
+    {
+      title: "Rencontre institutionnelle avec la Ville de Viry-Châtillon",
+      image: "/actualites/rencontre-institutionnelle-viry-chatillon.png"
+    },
+    ...publicAlbums
+  ];
   return (
     <>
       <MobileScreen
