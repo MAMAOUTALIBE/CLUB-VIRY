@@ -1,4 +1,4 @@
-export type TrainingSlot = { time: string; pitch: "T1" | "T2" | "T3" | "T4"; group?: string };
+export type TrainingSlot = { id?: string; time: string; pitch: "T1" | "T2" | "T3" | "T4"; group?: string; educator?: string; comment?: string };
 export type TrainingRow = { category: string; subtitle: string; accent: string; days: TrainingSlot[][] };
 export type UpcomingMatch = { category: string; home: string; away: string; date: string; time: string; venue: string };
 export type RecentResult = { category: string; home: string; away: string; homeScore: number; awayScore: number; date: string; venue: string };

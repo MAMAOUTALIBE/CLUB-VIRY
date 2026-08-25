@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
 import { validateHomeHeroSetting, type HomeHeroSlide as HeroSlideForm } from "@/lib/home-hero";
 import { validateAnnouncementsSetting, type SiteAnnouncement } from "@/lib/announcements";
+import { TrainingPlanningAdmin } from "@/components/admin/modules/TrainingPlanningAdmin";
 
 type Field = { name: string; label: string; type?: "text" | "url" | "textarea" | "boolean" | "json"; placeholder?: string; help?: string };
 type SettingDef = { key: string; title: string; description?: string; fields: Field[] };
@@ -25,15 +26,6 @@ function editorialPageDef(key: string, title: string, description: string): Sett
 }
 
 const DEFS: SettingDef[] = [
-  {
-    key: "home_sports",
-    title: "Accueil — planning des entraînements",
-    description: "Gérez le libellé de semaine et tous les créneaux affichés dans la grande section sportive de l’accueil. Les matchs et résultats se gèrent dans Sportif → Calendrier ; l’actualité mise en avant dans Communication → Actualités.",
-    fields: [
-      { name: "weekLabel", label: "Semaine affichée", placeholder: "Semaine du 2 au 6 septembre 2026" },
-      { name: "trainingSchedule", label: "Planning complet (JSON)", type: "json", help: "Chaque ligne contient category, subtitle, accent et days (5 tableaux, de lundi à vendredi). Pour supprimer un créneau, retirez-le de son tableau. Pour supprimer une catégorie, retirez sa ligne." }
-    ]
-  },
   {
     key: "socials",
     title: "Réseaux sociaux",
@@ -444,7 +436,7 @@ export function SettingsAdmin() {
       ) : null}
       {message ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{message}</p> : null}
 
-      {state === "ready" ? <><AnnouncementsAdmin value={settings.announcements} onAuth={() => setState("auth")} /><HeroSlidesAdmin value={settings.home_hero} onAuth={() => setState("auth")} />{DEFS.map((def) => <SettingCard key={def.key} def={def} value={settings[def.key]} onAuth={() => setState("auth")} />)}</> : null}
+      {state === "ready" ? <><TrainingPlanningAdmin value={settings.home_sports} onAuth={() => setState("auth")} /><AnnouncementsAdmin value={settings.announcements} onAuth={() => setState("auth")} /><HeroSlidesAdmin value={settings.home_hero} onAuth={() => setState("auth")} />{DEFS.map((def) => <SettingCard key={def.key} def={def} value={settings[def.key]} onAuth={() => setState("auth")} />)}</> : null}
     </div>
   );
 }
