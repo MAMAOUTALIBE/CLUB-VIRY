@@ -72,7 +72,7 @@ export function HomeHeroCarousel({ slides, intervalMs = 5500 }: HomeHeroCarousel
 
       <div className="absolute inset-0 z-[2] mx-auto flex w-full max-w-[1720px] items-center px-4 py-8 sm:px-6 lg:px-8 3xl:max-w-[1920px] 3xl:px-10">
         <div className="w-full max-w-4xl 3xl:max-w-5xl" aria-live="polite">
-          <h1 className="max-w-4xl font-script text-[4.25rem] leading-[0.95] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.5)] sm:text-7xl xl:text-8xl 3xl:text-9xl">{slides[activeIndex]?.title}</h1>
+          <h1 className="sr-only">{slides[activeIndex]?.title}</h1>
           {slides[activeIndex]?.description ? <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">{slides[activeIndex].description}</p> : null}
           <div className="mt-4 h-1 w-24 rounded-full bg-[#f7c600]" />
           {slides[activeIndex]?.buttonLabel && slides[activeIndex]?.buttonHref ? <Link className="focus-ring mt-7 inline-flex min-h-12 items-center justify-center gap-3 rounded-lg bg-[#f7c600] px-6 py-3 text-sm font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white" href={slides[activeIndex].buttonHref}>{slides[activeIndex].buttonLabel}<ArrowRight size={22} aria-hidden="true" /></Link> : null}

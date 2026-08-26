@@ -82,7 +82,7 @@ export default async function HomePage() {
 
           <div className="relative z-[1]">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">ES Viry-Châtillon</p>
-            <h1 className="mt-3 max-w-[22rem] font-script text-[4.45rem] leading-[0.9] text-[#f7c600] drop-shadow-[0_4px_14px_rgba(0,0,0,0.55)] min-[390px]:text-[4.95rem]">{heroLead?.title ?? "Une passion, notre force"}</h1>
+            <h1 className="sr-only">{heroLead?.title ?? "Une passion, notre force"}</h1>
             {heroLead?.description ? <p className="mt-4 max-w-sm text-sm font-bold text-white/90">{heroLead.description}</p> : null}
             <div className="mt-5 h-1 w-20 rounded-full bg-[#f7c600]" />
             <div className="mt-6 grid grid-cols-2 gap-3">

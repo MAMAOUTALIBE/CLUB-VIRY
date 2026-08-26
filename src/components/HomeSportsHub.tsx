@@ -12,6 +12,8 @@ const filters: Array<{ value: Filter; label: string; icon: typeof Grid2X2 }> = [
   { value: "matches", label: "Matchs à venir", icon: Trophy }, { value: "results", label: "Résultats", icon: Trophy }
 ];
 const pitchColors = { T1: "bg-[#9b5a17]", T2: "bg-[#d93670]", T3: "bg-[#e85e32]", T4: "bg-[#7040a8]" };
+const pitchLabels = { T1: "Honneur", T2: "Synthétique", T3: "Annexe", T4: "Stade Henri Perrain" };
+const shortWeekdays = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven."];
 
 function Crest({ name }: { name: string }) {
   const viry = name.toLowerCase().includes("viry");
@@ -43,9 +45,36 @@ export function HomeSportsHub({ matches, results, schedule, weekLabel = "Semaine
 
       <div className={`mt-5 grid items-stretch gap-4 ${showTraining && (showMatches || showResults) ? "xl:grid-cols-[minmax(0,2.35fr)_minmax(310px,.85fr)]" : ""}`}>
         {showTraining ? <section className="h-full overflow-hidden rounded-3xl border border-[#f5c400]/65 bg-[#003c29]/72 p-3 sm:p-4">
+          <div className="sm:hidden">
+            <div className="px-1 py-2">
+              <h3 className="flex items-center gap-3 text-2xl font-black uppercase text-white"><CalendarDays size={27} />Planning</h3>
+              <p className="mt-2 text-sm font-bold text-[#f5c400]">{weekLabel}</p>
+            </div>
+            <div className="mt-3 grid gap-3">
+              {displayedSchedule.slice(0, 2).map((row) => {
+                const dayIndex = row.days.findIndex((slots) => slots.length > 0);
+                const slot = dayIndex >= 0 ? row.days[dayIndex][0] : undefined;
+
+                return <article key={row.category} className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 rounded-2xl border border-[#f5c400]/45 bg-[#002f21]/55 p-4">
+                  <div className="flex items-center justify-center border-r border-[#f5c400]/25 pr-3" style={{ color: row.accent }}><UsersRound size={34} /></div>
+                  <div className="min-w-0">
+                    <h4 className="text-xl font-black uppercase leading-none text-white">{row.category}</h4>
+                    {row.subtitle ? <p className="mt-2 text-xs font-black uppercase" style={{ color: row.accent }}>{row.subtitle}</p> : null}
+                    {slot ? <div className="mt-4 grid gap-2 text-sm">
+                      <p className="flex items-center gap-2 font-bold text-white"><Clock3 size={17} className="shrink-0 text-[#f5c400]" />{shortWeekdays[dayIndex]} {slot.time}</p>
+                      <p className="flex items-center gap-2 text-white/90"><b className={`rounded px-2 py-1 text-xs text-white ${pitchColors[slot.pitch]}`}>{slot.pitch}</b><span>{pitchLabels[slot.pitch]}</span></p>
+                    </div> : <p className="mt-4 text-sm text-white/65">Aucun créneau renseigné.</p>}
+                  </div>
+                </article>;
+              })}
+            </div>
+            <Link href="/formation" className="focus-ring mt-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#f5c400]/70 px-4 text-sm font-black uppercase text-white transition hover:bg-[#f5c400] hover:text-[#002f21]">Voir tout le planning <ArrowRight size={19} className="text-[#f5c400]" /></Link>
+          </div>
+
+          <div className="hidden sm:block">
           <div className="flex flex-wrap items-start justify-between gap-4 px-1 py-2">
             <div><h3 className="flex items-center gap-2 text-xl font-black uppercase text-white"><CalendarDays size={25} />Planning des entraînements</h3><p className="mt-1 pl-8 text-sm font-bold text-[#f5c400]">{weekLabel}</p></div>
-            <div className="flex flex-wrap gap-3 text-[11px] font-bold">{Object.entries({ T1: "Honneur", T2: "Synthétique", T3: "Annexe", T4: "Stade Henri Perrain" }).map(([pitch, label]) => <span className="flex items-center gap-1.5" key={pitch}><b className={`rounded px-1.5 py-1 text-white ${pitchColors[pitch as keyof typeof pitchColors]}`}>{pitch}</b>{label}</span>)}</div>
+            <div className="flex flex-wrap gap-3 text-[11px] font-bold">{Object.entries(pitchLabels).map(([pitch, label]) => <span className="flex items-center gap-1.5" key={pitch}><b className={`rounded px-1.5 py-1 text-white ${pitchColors[pitch as keyof typeof pitchColors]}`}>{pitch}</b>{label}</span>)}</div>
           </div>
           <div className="mt-3 overflow-x-auto rounded-xl border border-[#f5c400]/20 [scrollbar-color:#f5c400_#003c29]">
             <div className="min-w-[760px] lg:min-w-0">
@@ -57,6 +86,7 @@ export function HomeSportsHub({ matches, results, schedule, weekLabel = "Semaine
             </div>
           </div>
           <div className="flex flex-col items-start justify-between gap-3 px-1 pt-3 text-[11px] sm:flex-row sm:items-center"><p className="flex items-center gap-2 text-white/75"><Info size={15} className="text-[#f5c400]" />Les horaires peuvent être modifiés. Vérifiez régulièrement les communications du club.</p><Link href="/formation" className="focus-ring flex min-h-10 shrink-0 items-center gap-3 rounded-lg border border-[#f5c400]/55 px-5 font-black uppercase text-[#f5c400] hover:bg-[#f5c400] hover:text-[#002f21]">Voir le planning complet <ArrowRight size={15} /></Link></div>
+          </div>
         </section> : null}
 
         {(showMatches || showResults) ? <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-[#f5c400]/55 bg-[#003c29]/72">
