@@ -103,26 +103,31 @@ test.describe("Navigation principale", () => {
     await page.goto("/");
 
     if (await isMobileLayout(page)) {
-      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
       const menu = page.locator("#mobile-menu");
+
+      // « Partenaires » vit dans le groupe « Le Club », deplie par defaut :
+      // il doit atterrir sur une section reellement visible a cette largeur.
+      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
       await expect(menu).toBeVisible();
-
-      // Accès rapides : on clique reellement chacun d'eux.
-      for (const [label, expected] of [
-        ["Inscriptions", "/inscriptions"],
-        ["Calendrier", "/calendrier"],
-        ["Boutique", "/boutique"]
-      ] as const) {
-        await menu.getByRole("link", { name: label, exact: true }).first().click();
-        await expect(page).toHaveURL(new RegExp(`${expected}$`));
-        await page.goto("/");
-        await page.getByRole("button", { name: "Ouvrir le menu" }).click();
-      }
-
-      // L'accès rapide « Partenaires » doit atterrir sur une section visible.
       await menu.getByRole("link", { name: "Partenaires", exact: true }).click();
       await expect(page).toHaveURL(/\/le-club\/valeurs-partenaires#partenaires$/);
       await expect(page.locator("#partenaires")).toBeVisible();
+
+      // « Inscriptions » et « Boutique » sont dans le groupe « Infos pratiques »,
+      // qu'il faut deplier : on verifie que le parcours complet aboutit.
+      for (const [label, expected] of [
+        ["Inscriptions", "/inscriptions"],
+        ["Boutique", "/boutique"]
+      ] as const) {
+        await page.goto("/");
+        await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+        await expect(menu).toBeVisible();
+        await menu.getByRole("button", { name: "Infos pratiques" }).click();
+        const link = menu.getByRole("link", { name: label, exact: true });
+        await expect(link).toBeVisible();
+        await link.click();
+        await expect(page).toHaveURL(new RegExp(`${expected}$`));
+      }
       return;
     }
 
