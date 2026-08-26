@@ -241,7 +241,7 @@ export function MemberSpace() {
             {loginError ? <p className="text-sm font-bold text-red-700">{loginError}</p> : null}
             <div className="flex items-center justify-between text-sm">
               <button className="focus-ring font-bold text-[#07542f] underline" type="button" onClick={() => setResetMode(true)}>Mot de passe oublié ?</button>
-              <Link className="focus-ring font-bold text-[#07542f] underline" href="/inscriptions">Créer un compte</Link>
+              <Link className="focus-ring font-bold text-[#07542f] underline" href="/inscriptions">Demander une inscription</Link>
             </div>
           </form>
         )}

@@ -84,7 +84,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <p className="mt-6 text-xs font-black uppercase text-[#664d00]">
           {article.category} · <time dateTime={article.isoDate}>{article.date}</time>
         </p>
-        <h1 className="mt-2 text-3xl font-black uppercase leading-tight text-[#002f1d] sm:text-4xl">{article.title}</h1>
+        <p className="mt-2 text-3xl font-black uppercase leading-tight text-[#002f1d] sm:text-4xl">{article.title}</p>
         <div className="gold-divider mt-4" aria-hidden="true" />
         {article.excerpt ? <p className="mt-6 text-lg font-medium leading-8 text-slate-800">{article.excerpt}</p> : null}
         {article.content ? (

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type HomeHeroSlide = {
   id: string;
@@ -18,11 +18,14 @@ export type HomeHeroSlide = {
 type HomeHeroCarouselProps = {
   slides: HomeHeroSlide[];
   intervalMs?: number;
+  variant?: "desktop" | "mobile";
 };
 
-export function HomeHeroCarousel({ slides, intervalMs = 5500 }: HomeHeroCarouselProps) {
+export function HomeHeroCarousel({ slides, intervalMs = 5500, variant = "desktop" }: HomeHeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
   const total = slides.length;
+  const isMobile = variant === "mobile";
 
   const goTo = useCallback(
     (nextIndex: number) => {
@@ -48,8 +51,21 @@ export function HomeHeroCarousel({ slides, intervalMs = 5500 }: HomeHeroCarousel
 
   if (total === 0) return null;
 
+  const activeSlide = slides[activeIndex];
+
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden">
+    <div
+      className="absolute inset-0 z-0 overflow-hidden"
+      onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; }}
+      onTouchEnd={(event) => {
+        const startX = touchStartX.current;
+        const endX = event.changedTouches[0]?.clientX;
+        touchStartX.current = null;
+        if (startX == null || endX == null || Math.abs(endX - startX) < 45) return;
+        if (endX < startX) next();
+        else previous();
+      }}
+    >
       {slides.map((slide, index) => (
         <div
           key={slide.id}
@@ -61,21 +77,26 @@ export function HomeHeroCarousel({ slides, intervalMs = 5500 }: HomeHeroCarousel
             fill
             priority={index === 0}
             sizes="100vw"
-            className="object-cover"
-            style={{ objectPosition: slide.objectPosition ?? "center" }}
+            className={`object-cover ${isMobile ? "scale-[1.04] sm:scale-100" : ""}`}
+            style={{ objectPosition: isMobile ? "center 78%" : (slide.objectPosition ?? "center") }}
           />
         </div>
       ))}
 
-      <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#001c10]/35 via-[#001c10]/10 to-transparent" aria-hidden="true" />
-      <div className="absolute inset-x-0 bottom-0 z-[1] h-2/5 bg-gradient-to-t from-[#001c10]/30 to-transparent" aria-hidden="true" />
+      <div className={`absolute inset-0 z-[1] ${isMobile ? "bg-gradient-to-b from-[#001c10]/10 via-[#001c10]/25 to-[#001c10]/95" : "bg-gradient-to-r from-[#001c10]/35 via-[#001c10]/10 to-transparent"}`} aria-hidden="true" />
+      <div className={`absolute inset-x-0 bottom-0 z-[1] bg-gradient-to-t from-[#001c10] to-transparent ${isMobile ? "h-3/5" : "h-2/5 from-[#001c10]/30"}`} aria-hidden="true" />
 
-      <div className="absolute inset-0 z-[2] mx-auto flex w-full max-w-[1720px] items-center px-4 py-8 sm:px-6 lg:px-8 3xl:max-w-[1920px] 3xl:px-10">
-        <div className="w-full max-w-4xl 3xl:max-w-5xl" aria-live="polite">
-          <h1 className="sr-only">{slides[activeIndex]?.title}</h1>
-          {slides[activeIndex]?.description ? <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">{slides[activeIndex].description}</p> : null}
+      <div className={`absolute inset-0 z-[2] mx-auto flex w-full max-w-[1720px] px-4 sm:px-6 lg:px-8 3xl:max-w-[1920px] 3xl:px-10 ${isMobile ? "items-end pb-7 pt-8" : "items-center py-8"}`}>
+        <div className={`w-full ${isMobile ? "mx-auto max-w-3xl" : "max-w-4xl 3xl:max-w-5xl"}`} aria-live="polite">
+          {isMobile ? <p className="mb-3 inline-flex rounded-full bg-[#f7c600] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#001c10] shadow-lg sm:text-xs">Bienvenue au club</p> : null}
+          <h1 className={isMobile ? "max-w-3xl text-[clamp(2rem,8vw,4.5rem)] font-black uppercase leading-[0.94] tracking-[-0.035em] text-white drop-shadow-[0_3px_16px_rgba(0,0,0,0.6)]" : "sr-only"}>{activeSlide?.title}</h1>
+          {activeSlide?.description ? <p className={`${isMobile ? "mt-4 max-w-xl text-sm font-bold leading-6 sm:text-base" : "mt-5 max-w-2xl text-base font-medium leading-7 sm:text-lg"} text-white/90`}>{activeSlide.description}</p> : null}
           <div className="mt-4 h-1 w-24 rounded-full bg-[#f7c600]" />
-          {slides[activeIndex]?.buttonLabel && slides[activeIndex]?.buttonHref ? <Link className="focus-ring mt-7 inline-flex min-h-12 items-center justify-center gap-3 rounded-lg bg-[#f7c600] px-6 py-3 text-sm font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white" href={slides[activeIndex].buttonHref}>{slides[activeIndex].buttonLabel}<ArrowRight size={22} aria-hidden="true" /></Link> : null}
+          {isMobile && total > 1 ? <div className="mt-5 flex items-center gap-2" aria-label="Diapositives du club">{slides.map((slide, index) => <button key={`mobile-dot-${slide.id}`} type="button" onClick={() => goTo(index)} aria-label={`Afficher la diapositive ${index + 1} sur ${total}`} aria-current={index === activeIndex ? "true" : undefined} className={`focus-ring h-2.5 rounded-full border border-white/80 transition-all ${index === activeIndex ? "w-10 bg-[#f7c600]" : "w-2.5 bg-transparent hover:bg-white"}`} />)}</div> : null}
+          <div className={isMobile ? "mt-6 grid grid-cols-2 gap-3" : ""}>
+            {activeSlide?.buttonLabel && activeSlide?.buttonHref ? <Link className={`focus-ring inline-flex min-h-12 items-center justify-center gap-3 rounded-lg bg-[#f7c600] px-4 py-3 text-center text-xs font-black uppercase text-[#001c10] shadow-[0_18px_34px_rgba(247,198,0,0.25)] transition hover:-translate-y-0.5 hover:bg-white ${isMobile ? "w-full sm:text-sm" : "mt-7 px-6 text-sm"}`} href={activeSlide.buttonHref}>{activeSlide.buttonLabel}<ArrowRight size={isMobile ? 18 : 22} aria-hidden="true" /></Link> : null}
+            {isMobile ? <Link className="focus-ring inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-white/80 bg-[#001c10]/30 px-4 py-3 text-center text-xs font-black uppercase text-white shadow-lg backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600] sm:text-sm" href="/equipes">Nos équipes<ArrowRight size={18} aria-hidden="true" /></Link> : null}
+          </div>
         </div>
       </div>
 

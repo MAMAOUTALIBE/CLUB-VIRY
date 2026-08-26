@@ -15,7 +15,7 @@ export function EducatorProfilePage({ educator }: { educator: DisplayEducator })
       <MobileScreen
         eyebrow="Éducateur"
         title={educator.name}
-        actions={[{ href: "/le-club/encadrement", label: "Retour", variant: "secondary" }]}
+        actions={[{ href: "/academy#encadrement", label: "Retour", variant: "secondary" }]}
         scrollable
       >
         <div className="grid gap-3 pb-2">
@@ -39,7 +39,7 @@ export function EducatorProfilePage({ educator }: { educator: DisplayEducator })
       <DesktopOnly>
     <article className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <Link
-        href="/le-club/encadrement"
+        href="/academy#encadrement"
         className="focus-ring inline-flex items-center gap-1.5 text-sm font-bold text-[#07542f] transition hover:text-[#002f1d]"
       >
         <ArrowLeft size={16} aria-hidden="true" />

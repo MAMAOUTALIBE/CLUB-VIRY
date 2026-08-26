@@ -57,7 +57,7 @@ export default async function ClubPage() {
       >
         <div className="flex flex-wrap gap-4">
           <ButtonLink href="/le-club/histoire">Découvrir l'histoire</ButtonLink>
-          <ButtonLink href="/le-club/stade-henri-longuet" variant="outline">
+          <ButtonLink href="/le-club/infrastructures#stade-henri-longuet" variant="outline">
             Voir le stade
           </ButtonLink>
         </div>
@@ -113,7 +113,7 @@ export default async function ClubPage() {
       <PremiumCta
         primaryHref="/inscriptions"
         primaryLabel="Rejoindre le club"
-        secondaryHref="/partenaires"
+        secondaryHref="/le-club/valeurs-partenaires#partenaires"
         secondaryLabel="Devenir partenaire"
         text="Chaque saison rassemble joueurs, familles et partenaires autour du club."
         title="Construisons ensemble la prochaine saison jaune et verte"

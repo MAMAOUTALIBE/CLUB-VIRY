@@ -8,7 +8,11 @@ import { Stagger, StaggerItem } from "@/components/Motion";
 
 type GalleryItem = { title: string; image: string };
 
-export function MediaGallery({ items }: { items: GalleryItem[] }) {
+/**
+ * `compact` : grille dense 2 colonnes utilisee par les ecrans mobiles.
+ * La visionneuse (agrandissement, fleches, Echap) est identique dans les deux cas.
+ */
+export function MediaGallery({ compact = false, items }: { compact?: boolean; items: GalleryItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const isOpen = openIndex !== null;
   const current = isOpen ? items[openIndex] : null;
@@ -48,11 +52,11 @@ export function MediaGallery({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-7">
+      <Stagger className={compact ? "grid grid-cols-2 gap-3" : "grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-7"}>
         {items.map((item, index) => (
-          <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
+          <StaggerItem className={`premium-card overflow-hidden rounded-lg bg-white ${!compact && index === 0 ? "lg:col-span-2 lg:row-span-2" : ""}`} key={item.title}>
             <button type="button" onClick={() => setOpenIndex(index)} aria-label={`Agrandir : ${item.title}`} className="focus-ring group block w-full text-left">
-              <div className={`relative w-full ${index === 0 ? "h-[29rem] 3xl:h-[34rem]" : "h-52 3xl:h-60"}`}>
+              <div className={`relative w-full ${compact ? "aspect-square" : index === 0 ? "h-[29rem] 3xl:h-[34rem]" : "h-52 3xl:h-60"}`}>
                 <Image
                   src={item.image}
                   alt={item.title}
@@ -61,7 +65,7 @@ export function MediaGallery({ items }: { items: GalleryItem[] }) {
                   className="object-cover transition duration-300 group-hover:scale-[1.03]"
                 />
               </div>
-              <span className="block p-3 text-sm font-black uppercase text-[#002f1d]">{item.title}</span>
+              <span className={`block p-3 font-black uppercase leading-tight text-[#002f1d] ${compact ? "text-xs" : "text-sm"}`}>{item.title}</span>
             </button>
           </StaggerItem>
         ))}

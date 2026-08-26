@@ -51,6 +51,16 @@ const PILLARS: Array<{ icon: LucideIcon; title: string; text: string }> = [
   { icon: Rocket, title: "Préparer l'avenir", text: "Maîtrise les compétences d'aujourd'hui et de demain." }
 ];
 
+const SECTION_LINKS: Array<[string, string]> = [
+  ["Projet", "#projet"],
+  ["Entraîneurs", "#entraineurs"],
+  ["Encadrement", "#encadrement"],
+  ["École de foot", "#ecole-de-foot"],
+  ["Football à 11", "#football-a-11"],
+  ["Stages", "#stages"],
+  ["Formations", "#formations"]
+];
+
 const PRIMARY_BTN =
   "ac-btn-gold focus-ring inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-sm font-black uppercase tracking-[0.04em] transition hover:-translate-y-0.5";
 const SECONDARY_BTN =
@@ -68,6 +78,7 @@ export default async function AcademyPage() {
         eyebrow="Academy"
         title="Sport. École. Avenir."
         actions={[{ href: academyCtaHref, label: ACADEMY_URL ? "Accéder" : "Demander l'accès" }]}
+        scrollable
       >
         <div className="grid h-full content-start gap-3 md:grid-cols-3">
           {PILLARS.map((pillar) => (
@@ -95,6 +106,18 @@ export default async function AcademyPage() {
             <MobileCard>
               <p className="text-xs font-black uppercase text-[#664d00]">Parcours joueur</p>
               <p className="mt-2 text-sm font-bold text-slate-700">École de foot, football à 11, projet de formation et stages.</p>
+            </MobileCard>
+          </div>
+          <div className="md:col-span-3">
+            <MobileCard>
+              <p className="text-xs font-black uppercase text-[#664d00]">Aller à une section</p>
+              <nav aria-label="Sections de l'Academy" className="mt-3 grid grid-cols-2 gap-2">
+                {SECTION_LINKS.map(([label, href]) => (
+                  <a className="focus-ring inline-flex min-h-11 items-center justify-center rounded-md border border-[#07542f]/20 bg-white px-3 text-center text-xs font-black uppercase text-[#002f1d]" href={href} key={href}>
+                    {label}
+                  </a>
+                ))}
+              </nav>
             </MobileCard>
           </div>
         </div>
@@ -152,114 +175,111 @@ export default async function AcademyPage() {
 
         <nav className="sticky top-[var(--header-h)] z-20 border-b border-[#07542f]/10 bg-white/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:px-8" aria-label="Sections de l'Academy">
           <div className="mx-auto flex max-w-7xl flex-wrap gap-2">
-            {[
-              ["Projet", "#projet"],
-              ["Entraîneurs", "#entraineurs"],
-              ["Encadrement", "#encadrement"],
-              ["École de foot", "#ecole-de-foot"],
-              ["Football à 11", "#football-a-11"],
-              ["Stages", "#stages"],
-              ["Formations", "#formations"]
-            ].map(([label, href]) => (
+            {SECTION_LINKS.map(([label, href]) => (
               <a key={href} href={href} className="focus-ring rounded-full border border-[#07542f]/20 px-3 py-2 text-xs font-black uppercase text-[#002f1d] transition hover:border-[#f7c600] hover:bg-[#f7c600]">
                 {label}
               </a>
             ))}
           </div>
         </nav>
+      </DesktopOnly>
 
-        <section id="projet" className="scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle eyebrow="Projet de formation" title="Un parcours complet, du terrain à l'avenir" text="L'Academy rassemble le projet sportif du club, l'accompagnement scolaire et les compétences utiles pour aider chaque jeune à progresser durablement." />
-            <div className="mt-8 grid gap-5 md:grid-cols-3">
-              {PILLARS.map(({ icon: Icon, title, text }) => (
-                <article key={title} className="premium-card rounded-xl bg-white p-6">
-                  <Icon className="text-[#07542f]" size={30} aria-hidden="true" />
-                  <h2 className="mt-4 text-xl font-black uppercase text-[#002f1d]">{title}</h2>
-                  <p className="mt-2 leading-7 text-slate-700">{text}</p>
-                </article>
-              ))}
-            </div>
+      {/* Sections cibles des ancres : rendues a toutes les largeurs pour que le pied de page
+          et les redirections /formation*, /le-club/entraineurs, /le-club/encadrement
+          aboutissent aussi sur mobile. */}
+      <section id="projet" className="scroll-mt-[var(--header-h)] xl:scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-10 xl:py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle eyebrow="Projet de formation" title="Un parcours complet, du terrain à l'avenir" text="L'Academy rassemble le projet sportif du club, l'accompagnement scolaire et les compétences utiles pour aider chaque jeune à progresser durablement." />
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {PILLARS.map(({ icon: Icon, title, text }) => (
+              <article key={title} className="premium-card rounded-xl bg-white p-6">
+                <Icon className="text-[#07542f]" size={30} aria-hidden="true" />
+                <h2 className="mt-4 text-xl font-black uppercase text-[#002f1d]">{title}</h2>
+                <p className="mt-2 leading-7 text-slate-700">{text}</p>
+              </article>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="entraineurs" className="scroll-mt-[calc(var(--header-h)+5rem)] px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle eyebrow="Équipe par équipe" title="Les entraîneurs" text="Les entraîneurs principaux et leurs adjoints, regroupés par équipe avec leurs fonctions et diplômes." />
-            <CoachesDirectory groups={coachGroups} />
+      <section id="entraineurs" className="scroll-mt-[var(--header-h)] xl:scroll-mt-[calc(var(--header-h)+5rem)] px-4 py-10 xl:py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle eyebrow="Équipe par équipe" title="Les entraîneurs" text="Les entraîneurs principaux et leurs adjoints, regroupés par équipe avec leurs fonctions et diplômes." />
+          <CoachesDirectory groups={coachGroups} />
+        </div>
+      </section>
+
+      <section id="encadrement" className="scroll-mt-[var(--header-h)] xl:scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-10 xl:py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle eyebrow="Nos éducateurs" title="L'encadrement sportif" text="Les éducateurs, référents et coordinateurs engagés dans la progression des licenciés." />
+          {educators.length > 0 ? <EducatorsDirectory educators={educators} /> : <p className="mt-8 text-slate-700">L'encadrement sera présenté prochainement.</p>}
+        </div>
+      </section>
+
+      <section id="ecole-de-foot" className="scroll-mt-[var(--header-h)] xl:scroll-mt-[calc(var(--header-h)+5rem)] px-4 py-10 xl:py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle eyebrow="U6 à U13" title="École de foot" text="Les éducateurs référents et les créneaux indicatifs pour accompagner les premiers pas et la progression des jeunes joueurs." />
+          <StaffDirectory intro="Les échanges avec les familles passent par les canaux officiels du club." people={settings.formationEcoleEducateurs} />
+          <div className="mt-12"><TrainingSlots slots={settings.formationCreneaux} /></div>
+        </div>
+      </section>
+
+      <section id="football-a-11" className="scroll-mt-[var(--header-h)] xl:scroll-mt-[calc(var(--header-h)+5rem)] club-shell px-4 py-10 xl:py-16 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle inverse eyebrow="U14 à Seniors" title="Football à 11" text="Un encadrement structuré autour du projet de jeu, du suivi individuel et des exigences du collectif." />
+          <StaffDirectory intro="Les éducateurs de référence du football à 11." people={settings.formationFootA11Educateurs} />
+        </div>
+      </section>
+
+      <section id="stages" className="scroll-mt-[var(--header-h)] xl:scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-10 xl:py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionTitle eyebrow="Programme" title="Stages et perfectionnement" text="Les stages proposés pendant les vacances et les temps forts de la saison." />
+          <StageCards stages={settings.formationStages} />
+        </div>
+      </section>
+
+      {/* ── SECTION — Formations phares ── */}
+      <section id="formations" className="scroll-mt-[var(--header-h)] bg-white px-4 py-10 xl:py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <SectionTitle eyebrow="Catalogue" title="Nos formations phares" />
+            <AcademyCta url={ACADEMY_URL} className={DARK_BTN}>
+              Voir toutes les formations <ArrowRight size={16} aria-hidden="true" />
+            </AcademyCta>
           </div>
-        </section>
+          <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6">
+            {FEATURED_FORMATIONS.map((formation) => {
+              const Icon = formation.icon;
+              return (
+                <StaggerItem key={formation.title} className="h-full">
+                  <article className="premium-card group flex h-full flex-col overflow-hidden rounded-2xl bg-white">
+                    <div className="relative h-44 overflow-hidden">
+                      <Image src={formation.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/80 via-[#001c10]/15 to-transparent" aria-hidden="true" />
+                      <span className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-lg ring-1 ring-white/20" style={{ background: formation.accent }} aria-hidden="true">
+                        <Icon size={22} />
+                      </span>
+                      <span className="absolute right-4 top-4 rounded-full bg-[#001c10]/80 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] ring-1 ring-[#f7c600]/30 backdrop-blur">
+                        {formation.level}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-lg font-black uppercase leading-tight text-[#002f1d]">{formation.title}</h3>
+                      <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{formation.description}</p>
+                      <AcademyCta url={ACADEMY_URL} className="focus-ring -ml-1 mt-3 inline-flex w-fit items-center gap-1.5 px-1 py-1.5 text-xs font-black uppercase">
+                        <span style={{ color: formation.accentText }}>Découvrir</span>
+                        <ArrowRight size={14} style={{ color: formation.accentText }} aria-hidden="true" />
+                      </AcademyCta>
+                    </div>
+                  </article>
+                </StaggerItem>
+              );
+            })}
+          </Stagger>
+        </div>
+      </section>
 
-        <section id="encadrement" className="scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle eyebrow="Nos éducateurs" title="L'encadrement sportif" text="Les éducateurs, référents et coordinateurs engagés dans la progression des licenciés." />
-            {educators.length > 0 ? <EducatorsDirectory educators={educators} /> : <p className="mt-8 text-slate-700">L'encadrement sera présenté prochainement.</p>}
-          </div>
-        </section>
-
-        <section id="ecole-de-foot" className="scroll-mt-[calc(var(--header-h)+5rem)] px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle eyebrow="U6 à U13" title="École de foot" text="Les éducateurs référents et les créneaux indicatifs pour accompagner les premiers pas et la progression des jeunes joueurs." />
-            <StaffDirectory intro="Les échanges avec les familles passent par les canaux officiels du club." people={settings.formationEcoleEducateurs} />
-            <div className="mt-12"><TrainingSlots slots={settings.formationCreneaux} /></div>
-          </div>
-        </section>
-
-        <section id="football-a-11" className="scroll-mt-[calc(var(--header-h)+5rem)] club-shell px-4 py-16 text-white sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle inverse eyebrow="U14 à Seniors" title="Football à 11" text="Un encadrement structuré autour du projet de jeu, du suivi individuel et des exigences du collectif." />
-            <StaffDirectory intro="Les éducateurs de référence du football à 11." people={settings.formationFootA11Educateurs} />
-          </div>
-        </section>
-
-        <section id="stages" className="scroll-mt-[calc(var(--header-h)+5rem)] bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle eyebrow="Programme" title="Stages et perfectionnement" text="Les stages proposés pendant les vacances et les temps forts de la saison." />
-            <StageCards stages={settings.formationStages} />
-          </div>
-        </section>
-
-        {/* ── SECTION — Formations phares ── */}
-        <section id="formations" className="scroll-mt-[var(--header-h)] bg-white px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <SectionTitle eyebrow="Catalogue" title="Nos formations phares" />
-              <AcademyCta url={ACADEMY_URL} className={DARK_BTN}>
-                Voir toutes les formations <ArrowRight size={16} aria-hidden="true" />
-              </AcademyCta>
-            </div>
-            <Stagger className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6">
-              {FEATURED_FORMATIONS.map((formation) => {
-                const Icon = formation.icon;
-                return (
-                  <StaggerItem key={formation.title} className="h-full">
-                    <article className="premium-card group flex h-full flex-col overflow-hidden rounded-2xl bg-white">
-                      <div className="relative h-44 overflow-hidden">
-                        <Image src={formation.image} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/80 via-[#001c10]/15 to-transparent" aria-hidden="true" />
-                        <span className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-lg ring-1 ring-white/20" style={{ background: formation.accent }} aria-hidden="true">
-                          <Icon size={22} />
-                        </span>
-                        <span className="absolute right-4 top-4 rounded-full bg-[#001c10]/80 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#f7c600] ring-1 ring-[#f7c600]/30 backdrop-blur">
-                          {formation.level}
-                        </span>
-                      </div>
-                      <div className="flex flex-1 flex-col p-5">
-                        <h3 className="text-lg font-black uppercase leading-tight text-[#002f1d]">{formation.title}</h3>
-                        <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{formation.description}</p>
-                        <AcademyCta url={ACADEMY_URL} className="focus-ring -ml-1 mt-3 inline-flex w-fit items-center gap-1.5 px-1 py-1.5 text-xs font-black uppercase">
-                          <span style={{ color: formation.accentText }}>Découvrir</span>
-                          <ArrowRight size={14} style={{ color: formation.accentText }} aria-hidden="true" />
-                        </AcademyCta>
-                      </div>
-                    </article>
-                  </StaggerItem>
-                );
-              })}
-            </Stagger>
-          </div>
-        </section>
-
+      <DesktopOnly>
         {/* ── SECTION FINALE — Pour qui + CTA (carte premium sur photo stade retravaillée) ── */}
         <section className="light-sweep relative isolate overflow-hidden px-4 py-20 text-white sm:px-6 lg:px-8">
           <Image src="/stade/imagepelouse.webp" alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />

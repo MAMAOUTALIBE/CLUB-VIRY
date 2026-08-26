@@ -95,7 +95,7 @@ export default async function HistoryPage() {
         </div>
       </section>
       <PremiumCta
-        primaryHref="/le-club/stade-henri-longuet"
+        primaryHref="/le-club/infrastructures#stade-henri-longuet"
         primaryLabel="Découvrir le stade"
         secondaryHref="/equipes"
         secondaryLabel="Voir les équipes"

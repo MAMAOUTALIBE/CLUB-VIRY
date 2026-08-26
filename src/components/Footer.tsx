@@ -3,7 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Mail, MapPin, User } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  ChevronRight,
+  ClipboardList,
+  Mail,
+  MapPin,
+  Newspaper,
+  ShoppingBag,
+  User,
+  Users
+} from "lucide-react";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { socialItems } from "@/lib/socials";
 
@@ -20,6 +31,7 @@ const columns = [
   {
     title: "Le Club",
     links: [
+      ["Présentation", "/le-club"],
       ["Histoire", "/le-club/histoire"],
       ["Organisation du club", "/le-club/organigramme"],
       ["Infrastructures du club", "/le-club/infrastructures"],
@@ -67,12 +79,12 @@ export function Footer({ socials, contact }: FooterProps) {
 
   return (
     <footer className="club-shell relative overflow-hidden border-t-4 border-[#f7c600] text-white">
-      <div className="relative mx-auto max-w-5xl px-4 py-8 md:px-6 lg:px-8 xl:hidden">
-        <div className="flex items-center gap-3 md:justify-center">
+      <div className="relative mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8 lg:px-8 xl:hidden">
+        <div className="flex items-center justify-center gap-3">
           <img
             decoding="async"
             loading="lazy"
-            className="h-14 w-14 shrink-0 rounded-full object-contain"
+            className="h-12 w-12 shrink-0 rounded-full object-contain md:h-14 md:w-14"
             src="/club-logo.svg"
             alt="ES Viry-Châtillon Football"
             width={56}
@@ -84,27 +96,39 @@ export function Footer({ socials, contact }: FooterProps) {
           </div>
         </div>
 
-        <nav className="mt-6 grid gap-2 md:grid-cols-2 lg:grid-cols-3" aria-label="Liens essentiels">
+        <nav className="mt-5 grid grid-cols-2 gap-2 md:mx-auto md:max-w-2xl" aria-label="Liens essentiels">
           {[
-            ["Inscriptions", "/inscriptions"],
-            ["Partenaires", "/le-club/valeurs-partenaires#partenaires"],
-            ["Calendrier", "/calendrier"],
-            ["Actualités", "/actualites"],
-            ["Boutique", "/boutique"],
-            ["Contact", "/contact"],
-            ["Espace membre", "/espace-membre"]
-          ].map(([label, href]) => (
-            <Link className="focus-ring min-h-11 rounded-md border border-white/12 bg-white/[0.04] px-3 py-3 text-sm font-black uppercase text-white/85" href={href} key={href}>
-              {label}
+            { label: "Actualités", href: "/actualites", Icon: Newspaper },
+            { label: "Calendrier", href: "/calendrier", Icon: CalendarDays },
+            { label: "Inscriptions", href: "/inscriptions", Icon: ClipboardList },
+            { label: "Nos équipes", href: "/equipes", Icon: Users },
+            { label: "Boutique", href: "/boutique", Icon: ShoppingBag },
+            { label: "Contact", href: "/contact", Icon: Mail }
+          ].map(({ label, href, Icon }) => (
+            <Link className="focus-ring flex min-h-10 min-w-0 items-center gap-1.5 rounded-md border border-white/12 bg-white/[0.04] px-2 py-2 text-[11px] font-black uppercase text-white/85 transition hover:border-[#f7c600]/50 hover:text-[#f7c600] md:min-h-11 md:gap-2 md:px-3 md:text-sm" href={href} key={href}>
+              <Icon aria-hidden="true" className="shrink-0 text-[#f7c600]" size={15} />
+              <span className="min-w-0 flex-1 whitespace-nowrap text-left">{label}</span>
+              <ChevronRight aria-hidden="true" className="shrink-0 text-[#f7c600]" size={14} />
             </Link>
           ))}
         </nav>
 
-        <div className="mt-6 flex flex-wrap gap-3 md:justify-center" aria-label="Réseaux sociaux">
+        <Link
+          className="focus-ring mx-auto mt-3 flex min-h-11 w-full max-w-2xl items-center justify-between gap-2 rounded-md bg-[#f7c600] px-4 py-2.5 text-sm font-black uppercase text-[#001c10] shadow-[0_8px_20px_rgba(247,198,0,0.2)] transition hover:bg-white"
+          href="/espace-membre"
+        >
+          <span className="flex items-center gap-2">
+            <User aria-hidden="true" size={17} />
+            Espace membre
+          </span>
+          <ChevronRight aria-hidden="true" size={17} />
+        </Link>
+
+        <div className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Réseaux sociaux">
           {socialItems.map((social) => {
             const href = socialHref(socials, social.label);
             const live = /^(https?:|mailto:|tel:)/.test(href);
-            const className = "focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full border ring-1 ring-white/10";
+            const className = "focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border ring-1 ring-white/10 transition hover:ring-[#f7c600]/60";
             const style = {
               background: social.background,
               borderColor: social.borderColor,
@@ -112,7 +136,7 @@ export function Footer({ socials, contact }: FooterProps) {
               boxShadow: social.label === "TikTok" ? "1.5px 0 0 #fe2c55, -1.5px 0 0 #25f4ee" : undefined
             };
             const icon = (
-              <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="currentColor" viewBox={social.viewBox}>
+              <svg aria-hidden="true" className="h-4 w-4" fill="currentColor" viewBox={social.viewBox}>
                 <path d={social.path} />
               </svg>
             );
@@ -129,9 +153,9 @@ export function Footer({ socials, contact }: FooterProps) {
           })}
         </div>
 
-        <div className="mt-6 grid gap-2 border-t border-white/10 pt-5 text-xs text-white/65 md:text-center">
+        <div className="mt-5 flex flex-col items-center gap-2 border-t border-white/10 pt-4 text-center text-[11px] text-white/60 md:text-xs">
           <p>© 2026 ES Viry-Châtillon Football</p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
             <Link className="focus-ring hover:text-[#f7c600]" href="/mentions-legales">
               Mentions légales
             </Link>
@@ -267,7 +291,7 @@ export function Footer({ socials, contact }: FooterProps) {
       </div>
 
       {/* Barre inférieure */}
-      <div className="relative border-t border-white/10">
+      <div className="relative hidden border-t border-white/10 xl:block">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 text-xs text-white/60 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <p>© 2026 ES Viry-Châtillon Football — Tous droits réservés</p>
           <div className="flex flex-wrap gap-5" aria-label="Accès réservés">

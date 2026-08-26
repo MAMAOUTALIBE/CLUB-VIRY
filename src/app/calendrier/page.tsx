@@ -6,8 +6,9 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData } from "@/lib/calendar-view";
+import { getSiteSettings } from "@/lib/public-content";
 import { images } from "@/lib/images";
-import { socialItems, isLiveSocial } from "@/lib/socials";
+import { socialItems } from "@/lib/socials";
 import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
@@ -15,7 +16,9 @@ export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
 export const metadata = pageMetadata("/calendrier");
 
 export default async function CalendarPage() {
-  const calendar = await getCalendarPageData();
+  const [calendar, settings] = await Promise.all([getCalendarPageData(), getSiteSettings()]);
+  // Meme source que l'en-tete et le pied de page : les reseaux configures dans le CRM.
+  const socials: Record<string, string> = settings.socials;
   // Grille calendaire correcte : vrai nombre de jours + offset du 1er jour (semaine commençant lundi).
   const daysInMonth = new Date(calendar.year, calendar.month + 1, 0).getDate();
   const firstWeekday = new Date(calendar.year, calendar.month, 1).getDay(); // 0 = dimanche
@@ -173,7 +176,7 @@ export default async function CalendarPage() {
 
             <Link
               className="focus-ring group flex items-center gap-3 rounded-xl border border-[#f7c600]/15 bg-white/[0.04] p-4 transition hover:border-[#f7c600]/40"
-              href="/le-club/stade-henri-longuet"
+              href="/le-club/infrastructures#stade-henri-longuet"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f7c600]/15 text-[#f7c600]">
                 <MapPin size={20} />
@@ -192,8 +195,10 @@ export default async function CalendarPage() {
               </p>
               <div className="mt-3 flex flex-wrap gap-2" aria-label="Réseaux sociaux">
                 {socialItems.map((social) => {
-                  // Lien cliquable seulement si une vraie URL est configurée ;
+                  // Lien cliquable seulement si une vraie URL est configurée dans le CRM ;
                   // sinon icône décorative (évite un <a href=""> qui recharge la page).
+                  const href = (socials?.[social.label.toLowerCase()] ?? "").trim();
+                  const live = /^(https?:|mailto:|tel:)/.test(href);
                   const className =
                     "focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-2 hover:ring-[#f7c600]/60";
                   const style = {
@@ -207,10 +212,10 @@ export default async function CalendarPage() {
                       <path d={social.path} />
                     </svg>
                   );
-                  return isLiveSocial(social) ? (
+                  return live ? (
                     <a
                       key={social.label}
-                      href={social.href}
+                      href={href}
                       aria-label={social.label}
                       title={social.label}
                       rel="noopener noreferrer"

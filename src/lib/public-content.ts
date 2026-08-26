@@ -14,7 +14,7 @@ import { listClubOfficials } from "@/lib/db/officials";
 import { listPublicStandings } from "@/lib/db/standings";
 import type { Match, NewsArticle, Standing } from "@/lib/db/types";
 import { images } from "@/lib/images";
-import { getPartnerLogo } from "@/lib/partner-logos";
+import { getPartnerLogo, getPartnerWebsite } from "@/lib/partner-logos";
 import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
 import { getVisibleHeroSlides, validateHomeHeroSetting, type HomeHeroSlide } from "@/lib/home-hero";
@@ -122,7 +122,7 @@ export async function getPublicPartners(): Promise<DisplayPartner[]> {
     return active.map((p) => ({ name: p.name, logoUrl: p.logo_url, websiteUrl: p.website_url, tier: p.tier }));
   }
 
-  return mockPartners.map((name) => ({ name, logoUrl: getPartnerLogo(name), websiteUrl: null, tier: null }));
+  return mockPartners.map((name) => ({ name, logoUrl: getPartnerLogo(name), websiteUrl: getPartnerWebsite(name), tier: null }));
 }
 
 export type DisplayProduct = { name: string; price: string; category: string; imageUrl: string | null; icon: LucideIcon | null };
@@ -868,7 +868,7 @@ function inferOfficialProfile(position: string, category: DisplayOfficial["categ
       contactHref: "/contact",
       links: [
         { label: "Projet club", href: "/le-club" },
-        { label: "Partenariats", href: "/partenaires" }
+        { label: "Partenariats", href: "/le-club/valeurs-partenaires#partenaires" }
       ]
     };
   }
@@ -910,9 +910,9 @@ function inferOfficialProfile(position: string, category: DisplayOfficial["categ
       missions: ["Accueillir les partenaires", "Construire les offres", "Suivre les engagements"],
       availability: "Rendez-vous partenaires sur demande",
       contactLabel: "Devenir partenaire",
-      contactHref: "/partenaires",
+      contactHref: "/le-club/valeurs-partenaires#partenaires",
       links: [
-        { label: "Partenaires", href: "/partenaires" },
+        { label: "Partenaires", href: "/le-club/valeurs-partenaires#partenaires" },
         { label: "Contact", href: "/contact" }
       ]
     };
@@ -1002,7 +1002,7 @@ function inferOfficialProfile(position: string, category: DisplayOfficial["categ
       contactLabel: "Contacter le club",
       contactHref: "/contact",
       links: [
-        { label: "Stade Henri Longuet", href: "/le-club/stade-henri-longuet" },
+        { label: "Stade Henri Longuet", href: "/le-club/infrastructures#stade-henri-longuet" },
         { label: "Contact", href: "/contact" }
       ]
     };
@@ -1106,7 +1106,7 @@ const mockOfficials: ClubOfficialsContent = {
       contactHref: "/contact",
       links: [
         { label: "Projet club", href: "/le-club" },
-        { label: "Partenariats", href: "/partenaires" }
+        { label: "Partenariats", href: "/le-club/valeurs-partenaires#partenaires" }
       ]
     }),
     buildOfficial({

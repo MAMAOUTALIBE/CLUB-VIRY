@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       metadata: { count: payload.data.ids.length }
     });
     revalidatePath("/");
-    revalidatePath("/partenaires");
+    revalidatePath("/le-club/valeurs-partenaires");
 
     return jsonOk({ reordered: true });
   } catch (error) {

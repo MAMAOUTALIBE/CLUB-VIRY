@@ -23,7 +23,7 @@ type RouteContext = {
 // Pages publiques à revalider quand un contenu réapparaît (restauration).
 const REVALIDATE_PATHS: Record<TrashType, string[]> = {
   news: ["/", "/actualites"],
-  partners: ["/", "/partenaires"],
+  partners: ["/", "/le-club/valeurs-partenaires"],
   products: ["/boutique"],
   officials: ["/le-club/organigramme", "/le-club/bureau", "/le-club/dirigeants"],
   seasons: ["/equipes"],

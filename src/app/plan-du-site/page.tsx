@@ -14,6 +14,7 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
     links: [
       ["/le-club", "Le Club"],
       ["/le-club/histoire", "Histoire"],
+      ["/le-club/galerie", "Galerie photos"],
       ["/le-club/organigramme", "Organisation du club"],
       ["/le-club/infrastructures", "Infrastructures du club"],
       ["/le-club/valeurs-partenaires", "Valeurs et partenaires"]
@@ -23,6 +24,7 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
     title: "ES Viry Academy",
     links: [
       ["/academy", "ES Viry Academy"],
+      ["/academy#projet", "Projet de formation"],
       ["/academy#entraineurs", "Entraîneurs"],
       ["/academy#encadrement", "Encadrement sportif"],
       ["/academy#ecole-de-foot", "École de Foot"],
@@ -53,7 +55,7 @@ const SECTIONS: Array<{ title: string; links: Array<[string, string]> }> = [
     links: [
       ["/inscriptions", "Inscriptions"],
       ["/detections-recrutement", "Détections / Recrutement"],
-      ["/partenaires", "Partenaires"],
+      ["/le-club/valeurs-partenaires#partenaires", "Partenaires"],
       ["/contact", "Contact"]
     ]
   },

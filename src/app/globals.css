@@ -15,6 +15,7 @@
   --viry-yellow: #f7c600;
   --viry-yellow-2: #ffd84d;
   --viry-ink: #102018;
+  --font-script: "Snell Roundhand", "Brush Script MT", "Apple Chancery", cursive;
   /* Hauteur du header (mise à jour dynamiquement par le composant Header) */
   --header-h: 108px;
 }
@@ -244,7 +245,7 @@ select {
 
 /* Lettrage brush / calligraphie (titre hero) */
 .font-script {
-  font-family: var(--font-script), "Snell Roundhand", "Brush Script MT", "Apple Chancery", cursive;
+  font-family: var(--font-script);
   font-weight: 400;
   letter-spacing: 0.01em;
 }
@@ -274,6 +275,18 @@ select {
   animation-play-state: paused;
 }
 
+.institutional-partners-marquee__track {
+  animation: institutional-partners-scroll 12s linear infinite;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .institutional-partners-marquee:hover .institutional-partners-marquee__track,
+  .institutional-partners-marquee:focus-within .institutional-partners-marquee__track {
+    animation-play-state: paused;
+  }
+}
+
 @keyframes marquee-scroll {
   from {
     transform: translateX(0);
@@ -292,15 +305,33 @@ select {
   }
 }
 
+@keyframes institutional-partners-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
 
   .marquee__track,
-  .partners-marquee__track {
+  .partners-marquee__track,
+  .institutional-partners-marquee__track {
     animation: none;
     transform: none;
+  }
+
+  .institutional-partners-marquee {
+    overflow-x: auto;
+  }
+
+  .institutional-partners-marquee__track > [aria-hidden="true"] {
+    display: none;
   }
 
   .light-sweep::after {

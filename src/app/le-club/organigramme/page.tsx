@@ -3,7 +3,6 @@ import { ArrowRight, ClipboardList, GraduationCap, Landmark, Mail, Settings, Shi
 
 import { FeatureCards } from "@/components/FeatureCards";
 import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
-import { OfficialIdentityCard } from "@/components/OfficialIdentityCard";
 import { PageHero } from "@/components/PageHero";
 import { PersonProfileCard } from "@/components/PersonProfileCard";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -148,16 +147,20 @@ function OfficialProfileCard({ official, featured = false }: { official: Display
 }
 
 function OfficialsSection({ title, text, officials, featured }: { title: string; text: string; officials: DisplayOfficial[]; featured?: boolean }) {
-  if (officials.length === 0) return null;
-
   return (
     <section id={title === "Bureau exécutif" ? "bureau" : "dirigeants"} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <SectionTitle eyebrow="Responsables" title={title} text={text} />
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {officials.map((official) => (
-          <OfficialProfileCard key={official.id} official={official} featured={featured && /président/i.test(official.position)} />
-        ))}
-      </div>
+      {officials.length > 0 ? (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {officials.map((official) => (
+            <OfficialProfileCard key={official.id} official={official} featured={featured && /président/i.test(official.position)} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-[#07542f]/15 bg-[#f7f8f4] px-5 py-8 text-center text-sm font-bold text-slate-700">
+          Aucun responsable n’est actuellement publié dans cette section.
+        </div>
+      )}
     </section>
   );
 }
@@ -238,13 +241,6 @@ export default async function OrganizationPage() {
               ))}
             </div>
           </MobileCard>
-          {allOfficials.map((official) => (
-            <OfficialIdentityCard
-              key={official.id}
-              href={officialHref(official)}
-              official={{ name: official.name, position: official.position, department: official.department, photo: official.photo, missionCount: official.missions.length }}
-            />
-          ))}
         </div>
       </MobileScreen>
       <DesktopOnly>
@@ -271,7 +267,21 @@ export default async function OrganizationPage() {
         <SectionTitle eyebrow="Carte des rôles" title="Une direction lisible, profil par profil" text="Cliquez sur un responsable pour consulter ses missions, son périmètre et les meilleurs chemins de contact." />
         <OfficialsCarousel officials={allOfficials} />
       </section>
+      </DesktopOnly>
 
+      <OfficialsSection
+        featured
+        title="Bureau exécutif"
+        text="Les membres chargés de la gouvernance et des décisions structurantes du club."
+        officials={officials.bureau}
+      />
+      <OfficialsSection
+        title="Dirigeants"
+        text="Les responsables qui coordonnent les pôles et accompagnent la vie quotidienne du club."
+        officials={officials.dirigeants}
+      />
+
+      <DesktopOnly>
       <ContactGuide items={contactGuide} />
 
       <section className="bg-[#f7f8f4] px-4 py-16 sm:px-6 lg:px-8">

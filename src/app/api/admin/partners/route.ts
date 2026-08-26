@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       metadata: { name: partner.name, slug: partner.slug, tier: partner.tier }
     });
     revalidatePath("/");
-    revalidatePath("/partenaires");
+    revalidatePath("/le-club/valeurs-partenaires");
 
     return jsonOk({ partner }, 201);
   } catch (error) {

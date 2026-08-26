@@ -20,15 +20,8 @@ export default async function GaleriePage() {
         actions={[{ href: "/le-club/histoire", label: "Histoire", variant: "secondary" }]}
         scrollable
       >
-        <div className="grid grid-cols-2 gap-3 pb-2">
-          {galerieArchives.slice(0, 12).map((item) => (
-            <article className="overflow-hidden rounded-lg border border-[#07542f]/12 bg-white shadow-sm" key={item.title}>
-              <div className="aspect-square overflow-hidden bg-[#002f1d]">
-                <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-              </div>
-              <h2 className="p-3 text-sm font-black uppercase leading-tight text-[#002f1d]">{item.title}</h2>
-            </article>
-          ))}
+        <div className="pb-2">
+          <MediaGallery compact items={galerieArchives} />
         </div>
       </MobileScreen>
       <DesktopOnly>

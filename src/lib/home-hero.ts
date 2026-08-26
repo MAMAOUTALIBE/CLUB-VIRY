@@ -17,6 +17,59 @@ export type HeroValidationResult = { ok: true; slides: HomeHeroSlide[] } | { ok:
 const MAX_SLIDES = 12;
 const limits = { id: 80, title: 120, description: 500, imageUrl: 1500, buttonLabel: 60, buttonHref: 1500 } as const;
 
+const PUBLIC_HERO_ROUTES = new Set([
+  "/",
+  "/academy",
+  "/actualites",
+  "/boutique",
+  "/boutique/conditions-generales",
+  "/boutique/livraison-retour",
+  "/calendrier",
+  "/connexion",
+  "/contact",
+  "/detections-recrutement",
+  "/equipes",
+  "/espace-membre",
+  "/formation",
+  "/formation/ecole-de-foot",
+  "/formation/football-a-11",
+  "/formation/projet-ecole-de-foot",
+  "/formation/stages",
+  "/inscriptions",
+  "/le-club",
+  "/le-club/codes-de-conduite",
+  "/le-club/encadrement",
+  "/le-club/entraineurs",
+  "/le-club/galerie",
+  "/le-club/histoire",
+  "/le-club/infrastructures",
+  "/le-club/installations",
+  "/le-club/mot-du-president",
+  "/le-club/organigramme",
+  "/le-club/stade-henri-longuet",
+  "/le-club/valeurs-partenaires",
+  "/medias",
+  "/mentions-legales",
+  "/partenaires",
+  "/plan-du-site",
+  "/politique-confidentialite",
+  "/resultats"
+]);
+
+const PUBLIC_HERO_DYNAMIC_ROUTES = [
+  /^\/actualites\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^\/equipes\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^\/le-club\/encadrement\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^\/le-club\/organigramme\/[a-z0-9]+(?:-[a-z0-9]+)*$/
+];
+
+const PUBLIC_HERO_ANCHORS: Readonly<Record<string, ReadonlySet<string>>> = {
+  "/academy": new Set(["projet", "entraineurs", "encadrement", "ecole-de-foot", "football-a-11", "stages", "formations"]),
+  "/le-club/infrastructures": new Set(["installations", "stade-henri-longuet"]),
+  "/le-club/organigramme": new Set(["bureau", "dirigeants"]),
+  "/le-club/valeurs-partenaires": new Set(["valeurs", "partenaires", "devenir-partenaire"])
+};
+
 export function isAllowedHeroImageUrl(value: string): boolean {
   if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")) return true;
   try {
@@ -28,9 +81,25 @@ export function isAllowedHeroImageUrl(value: string): boolean {
 }
 
 export function isSafeHeroLink(value: string): boolean {
-  if (!value) return true;
-  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")) return true;
-  try { return new URL(value).protocol === "https:"; } catch { return false; }
+  if (!value || value === "#" || value.startsWith("#")) return false;
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")) {
+    try {
+      const url = new URL(value, "https://www.esviry-chatillon.fr");
+      if (url.origin !== "https://www.esviry-chatillon.fr" || url.username || url.password) return false;
+      const routeExists = PUBLIC_HERO_ROUTES.has(url.pathname) || PUBLIC_HERO_DYNAMIC_ROUTES.some((route) => route.test(url.pathname));
+      if (!routeExists) return false;
+      if (!url.hash) return true;
+      return PUBLIC_HERO_ANCHORS[url.pathname]?.has(decodeURIComponent(url.hash.slice(1))) ?? false;
+    } catch {
+      return false;
+    }
+  }
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password;
+  } catch {
+    return false;
+  }
 }
 
 export function validateHomeHeroSetting(body: unknown): HeroValidationResult {
@@ -61,7 +130,7 @@ export function validateHomeHeroSetting(body: unknown): HeroValidationResult {
     if (!normalized.title) issues.push({ field: `${field}.title`, message: "Titre requis." });
     if (!normalized.imageUrl) issues.push({ field: `${field}.imageUrl`, message: "Image requise." });
     else if (!isAllowedHeroImageUrl(normalized.imageUrl)) issues.push({ field: `${field}.imageUrl`, message: "Utilisez un chemin local /…, images.unsplash.com ou un domaine *.supabase.co." });
-    if (!isSafeHeroLink(normalized.buttonHref)) issues.push({ field: `${field}.buttonHref`, message: "Utilisez un chemin interne /… ou une URL HTTPS." });
+    if (!isSafeHeroLink(normalized.buttonHref)) issues.push({ field: `${field}.buttonHref`, message: "Utilisez une route publique existante (et, le cas échéant, une ancre existante) ou une URL HTTPS." });
     for (const key of Object.keys(limits) as Array<keyof typeof limits>) if (normalized[key].length > limits[key]) issues.push({ field: `${field}.${key}`, message: `${limits[key]} caractères maximum.` });
     const start = normalized.startAt ? new Date(normalized.startAt).getTime() : null;
     const end = normalized.endAt ? new Date(normalized.endAt).getTime() : null;

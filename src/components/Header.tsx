@@ -1,6 +1,18 @@
 "use client";
 
-import { ArrowRight, CalendarDays, ChevronDown, Menu, User, X } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  ChevronDown,
+  Info,
+  Menu,
+  Newspaper,
+  ShieldCheck,
+  Shirt,
+  User,
+  Users,
+  X
+} from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -39,7 +51,6 @@ const navItems = [
     label: "Academy",
     href: "/academy",
     children: [
-      ["ES Viry Academy", "/academy"],
       ["Toutes les équipes", "/equipes"],
       ["Seniors A", "/equipes/seniors-a"],
       ["École de foot", "/equipes/ecole-de-foot"],
@@ -50,7 +61,6 @@ const navItems = [
     label: "Actu & Médias",
     href: "/actualites",
     children: [
-      ["Actualités", "/actualites"],
       ["Calendrier", "/calendrier"],
       ["Résultats", "/resultats"],
       ["Médias", "/medias"]
@@ -61,7 +71,6 @@ const navItems = [
     label: "Nous rejoindre",
     href: "/inscriptions",
     children: [
-      ["Inscriptions", "/inscriptions"],
       ["Détections / recrutement", "/detections-recrutement"],
       ["Contact", "/contact"]
     ]
@@ -72,18 +81,20 @@ const mobileNavGroups = [
   {
     label: "Le Club",
     href: "/le-club",
+    icon: ShieldCheck,
     links: [
       ["Présentation", "/le-club"],
       ["Histoire", "/le-club/histoire"],
       ["Galerie photos", "/le-club/galerie"],
       ["Organisation du club", "/le-club/organigramme"],
       ["Infrastructures du club", "/le-club/infrastructures"],
-      ["Valeurs et partenaires", "/le-club/valeurs-partenaires"]
+      ["Partenaires", "/le-club/valeurs-partenaires#partenaires"]
     ]
   },
   {
     label: "Academy & équipes",
     href: "/academy",
+    icon: Shirt,
     links: [
       ["ES Viry Academy", "/academy"],
       ["Toutes les équipes", "/equipes"],
@@ -95,6 +106,7 @@ const mobileNavGroups = [
   {
     label: "Actu & Médias",
     href: "/actualites",
+    icon: Newspaper,
     links: [
       ["Actualités", "/actualites"],
       ["Calendrier", "/calendrier"],
@@ -103,29 +115,16 @@ const mobileNavGroups = [
     ]
   },
   {
-    label: "Boutique",
-    href: "/boutique",
-    links: [
-      ["Boutique", "/boutique"],
-      ["Conditions générales", "/boutique/conditions-generales"],
-      ["Livraison & retour", "/boutique/livraison-retour"]
-    ]
-  },
-  {
-    label: "Nous rejoindre",
-    href: "/inscriptions",
+    label: "Infos pratiques",
+    href: "/plan-du-site",
+    icon: Info,
     links: [
       ["Inscriptions", "/inscriptions"],
       ["Détections", "/detections-recrutement"],
-      ["Partenaires", "/le-club/valeurs-partenaires#partenaires"],
+      ["Boutique", "/boutique"],
       ["Contact", "/contact"],
-      ["Espace membre", "/espace-membre"]
-    ]
-  },
-  {
-    label: "Infos",
-    href: "/plan-du-site",
-    links: [
+      ["Conditions générales", "/boutique/conditions-generales"],
+      ["Livraison & retour", "/boutique/livraison-retour"],
       ["Plan du site", "/plan-du-site"],
       ["Mentions légales", "/mentions-legales"],
       ["Confidentialité", "/politique-confidentialite"]
@@ -303,7 +302,7 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
       <div className="hidden border-b border-[#f7c600]/20 bg-black/30 text-xs font-bold lg:block">
         <div className="mx-auto flex max-w-[1680px] items-center justify-between gap-6 px-6 py-2.5 2xl:px-8 3xl:px-10">
           {bannerActive ? (
-            <div className="marquee min-w-0 flex-1 text-base font-extrabold uppercase tracking-wide text-white sm:text-lg">
+            <Link className="focus-ring marquee min-w-0 flex-1 text-base font-extrabold uppercase tracking-wide text-white transition hover:text-[#f7c600] sm:text-lg" href="/inscriptions">
               <span className="sr-only">{announcement}</span>
               <div className="marquee__track" aria-hidden="true">
                 {[0, 1].map((half) => (
@@ -317,7 +316,7 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
                   </div>
                 ))}
               </div>
-            </div>
+            </Link>
           ) : (
             <div className="min-w-0 flex-1" />
           )}
@@ -498,19 +497,24 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
         <MotionDiv
           ref={mobileMenuRef}
           id="mobile-menu"
-          className="fixed inset-x-0 bottom-0 top-[var(--header-h)] z-50 overflow-y-auto overscroll-contain border-t border-[#f7c600]/30 bg-[#001c10] px-4 py-4 min-[1280px]:hidden"
+          className="fixed inset-x-0 bottom-0 top-[var(--header-h)] z-50 overflow-hidden border-t border-[#f7c600]/35 bg-[#00160e] min-[1280px]:hidden"
           initial={reduceMotion ? false : { opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={reduceMotion ? { duration: 0 } : { duration: 0.22 }}
         >
-          <div className="mx-auto flex h-full max-w-5xl flex-col gap-3">
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#f7c600]/25 pb-3">
-              <div>
-                <p className="text-xs font-black uppercase text-[#f7c600]">Menu</p>
-                <p className="text-lg font-black uppercase text-white">ES Viry-Châtillon</p>
+          <div aria-hidden="true" className="absolute inset-0 bg-[url('/stade/tribune2.jpg')] bg-cover bg-center opacity-20" />
+          <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,24,15,.9),rgba(0,34,21,.94)_50%,rgba(0,15,10,.98))]" />
+          <div className="relative mx-auto flex h-full max-w-5xl flex-col">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-32 pt-4 [scrollbar-color:rgba(247,198,0,.45)_transparent] sm:px-5 sm:pt-5">
+            <div className="mb-4 flex shrink-0 items-center justify-between gap-3 rounded-[1.6rem] border border-[#f7c600]/25 bg-black/30 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,.12),0_14px_44px_rgba(0,0,0,.3),0_1px_18px_rgba(247,198,0,.12)] backdrop-blur-xl sm:p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="relative grid h-16 w-16 shrink-0 place-items-center rounded-full border border-[#f7c600]/55 bg-[#003c25] shadow-[0_0_28px_rgba(247,198,0,.2)] sm:h-20 sm:w-20">
+                  <img className="h-[90%] w-[90%] rounded-full object-contain" src="/club-logo.svg" alt="" width={80} height={80} />
+                </span>
+                <p className="truncate text-base font-black uppercase tracking-wide text-white sm:text-xl">ES Viry-Châtillon</p>
               </div>
               <button
-                className="focus-ring inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-white/18 text-white"
+                className="focus-ring inline-flex min-h-12 min-w-12 items-center justify-center rounded-full border border-white/25 bg-white/[0.07] text-white shadow-inner hover:border-[#f7c600]/60 hover:text-[#f7c600]"
                 onClick={() => {
                   setOpen(false);
                   menuButtonRef.current?.focus();
@@ -522,47 +526,31 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
               </button>
             </div>
 
-            <nav className="grid shrink-0 grid-cols-2 gap-2 md:grid-cols-4" aria-label="Accès rapides mobile">
-              {[
-                ["Partenaires", "/le-club/valeurs-partenaires#partenaires"],
-                ["Inscriptions", "/inscriptions"],
-                ["Calendrier", "/calendrier"],
-                ["Boutique", "/boutique"]
-              ].map(([label, href]) => (
-                <Link
-                  className="focus-ring min-h-11 rounded-md border border-[#f7c600]/25 bg-white/[0.06] px-3 py-3 text-center text-xs font-black uppercase text-white hover:bg-[#f7c600] hover:text-[#002f1d]"
-                  href={href}
-                  key={href}
-                  onClick={() => setOpen(false)}
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto overscroll-contain pr-1 md:grid-cols-2">
+            <div className="grid content-start gap-2.5">
               {mobileNavGroups.map((group) => {
                 const expanded = openMobileGroup === group.href;
                 const active = isActive(group.href) || group.links.some(([, href]) => isActive(href));
+                const Icon = group.icon;
+                const controlsId = `mobile-submenu-${menuDomId(group.href)}`;
                 return (
-                  <section className="rounded-lg border border-white/12 bg-white/[0.04]" key={group.href}>
+                  <section className={`overflow-hidden rounded-[1.25rem] border bg-black/25 backdrop-blur-xl ${expanded ? "border-[#f7c600]/55 shadow-[inset_4px_0_0_#f7c600,0_0_24px_rgba(247,198,0,.1)]" : "border-white/20"}`} key={group.href}>
                     <button
+                      aria-controls={controlsId}
                       aria-expanded={expanded}
-                      className={`focus-ring flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-black uppercase ${
-                        active ? "bg-[#f7c600] text-[#002f1d]" : "text-white"
-                      }`}
+                      className={`focus-ring flex min-h-16 w-full items-center gap-3 rounded-[1.25rem] px-3 text-left text-sm font-black uppercase sm:min-h-20 sm:px-5 sm:text-base ${active ? "text-[#f7c600]" : "text-white"}`}
                       onClick={() => setOpenMobileGroup((current) => (current === group.href ? "" : group.href))}
                       type="button"
                     >
-                      {group.label}
-                      <ChevronDown size={18} aria-hidden="true" className={`shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#f7c600]/45 bg-[#002f1d]/80 text-[#f7c600] sm:h-12 sm:w-12"><Icon size={23} aria-hidden="true" /></span>
+                      <span className="flex-1">{group.label}</span>
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/20 bg-white/[0.06] text-[#f7c600]"><ChevronDown size={20} aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`} /></span>
                     </button>
                     {expanded ? (
-                      <div className="grid gap-1 px-2 py-2">
+                      <div id={controlsId} className="grid grid-cols-2 gap-2 px-3 pb-3 sm:px-5 sm:pb-5">
                         {group.links.map(([label, href]) => (
                           <Link
                             aria-current={isActive(href) ? "page" : undefined}
-                            className="focus-ring min-h-11 rounded-md px-3 py-3 text-sm font-bold uppercase text-white/82 hover:bg-white/10 hover:text-[#f7c600]"
+                            className="focus-ring flex min-h-11 items-center justify-center rounded-full border border-white/18 bg-white/[0.055] px-3 py-2 text-center text-xs font-bold text-white/90 shadow-inner hover:border-[#f7c600]/60 hover:text-[#f7c600] sm:text-sm"
                             href={href}
                             key={`${group.label}-${href}`}
                             onClick={() => setOpen(false)}
@@ -576,22 +564,25 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
                 );
               })}
             </div>
+            </div>
 
-            <div className="grid shrink-0 gap-2 border-t border-[#f7c600]/30 pt-3 md:grid-cols-2">
+            <div className="absolute inset-x-0 bottom-0 grid shrink-0 grid-cols-2 gap-2 border-t border-[#f7c600]/25 bg-[#00160e]/90 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_42px_rgba(0,0,0,.45)] backdrop-blur-2xl sm:px-5">
               <Link
-                className="focus-ring flex items-center gap-2 rounded-md border border-white/18 px-3 py-3 text-sm font-black uppercase text-white hover:bg-white/10"
+                className="focus-ring flex min-h-14 items-center justify-center gap-2 rounded-[1.1rem] border border-[#f7c600]/70 bg-black/20 px-3 py-3 text-xs font-black uppercase text-white hover:bg-white/10 sm:text-sm"
                 href="/espace-membre"
                 onClick={() => setOpen(false)}
               >
-                <User size={18} aria-hidden="true" />
+                <User size={20} aria-hidden="true" />
                 Mon espace
               </Link>
               <Link
-                className="focus-ring rounded-md bg-[#f7c600] px-3 py-3 text-center text-sm font-black uppercase text-[#002f1d]"
+                className="focus-ring flex min-h-14 items-center justify-center gap-2 rounded-[1.1rem] bg-[#f7c600] px-3 py-3 text-center text-xs font-black uppercase text-[#002f1d] shadow-[0_0_24px_rgba(247,198,0,.28)] hover:bg-white sm:text-sm"
                 href="/inscriptions"
                 onClick={() => setOpen(false)}
               >
+                <Users size={20} aria-hidden="true" />
                 Rejoindre le club
+                <ArrowRight className="hidden sm:block" size={18} aria-hidden="true" />
               </Link>
             </div>
           </div>

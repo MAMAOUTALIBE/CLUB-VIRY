@@ -53,7 +53,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       metadata: { name: partner.name, slug: partner.slug, isActive: partner.is_active }
     });
     revalidatePath("/");
-    revalidatePath("/partenaires");
+    revalidatePath("/le-club/valeurs-partenaires");
 
     return jsonOk({ partner });
   } catch (error) {
@@ -89,7 +89,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       entityId: id
     });
     revalidatePath("/");
-    revalidatePath("/partenaires");
+    revalidatePath("/le-club/valeurs-partenaires");
 
     return jsonOk({ trashed: true });
   } catch (error) {

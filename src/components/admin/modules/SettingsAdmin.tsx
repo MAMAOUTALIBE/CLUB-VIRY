@@ -417,6 +417,23 @@ export function SettingsAdmin() {
     return () => window.clearTimeout(t);
   }, [load]);
 
+  // Les sections (#home_sports, #annonces) ne sont montées qu'une fois les données
+  // chargées : le navigateur a déjà résolu le hash à ce moment-là. On refait donc
+  // le défilement nous-mêmes, sinon les liens du menu CRM restent en haut de page.
+  useEffect(() => {
+    if (state !== "ready") {
+      return;
+    }
+    const id = window.location.hash.slice(1);
+    if (!id) {
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [state]);
+
   return (
     <div className="grid gap-6">
       <div>

@@ -31,15 +31,8 @@ export default async function MediaPage() {
         title="Galerie"
         scrollable
       >
-        <div className="grid grid-cols-2 gap-3 pb-2 lg:grid-cols-3">
-          {albums.map((album) => (
-            <article className="overflow-hidden rounded-lg border border-[#07542f]/12 bg-white shadow-sm" key={album.title}>
-              <div className="aspect-square overflow-hidden bg-[#002f1d]">
-                <img src={album.image} alt={album.title} className="h-full w-full object-cover" />
-              </div>
-              <h2 className="p-3 text-sm font-black uppercase leading-tight text-[#002f1d]">{album.title}</h2>
-            </article>
-          ))}
+        <div className="pb-2">
+          <MediaGallery compact items={albums} />
         </div>
       </MobileScreen>
       <DesktopOnly>

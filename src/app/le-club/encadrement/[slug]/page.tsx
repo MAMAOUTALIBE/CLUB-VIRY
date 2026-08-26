@@ -55,8 +55,8 @@ export default async function EducatorDetailPage({ params }: Props) {
 
   const breadcrumbJsonLd = buildBreadcrumb([
     { name: "Accueil", path: "/" },
-    { name: "Le Club", path: "/le-club" },
-    { name: "Encadrement", path: "/le-club/encadrement" },
+    { name: "Academy", path: "/academy" },
+    { name: "Encadrement", path: "/academy#encadrement" },
     { name: educator.name }
   ]);
 

@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CalendarDays, Clock, Handshake, MapPin, Sparkles, Ticket, Trophy } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Clock, MapPin, Sparkles, Ticket, Trophy } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
 import { HomeHeroCarousel } from "@/components/HomeHeroCarousel";
 import { HomeSportsHub } from "@/components/HomeSportsHub";
 import { Stagger, StaggerItem } from "@/components/Motion";
-import { PartnerLogoMarquee, type PartnerLogo } from "@/components/PartnerLogoMarquee";
 import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData } from "@/lib/calendar-view";
 import { iconByName } from "@/lib/icon-map";
@@ -13,7 +12,7 @@ import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
 import { getPublicNews, getPublicPartners, getSiteSettings, type DisplayPartner } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
-import type { FeaturedNews, RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
+import type { RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -32,23 +31,53 @@ const websiteJsonLd = {
   inLanguage: "fr-FR"
 };
 
-function toPartnerLogo(partner: DisplayPartner): PartnerLogo {
-  return {
-    name: partner.name,
-    logo: partner.logoUrl ?? getPartnerLogo(partner.name),
-    alt: `Logo ${partner.name}`
-  };
+const institutionalPartnerNames = ["Essonne Département", "Ville de Viry-Châtillon"] as const;
+
+function getInstitutionalPartners(partners: DisplayPartner[]): DisplayPartner[] {
+  return institutionalPartnerNames.map((name) => {
+    const partner = partners.find((item) => item.name === name);
+    return partner ?? { name, logoUrl: getPartnerLogo(name), websiteUrl: null, tier: null };
+  });
+}
+
+function InstitutionalPartnerCard({ partner, className, interactive = true }: { partner: DisplayPartner; className: string; interactive?: boolean }) {
+  const logoUrl = partner.logoUrl ?? getPartnerLogo(partner.name);
+  const content = (
+    <>
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={`Logo ${partner.name}`}
+          className="h-14 w-full object-contain sm:h-20 lg:h-24"
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <span className="text-center text-base font-black uppercase text-[#002f1d] sm:text-xl">{partner.name}</span>
+      )}
+      <span className="mt-3 text-center text-xs font-bold leading-tight text-[#002f1d] sm:mt-4 sm:text-base">
+        {partner.name === "Essonne Département" ? "Département de l’Essonne" : partner.name}
+      </span>
+    </>
+  );
+
+  return interactive && partner.websiteUrl ? (
+    <a href={partner.websiteUrl} className={className} target="_blank" rel="noreferrer">
+      {content}
+    </a>
+  ) : (
+    <article className={className}>{content}</article>
+  );
 }
 
 export default async function HomePage() {
   const [allNews, settings, featuredPartners, calendar] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData()]);
-  const partnerLogos = featuredPartners.map(toPartnerLogo);
+  const institutionalPartners = getInstitutionalPartners(featuredPartners);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
   const clubStats = settings.club_stats;
   const values = settings.values;
   const heroSlides = settings.homeHero;
-  const heroLead = heroSlides[0];
   // Prochains matchs : depuis le calendrier DB (matchs publiés), avec repli sur le mock
   // partagé via getCalendarPageData — même contenu qu'auparavant en mode vitrine.
   const homeMatches = calendar.items
@@ -61,7 +90,6 @@ export default async function HomePage() {
     .slice(-3)
     .reverse()
     .map((item) => ({ category: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", homeScore: item.homeScore as number, awayScore: item.awayScore as number, date: item.dateLabel, venue: item.place }));
-  const sportsNews: FeaturedNews = { badge: "À la une", title: leadNews.title, description: leadNews.excerpt, date: leadNews.date, category: leadNews.category, image: leadNews.image, href: `/actualites/${leadNews.slug}` };
   const isClub = (name: string) => name.toLowerCase().includes("viry");
   const shortTeam = (name: string) => (isClub(name) ? "ES Viry" : name);
   const teamInitials = (name: string) => name.replace(/^ES\s+/i, "").split(/[\s-]+/).filter(Boolean).map((word) => word[0]).join("").slice(0, 3).toUpperCase();
@@ -75,28 +103,11 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }} />
       <section className="bg-[#f7f8f4] xl:hidden">
-        <div className="relative isolate flex min-h-[calc(86svh_-_var(--header-h,0px))] flex-col justify-end overflow-hidden px-4 pb-6 pt-8 text-white">
-          <Image src={heroLead?.imageUrl ?? images.stadiumHero} alt="" fill sizes="100vw" priority className="object-cover object-[center_82%]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/95 via-[#001c10]/45 to-[#001c10]/20" aria-hidden="true" />
-          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#001c10] to-transparent" aria-hidden="true" />
-
-          <div className="relative z-[1]">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f7c600]">ES Viry-Châtillon</p>
-            <h1 className="sr-only">{heroLead?.title ?? "Une passion, notre force"}</h1>
-            {heroLead?.description ? <p className="mt-4 max-w-sm text-sm font-bold text-white/90">{heroLead.description}</p> : null}
-            <div className="mt-5 h-1 w-20 rounded-full bg-[#f7c600]" />
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <Link className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#f7c600] px-3 text-xs font-black uppercase text-[#001c10]" href={heroLead?.buttonHref || "/le-club"}>
-                {heroLead?.buttonLabel || "Découvrir le club"} <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-              <Link className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-white/65 bg-black/10 px-3 text-xs font-black uppercase text-white backdrop-blur" href="/equipes">
-                Nos équipes <ArrowRight size={17} aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
+        <div className="relative isolate min-h-[calc(88svh_-_var(--header-h,0px))] overflow-hidden text-white sm:min-h-[680px]">
+          <HomeHeroCarousel slides={heroSlides} variant="mobile" />
         </div>
 
-        <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} news={sportsNews} />
+        <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} />
       </section>
 
       <div className="hidden xl:block">
@@ -132,121 +143,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} news={sportsNews} />
-      <section className="hidden">
-        {/* ── Prochains matchs : affichage compact en liste ── */}
-        <div className="club-panel relative overflow-hidden rounded-3xl p-5 text-white sm:p-7">
-          <div className="stadium-grid pointer-events-none absolute inset-0 opacity-70" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#f7c600]/20 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-[#0a6b3d]/45 blur-3xl" aria-hidden="true" />
-          <div className="relative">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="inline-flex items-center gap-3 text-2xl font-black uppercase leading-none text-white sm:text-3xl">
-                <Ticket size={24} className="text-[#f7c600]" aria-hidden="true" />
-                Prochains matchs
-              </h2>
-              <Link
-                href="/calendrier"
-                className="focus-ring inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#f7c600] transition hover:text-white"
-              >
-                Voir le calendrier <ArrowRight size={16} aria-hidden="true" />
-              </Link>
-            </div>
+      <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} />
 
-            <div className="mt-6 grid gap-4">
-              {homeMatches.length === 0 ? (
-                <p className="rounded-2xl border border-white/12 bg-white/[0.06] p-5 text-sm font-bold text-white/75">Aucun match programmé pour le moment. Consultez le calendrier pour les prochaines dates.</p>
-              ) : null}
-              {homeMatches.map((match, index) => (
-                <article
-                  className={`grid gap-4 rounded-2xl border bg-white/[0.06] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:bg-white/[0.09] sm:grid-cols-[minmax(0,1fr)_minmax(13rem,0.72fr)] ${
-                    index === homeMatches.length - 1 ? "border-[#f7c600]/55" : "border-white/12 hover:border-[#f7c600]/45"
-                  }`}
-                  key={match.team + "-" + match.away}
-                  aria-label={`${match.team} : ${shortTeam(match.home)} contre ${shortTeam(match.away)} — ${match.date} à ${match.time}`}
-                >
-                  <div className="min-w-0">
-                    <span className="inline-flex rounded-md bg-[#f7c600] px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#001c10]">
-                      {match.team}
-                    </span>
-                    <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-5">
-                      <div className="min-w-0 text-center">
-                        <div className="mx-auto w-fit">{crest(match.home, "sm")}</div>
-                        <p className="mt-2 truncate text-base font-black uppercase text-white sm:text-lg">{shortTeam(match.home)}</p>
-                      </div>
-                      <span className="text-lg font-black uppercase text-[#f7c600]">VS</span>
-                      <div className="min-w-0 text-center">
-                        <div className="mx-auto w-fit">{crest(match.away, "sm")}</div>
-                        <p className="mt-2 truncate text-base font-black uppercase text-white sm:text-lg">{shortTeam(match.away)}</p>
-                      </div>
-                    </div>
-                  </div>
+      </div>
 
-                  <div className="flex flex-col justify-center rounded-xl border border-white/10 bg-[#00120b]/35 p-4">
-                    <p className="inline-flex items-center gap-2 text-base font-black text-white">
-                      <CalendarDays size={18} className="shrink-0 text-[#f7c600]" aria-hidden="true" />
-                      {match.date}
-                    </p>
-                    <p className="mt-2 inline-flex items-center gap-2 text-3xl font-black leading-none text-white">
-                      <Clock size={20} className="shrink-0 text-[#f7c600]" aria-hidden="true" />
-                      {match.time}
-                    </p>
-                    <p className="mt-3 inline-flex items-start gap-2 text-sm font-bold leading-5 text-white/75">
-                      <MapPin size={16} className="mt-0.5 shrink-0 text-[#f7c600]" aria-hidden="true" />
-                      {match.place}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            <Link
-              href="/calendrier"
-              className="focus-ring mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] py-3 text-sm font-black uppercase text-white transition hover:-translate-y-0.5 hover:border-[#f7c600] hover:text-[#f7c600]"
-            >
-              Voir tous les matchs <ArrowRight size={18} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-
-        {/* ── Actualité à la une : carte éditoriale premium ── */}
-        <article className="premium-card group flex flex-col overflow-hidden rounded-3xl bg-white">
-          <div className="relative h-60 overflow-hidden sm:h-80">
-            <Image
-              src={leadNews.image}
-              alt={leadNews.title}
-              fill
-              sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#001c10]/85 via-[#001c10]/15 to-transparent" aria-hidden="true" />
-            <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[#002f1d]/90 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#f7c600] ring-1 ring-[#f7c600]/30 backdrop-blur">
-              <Sparkles size={12} aria-hidden="true" /> À la une
-            </span>
-            <p className="absolute inset-x-4 bottom-4 text-[11px] font-black uppercase tracking-[0.18em] text-white/90">
-              {leadNews.category} · {leadNews.date}
-            </p>
-          </div>
-          <div className="flex flex-1 flex-col p-6 sm:p-7">
-            <h3 className="text-2xl font-black uppercase leading-tight text-[#002f1d] transition-colors group-hover:text-[#064b2d] sm:text-3xl">
-              {leadNews.title}
-            </h3>
-            <p className="mt-3 leading-7 text-slate-700">{leadNews.excerpt}</p>
-            <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6">
-              <ButtonLink href={`/actualites/${leadNews.slug}`} variant="dark">Lire l'article</ButtonLink>
-              <Link
-                href="/actualites"
-                className="focus-ring inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#664d00] transition hover:text-[#002f1d]"
-              >
-                Toutes les actus
-                <ArrowUpRight size={14} aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:pb-14 xl:pt-0">
         <div className="relative isolate overflow-hidden rounded-3xl border border-[#f7c600]/20 text-white shadow-[0_30px_70px_rgba(0,18,11,0.45)]">
           <Image src={images.youthTeam} alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
           {/* Overlays : profondeur + lisibilité */}
@@ -279,7 +180,7 @@ export default async function HomePage() {
       </section>
 
       {gridNews.length > 0 ? (
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 xl:py-14">
           <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <SectionTitle eyebrow="Actualités" title="Dernières actualités" text="Résultats, stages, détections et temps forts : toute la vie du club." />
             <div className="pb-2">
@@ -336,36 +237,47 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
-      </div>
 
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-8 sm:py-10 lg:py-12" aria-label="Partenaires institutionnels">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <SectionTitle
-              eyebrow="Partenaires"
-              text="Un club sérieux, stable et ambitieux : associez votre image à un acteur majeur du territoire."
-              title="Ils accompagnent le projet"
-            />
-            <div className="lg:pb-9">
-              <ButtonLink href="/partenaires" variant="dark">
-                Devenir partenaire
-              </ButtonLink>
+          <div className="flex flex-col gap-4 rounded-2xl bg-[#002f1d] p-5 shadow-[0_14px_34px_rgba(0,47,29,0.14)] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-7 lg:rounded-3xl lg:px-10 lg:py-8">
+            <h2 className="text-xl font-black uppercase leading-tight text-white sm:text-2xl lg:text-3xl">
+              Devenez partenaire du club
+            </h2>
+            <Link
+              href="/le-club/valeurs-partenaires#devenir-partenaire"
+              className="focus-ring inline-flex min-h-12 shrink-0 items-center justify-center gap-3 rounded-xl bg-[#f7c600] px-6 text-sm font-black uppercase text-[#002f1d] transition hover:bg-[#ffd62e] sm:min-w-56 sm:text-base lg:min-h-14 lg:min-w-72 lg:text-lg"
+            >
+              Nous rejoindre <ArrowRight size={22} aria-hidden="true" />
+            </Link>
+          </div>
+
+          <div className="institutional-partners-marquee mt-4 overflow-hidden sm:mt-5 lg:hidden">
+            <div className="institutional-partners-marquee__track flex w-max">
+              {[false, true].map((isDuplicate) => (
+                <div key={String(isDuplicate)} className="flex shrink-0 gap-3 pr-3 sm:gap-5 sm:pr-5" aria-hidden={isDuplicate || undefined}>
+                  {institutionalPartners.map((partner) => (
+                    <InstitutionalPartnerCard
+                      key={partner.name}
+                      partner={partner}
+                      interactive={!isDuplicate}
+                      className="focus-ring flex min-h-36 w-[72vw] max-w-[25rem] shrink-0 flex-col items-center justify-center rounded-2xl border border-[#002f1d]/15 bg-white p-4 shadow-[0_8px_22px_rgba(0,47,29,0.08)] sm:min-h-48 sm:w-[44vw] sm:p-6"
+                    />
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-[#002f1d]/10 py-4 text-xs font-black uppercase tracking-wide text-[#664d00]">
-            <span className="inline-flex items-center gap-2">
-              <Handshake size={16} aria-hidden="true" />
-              Partenaires institutionnels &amp; officiels
-            </span>
-            <span className="hidden h-3 w-px bg-[#002f1d]/15 sm:inline-block" aria-hidden="true" />
-            <span className="inline-flex items-center gap-2 text-[#002f1d]/70">
-              <Sparkles size={16} className="text-[#f7c600]" aria-hidden="true" />
-              Un territoire qui soutient son club
-            </span>
+          <div className="mt-5 hidden grid-cols-2 gap-5 lg:grid">
+            {institutionalPartners.map((partner) => (
+              <InstitutionalPartnerCard
+                key={partner.name}
+                partner={partner}
+                className="focus-ring flex min-h-56 flex-col items-center justify-center rounded-2xl border border-[#002f1d]/15 bg-white p-6 shadow-[0_8px_22px_rgba(0,47,29,0.08)]"
+              />
+            ))}
           </div>
-
-          <PartnerLogoMarquee partners={partnerLogos} />
         </div>
       </section>
 

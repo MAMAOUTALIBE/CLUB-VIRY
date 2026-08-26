@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getVisibleHeroSlides, isAllowedHeroImageUrl, validateHomeHeroSetting } from "../src/lib/home-hero.ts";
+import { getVisibleHeroSlides, isAllowedHeroImageUrl, isSafeHeroLink, validateHomeHeroSetting } from "../src/lib/home-hero.ts";
 import { isAllowedSettingKey } from "../src/lib/settings-keys.ts";
 
 const slide = (overrides = {}) => ({ id: "one", title: "Bienvenue", description: "Au club", imageUrl: "/hero.jpg", buttonLabel: "Découvrir", buttonHref: "/le-club", active: true, startAt: "", endAt: "", ...overrides });
@@ -23,6 +23,26 @@ test("home hero validator enforces required fields, unique ids, safe links and o
     assert.ok(result.issues.some((issue) => issue.field === "slides.0.endAt"));
     assert.ok(result.issues.some((issue) => issue.field === "slides.1.id"));
   }
+});
+
+test("home hero links accept only real public routes, known anchors and HTTPS URLs", () => {
+  assert.equal(isSafeHeroLink(""), false);
+  assert.equal(isSafeHeroLink("#"), false);
+  assert.equal(isSafeHeroLink("#valeurs"), false);
+  assert.equal(isSafeHeroLink("/route-inexistante"), false);
+  assert.equal(isSafeHeroLink("/le-club/valeurs-partenaires#valeurs"), true);
+  assert.equal(isSafeHeroLink("/le-club/valeurs-partenaires#inconnue"), false);
+  assert.equal(isSafeHeroLink("/equipes/u18-a"), true);
+  assert.equal(isSafeHeroLink("/actualites/un-nouvel-article"), true);
+  assert.equal(isSafeHeroLink("https://example.com/campagne"), true);
+  assert.equal(isSafeHeroLink("https://user:password@example.com/campagne"), false);
+  assert.equal(isSafeHeroLink("http://example.com/campagne"), false);
+});
+
+test("home hero validator rejects a missing CTA destination", () => {
+  const result = validateHomeHeroSetting({ slides: [slide({ buttonHref: "   " })] });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.ok(result.issues.some((issue) => issue.field === "slides.0.buttonHref"));
 });
 
 test("home hero filters scheduled slides and falls back if none is visible", () => {

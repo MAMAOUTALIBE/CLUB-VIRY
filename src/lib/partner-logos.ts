@@ -14,3 +14,14 @@ export const partnerLogosByName: Record<string, string> = {
 export function getPartnerLogo(name: string): string | null {
   return partnerLogosByName[name] ?? null;
 }
+
+// Sites officiels des partenaires institutionnels mis en avant sur l'accueil.
+// Sert uniquement de repli en mode vitrine : en mode CRM, partners.website_url fait foi.
+export const partnerWebsitesByName: Record<string, string> = {
+  "Essonne Département": "https://www.essonne.fr",
+  "Ville de Viry-Châtillon": "https://www.viry-chatillon.fr"
+};
+
+export function getPartnerWebsite(name: string): string | null {
+  return partnerWebsitesByName[name] ?? null;
+}

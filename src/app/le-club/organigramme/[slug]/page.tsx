@@ -144,7 +144,7 @@ export default async function OfficialProfilePage({ params }: Props) {
               </span>
             </div>
             <div className="p-6">
-              <h1 className="text-2xl font-black uppercase text-[#002f1d]">{official.name}</h1>
+              <p className="text-2xl font-black uppercase text-[#002f1d]">{official.name}</p>
               <p className="mt-2 text-sm font-black uppercase tracking-wide text-[#07542f]">{official.position}</p>
               <p className="mt-3 inline-flex rounded-full bg-[#07542f]/10 px-3 py-1 text-xs font-black uppercase text-[#07542f]">{official.department}</p>
             </div>

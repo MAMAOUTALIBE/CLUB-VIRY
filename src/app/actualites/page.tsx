@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { LiveMatch } from "@/components/LiveMatch";
 import { LiveVideo } from "@/components/LiveVideo";
 import { DesktopOnly, MobileLinkCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
 import { Stagger, StaggerItem } from "@/components/Motion";
@@ -50,11 +49,8 @@ export default async function NewsPage() {
       <DesktopOnly>
       <PageHero description="Toute la vie du club : résultats, stages, événements, informations pratiques." image={images.teamHuddle} title="Actualités" />
       <section className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 lg:px-8">
-        <SectionTitle eyebrow="Match en direct" title="Suivez les Jaune et Vert" text="Regardez le match en vidéo et suivez le score, le chrono et les faits de match en temps réel." />
-        <div className="grid items-start gap-6 lg:grid-cols-[1.5fr_1fr] 3xl:grid-cols-[1.65fr_1fr]">
-          <LiveVideo />
-          <LiveMatch />
-        </div>
+        <SectionTitle eyebrow="Vidéo" title="Les Jaune et Vert en images" text="Les séquences filmées des dernières rencontres du club." />
+        <LiveVideo />
       </section>
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <SectionTitle title="Dernières actualités" text="L'actualité forte du moment, puis toutes les nouvelles du club." />

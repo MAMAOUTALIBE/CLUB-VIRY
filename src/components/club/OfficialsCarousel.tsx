@@ -44,8 +44,14 @@ export function OfficialsCarousel({ officials }: { officials: DisplayOfficial[] 
   if (visibleOfficials.length === 0) return null;
 
   const hasSeveralPages = total > visibleCount;
+  // On avance d'une page complete et on revient a la premiere : l'index actif
+  // correspond toujours a l'une des pastilles, meme si le total n'est pas
+  // un multiple de CARDS_PER_VIEW.
   const showNext = () => {
-    setActiveIndex((current) => (current + CARDS_PER_VIEW) % total);
+    setActiveIndex((current) => {
+      const nextPage = Math.floor(current / CARDS_PER_VIEW) + 1;
+      return (nextPage % pageCount) * CARDS_PER_VIEW;
+    });
   };
   const showPage = (pageIndex: number) => {
     setActiveIndex(pageIndex * CARDS_PER_VIEW);
@@ -57,17 +63,6 @@ export function OfficialsCarousel({ officials }: { officials: DisplayOfficial[] 
         <span className="rounded-full border border-[#07542f]/15 bg-white px-3 py-1 text-xs font-black tabular-nums text-[#07542f] shadow-sm" aria-live="polite">
           {visibleCount} / {total}
         </span>
-        {hasSeveralPages ? (
-          <button
-            type="button"
-            onClick={showNext}
-            className="focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#f7c600] text-[#001c10] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#ffd83d] sm:hidden"
-            aria-label="Afficher le responsable suivant"
-            title="Responsable suivant"
-          >
-            <ArrowRight size={20} aria-hidden="true" />
-          </button>
-        ) : null}
       </div>
 
       <div className="relative">

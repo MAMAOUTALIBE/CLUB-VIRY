@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Kaushan_Script } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ImageProtection } from "@/components/ImageProtection";
 import { getSiteSettings } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
 import "./globals.css";
-
-const scriptFont = Kaushan_Script({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-script",
-  display: "swap"
-});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -67,7 +59,7 @@ const sportsClubJsonLd = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const settings = await getSiteSettings();
   return (
-    <html data-scroll-behavior="smooth" lang="fr" className={scriptFont.variable}>
+    <html data-scroll-behavior="smooth" lang="fr">
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />

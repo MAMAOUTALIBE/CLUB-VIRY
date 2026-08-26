@@ -36,7 +36,7 @@ export function StaffDirectory({ people, intro }: { people: StaffPerson[]; intro
     <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
       {intro ? <p className="max-w-3xl text-base leading-7 text-slate-700">{intro}</p> : null}
       <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_320px] lg:items-center">
-        <div className="flex flex-wrap gap-2" role="list" aria-label="Filtrer par catégorie">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer par catégorie">
           {categories.map((item) => (
             <button
               className={`focus-ring rounded-md px-4 py-2 text-xs font-black uppercase transition ${
