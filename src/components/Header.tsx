@@ -18,22 +18,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MotionDiv } from "@/components/Motion";
-import { socialItems } from "@/lib/socials";
+import { hasLiveSocials, socialItems, socialUrl } from "@/lib/socials";
 import type { SiteAnnouncement } from "@/lib/announcements";
 
-const DEFAULT_ANNOUNCEMENT =
-  "Inscriptions des licenciés : du 09 juin jusqu'à la fin du mois de juin — rejoignez l'ES Viry-Châtillon !";
+// Repli affiche tant que le CRM n'a pas de texte : volontairement SANS dates, pour
+// ne pas annoncer une periode d'inscription perimee. Les dates de la saison en cours
+// se saisissent dans le CRM (Parametres -> bandeau d'inscriptions).
+const DEFAULT_ANNOUNCEMENT = "Inscriptions des licenciés : rejoignez l'ES Viry-Châtillon !";
 
 type HeaderProps = {
   announcements?: SiteAnnouncement[];
   banner?: { text?: string; active?: boolean };
   socials?: Record<string, string>;
 };
-
-// URL réelle d'un réseau (depuis les paramètres CRM) ; vide = icône décorative.
-function socialHref(socials: Record<string, string> | undefined, label: string): string {
-  return (socials?.[label.toLowerCase()] ?? "").trim();
-}
 
 const navItems = [
   {
@@ -138,6 +135,7 @@ function menuDomId(href: string) {
 
 export function Header({ announcements = [], banner, socials }: HeaderProps) {
   const announcement = banner?.text?.trim() || DEFAULT_ANNOUNCEMENT;
+  const socialsConfigured = hasLiveSocials(socials);
   const bannerActive = banner?.active !== false;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -322,11 +320,14 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
           )}
 
           <div className="flex items-center gap-5">
+            {/* Aucun compte configure : on masque le bloc plutot que d'afficher
+                cinq icones sans action (les URLs viennent du CRM). */}
+            {socialsConfigured ? (
             <div className="hidden items-center gap-2 xl:flex">
               <span className="whitespace-nowrap text-sm font-extrabold uppercase tracking-wide text-white sm:text-base">Suivez-nous :</span>
               {socialItems.map((item) => {
-                const href = socialHref(socials, item.label);
-                const live = /^(https?:|mailto:|tel:)/.test(href);
+                const href = socialUrl(socials, item.label);
+                if (!href) return null;
                 const className = "inline-flex h-7 w-7 items-center justify-center rounded-full border transition hover:scale-105";
                 const style = {
                   background: item.background,
@@ -340,17 +341,14 @@ export function Header({ announcements = [], banner, socials }: HeaderProps) {
                   </svg>
                 );
 
-                return live ? (
+                return (
                   <a aria-label={item.label} className={`focus-ring ${className}`} href={href} key={item.label} rel="noopener noreferrer" style={style} target="_blank" title={item.label}>
                     {icon}
                   </a>
-                ) : (
-                  <span aria-label={item.label} className={className} key={item.label} role="img" style={style} title={item.label}>
-                    {icon}
-                  </span>
                 );
               })}
             </div>
+            ) : null}
           </div>
         </div>
       </div>

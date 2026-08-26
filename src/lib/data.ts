@@ -31,19 +31,6 @@ export type Team = {
   players: string[];
 };
 
-export const navItems = [
-  { label: "Accueil", href: "/" },
-  { label: "Le Club", href: "/le-club" },
-  { label: "Équipes", href: "/equipes" },
-  { label: "Actualités", href: "/actualites" },
-  { label: "Calendrier", href: "/calendrier" },
-  { label: "Résultats", href: "/resultats" },
-  { label: "Inscriptions", href: "/inscriptions" },
-  { label: "Partenaires", href: "/partenaires" },
-  { label: "Boutique", href: "/boutique" },
-  { label: "Contact", href: "/contact" }
-];
-
 export const clubStats = [
   { label: "Licenciés", value: "+600", icon: Users },
   { label: "Éducateurs", value: "50", icon: Award },

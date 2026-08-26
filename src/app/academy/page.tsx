@@ -30,6 +30,9 @@ export const metadata = pageMetadata("/academy");
 // la Plateforme Academy = service EXTERNE déjà développé. La page ne fait que présenter
 // et rediriger via ACADEMY_PLATFORM_URL (aucune URL en dur). Sans URL, les CTA sont désactivés.
 const ACADEMY_URL = process.env.ACADEMY_PLATFORM_URL?.trim() ?? "";
+// Tant que la plateforme n'est pas configuree, les CTA restent de vrais liens :
+// ils menent au contact du club, avec un libelle qui annonce ce qui va se passer.
+const ACADEMY_FALLBACK = "/contact";
 
 const PUBLIC_ICON: Record<string, LucideIcon> = {
   Joueurs: Dumbbell,
@@ -70,7 +73,7 @@ const DARK_BTN =
 
 export default async function AcademyPage() {
   const [settings, educators] = await Promise.all([getSiteSettings(), getPublicEducators()]);
-  const academyCtaHref = ACADEMY_URL || "/contact";
+  const academyCtaHref = ACADEMY_URL || ACADEMY_FALLBACK;
   const coachGroups = coachesByTeam();
   return (
     <>
@@ -159,7 +162,11 @@ export default async function AcademyPage() {
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <AcademyCta url={ACADEMY_URL} className={PRIMARY_BTN}>
+                <AcademyCta
+                  url={ACADEMY_URL}
+                  className={PRIMARY_BTN}
+                  fallback={{ href: ACADEMY_FALLBACK, label: <>Demander l&apos;accès <ArrowRight size={18} aria-hidden="true" /></> }}
+                >
                   Accéder à la plateforme <ExternalLink size={18} aria-hidden="true" />
                 </AcademyCta>
                 <a className={SECONDARY_BTN} href="#formations">
@@ -243,7 +250,11 @@ export default async function AcademyPage() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <SectionTitle eyebrow="Catalogue" title="Nos formations phares" />
-            <AcademyCta url={ACADEMY_URL} className={DARK_BTN}>
+            <AcademyCta
+              url={ACADEMY_URL}
+              className={DARK_BTN}
+              fallback={{ href: ACADEMY_FALLBACK, label: <>Demander le catalogue <ArrowRight size={16} aria-hidden="true" /></> }}
+            >
               Voir toutes les formations <ArrowRight size={16} aria-hidden="true" />
             </AcademyCta>
           </div>
@@ -266,7 +277,19 @@ export default async function AcademyPage() {
                     <div className="flex flex-1 flex-col p-5">
                       <h3 className="text-lg font-black uppercase leading-tight text-[#002f1d]">{formation.title}</h3>
                       <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{formation.description}</p>
-                      <AcademyCta url={ACADEMY_URL} className="focus-ring -ml-1 mt-3 inline-flex w-fit items-center gap-1.5 px-1 py-1.5 text-xs font-black uppercase">
+                      <AcademyCta
+                        url={ACADEMY_URL}
+                        className="focus-ring -ml-1 mt-3 inline-flex w-fit items-center gap-1.5 px-1 py-1.5 text-xs font-black uppercase"
+                        fallback={{
+                          href: ACADEMY_FALLBACK,
+                          label: (
+                            <>
+                              <span style={{ color: formation.accentText }}>Se renseigner</span>
+                              <ArrowRight size={14} style={{ color: formation.accentText }} aria-hidden="true" />
+                            </>
+                          )
+                        }}
+                      >
                         <span style={{ color: formation.accentText }}>Découvrir</span>
                         <ArrowRight size={14} style={{ color: formation.accentText }} aria-hidden="true" />
                       </AcademyCta>
@@ -315,7 +338,11 @@ export default async function AcademyPage() {
                 })}
               </div>
               <div className="relative mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <AcademyCta url={ACADEMY_URL} className={PRIMARY_BTN}>
+                <AcademyCta
+                  url={ACADEMY_URL}
+                  className={PRIMARY_BTN}
+                  fallback={{ href: ACADEMY_FALLBACK, label: <>Demander l&apos;accès <ArrowRight size={18} aria-hidden="true" /></> }}
+                >
                   Je commence maintenant <ExternalLink size={18} aria-hidden="true" />
                 </AcademyCta>
                 <a className={SECONDARY_BTN} href="#formations">

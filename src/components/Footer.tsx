@@ -16,16 +16,12 @@ import {
   Users
 } from "lucide-react";
 import { NewsletterForm } from "@/components/NewsletterForm";
-import { socialItems } from "@/lib/socials";
+import { hasLiveSocials, socialItems, socialUrl } from "@/lib/socials";
 
 type FooterProps = {
   socials?: Record<string, string>;
   contact?: { address?: string };
 };
-
-function socialHref(socials: Record<string, string> | undefined, label: string): string {
-  return (socials?.[label.toLowerCase()] ?? "").trim();
-}
 
 const columns = [
   {
@@ -72,6 +68,9 @@ const columns = [
 
 export function Footer({ socials, contact }: FooterProps) {
   const pathname = usePathname();
+  // Aucun compte configure : les rangees d'icones sont masquees plutot que
+  // rendues inertes (les URLs viennent du CRM).
+  const socialsConfigured = hasLiveSocials(socials);
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -124,10 +123,11 @@ export function Footer({ socials, contact }: FooterProps) {
           <ChevronRight aria-hidden="true" size={17} />
         </Link>
 
+        {socialsConfigured ? (
         <div className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Réseaux sociaux">
           {socialItems.map((social) => {
-            const href = socialHref(socials, social.label);
-            const live = /^(https?:|mailto:|tel:)/.test(href);
+            const href = socialUrl(socials, social.label);
+            if (!href) return null;
             const className = "focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border ring-1 ring-white/10 transition hover:ring-[#f7c600]/60";
             const style = {
               background: social.background,
@@ -141,17 +141,14 @@ export function Footer({ socials, contact }: FooterProps) {
               </svg>
             );
 
-            return live ? (
+            return (
               <a key={social.label} href={href} target="_blank" rel="noopener noreferrer" aria-label={social.label} title={social.label} className={className} style={style}>
                 {icon}
               </a>
-            ) : (
-              <span key={social.label} role="img" aria-label={social.label} title={social.label} className={className} style={style}>
-                {icon}
-              </span>
             );
           })}
         </div>
+        ) : null}
 
         <div className="mt-5 flex flex-col items-center gap-2 border-t border-white/10 pt-4 text-center text-[11px] text-white/60 md:text-xs">
           <p>© 2026 ES Viry-Châtillon Football</p>
@@ -199,10 +196,11 @@ export function Footer({ socials, contact }: FooterProps) {
             <p className="mt-5 max-w-xs text-sm leading-6 text-white/70">
               Site officiel de l'ES Viry-Châtillon Football. Jaune et Vert pour toujours.
             </p>
+            {socialsConfigured ? (
             <div className="mt-6 flex flex-wrap gap-3" aria-label="Réseaux sociaux">
               {socialItems.map((social) => {
-                const href = socialHref(socials, social.label);
-                const live = /^(https?:|mailto:|tel:)/.test(href);
+                const href = socialUrl(socials, social.label);
+                if (!href) return null;
                 const className = "focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-[#f7c600]/60";
                 const style = {
                   background: social.background,
@@ -216,19 +214,14 @@ export function Footer({ socials, contact }: FooterProps) {
                   </svg>
                 );
 
-                // Lien cliquable seulement si une vraie URL existe ; sinon icone decorative
-                // (pas de lien mort vers "#").
-                return live ? (
+                return (
                   <a key={social.label} href={href} target="_blank" rel="noopener noreferrer" aria-label={social.label} title={social.label} className={className} style={style}>
                     {icon}
                   </a>
-                ) : (
-                  <span key={social.label} role="img" aria-label={social.label} title={social.label} className={className} style={style}>
-                    {icon}
-                  </span>
                 );
               })}
             </div>
+            ) : null}
           </div>
 
           {/* Colonnes de liens */}

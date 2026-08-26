@@ -23,6 +23,10 @@ const isActive = (path: string, href: string) => { const base = href.split("#")[
 export function AdminSidebar({ collapsed, mobileOpen, educatorOnly, onClose, onExpand }: { collapsed: boolean; mobileOpen: boolean; educatorOnly: boolean; onClose: () => void; onExpand: () => void }) {
   const pathname = usePathname();
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  // Deconnexion : rechargement complet volontaire plutot qu'une navigation client.
+  // Il purge le cache du routeur et tout l'etat React encore en memoire, pour qu'aucune
+  // donnee du CRM ne subsiste apres la sortie de session.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   const logout = async () => { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null); window.location.href = "/"; };
   const visibleNavigation: NavGroup[] = educatorOnly ? [{ label: "Convocations", icon: ClipboardCheck, href: "/admin/convocations" }] : NAVIGATION;
   const selected = visibleNavigation.find((group) => group.label === selectedGroup && group.children);

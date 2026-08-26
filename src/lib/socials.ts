@@ -16,6 +16,21 @@ export function isLiveSocial(item: SocialItem): boolean {
   return /^(https?:|mailto:|tel:)/.test(item.href.trim());
 }
 
+/** URL utilisable pour un reseau, depuis les parametres du CRM. */
+export function socialUrl(socials: Record<string, string> | undefined, label: string): string {
+  const href = (socials?.[label.toLowerCase()] ?? "").trim();
+  return /^(https?:|mailto:|tel:)/.test(href) ? href : "";
+}
+
+/**
+ * Vrai des qu'au moins un reseau est configure. Tant que ce n'est pas le cas,
+ * les blocs « Suivez-nous » sont masques : mieux vaut ne rien afficher qu'une
+ * rangee d'icones sans action.
+ */
+export function hasLiveSocials(socials: Record<string, string> | undefined): boolean {
+  return socialItems.some((item) => socialUrl(socials, item.label) !== "");
+}
+
 export const socialItems: SocialItem[] = [
   {
     label: "Facebook",

@@ -97,6 +97,9 @@ test.describe("Redirections et ancres", () => {
 
 test.describe("Navigation principale", () => {
   test("le menu mene aux bonnes pages", async ({ page }) => {
+    // Ce parcours enchaine plusieurs chargements de page complets (un par lien
+    // clique, avec reouverture du menu) : il depasse legitimement le delai standard.
+    test.slow();
     await page.goto("/");
 
     if (await isMobileLayout(page)) {
@@ -135,7 +138,7 @@ test.describe("Navigation principale", () => {
     await expect(page).toHaveURL(/\/resultats$/);
 
     await page.goto("/");
-    await nav.getByRole("link", { name: "Rejoindre" }).click();
+    await nav.getByRole("link", { name: "Rejoindre", exact: true }).click();
     await expect(page).toHaveURL(/\/inscriptions$/);
   });
 
@@ -180,10 +183,12 @@ test.describe("Navigation principale", () => {
 test.describe("Appels a l'action", () => {
   test("« Nous rejoindre » mene au formulaire partenaire visible", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /Nous rejoindre/ }).click();
+    await page.getByRole("link", { name: "Nous rejoindre", exact: true }).click();
     await expect(page).toHaveURL(/\/le-club\/valeurs-partenaires#devenir-partenaire$/);
     await expect(page.locator("#devenir-partenaire")).toBeVisible();
-    await expect(page.getByRole("button", { name: /partenaire/i })).toBeVisible();
+    const form = page.locator("#devenir-partenaire");
+    await expect(form.getByRole("heading", { name: "Devenir partenaire" })).toBeVisible();
+    await expect(form.getByRole("button", { name: "Envoyer ma demande" })).toBeVisible();
   });
 
   test("les partenaires institutionnels ouvrent leur site", async ({ page }) => {
@@ -252,9 +257,12 @@ test.describe("Galerie et boutique", () => {
 test.describe("Formulaires et acces proteges", () => {
   test("le formulaire de contact refuse un envoi vide", async ({ page }) => {
     await page.goto("/contact");
-    const form = page.locator("form").filter({ has: page.getByLabel(/Pr[ée]nom/i) }).first();
-    await form.getByRole("button", { name: /Envoyer/i }).click();
+    const submit = page.getByRole("button", { name: "Envoyer", exact: true }).first();
+    await submit.scrollIntoViewIfNeeded();
+    await submit.click();
+    // La validation cote client bloque l'envoi : on reste sur la page.
     await expect(page).toHaveURL(/\/contact$/);
+    await expect(submit).toBeVisible();
   });
 
   test("le CRM redirige vers la connexion sans session", async ({ page }) => {
