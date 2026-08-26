@@ -5,9 +5,10 @@ import { ButtonLink } from "@/components/ButtonLink";
 import { HomeHeroCarousel } from "@/components/HomeHeroCarousel";
 import { HomeSportsHub } from "@/components/HomeSportsHub";
 import { MobileDailyProgram } from "@/components/MobileDailyProgram";
+import { MobileLiveResults } from "@/components/MobileLiveResults";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { getCalendarPageData, getTodayCalendarItems } from "@/lib/calendar-view";
+import { getCalendarPageData, getMobileMatchFeed, getTodayCalendarItems } from "@/lib/calendar-view";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
@@ -73,7 +74,7 @@ function InstitutionalPartnerCard({ partner, className, interactive = true }: { 
 
 export default async function HomePage() {
   const now = new Date();
-  const [allNews, settings, featuredPartners, calendar, todayCalendarItems] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData(), getTodayCalendarItems(now)]);
+  const [allNews, settings, featuredPartners, calendar, todayCalendarItems, mobileMatchFeed] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData(), getTodayCalendarItems(now), getMobileMatchFeed()]);
   const institutionalPartners = getInstitutionalPartners(featuredPartners);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
@@ -110,6 +111,7 @@ export default async function HomePage() {
         </div>
 
         <MobileDailyProgram items={todayCalendarItems} now={now} />
+        <MobileLiveResults live={mobileMatchFeed.live} results={mobileMatchFeed.results} />
       </section>
 
       <div className="hidden xl:block">
@@ -149,7 +151,7 @@ export default async function HomePage() {
 
       </div>
 
-      <section className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:pb-14 xl:pt-0">
+      <section className="mx-auto hidden max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:block xl:pb-14 xl:pt-0">
         <div className="relative isolate overflow-hidden rounded-3xl border border-[#f7c600]/20 text-white shadow-[0_30px_70px_rgba(0,18,11,0.45)]">
           <Image src={images.youthTeam} alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
           {/* Overlays : profondeur + lisibilité */}
@@ -183,7 +185,13 @@ export default async function HomePage() {
 
       {gridNews.length > 0 ? (
         <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 xl:py-14">
-          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <Link
+            href="/actualites"
+            className="focus-ring mb-5 inline-flex items-center gap-2 text-sm font-black uppercase tracking-[0.14em] text-[#664d00] transition hover:text-[#002f1d] xl:hidden"
+          >
+            Actualités <ArrowRight size={18} aria-hidden="true" />
+          </Link>
+          <div className="mb-8 hidden flex-col gap-4 xl:flex xl:flex-row xl:items-end xl:justify-between">
             <SectionTitle eyebrow="Actualités" title="Dernières actualités" text="Résultats, stages, détections et temps forts : toute la vie du club." />
             <div className="pb-2">
               <ButtonLink href="/actualites" variant="dark">Voir toutes les actualités</ButtonLink>

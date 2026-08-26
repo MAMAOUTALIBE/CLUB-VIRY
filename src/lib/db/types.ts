@@ -235,6 +235,7 @@ export type Match = {
   status: MatchStatus;
   home_score: number | null;
   away_score: number | null;
+  live_minute: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;

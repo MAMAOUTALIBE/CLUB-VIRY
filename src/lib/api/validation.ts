@@ -179,6 +179,7 @@ export type AdminMatchPayload = {
   status?: "SCHEDULED" | "LIVE" | "FINISHED" | "POSTPONED" | "CANCELLED";
   homeScore?: number;
   awayScore?: number;
+  liveMinute?: number | null;
   notes?: string;
 };
 
@@ -2580,6 +2581,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   const status = normalizeString(body.status);
   const homeScore = typeof body.homeScore === "number" ? body.homeScore : undefined;
   const awayScore = typeof body.awayScore === "number" ? body.awayScore : undefined;
+  const liveMinute = body.liveMinute === null ? null : typeof body.liveMinute === "number" ? body.liveMinute : undefined;
   const notes = normalizeString(body.notes);
 
   if (teamId && !isUuid(teamId)) {
@@ -2622,6 +2624,10 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
     issues.push({ field: "awayScore", message: "Score exterieur invalide." });
   }
 
+  if (liveMinute !== undefined && liveMinute !== null && (!Number.isInteger(liveMinute) || liveMinute < 0 || liveMinute > 130)) {
+    issues.push({ field: "liveMinute", message: "Minute de direct invalide." });
+  }
+
   if (notes && notes.length > 1000) {
     issues.push({ field: "notes", message: "Notes trop longues." });
   }
@@ -2648,6 +2654,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
       ...(status ? { status: status as AdminMatchPayload["status"] } : {}),
       ...(homeScore !== undefined ? { homeScore } : {}),
       ...(awayScore !== undefined ? { awayScore } : {}),
+      ...(liveMinute !== undefined ? { liveMinute } : {}),
       ...(notes ? { notes } : {})
     }
   };

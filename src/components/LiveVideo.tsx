@@ -44,12 +44,12 @@ export function LiveVideo() {
   };
 
   return (
-    <div className="club-shell relative overflow-hidden rounded-2xl border border-[#f7c600]/25 text-white shadow-[0_30px_70px_rgba(0,18,11,0.4)]">
-      <div className="relative aspect-video w-full bg-black">
+    <div className="club-shell relative shrink-0 overflow-hidden rounded-2xl border border-[#f7c600]/25 text-white shadow-[0_30px_70px_rgba(0,18,11,0.4)]">
+      <div className="relative h-[20rem] w-full shrink-0 bg-black sm:h-[28rem] xl:h-auto xl:aspect-video">
         <video
           key={MATCH_CLIPS[activeClip].src}
           ref={videoRef}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain xl:object-cover"
           src={MATCH_CLIPS[activeClip].src}
           poster="/matches/match-direct-poster.jpg"
           autoPlay

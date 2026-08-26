@@ -16,6 +16,38 @@ export type PublicCalendarPayload = {
   matches: Match[];
 };
 
+export type PublicHomeMatchRow = Match & {
+  teams: { name: string } | null;
+};
+
+/** Exact CRM source for the mobile live/results block. No public fallback. */
+export async function listPublicHomeMatches(): Promise<PublicHomeMatchRow[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("matches")
+    .select("*, teams(name)")
+    .is("deleted_at", null)
+    .in("status", ["LIVE", "FINISHED"])
+    .order("starts_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw new Error(`Unable to fetch home live matches: ${error.message}`);
+  return (data ?? []) as PublicHomeMatchRow[];
+}
+
+/** A match is public when it is present and not soft-deleted: the current
+ * matches schema has no draft/publication column. */
+export async function getPublicMatchById(id: string): Promise<PublicHomeMatchRow | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("matches")
+    .select("*, teams(name)")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) throw new Error(`Unable to fetch public match: ${error.message}`);
+  return (data as PublicHomeMatchRow | null) ?? null;
+}
+
 type DateRangeQuery = {
   gte: (column: string, value: string) => DateRangeQuery;
   lte: (column: string, value: string) => DateRangeQuery;

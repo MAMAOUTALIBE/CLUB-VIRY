@@ -28,6 +28,8 @@ export type CrudField = {
   payloadKey?: string | false;
   /** Transforme la valeur saisie avant envoi (ex: euros -> centimes). */
   toPayload?: (raw: string) => unknown;
+  /** Valeur explicitement envoyée à l'édition lorsque le champ est vidé. */
+  emptyEditPayload?: unknown;
   /** Calcule la valeur initiale du champ lors de l'édition (ex: centimes -> euros). */
   fromRowValue?: (row: Row) => string;
   /** Endpoint multipart pour les champs fichier. Doit retourner data[uploadResponseKey]. */
@@ -399,6 +401,8 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
       const v = raw?.trim?.() ?? raw;
       if (v !== "" && v !== undefined) {
         payload[key] = f.toPayload ? f.toPayload(v) : f.type === "number" ? Number(v) : v;
+      } else if (editing && f.emptyEditPayload !== undefined) {
+        payload[key] = f.emptyEditPayload;
       }
     }
     const id = editing && editing[idField];

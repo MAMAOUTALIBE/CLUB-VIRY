@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       action: "match.created",
       entityType: "matches",
       entityId: match.id,
-      metadata: { opponentName: match.opponent_name, startsAt: match.starts_at }
+      metadata: { opponentName: match.opponent_name, startsAt: match.starts_at, liveMinute: match.live_minute }
     });
 
     return jsonOk({ match }, 201);

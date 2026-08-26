@@ -1,7 +1,8 @@
 import { matches as fallbackMatches } from "./data";
-import { listPublicCalendar, listPublicCalendarRangeExact } from "./db/calendar";
+import { listPublicCalendar, listPublicCalendarRangeExact, listPublicHomeMatches } from "./db/calendar";
 import type { ClubEvent, ClubEventStatus, ClubEventType, Match, MatchLocation, MatchStatus } from "./db/types";
 import { readPublicDb } from "./public-db";
+import { selectMobileMatchFeed } from "./mobile-match-feed";
 
 export type CalendarDisplayItem = {
   id: string;
@@ -232,4 +233,10 @@ export async function getTodayCalendarItems(now = new Date()): Promise<CalendarD
   const to = new Date(now.getTime() + 36 * 60 * 60 * 1000).toISOString();
   const calendar = await readPublicDb(() => listPublicCalendarRangeExact(from, to));
   return calendar ? calendarApiToItems(calendar, { strictNoFallback: true }) : [];
+}
+
+/** Mobile/tablet only: exact CRM data, deliberately empty when DB is unavailable. */
+export async function getMobileMatchFeed() {
+  const rows = await readPublicDb(() => listPublicHomeMatches());
+  return selectMobileMatchFeed(rows ?? []);
 }

@@ -1,6 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { AdminCrud } from "@/components/admin/AdminCrud";
+import type { CrudField } from "@/components/admin/AdminCrud";
+
+type TeamOption = { id: string; name: string };
 
 function fmtDateTime(value: unknown): string {
   if (typeof value !== "string" || !value) return "—";
@@ -43,6 +47,34 @@ const EVENT_STATUS = [
 ];
 
 export function CalendarAdmin() {
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(async () => {
+      const response = await fetch("/api/admin/teams?limit=200", { credentials: "same-origin" }).catch(() => null);
+      const json = response ? await response.json().catch(() => null) : null;
+      if (json?.ok && Array.isArray(json.data?.teams)) {
+        setTeams(json.data.teams.map((team: TeamOption) => ({ id: team.id, name: team.name })));
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const matchFields: CrudField[] = [
+    { name: "teamId", label: "Équipe / catégorie", type: "select", rowKey: "team_id", required: true, options: [{ value: "", label: "— Choisir une équipe —" }, ...teams.map((team) => ({ value: team.id, label: team.name }))], help: "Obligatoire pour publier la catégorie et le nom du club sans donnée inventée." },
+    { name: "opponentName", label: "Adversaire", required: true, rowKey: "opponent_name", placeholder: "FC Massy" },
+    { name: "opponentLogoUrl", label: "Logo de l’adversaire (URL)", type: "url", rowKey: "opponent_logo_url", emptyEditPayload: null, help: "Optionnel. Aucun logo de remplacement n’est généré." },
+    { name: "location", label: "Lieu", type: "select", options: LOCATION },
+    { name: "startsAt", label: "Date et heure", type: "datetime", required: true, rowKey: "starts_at" },
+    { name: "venue", label: "Stade", placeholder: "Stade Henri Longuet" },
+    { name: "competition", label: "Compétition", placeholder: "Championnat D1" },
+    { name: "status", label: "Statut", type: "select", options: MATCH_STATUS },
+    { name: "homeScore", label: "Score domicile", type: "number", rowKey: "home_score" },
+    { name: "awayScore", label: "Score extérieur", type: "number", rowKey: "away_score" },
+    { name: "liveMinute", label: "Minute du direct", type: "number", rowKey: "live_minute", placeholder: "67", emptyEditPayload: null, help: "Saisie réelle uniquement ; laissez vide hors direct." },
+    { name: "notes", label: "Notes", type: "textarea" }
+  ];
+
   return (
     <div className="grid gap-6">
       <AdminCrud
@@ -57,23 +89,14 @@ export function CalendarAdmin() {
         allowBulkDelete
         deleteMode="soft"
         rowLabel={(r) => `le match contre « ${String(r.opponent_name ?? "cet adversaire")} »`}
-        fields={[
-          { name: "opponentName", label: "Adversaire", required: true, rowKey: "opponent_name", placeholder: "FC Massy" },
-          { name: "location", label: "Lieu", type: "select", options: LOCATION },
-          { name: "startsAt", label: "Date et heure", type: "datetime", required: true, rowKey: "starts_at" },
-          { name: "venue", label: "Stade", placeholder: "Stade Henri Longuet" },
-          { name: "competition", label: "Compétition", placeholder: "Championnat D1" },
-          { name: "status", label: "Statut", type: "select", options: MATCH_STATUS },
-          { name: "homeScore", label: "Score domicile", type: "number", rowKey: "home_score" },
-          { name: "awayScore", label: "Score extérieur", type: "number", rowKey: "away_score" },
-          { name: "notes", label: "Notes", type: "textarea" }
-        ]}
+        fields={matchFields}
         columns={[
           { label: "Adversaire", render: (r) => <span className="font-bold text-[#002f1d]">{String(r.opponent_name ?? "—")}</span> },
           { label: "Date", render: (r) => fmtDateTime(r.starts_at) },
           { label: "Lieu", render: (r) => LOCATION.find((l) => l.value === r.location)?.label ?? String(r.location ?? "—") },
           { label: "Statut", render: (r) => MATCH_STATUS.find((s) => s.value === r.status)?.label ?? String(r.status ?? "—") },
-          { label: "Score", render: (r) => (r.home_score != null && r.away_score != null ? `${r.home_score} - ${r.away_score}` : "—") }
+          { label: "Score", render: (r) => (r.home_score != null && r.away_score != null ? `${r.home_score} - ${r.away_score}` : "—") },
+          { label: "Direct", render: (r) => (r.status === "LIVE" && r.live_minute != null ? `${r.live_minute}’` : "—") }
         ]}
       />
 

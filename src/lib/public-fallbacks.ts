@@ -72,6 +72,7 @@ export function getFallbackMatches(limit = 20): Match[] {
     status: "SCHEDULED",
     home_score: null,
     away_score: null,
+    live_minute: null,
     notes: null,
     created_at: now,
     updated_at: now
@@ -99,6 +100,7 @@ export function getFallbackRecentResults(): Match[] {
     status: "FINISHED",
     home_score: homeScore,
     away_score: awayScore,
+    live_minute: null,
     notes: null,
     created_at: now,
     updated_at: now

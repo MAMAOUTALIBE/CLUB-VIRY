@@ -505,6 +505,17 @@ test("admin match validation accepts a scheduled match", () => {
   assert.equal(result.ok, true);
 });
 
+test("admin match validation accepte et borne la minute de direct CRM", () => {
+  const accepted = validateAdminMatchPayload({ liveMinute: 67 }, { partial: true });
+  const cleared = validateAdminMatchPayload({ liveMinute: null }, { partial: true });
+  const rejected = validateAdminMatchPayload({ liveMinute: 131 }, { partial: true });
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.data.liveMinute, 67);
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.data.liveMinute, null);
+  assert.equal(rejected.ok, false);
+});
+
 test("admin event validation rejects inverted dates", () => {
   const result = validateAdminEventPayload({
     title: "Reunion educateurs",

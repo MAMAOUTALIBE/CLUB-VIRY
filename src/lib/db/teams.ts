@@ -52,6 +52,7 @@ function matchPayloadToRow(input: AdminMatchPayload) {
     ...(input.status ? { status: input.status } : {}),
     ...(input.homeScore !== undefined ? { home_score: input.homeScore } : {}),
     ...(input.awayScore !== undefined ? { away_score: input.awayScore } : {}),
+    ...(input.liveMinute !== undefined ? { live_minute: input.liveMinute } : {}),
     ...(input.notes !== undefined ? { notes: input.notes ?? null } : {})
   };
 }

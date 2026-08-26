@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       action: "match.updated",
       entityType: "matches",
       entityId: match.id,
-      metadata: { opponentName: match.opponent_name, status: match.status }
+      metadata: { opponentName: match.opponent_name, status: match.status, liveMinute: match.live_minute }
     });
 
     return jsonOk({ match });
