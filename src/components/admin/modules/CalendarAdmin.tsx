@@ -37,6 +37,10 @@ const VISIBILITY = [
   { value: "MEMBERS", label: "Membres" },
   { value: "STAFF", label: "Staff" }
 ];
+const EVENT_STATUS = [
+  { value: "SCHEDULED", label: "Programmé" },
+  { value: "CANCELLED", label: "Annulé" }
+];
 
 export function CalendarAdmin() {
   return (
@@ -75,7 +79,7 @@ export function CalendarAdmin() {
 
       <AdminCrud
         title="Événements"
-        description="Tournois, stages, réunions, échéances… Les événements en visibilité « Public » apparaissent sur le calendrier du site."
+        description="Tournois, stages, réunions, échéances et entraînements saisis ici alimentent le calendrier public. Une séance publique de type « Entraînement » alimente aussi le Programme du jour mobile."
         endpoint="/api/admin/calendar/events"
         listKey="events"
         itemKey="event"
@@ -91,13 +95,15 @@ export function CalendarAdmin() {
           { name: "endsAt", label: "Fin", type: "datetime", rowKey: "ends_at" },
           { name: "venue", label: "Lieu", placeholder: "Stade Henri Longuet" },
           { name: "visibility", label: "Visibilité", type: "select", options: VISIBILITY },
+          { name: "status", label: "Statut", type: "select", options: EVENT_STATUS },
           { name: "description", label: "Description", type: "textarea" }
         ]}
         columns={[
           { label: "Titre", render: (r) => <span className="font-bold text-[#002f1d]">{String(r.title ?? "—")}</span> },
           { label: "Type", render: (r) => EVENT_TYPE.find((t) => t.value === r.type)?.label ?? String(r.type ?? "—") },
           { label: "Début", render: (r) => fmtDateTime(r.starts_at) },
-          { label: "Visibilité", render: (r) => VISIBILITY.find((v) => v.value === r.visibility)?.label ?? String(r.visibility ?? "—") }
+          { label: "Visibilité", render: (r) => VISIBILITY.find((v) => v.value === r.visibility)?.label ?? String(r.visibility ?? "—") },
+          { label: "Statut", render: (r) => EVENT_STATUS.find((v) => v.value === r.status)?.label ?? String(r.status ?? "—") }
         ]}
       />
     </div>

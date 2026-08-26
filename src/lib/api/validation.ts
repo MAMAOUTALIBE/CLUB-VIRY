@@ -191,6 +191,7 @@ export type AdminEventPayload = {
   venue?: string;
   description?: string;
   visibility?: "PUBLIC" | "MEMBERS" | "STAFF";
+  status?: "SCHEDULED" | "CANCELLED";
   isFeatured?: boolean;
 };
 
@@ -1370,6 +1371,10 @@ function isClubEventType(value: unknown): value is NonNullable<AdminEventPayload
 
 function isClubEventVisibility(value: unknown): value is NonNullable<AdminEventPayload["visibility"]> {
   return value === "PUBLIC" || value === "MEMBERS" || value === "STAFF";
+}
+
+function isClubEventStatus(value: unknown): value is NonNullable<AdminEventPayload["status"]> {
+  return value === "SCHEDULED" || value === "CANCELLED";
 }
 
 function isCategoryGender(value: unknown): value is NonNullable<AdminTeamPayload["gender"]> {
@@ -2664,6 +2669,7 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
   const venue = normalizeString(body.venue);
   const description = normalizeString(body.description);
   const visibility = normalizeString(body.visibility);
+  const status = normalizeString(body.status);
   const isFeatured = typeof body.isFeatured === "boolean" ? body.isFeatured : undefined;
 
   if (teamId && !isUuid(teamId)) {
@@ -2710,6 +2716,10 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
     issues.push({ field: "visibility", message: "Visibilite evenement invalide." });
   }
 
+  if (status && !isClubEventStatus(status)) {
+    issues.push({ field: "status", message: "Statut evenement invalide." });
+  }
+
   if (options.partial && Object.keys(body).length === 0) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
   }
@@ -2729,6 +2739,7 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
       ...(venue ? { venue } : {}),
       ...(description ? { description } : {}),
       ...(visibility ? { visibility: visibility as AdminEventPayload["visibility"] } : {}),
+      ...(status ? { status: status as AdminEventPayload["status"] } : {}),
       ...(isFeatured !== undefined ? { isFeatured } : {})
     }
   };

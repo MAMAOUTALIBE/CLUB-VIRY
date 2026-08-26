@@ -31,6 +31,7 @@ function eventPayloadToRow(input: AdminEventPayload, actorId?: string) {
     ...(input.venue !== undefined ? { venue: input.venue ?? null } : {}),
     ...(input.description !== undefined ? { description: input.description ?? null } : {}),
     ...(input.visibility ? { visibility: input.visibility } : {}),
+    ...(input.status ? { status: input.status } : {}),
     ...(input.isFeatured !== undefined ? { is_featured: input.isFeatured } : {}),
     ...(actorId ? { created_by: actorId } : {})
   };
@@ -104,6 +105,7 @@ export async function createEvent(input: AdminEventPayload, actorId: string): Pr
       ...eventPayloadToRow(input, actorId),
       type: input.type ?? "CLUB_EVENT",
       visibility: input.visibility ?? "PUBLIC",
+      status: input.status ?? "SCHEDULED",
       is_featured: input.isFeatured ?? false
     })
     .select("*")

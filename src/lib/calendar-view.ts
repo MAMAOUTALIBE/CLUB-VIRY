@@ -1,6 +1,6 @@
 import { matches as fallbackMatches } from "./data";
-import { listPublicCalendar } from "./db/calendar";
-import type { ClubEvent, ClubEventType, Match, MatchLocation, MatchStatus } from "./db/types";
+import { listPublicCalendar, listPublicCalendarRangeExact } from "./db/calendar";
+import type { ClubEvent, ClubEventStatus, ClubEventType, Match, MatchLocation, MatchStatus } from "./db/types";
 import { readPublicDb } from "./public-db";
 
 export type CalendarDisplayItem = {
@@ -12,10 +12,11 @@ export type CalendarDisplayItem = {
   away?: string;
   dateLabel: string;
   timeLabel: string;
-  place: string;
+  place?: string;
   dayOfMonth?: number;
   startsAt?: string;
-  status?: MatchStatus;
+  status?: MatchStatus | ClubEventStatus;
+  eventType?: ClubEventType;
   location?: MatchLocation;
   homeScore?: number | null;
   awayScore?: number | null;
@@ -62,6 +63,7 @@ const monthFormatter = new Intl.DateTimeFormat("fr-FR", {
 });
 
 const timeFormatter = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: "Europe/Paris",
   hour: "2-digit",
   minute: "2-digit"
 });
@@ -110,7 +112,7 @@ function getMatchTeams(location: MatchLocation, opponentName: string) {
   return { home: clubName, away: opponentName };
 }
 
-export function calendarApiToItems(data: { events?: ClubEvent[]; matches?: Match[] }): CalendarDisplayItem[] {
+export function calendarApiToItems(data: { events?: ClubEvent[]; matches?: Match[] }, options: { strictNoFallback?: boolean } = {}): CalendarDisplayItem[] {
   const matchItems = (data.matches ?? []).map((match): CalendarDisplayItem => {
     const teams = getMatchTeams(match.location, match.opponent_name);
     const date = readDate(match.starts_at);
@@ -124,7 +126,7 @@ export function calendarApiToItems(data: { events?: ClubEvent[]; matches?: Match
       away: teams.away,
       dateLabel: formatDateLabel(match.starts_at),
       timeLabel: formatTimeLabel(match.starts_at),
-      place: match.venue ?? "Lieu à confirmer",
+      place: options.strictNoFallback ? match.venue ?? undefined : match.venue ?? "Lieu à confirmer",
       dayOfMonth: date?.getDate(),
       startsAt: match.starts_at
       ,status: match.status
@@ -144,9 +146,11 @@ export function calendarApiToItems(data: { events?: ClubEvent[]; matches?: Match
       title: event.title,
       dateLabel: formatDateLabel(event.starts_at),
       timeLabel: formatTimeLabel(event.starts_at),
-      place: event.venue ?? "Lieu à confirmer",
+      place: options.strictNoFallback ? event.venue ?? undefined : event.venue ?? "Lieu à confirmer",
       dayOfMonth: date?.getDate(),
-      startsAt: event.starts_at
+      startsAt: event.starts_at,
+      eventType: event.type,
+      status: event.status
     };
   });
 
@@ -216,4 +220,16 @@ export async function getCalendarPageData(): Promise<CalendarPageData> {
   }
 
   return buildCalendarPageData([], true);
+}
+
+/** Public CRM source for the mobile/tablet daily program.
+ * Trainings are PUBLIC club_events whose persisted type is TRAINING. The
+ * educator-only training_sessions table is intentionally excluded because it
+ * has no public visibility contract and must not be exposed or duplicated.
+ */
+export async function getTodayCalendarItems(now = new Date()): Promise<CalendarDisplayItem[]> {
+  const from = new Date(now.getTime() - 36 * 60 * 60 * 1000).toISOString();
+  const to = new Date(now.getTime() + 36 * 60 * 60 * 1000).toISOString();
+  const calendar = await readPublicDb(() => listPublicCalendarRangeExact(from, to));
+  return calendar ? calendarApiToItems(calendar, { strictNoFallback: true }) : [];
 }

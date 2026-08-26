@@ -10,6 +10,7 @@ export type MatchStatus = "SCHEDULED" | "LIVE" | "FINISHED" | "POSTPONED" | "CAN
 export type MatchLocation = "HOME" | "AWAY" | "NEUTRAL";
 export type ClubEventType = "TRAINING" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
 export type ClubEventVisibility = "PUBLIC" | "MEMBERS" | "STAFF";
+export type ClubEventStatus = "SCHEDULED" | "CANCELLED";
 export type PublicationStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 export type MediaType = "PHOTO" | "VIDEO";
 export type RequestStatus = "PENDING" | "CONTACTED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
@@ -249,6 +250,7 @@ export type ClubEvent = {
   venue: string | null;
   description: string | null;
   visibility: ClubEventVisibility;
+  status: ClubEventStatus;
   is_featured: boolean;
   created_by: string | null;
   created_at: string;

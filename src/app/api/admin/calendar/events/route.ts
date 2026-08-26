@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         title: event.title,
         startsAt: event.starts_at,
-        visibility: event.visibility
+        visibility: event.visibility,
+        status: event.status
       }
     });
 

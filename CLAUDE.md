@@ -90,3 +90,13 @@ Production is **vitrine mode**, Docker + Traefik on a VPS, domain `esvirychatill
 The base `docker-compose.yml` only attaches Traefik labels — it assumes an **external Traefik already running**. The reverse-proxy itself lives in `infra/traefik/docker-compose.traefik.yml` (Traefik v3, ports 80/443, Let's Encrypt TLS-ALPN via `letsencrypt` resolver, joins the `esviry-net` network). For a **from-scratch VPS** (e.g. fresh Hostinger): `scripts/provision-vps.sh` bootstraps Docker + UFW, then follow `docs/deploiement-hostinger.md` end-to-end (DNS → Supabase Cloud → first manual `up` → start Traefik → smoke test). CRM env template: `.env.production.crm.example`. First bring-up is manual (the site must create `esviry-net` before Traefik starts, and `deploy.sh`'s HTTPS smoke test needs Traefik live); `deploy.sh` is for updates thereafter.
 
 **Actual live production (VPS `srv1768778`, `213.130.144.215`)** does NOT use Traefik. That VPS already runs a native **nginx** (ports 80/443 + certbot) serving another site (`lodene.org`), so the club site is co-hosted **behind that nginx**: the container is published to `127.0.0.1:8090` (override `docker-compose.nginx.yml`), nginx reverse-proxies a dedicated vhost (`infra/nginx/esvirychatillonfootball.org.conf`) to it, and HTTPS is certbot (auto-renew). Currently **vitrine mode**. Update the live site with `scripts/deploy-nginx-vps.sh` (NOT `deploy.sh`) — see `docs/maj-site-en-ligne.md`. Never run `provision-vps.sh` there (it would enable UFW on port 22 and disrupt nginx/lodene).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -5,13 +5,14 @@ import test from "node:test";
 const homeSource = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
 const hubSource = await readFile(new URL("../src/components/HomeSportsHub.tsx", import.meta.url), "utf8");
 
-test("every responsive home layout passes the three calendar data sets", () => {
+test("desktop keeps its sports hub and mobile uses the daily CRM program", () => {
   const homeHubCalls = homeSource.match(/<HomeSportsHub[^>]+\/>/g) ?? [];
 
-  assert.equal(homeHubCalls.length, 2);
+  assert.equal(homeHubCalls.length, 1);
   assert.ok(homeHubCalls.every((call) => call.includes("matches={sportsMatches}")));
   assert.ok(homeHubCalls.every((call) => call.includes("results={calendar.isFallback ? undefined : sportsResults}")));
   assert.ok(homeHubCalls.every((call) => !call.includes("showRecap")));
+  assert.match(homeSource, /<MobileDailyProgram items=\{todayCalendarItems\} now=\{now\}/);
 });
 
 test("the sports hub exposes three exclusive accessible calendars with training selected by default", () => {

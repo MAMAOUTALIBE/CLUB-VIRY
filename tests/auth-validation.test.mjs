@@ -524,10 +524,20 @@ test("admin event validation accepts a public club event", () => {
     endsAt: "2026-09-05T16:00:00.000Z",
     venue: "Stade Henri Longuet",
     visibility: "PUBLIC",
+    status: "SCHEDULED",
     isFeatured: true
   });
 
   assert.equal(result.ok, true);
+  assert.equal(result.data.status, "SCHEDULED");
+});
+
+test("admin event validation persists cancellations and rejects unknown statuses", () => {
+  const cancelled = validateAdminEventPayload({ status: "CANCELLED" }, { partial: true });
+  const unknown = validateAdminEventPayload({ status: "FINISHED" }, { partial: true });
+  assert.equal(cancelled.ok, true);
+  assert.equal(cancelled.data.status, "CANCELLED");
+  assert.equal(unknown.ok, false);
 });
 
 test("admin team validation rejects invalid slugs", () => {

@@ -4,9 +4,10 @@ import { ArrowRight, ArrowUpRight, CalendarDays, Clock, MapPin, Sparkles, Ticket
 import { ButtonLink } from "@/components/ButtonLink";
 import { HomeHeroCarousel } from "@/components/HomeHeroCarousel";
 import { HomeSportsHub } from "@/components/HomeSportsHub";
+import { MobileDailyProgram } from "@/components/MobileDailyProgram";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
-import { getCalendarPageData } from "@/lib/calendar-view";
+import { getCalendarPageData, getTodayCalendarItems } from "@/lib/calendar-view";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getPartnerLogo } from "@/lib/partner-logos";
@@ -71,7 +72,8 @@ function InstitutionalPartnerCard({ partner, className, interactive = true }: { 
 }
 
 export default async function HomePage() {
-  const [allNews, settings, featuredPartners, calendar] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData()]);
+  const now = new Date();
+  const [allNews, settings, featuredPartners, calendar, todayCalendarItems] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData(), getTodayCalendarItems(now)]);
   const institutionalPartners = getInstitutionalPartners(featuredPartners);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
@@ -84,12 +86,12 @@ export default async function HomePage() {
     .filter((item) => item.kind === "match" && item.status !== "FINISHED" && item.status !== "CANCELLED")
     .slice(0, 3)
     .map((item) => ({ team: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", date: item.dateLabel, time: item.timeLabel, place: item.place }));
-  const sportsMatches: UpcomingMatch[] = homeMatches.map((match) => ({ category: match.team, home: match.home, away: match.away, date: match.date, time: match.time, venue: match.place }));
+  const sportsMatches: UpcomingMatch[] = homeMatches.map((match) => ({ category: match.team, home: match.home, away: match.away, date: match.date, time: match.time, venue: match.place ?? "" }));
   const sportsResults: RecentResult[] = calendar.items
     .filter((item) => item.kind === "match" && item.status === "FINISHED" && item.homeScore != null && item.awayScore != null)
     .slice(-3)
     .reverse()
-    .map((item) => ({ category: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", homeScore: item.homeScore as number, awayScore: item.awayScore as number, date: item.dateLabel, venue: item.place }));
+    .map((item) => ({ category: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", homeScore: item.homeScore as number, awayScore: item.awayScore as number, date: item.dateLabel, venue: item.place ?? "" }));
   const isClub = (name: string) => name.toLowerCase().includes("viry");
   const shortTeam = (name: string) => (isClub(name) ? "ES Viry" : name);
   const teamInitials = (name: string) => name.replace(/^ES\s+/i, "").split(/[\s-]+/).filter(Boolean).map((word) => word[0]).join("").slice(0, 3).toUpperCase();
@@ -107,7 +109,7 @@ export default async function HomePage() {
           <HomeHeroCarousel slides={heroSlides} variant="mobile" />
         </div>
 
-        <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} />
+        <MobileDailyProgram items={todayCalendarItems} now={now} />
       </section>
 
       <div className="hidden xl:block">

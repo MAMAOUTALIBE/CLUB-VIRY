@@ -50,7 +50,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       metadata: {
         title: event.title,
         startsAt: event.starts_at,
-        visibility: event.visibility
+        visibility: event.visibility,
+        status: event.status
       }
     });
 
