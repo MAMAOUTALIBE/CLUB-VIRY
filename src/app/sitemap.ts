@@ -2,12 +2,15 @@ import type { MetadataRoute } from "next";
 
 import { getClubOfficials, getPublicEducators, getPublicNews, getPublicTeams } from "@/lib/public-content";
 
-// Le plan de site lit la base (actualités, équipes, dirigeants, éducateurs). Sans
-// `revalidate`, Next.js le fige au BUILD — or l'image Docker est construite hors du
-// réseau Supabase, donc le rendu de build ne voit QUE les données de repli. Résultat :
-// un sitemap mocké servi un an (s-maxage=31536000). On le régénère donc toutes les
-// heures côté serveur, où la base est bien joignable.
-export const revalidate = 3600;
+// Le plan de site lit la base (actualités, équipes, dirigeants, éducateurs). Or
+// l'image Docker est construite hors du réseau Supabase : le rendu de build ne voit
+// QUE les données de repli, et sitemap.ts est « a special Route Handler that is cached
+// by default unless it uses a Request-time API or dynamic config option ». Un simple
+// `revalidate` n'a pas suffi (la réponse restait un HIT permanent, lastmod figé à
+// l'heure du build) : il faut la config dynamique. Le coût reste marginal — un plan de
+// site n'est lu que par les robots, et readPublicDb borne déjà chaque lecture à 1,2 s
+// avec repli sur les routes statiques.
+export const dynamic = "force-dynamic";
 
 // Pages publiques indexables. Les zones privées (/admin, /espace-membre, /espace-educateur)
 // sont volontairement EXCLUES : elles ne doivent pas être indexées.
