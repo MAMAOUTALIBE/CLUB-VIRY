@@ -1,7 +1,7 @@
 import { ArrowRight, CalendarDays, ChevronRight, Clock, MapPin, Shield, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-import { DesktopOnly, MobileCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
+import { DesktopOnly, MobileCard, MobileLinkCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -59,20 +59,34 @@ export default async function CalendarPage() {
             <p className="mt-1 text-sm font-semibold text-slate-600">{calendar.featured.place}</p>
           </MobileCard>
           <MobileScrollableList>
-            {mobileItems.map((item) => (
-              <MobileCard key={item.id}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-black uppercase text-[#664d00]">{item.eyebrow}</p>
-                    <h2 className="mt-1 text-base font-black uppercase text-[#002f1d]">{item.title}</h2>
+            {mobileItems.map((item) => {
+              const detailHref = item.kind === "match" && isUuid(item.id) ? `/matchs/${item.id}` : null;
+              const card = (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase text-[#664d00]">{item.eyebrow}</p>
+                      <h2 className="mt-1 text-base font-black uppercase text-[#002f1d]">{item.title}</h2>
+                    </div>
+                    <span className="shrink-0 text-right text-xs font-black uppercase text-slate-600">{item.dateLabel}</span>
                   </div>
-                  <span className="shrink-0 text-right text-xs font-black uppercase text-slate-600">{item.dateLabel}</span>
-                </div>
-                <p className="mt-2 text-sm font-semibold text-slate-700">
-                  {item.timeLabel} · {item.place}
-                </p>
-              </MobileCard>
-            ))}
+                  <p className="mt-2 text-sm font-semibold text-slate-700">
+                    {item.timeLabel} · {item.place}
+                  </p>
+                  {detailHref ? (
+                    <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase text-[#07542f]">
+                      Voir le match <ArrowRight size={13} aria-hidden="true" />
+                    </span>
+                  ) : null}
+                </>
+              );
+
+              return detailHref ? (
+                <MobileLinkCard href={detailHref} key={item.id}>{card}</MobileLinkCard>
+              ) : (
+                <MobileCard key={item.id}>{card}</MobileCard>
+              );
+            })}
           </MobileScrollableList>
         </div>
       </MobileScreen>

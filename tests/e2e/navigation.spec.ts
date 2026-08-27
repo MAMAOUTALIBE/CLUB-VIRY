@@ -237,6 +237,21 @@ test.describe("Appels a l'action", () => {
     await expect(page).toHaveURL(/\/inscriptions$/);
   });
 
+  test("le calendrier et les résultats mènent à la fiche du match", async ({ page }) => {
+    // La fiche n'existe que si le CRM contient de vrais matchs : sans données
+    // exploitables, la carte reste volontairement non cliquable.
+    for (const route of ["/calendrier", "/resultats"]) {
+      await page.goto(route);
+      const link = page.locator('a[href^="/matchs/"]:visible').first();
+      if (!(await link.count())) continue;
+      await link.click();
+      await expect(page).toHaveURL(/\/matchs\/[0-9a-f-]{36}$/);
+      await expect(page.locator("h1:visible")).toHaveCount(1);
+      // Une seule région principale : le layout en fournit déjà une.
+      await expect(page.locator("main")).toHaveCount(1);
+    }
+  });
+
   test("les actualites sont accessibles a toutes les largeurs", async ({ page }) => {
     await page.goto("/");
     const firstArticle = page.locator('a[href^="/actualites/"]').first();
