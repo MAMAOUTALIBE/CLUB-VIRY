@@ -41,8 +41,17 @@ test("mappe HOME, AWAY et NEUTRAL uniquement depuis les noms CRM", () => {
   assert.deepEqual([neutral.home, neutral.away], ["Seniors A", "FC Massy"]);
 });
 
-test("exclut une entrée privée de relation équipe ou de nom adversaire", () => {
-  assert.deepEqual(selectMobileMatchFeed([row({ teams: null })]).results, []);
+test("retombe sur la compétition quand aucune équipe n'est rattachée", () => {
+  // Le CRM autorise un match sans équipe : le côté club prend alors le libellé de
+  // la compétition plutôt que de disparaître du site.
+  const [card] = selectMobileMatchFeed([row({ teams: null, competition: "U16 A" })]).results;
+  assert.equal(card.category, "U16 A");
+  assert.equal(card.home, "U16 A");
+});
+
+test("exclut une entrée sans aucun libellé exploitable", () => {
+  // Ni équipe ni compétition : rien à afficher côté club, on masque.
+  assert.deepEqual(selectMobileMatchFeed([row({ teams: null, competition: null })]).results, []);
   assert.deepEqual(selectMobileMatchFeed([row({ opponent_name: "" })]).results, []);
 });
 

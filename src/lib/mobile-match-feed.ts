@@ -28,7 +28,11 @@ export type MobileMatchCard = {
 export type MatchIdentity = Pick<MobileMatchCard, "category" | "home" | "away" | "homeLogoUrl" | "awayLogoUrl">;
 
 export function mapMatchIdentity(row: MobileMatchFeedRow): MatchIdentity | null {
-  const teamName = row.teams?.name.trim();
+  // Le CRM autorise un match sans équipe rattachée (import, saisie rapide). Dans ce
+  // cas on retombe sur la compétition — « U16 A », « Séniors A » — qui est déjà le
+  // libellé affiché ailleurs sur le site. Rien n'est inventé : sans l'un ni l'autre,
+  // le match reste masqué plutôt que d'afficher un côté club anonyme.
+  const teamName = row.teams?.name.trim() || row.competition?.trim();
   const opponentName = row.opponent_name.trim();
   if (!teamName || !opponentName) return null;
   const away = row.location === "AWAY";
