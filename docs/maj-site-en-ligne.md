@@ -13,7 +13,7 @@ Le site tourne sur le **VPS `srv1768778`** (`213.130.144.215`), **derrière le n
 | Conteneur | `es-viry-football`, publié sur **127.0.0.1:8090** (jamais exposé en direct) |
 | Reverse-proxy | **nginx hôte** → `proxy_pass 127.0.0.1:8090` ; vhost `/etc/nginx/sites-available/esvirychatillonfootball.org` |
 | HTTPS | certbot (Let's Encrypt), renouvellement auto |
-| Mode | **vitrine** (sans Supabase). Bascule CRM = remplir les clés Supabase dans `.env.local` puis rebuild |
+| Mode | **CRM** (Supabase auto-hébergé, joint via `http://kong:8000` sur le réseau `supabase_default`). Vérifier avec `/api/backend/health` |
 | Branche de prod | `main` |
 
 Se connecter à la main : `ssh -i ~/.ssh/esviry_deploy_ed25519 root@213.130.144.215`
@@ -68,7 +68,7 @@ D=esvirychatillonfootball.org
 curl -sI https://$D/ | head -1                       # 200
 curl -s -o /dev/null -w "%{http_code}\n" https://$D/equipes
 curl -s -o /dev/null -w "%{http_code}\n" http://$D/  # 301 -> https
-curl -fsS https://$D/api/backend/health              # publicSupabaseConfigured (false=vitrine)
+curl -fsS https://$D/api/backend/health              # doit renvoyer "mode":"crm"
 ```
 
 ---
@@ -81,7 +81,8 @@ curl -fsS https://$D/api/backend/health              # publicSupabaseConfigured 
 | Build « Killed » (OOM) | Peu probable (31 Go RAM). Sinon ajouter du swap. |
 | 502 Bad Gateway | Le conteneur est tombé. `docker compose -f docker-compose.nginx.yml up -d` puis vérifier `docker ps`. |
 | `git pull` bloqué par un fichier non suivi | Les artefacts de déploiement sont versionnés ; `git checkout -- . && git pull`. (Le script gère ce cas tout seul.) |
-| Demandes (leads) | En mode vitrine : `ls /opt/esviry/var/leads` puis `cat /opt/esviry/var/leads/*.jsonl`. |
+| Demandes (leads) | En mode CRM elles vont en base (CRM → Messages / Inscriptions). Le repli fichier reste lisible : `ls /opt/esviry/var/leads`. |
+| Contenu public figé après publication CRM | L'image est bâtie HORS du réseau Supabase : une page sans `revalidate` reste sur les données de repli. Vérifier `x-nextjs-cache` / `s-maxage` sur la page concernée. |
 | HTTPS / certificat | certbot renouvelle seul. Forcer : `certbot renew` ; état : `certbot certificates`. **Ne pas** toucher au vhost de `lodene.org`. |
 
 ---
@@ -93,11 +94,19 @@ curl -fsS https://$D/api/backend/health              # publicSupabaseConfigured 
 - variables **`NEXT_PUBLIC_*`** (URL, clés Supabase) → inlinées au **build** → il faut **rebuild**
   (`... build && ... up -d`). C'est le cas pour passer **vitrine → CRM**.
 
-## Passer en mode CRM (plus tard)
+## Le mode CRM (déjà en place — rappel de la procédure)
 
-1. Créer un projet **Supabase** (cloud), appliquer `supabase/migrations/*.sql` puis `seed.sql`.
+La bascule a déjà été faite : la production tourne en CRM sur un Supabase **auto-hébergé**
+sur le même VPS. Pour mémoire, ou pour rebrancher une autre instance :
+
+1. Appliquer `supabase/migrations/*.sql` puis `seed.sql` sur l'instance Supabase.
 2. Dans `/opt/esviry/.env.local`, renseigner `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 3. **Rebuild** : `./scripts/deploy-nginx-vps.sh` (ou `... build && ... up -d` sur le VPS).
 4. Vérifier : `curl -fsS https://esvirychatillonfootball.org/api/backend/health` doit montrer
-   `publicSupabaseConfigured:true`.
+   `"mode":"crm"`.
+
+> ⚠️ Le build Docker ne voit **pas** la base (`kong` n'existe qu'au runtime, et la clé service
+> role n'est pas un argument de build). Une page publique alimentée par le CRM doit donc
+> déclarer `revalidate` ou `dynamic = "force-dynamic"` — sinon elle est figée pour un an sur
+> les données de repli. Le test `tests/public-content-freshness.test.mjs` garde cette règle.
