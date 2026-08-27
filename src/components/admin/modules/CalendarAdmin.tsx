@@ -44,10 +44,17 @@ import {
   type PlanningKind
 } from "@/lib/planning-kanban";
 
-type TeamOption = { id: string; name: string };
+type TeamOption = { id: string; name: string; category_id: string | null };
+type CategoryOption = { id: string; name: string };
+type StaffOption = { id: string; name: string };
 type MatchRow = {
   id: string;
   team_id: string | null;
+  title: string | null;
+  category_id: string | null;
+  group_label: string | null;
+  pitch_code: "T1" | "T2" | "T3" | "T4" | null;
+  educator_id: string | null;
   opponent_name: string;
   opponent_logo_url: string | null;
   location: "HOME" | "AWAY" | "NEUTRAL";
@@ -61,10 +68,16 @@ type MatchRow = {
   live_minute: number | null;
   follow_url: string | null;
   notes: string | null;
+  visibility: "PUBLIC" | "MEMBERS" | "STAFF";
 };
 type EventRow = {
   id: string;
   team_id: string | null;
+  category_id: string | null;
+  group_label: string | null;
+  pitch_code: "T1" | "T2" | "T3" | "T4" | null;
+  opponent_name: string | null;
+  educator_id: string | null;
   title: string;
   type: "TRAINING" | "STAGE" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
   starts_at: string;
@@ -84,6 +97,11 @@ type PlanningItem = {
   endsAt: string | null;
   teamId: string | null;
   venue: string | null;
+  categoryId: string | null;
+  groupLabel: string | null;
+  pitchCode: MatchRow["pitch_code"];
+  educatorId: string | null;
+  visibility: EventRow["visibility"];
   cancelled: boolean;
   match?: MatchRow;
   event?: EventRow;
@@ -98,6 +116,10 @@ type EditorForm = {
   start: string;
   end: string;
   teamId: string;
+  categoryId: string;
+  groupLabel: string;
+  pitchCode: "" | NonNullable<MatchRow["pitch_code"]>;
+  educatorId: string;
   venue: string;
   description: string;
   competition: string;
@@ -107,6 +129,8 @@ type EditorForm = {
   awayScore: string;
   liveMinute: string;
   followUrl: string;
+  visibility: EventRow["visibility"];
+  eventStatus: EventRow["status"];
 };
 
 const KIND_META: Record<PlanningKind, { label: string; badge: string; dot: string }> = {
@@ -152,11 +176,16 @@ function itemFromMatch(row: MatchRow, teamName: string | null): PlanningItem {
     id: row.id,
     source: "match",
     kind: "MATCH",
-    title: `${teamName ?? "Équipe non renseignée"} vs ${row.opponent_name}`,
+    title: row.title ?? `${teamName ?? "Équipe non renseignée"} vs ${row.opponent_name}`,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     teamId: row.team_id,
-    venue: row.venue,
+    venue: row.pitch_code ?? row.venue,
+    categoryId: row.category_id,
+    groupLabel: row.group_label,
+    pitchCode: row.pitch_code,
+    educatorId: row.educator_id,
+    visibility: row.visibility,
     cancelled: row.status === "CANCELLED",
     match: row
   };
@@ -172,7 +201,12 @@ function itemFromEvent(row: EventRow): PlanningItem {
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     teamId: row.team_id,
-    venue: row.venue,
+    venue: row.pitch_code ?? row.venue,
+    categoryId: row.category_id,
+    groupLabel: row.group_label,
+    pitchCode: row.pitch_code,
+    educatorId: row.educator_id,
+    visibility: row.visibility,
     cancelled: row.status === "CANCELLED",
     event: row
   };
@@ -180,19 +214,23 @@ function itemFromEvent(row: EventRow): PlanningItem {
 
 function formFromEditor(editor: NonNullable<EditorState>): EditorForm {
   if (editor.mode === "create") {
-    return { kind: "TRAINING", title: "", opponentName: "", opponentLogoUrl: "", date: editor.date, start: "18:00", end: "19:30", teamId: "", venue: "", description: "", competition: "", location: "HOME", matchStatus: "SCHEDULED", homeScore: "", awayScore: "", liveMinute: "", followUrl: "" };
+    return { kind: "TRAINING", title: "", opponentName: "", opponentLogoUrl: "", date: editor.date, start: "18:00", end: "19:30", teamId: "", categoryId: "", groupLabel: "", pitchCode: "", educatorId: "", venue: "", description: "", competition: "", location: "HOME", matchStatus: "SCHEDULED", homeScore: "", awayScore: "", liveMinute: "", followUrl: "", visibility: "PUBLIC", eventStatus: "SCHEDULED" };
   }
   const item = editor.item;
   return {
     kind: item.kind,
-    title: item.source === "event" ? item.title : "",
+    title: item.source === "event" ? item.title : item.match?.title ?? "",
     opponentName: item.match?.opponent_name ?? "",
     opponentLogoUrl: item.match?.opponent_logo_url ?? "",
     date: planningDateKey(item.startsAt),
     start: localInputTime(item.startsAt),
     end: localInputTime(item.endsAt),
     teamId: item.teamId ?? "",
-    venue: item.venue ?? "",
+    categoryId: item.categoryId ?? "",
+    groupLabel: item.groupLabel ?? "",
+    pitchCode: item.pitchCode ?? "",
+    educatorId: item.educatorId ?? "",
+    venue: item.source === "event" ? item.event?.venue ?? "" : item.match?.venue ?? "",
     description: item.event?.description ?? item.match?.notes ?? "",
     competition: item.match?.competition ?? "",
     location: item.match?.location ?? "HOME",
@@ -200,11 +238,13 @@ function formFromEditor(editor: NonNullable<EditorState>): EditorForm {
     homeScore: item.match?.home_score == null ? "" : String(item.match.home_score),
     awayScore: item.match?.away_score == null ? "" : String(item.match.away_score),
     liveMinute: item.match?.live_minute == null ? "" : String(item.match.live_minute),
-    followUrl: item.match?.follow_url ?? ""
+    followUrl: item.match?.follow_url ?? "",
+    visibility: item.visibility,
+    eventStatus: item.event?.status ?? "SCHEDULED"
   };
 }
 
-function PlanningCardBody({ conflicts, item, teamName }: { conflicts: string[]; item: PlanningItem; teamName: string | null }) {
+function PlanningCardBody({ categoryName, conflicts, educatorName, item, teamName }: { categoryName: string | null; conflicts: string[]; educatorName: string | null; item: PlanningItem; teamName: string | null }) {
   const meta = KIND_META[item.kind];
   return (
     <>
@@ -214,14 +254,19 @@ function PlanningCardBody({ conflicts, item, teamName }: { conflicts: string[]; 
       </div>
       <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-slate-600"><Clock3 size={14} aria-hidden /> {formatTime(item.startsAt)}{item.endsAt ? ` – ${formatTime(item.endsAt)}` : ""}</p>
       <h3 className="mt-2 text-sm font-black leading-snug text-slate-950">{item.title}</h3>
+      {categoryName ? <p className="mt-2 text-[11px] font-bold text-slate-500">Catégorie · {categoryName}</p> : null}
       {teamName ? <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-600"><UsersRound size={14} aria-hidden /> <span className="truncate">{teamName}</span></p> : null}
-      {item.venue ? <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-600"><MapPin size={14} aria-hidden /> <span className="truncate">{item.venue}</span></p> : null}
+      {item.groupLabel ? <p className="mt-1.5 text-xs font-bold text-slate-700">Groupe · {item.groupLabel}</p> : null}
+      {item.pitchCode || item.source === "event" && item.event?.venue || item.source === "match" && item.match?.venue ? <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-600"><MapPin size={14} aria-hidden /> <span className="truncate">{[item.pitchCode, item.source === "event" ? item.event?.venue : item.match?.venue].filter(Boolean).join(" · ")}</span></p> : null}
+      {educatorName ? <p className="mt-1.5 text-xs text-slate-600">Éducateur · {educatorName}</p> : null}
+      {item.source === "event" && item.event?.description || item.source === "match" && item.match?.notes ? <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-slate-500">{item.source === "event" ? item.event?.description : item.match?.notes}</p> : null}
+      <p className="mt-2 text-[9px] font-black uppercase text-slate-400">{item.visibility === "PUBLIC" ? "Public" : item.visibility === "MEMBERS" ? "Membres" : "Staff"}</p>
       {item.cancelled ? <p className="mt-2 text-[10px] font-black uppercase text-red-700">Annulé</p> : null}
     </>
   );
 }
 
-function PlanningCard({ conflicts, item, teamName, onEdit }: { conflicts: string[]; item: PlanningItem; teamName: string | null; onEdit: () => void }) {
+function PlanningCard({ categoryName, conflicts, educatorName, item, teamName, onEdit }: { categoryName: string | null; conflicts: string[]; educatorName: string | null; item: PlanningItem; teamName: string | null; onEdit: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.key });
   return (
     <article ref={setNodeRef} style={{ transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined }} className={`relative rounded-md border bg-white p-3 shadow-sm transition ${conflicts.length ? "border-red-400 ring-1 ring-red-100" : "border-slate-200 hover:border-emerald-400"} ${isDragging ? "z-50 opacity-35" : ""} ${item.cancelled ? "opacity-60" : ""}`}>
@@ -229,12 +274,12 @@ function PlanningCard({ conflicts, item, teamName, onEdit }: { conflicts: string
         <button type="button" onClick={onEdit} className="focus-ring rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-[#00351f]" aria-label={`Modifier ${item.title}`}><Pencil size={15} /></button>
         <button type="button" {...attributes} {...listeners} className="focus-ring touch-none cursor-grab rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-[#00351f] active:cursor-grabbing" aria-label={`Déplacer ${item.title}`}><GripVertical size={17} /></button>
       </div>
-      <div className="pr-14"><PlanningCardBody conflicts={conflicts} item={item} teamName={teamName} /></div>
+      <div className="pr-14"><PlanningCardBody categoryName={categoryName} conflicts={conflicts} educatorName={educatorName} item={item} teamName={teamName} /></div>
     </article>
   );
 }
 
-function DayColumn({ activeDrag, conflicts, date, items, teamNames, onAdd, onEdit }: { activeDrag: boolean; conflicts: Map<string, string[]>; date: Date; items: PlanningItem[]; teamNames: Map<string, string>; onAdd: () => void; onEdit: (item: PlanningItem) => void }) {
+function DayColumn({ activeDrag, categoryNames, conflicts, date, educatorNames, items, teamNames, onAdd, onEdit }: { activeDrag: boolean; categoryNames: Map<string, string>; conflicts: Map<string, string[]>; date: Date; educatorNames: Map<string, string>; items: PlanningItem[]; teamNames: Map<string, string>; onAdd: () => void; onEdit: (item: PlanningItem) => void }) {
   const key = planningDateKey(date);
   const { isOver, setNodeRef } = useDroppable({ id: `day:${key}` });
   const dayLabel = new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(date);
@@ -247,13 +292,13 @@ function DayColumn({ activeDrag, conflicts, date, items, teamNames, onAdd, onEdi
       </header>
       <div className="flex flex-1 flex-col gap-2 p-2.5">
         {activeDrag ? <div className={`flex min-h-24 items-center justify-center rounded-md border border-dashed p-3 text-center text-xs font-bold transition ${isOver ? "border-emerald-600 bg-white text-emerald-900" : "border-slate-300 text-slate-500"}`}><span><CalendarDays className="mx-auto mb-2" size={22} aria-hidden />Déposer ici<br />pour planifier au {dayLabel} {date.getDate()}</span></div> : null}
-        {items.length ? items.map((item) => <PlanningCard key={item.key} item={item} conflicts={conflicts.get(item.key) ?? []} teamName={item.teamId ? teamNames.get(item.teamId) ?? null : null} onEdit={() => onEdit(item)} />) : <p className="my-auto px-3 text-center text-xs font-semibold text-slate-400">Aucun élément planifié</p>}
+        {items.length ? items.map((item) => <PlanningCard key={item.key} item={item} conflicts={conflicts.get(item.key) ?? []} teamName={item.teamId ? teamNames.get(item.teamId) ?? null : null} categoryName={item.categoryId ? categoryNames.get(item.categoryId) ?? null : null} educatorName={item.educatorId ? educatorNames.get(item.educatorId) ?? null : null} onEdit={() => onEdit(item)} />) : <p className="my-auto px-3 text-center text-xs font-semibold text-slate-400">Aucun élément planifié</p>}
       </div>
     </section>
   );
 }
 
-function EventEditor({ editor, saving, teams, venues, onClose, onDelete, onSave }: { editor: NonNullable<EditorState>; saving: boolean; teams: TeamOption[]; venues: string[]; onClose: () => void; onDelete: () => void; onSave: (form: EditorForm) => void }) {
+function EventEditor({ categories, editor, saving, staff, teams, venues, onClose, onDelete, onSave }: { categories: CategoryOption[]; editor: NonNullable<EditorState>; saving: boolean; staff: StaffOption[]; teams: TeamOption[]; venues: string[]; onClose: () => void; onDelete: () => void; onSave: (form: EditorForm) => void }) {
   const [form, setForm] = useState(() => formFromEditor(editor));
   const isMatch = form.kind === "MATCH";
   useEffect(() => {
@@ -267,21 +312,29 @@ function EventEditor({ editor, saving, teams, venues, onClose, onDelete, onSave 
         <div className="flex items-center justify-between gap-3"><h2 id="planning-editor-title" className="text-xl font-black text-[#002f1d]">{editor.mode === "edit" ? "Modifier l’événement" : "Nouvel événement"}</h2><button autoFocus type="button" disabled={saving} onClick={onClose} className="focus-ring rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Fermer"><X size={20} /></button></div>
         <form className="mt-6 grid gap-4" onSubmit={(event) => { event.preventDefault(); onSave(form); }}>
           <label className="grid gap-1.5 text-xs font-black text-slate-700">Type<select value={form.kind} onChange={(event) => setForm({ ...form, kind: event.target.value as PlanningKind })} disabled={editor.mode === "edit"} className={INPUT}><option value="TRAINING">Entraînement</option><option value="MATCH">Match</option><option value="STAGE">Stage</option><option value="EVENT">Événement</option></select></label>
-          {isMatch ? <label className="grid gap-1.5 text-xs font-black text-slate-700">Adversaire<input required value={form.opponentName} onChange={(event) => setForm({ ...form, opponentName: event.target.value })} className={INPUT} placeholder="Nom de l’adversaire" /></label> : <label className="grid gap-1.5 text-xs font-black text-slate-700">Titre<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} className={INPUT} placeholder="Nom de l’événement" /></label>}
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Titre<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} className={INPUT} placeholder={isMatch ? "Titre du match" : "Nom de l’événement"} /></label>
+          {isMatch ? <label className="grid gap-1.5 text-xs font-black text-slate-700">Adversaire<input required value={form.opponentName} onChange={(event) => setForm({ ...form, opponentName: event.target.value })} className={INPUT} placeholder="Nom de l’adversaire" /></label> : null}
           <label className="grid gap-1.5 text-xs font-black text-slate-700">Date<input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} className={INPUT} /></label>
           <div className="grid grid-cols-2 gap-3"><label className="grid gap-1.5 text-xs font-black text-slate-700">Heure de début<input required type="time" value={form.start} onChange={(event) => setForm({ ...form, start: event.target.value })} className={INPUT} /></label><label className="grid gap-1.5 text-xs font-black text-slate-700">Heure de fin<input type="time" value={form.end} onChange={(event) => setForm({ ...form, end: event.target.value })} className={INPUT} /></label></div>
-          <label className="grid gap-1.5 text-xs font-black text-slate-700">Équipe<select name="teamId" required={isMatch} value={form.teamId} onChange={(event) => setForm({ ...form, teamId: event.target.value })} className={INPUT}><option value="">{isMatch ? "Choisir une équipe" : "Club / aucune équipe"}</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
-          <label className="grid gap-1.5 text-xs font-black text-slate-700">Terrain ou lieu<input list="planning-venues" value={form.venue} onChange={(event) => setForm({ ...form, venue: event.target.value })} className={INPUT} placeholder="Terrain enregistré" /><datalist id="planning-venues">{venues.map((venue) => <option key={venue} value={venue} />)}</datalist></label>
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Catégorie<select value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })} className={INPUT}><option value="">Aucune catégorie</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Équipe<select name="teamId" required={isMatch} value={form.teamId} onChange={(event) => { const team = teams.find((candidate) => candidate.id === event.target.value); setForm({ ...form, teamId: event.target.value, categoryId: team?.category_id ?? form.categoryId }); }} className={INPUT}><option value="">{isMatch ? "Choisir une équipe" : "Club / aucune équipe"}</option>{teams.filter((team) => !form.categoryId || team.category_id === form.categoryId).map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Groupe<input value={form.groupLabel} onChange={(event) => setForm({ ...form, groupLabel: event.target.value })} className={INPUT} placeholder="U8/U9 A ou A – B – C" /></label>
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Terrain<select value={form.pitchCode} onChange={(event) => setForm({ ...form, pitchCode: event.target.value as EditorForm["pitchCode"] })} className={INPUT}><option value="">Non renseigné</option>{["T1", "T2", "T3", "T4"].map((pitch) => <option key={pitch} value={pitch}>{pitch}</option>)}</select></label>
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Lieu<input list="planning-venues" value={form.venue} onChange={(event) => setForm({ ...form, venue: event.target.value })} className={INPUT} placeholder="Complexe ou adresse" /><datalist id="planning-venues">{venues.map((venue) => <option key={venue} value={venue} />)}</datalist></label>
+          <label className="grid gap-1.5 text-xs font-black text-slate-700">Éducateur<select value={form.educatorId} onChange={(event) => setForm({ ...form, educatorId: event.target.value })} className={INPUT}><option value="">Non renseigné</option>{staff.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>
           {isMatch ? <>
             <label className="grid gap-1.5 text-xs font-black text-slate-700">Logo de l’adversaire (URL)<input name="opponentLogoUrl" type="url" value={form.opponentLogoUrl} onChange={(event) => setForm({ ...form, opponentLogoUrl: event.target.value })} className={INPUT} placeholder="https://…" /></label>
             <label className="grid gap-1.5 text-xs font-black text-slate-700">Compétition<input value={form.competition} onChange={(event) => setForm({ ...form, competition: event.target.value })} className={INPUT} /></label>
             <label className="grid gap-1.5 text-xs font-black text-slate-700">Localisation<select value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value as EditorForm["location"] })} className={INPUT}><option value="HOME">Domicile</option><option value="AWAY">Extérieur</option><option value="NEUTRAL">Terrain neutre</option></select></label>
-            <label className="grid gap-1.5 text-xs font-black text-slate-700">Statut<select value={form.matchStatus} onChange={(event) => setForm({ ...form, matchStatus: event.target.value as MatchRow["status"] })} className={INPUT}><option value="SCHEDULED">Programmé</option><option value="LIVE">En direct</option><option value="FINISHED">Terminé</option><option value="POSTPONED">Reporté</option><option value="CANCELLED">Annulé</option></select></label>
             {form.matchStatus === "LIVE" || form.matchStatus === "FINISHED" ? <div className="grid grid-cols-2 gap-3"><label className="grid gap-1.5 text-xs font-black text-slate-700">Score domicile<input min="0" max="99" type="number" value={form.homeScore} onChange={(event) => setForm({ ...form, homeScore: event.target.value })} className={INPUT} /></label><label className="grid gap-1.5 text-xs font-black text-slate-700">Score extérieur<input min="0" max="99" type="number" value={form.awayScore} onChange={(event) => setForm({ ...form, awayScore: event.target.value })} className={INPUT} /></label></div> : null}
             {form.matchStatus === "LIVE" ? <label className="grid gap-1.5 text-xs font-black text-slate-700">Minute du direct<input name="liveMinute" min="0" max="130" type="number" value={form.liveMinute} onChange={(event) => setForm({ ...form, liveMinute: event.target.value })} className={INPUT} /></label> : null}
             <label className="grid gap-1.5 text-xs font-black text-slate-700">Lien de suivi du direct<input name="followUrl" type="url" value={form.followUrl} onChange={(event) => setForm({ ...form, followUrl: event.target.value })} className={INPUT} placeholder="https://…" /></label>
           </> : null}
           <label className="grid gap-1.5 text-xs font-black text-slate-700">Description (optionnel)<textarea rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className={`${INPUT} py-3`} placeholder="Ajouter des détails…" /></label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="grid gap-1.5 text-xs font-black text-slate-700">Statut{isMatch ? <select value={form.matchStatus} onChange={(event) => setForm({ ...form, matchStatus: event.target.value as MatchRow["status"] })} className={INPUT}><option value="SCHEDULED">Programmé</option><option value="LIVE">En direct</option><option value="FINISHED">Terminé</option><option value="POSTPONED">Reporté</option><option value="CANCELLED">Annulé</option></select> : <select value={form.eventStatus} onChange={(event) => setForm({ ...form, eventStatus: event.target.value as EventRow["status"] })} className={INPUT}><option value="SCHEDULED">Programmé</option><option value="CANCELLED">Annulé</option></select>}</label>
+            <label className="grid gap-1.5 text-xs font-black text-slate-700">Visibilité<select value={form.visibility} onChange={(event) => setForm({ ...form, visibility: event.target.value as EventRow["visibility"] })} className={INPUT}><option value="PUBLIC">Site public</option><option value="MEMBERS">Membres</option><option value="STAFF">Staff</option></select></label>
+          </div>
           <div className="mt-3 flex items-center gap-2">{editor.mode === "edit" ? <button type="button" disabled={saving} onClick={onDelete} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-xs font-black uppercase text-red-700 hover:bg-red-50"><Trash2 size={17} /> Supprimer</button> : null}<button type="submit" disabled={saving} className="focus-ring ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#f7c600] px-5 text-xs font-black uppercase text-[#002f1d] hover:bg-[#ffd84d] disabled:opacity-60">{saving ? <Loader2 className="animate-spin" size={17} /> : <ShieldCheck size={17} />} Enregistrer</button></div>
         </form>
       </aside>
@@ -292,6 +345,8 @@ function EventEditor({ editor, saving, teams, venues, onClose, onDelete, onSave 
 export function CalendarAdmin() {
   const [weekStart, setWeekStart] = useState(() => startOfPlanningWeek(new Date()));
   const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [staff, setStaff] = useState<StaffOption[]>([]);
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [filters, setFilters] = useState<PlanningFilters>({ kind: "ALL", teamId: "", venue: "" });
@@ -303,20 +358,26 @@ export function CalendarAdmin() {
   const [reload, setReload] = useState(0);
   const days = useMemo(() => planningWeekDays(weekStart), [weekStart]);
   const teamNames = useMemo(() => new Map(teams.map((team) => [team.id, team.name])), [teams]);
+  const categoryNames = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories]);
+  const educatorNames = useMemo(() => new Map(staff.map((person) => [person.id, person.name])), [staff]);
   const range = useMemo(() => ({ from: new Date(days[0].getFullYear(), days[0].getMonth(), days[0].getDate()).toISOString(), to: new Date(days.at(-1)!.getFullYear(), days.at(-1)!.getMonth(), days.at(-1)!.getDate(), 23, 59, 59, 999).toISOString() }), [days]);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true); setMessage(null);
     try {
       const params = new URLSearchParams({ limit: "2000", from: range.from, to: range.to });
-      const [teamResponse, matchResponse, eventResponse] = await Promise.all([
+      const [teamResponse, categoryResponse, staffResponse, matchResponse, eventResponse] = await Promise.all([
         fetch("/api/admin/teams?limit=200", { credentials: "same-origin", signal }),
+        fetch("/api/admin/categories?limit=200", { credentials: "same-origin", signal }),
+        fetch("/api/admin/assignees", { credentials: "same-origin", signal }),
         fetch(`/api/admin/matches?${params}`, { credentials: "same-origin", signal }),
         fetch(`/api/admin/calendar/events?${params}`, { credentials: "same-origin", signal })
       ]);
-      const [teamJson, matchJson, eventJson] = await Promise.all([teamResponse.json(), matchResponse.json(), eventResponse.json()]);
-      if (!teamResponse.ok || !teamJson?.ok || !matchResponse.ok || !matchJson?.ok || !eventResponse.ok || !eventJson?.ok) throw new Error("Le planning n’a pas pu être chargé.");
-      setTeams((teamJson.data?.teams ?? []).map((team: TeamOption) => ({ id: team.id, name: team.name })));
+      const [teamJson, categoryJson, staffJson, matchJson, eventJson] = await Promise.all([teamResponse.json(), categoryResponse.json(), staffResponse.json(), matchResponse.json(), eventResponse.json()]);
+      if (!teamResponse.ok || !teamJson?.ok || !categoryResponse.ok || !categoryJson?.ok || !staffResponse.ok || !staffJson?.ok || !matchResponse.ok || !matchJson?.ok || !eventResponse.ok || !eventJson?.ok) throw new Error("Le planning n’a pas pu être chargé.");
+      setTeams((teamJson.data?.teams ?? []).map((team: TeamOption) => ({ id: team.id, name: team.name, category_id: team.category_id ?? null })));
+      setCategories((categoryJson.data?.categories ?? []).map((category: CategoryOption) => ({ id: category.id, name: category.name })));
+      setStaff((staffJson.data?.assignees ?? []).map((person: StaffOption) => ({ id: person.id, name: person.name })));
       setMatches(matchJson.data?.matches ?? []); setEvents(eventJson.data?.events ?? []);
     } catch (cause) {
       if ((cause as Error).name !== "AbortError") setMessage({ tone: "error", text: cause instanceof Error ? cause.message : "Erreur réseau." });
@@ -332,7 +393,8 @@ export function CalendarAdmin() {
   const items = useMemo(() => [...matches.map((row) => itemFromMatch(row, row.team_id ? teamNames.get(row.team_id) ?? null : null)), ...events.map(itemFromEvent)].sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt)), [events, matches, teamNames]);
   const conflicts = useMemo(() => detectPlanningConflicts(items.map((item) => ({ id: item.key, startsAt: item.startsAt, endsAt: item.endsAt, teamId: item.teamId, venue: item.venue, cancelled: item.cancelled }))), [items]);
   const visibleItems = useMemo(() => items.filter((item) => matchesPlanningFilters(item, filters)), [filters, items]);
-  const venues = useMemo(() => [...new Set(items.map((item) => item.venue?.trim()).filter((venue): venue is string => Boolean(venue)))].sort((left, right) => left.localeCompare(right, "fr")), [items]);
+  const terrainOptions = useMemo(() => [...new Set(items.map((item) => item.venue?.trim()).filter((venue): venue is string => Boolean(venue)))].sort((left, right) => left.localeCompare(right, "fr")), [items]);
+  const venues = useMemo(() => [...new Set(items.map((item) => item.source === "event" ? item.event?.venue?.trim() : item.match?.venue?.trim()).filter((venue): venue is string => Boolean(venue)))].sort((left, right) => left.localeCompare(right, "fr")), [items]);
   const activeItem = activeKey ? items.find((item) => item.key === activeKey) ?? null : null;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }));
 
@@ -351,12 +413,12 @@ export function CalendarAdmin() {
     setSaving(true); setMessage(null);
     try {
       if (form.kind === "MATCH") {
-        const payload = { teamId: form.teamId || null, opponentName: form.opponentName, opponentLogoUrl: form.opponentLogoUrl || undefined, startsAt, endsAt, venue: form.venue || null, competition: form.competition || null, location: form.location, notes: form.description || null, status: form.matchStatus, homeScore: form.homeScore === "" ? undefined : Number(form.homeScore), awayScore: form.awayScore === "" ? undefined : Number(form.awayScore), liveMinute: form.liveMinute === "" ? null : Number(form.liveMinute), followUrl: form.followUrl || null };
+        const payload = { teamId: form.teamId || null, title: form.title, categoryId: form.categoryId || null, groupLabel: form.groupLabel || null, pitchCode: form.pitchCode || null, educatorId: form.educatorId || null, opponentName: form.opponentName, opponentLogoUrl: form.opponentLogoUrl || undefined, startsAt, endsAt, venue: form.venue || null, competition: form.competition || null, location: form.location, notes: form.description || null, status: form.matchStatus, visibility: form.visibility, homeScore: form.homeScore === "" ? undefined : Number(form.homeScore), awayScore: form.awayScore === "" ? undefined : Number(form.awayScore), liveMinute: form.liveMinute === "" ? null : Number(form.liveMinute), followUrl: form.followUrl || null };
         await request(editor.mode === "edit" ? `/api/admin/matches/${editor.item.id}` : "/api/admin/matches", editor.mode === "edit" ? "PATCH" : "POST", payload);
       } else {
         const existing = editor.mode === "edit" ? editor.item.event : null;
         const eventType = form.kind === "TRAINING" ? "TRAINING" : form.kind === "STAGE" ? "STAGE" : existing && !["TRAINING", "STAGE"].includes(existing.type) ? existing.type : "CLUB_EVENT";
-        const payload = { teamId: form.teamId || null, title: form.title, type: eventType, startsAt, endsAt, venue: form.venue || null, description: form.description || null, visibility: existing?.visibility ?? "PUBLIC", status: existing?.status ?? "SCHEDULED" };
+        const payload = { teamId: form.teamId || null, categoryId: form.categoryId || null, groupLabel: form.groupLabel || null, pitchCode: form.pitchCode || null, educatorId: form.educatorId || null, title: form.title, type: eventType, startsAt, endsAt, venue: form.venue || null, description: form.description || null, visibility: form.visibility, status: form.eventStatus };
         await request(editor.mode === "edit" ? `/api/admin/calendar/events/${editor.item.id}` : "/api/admin/calendar/events", editor.mode === "edit" ? "PATCH" : "POST", payload);
       }
       setEditor(null); setMessage({ tone: "success", text: editor.mode === "edit" ? "Événement mis à jour." : "Événement ajouté au planning." }); setReload((value) => value + 1);
@@ -407,7 +469,7 @@ export function CalendarAdmin() {
         <div className="ml-auto flex w-full flex-wrap gap-2 lg:w-auto">
           <select aria-label="Filtrer par type" value={filters.kind} onChange={(event) => setFilters({ ...filters, kind: event.target.value as PlanningFilters["kind"] })} className={`${INPUT} w-full sm:w-auto`}><option value="ALL">Tous les types</option>{Object.entries(KIND_META).map(([value, meta]) => <option key={value} value={value}>{meta.label}</option>)}</select>
           <select aria-label="Filtrer par équipe" value={filters.teamId} onChange={(event) => setFilters({ ...filters, teamId: event.target.value })} className={`${INPUT} w-full sm:w-auto`}><option value="">Toutes les équipes</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select>
-          <select aria-label="Filtrer par terrain" value={filters.venue} onChange={(event) => setFilters({ ...filters, venue: event.target.value })} className={`${INPUT} w-full sm:w-auto`}><option value="">Tous les terrains</option>{venues.map((venue) => <option key={venue} value={venue}>{venue}</option>)}</select>
+          <select aria-label="Filtrer par terrain" value={filters.venue} onChange={(event) => setFilters({ ...filters, venue: event.target.value })} className={`${INPUT} w-full sm:w-auto`}><option value="">Tous les terrains</option>{terrainOptions.map((venue) => <option key={venue} value={venue}>{venue}</option>)}</select>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-600">{Object.entries(KIND_META).map(([kind, meta]) => <span key={kind} className="inline-flex items-center gap-2"><span className={`size-2.5 rounded-full ${meta.dot}`} />{meta.label}</span>)}</div>
@@ -416,12 +478,12 @@ export function CalendarAdmin() {
       <div className="mt-5 overflow-x-auto pb-3 [scrollbar-color:#0b6b46_#e2e8f0]">
         {loading ? <div className="flex min-h-80 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-bold text-slate-600"><Loader2 className="mr-2 animate-spin" size={20} /> Chargement du planning…</div> : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragCancel={() => setActiveKey(null)} onDragEnd={(event) => void onDragEnd(event)}>
-            <div className="flex min-w-[1120px] gap-3">{days.map((date) => <DayColumn key={planningDateKey(date)} date={date} items={visibleItems.filter((item) => planningDateKey(item.startsAt) === planningDateKey(date))} conflicts={conflicts} activeDrag={Boolean(activeKey)} teamNames={teamNames} onAdd={() => setEditor({ mode: "create", date: planningDateKey(date) })} onEdit={(item) => setEditor({ mode: "edit", item })} />)}</div>
-            <DragOverlay>{activeItem ? <div className="w-[240px] rotate-2 rounded-md border border-[#f7c600] bg-white p-3 shadow-2xl"><PlanningCardBody item={activeItem} conflicts={conflicts.get(activeItem.key) ?? []} teamName={activeItem.teamId ? teamNames.get(activeItem.teamId) ?? null : null} /></div> : null}</DragOverlay>
+            <div className="flex min-w-[1120px] gap-3">{days.map((date) => <DayColumn key={planningDateKey(date)} date={date} items={visibleItems.filter((item) => planningDateKey(item.startsAt) === planningDateKey(date))} conflicts={conflicts} activeDrag={Boolean(activeKey)} teamNames={teamNames} categoryNames={categoryNames} educatorNames={educatorNames} onAdd={() => setEditor({ mode: "create", date: planningDateKey(date) })} onEdit={(item) => setEditor({ mode: "edit", item })} />)}</div>
+            <DragOverlay>{activeItem ? <div className="w-[240px] rotate-2 rounded-md border border-[#f7c600] bg-white p-3 shadow-2xl"><PlanningCardBody item={activeItem} conflicts={conflicts.get(activeItem.key) ?? []} teamName={activeItem.teamId ? teamNames.get(activeItem.teamId) ?? null : null} categoryName={activeItem.categoryId ? categoryNames.get(activeItem.categoryId) ?? null : null} educatorName={activeItem.educatorId ? educatorNames.get(activeItem.educatorId) ?? null : null} /></div> : null}</DragOverlay>
           </DndContext>
         )}
       </div>
-      {editor ? <EventEditor key={editor.mode === "edit" ? editor.item.key : editor.date} editor={editor} saving={saving} teams={teams} venues={venues} onClose={() => setEditor(null)} onDelete={() => void deleteEditor()} onSave={(form) => void saveEditor(form)} /> : null}
+      {editor ? <EventEditor key={editor.mode === "edit" ? editor.item.key : editor.date} editor={editor} saving={saving} teams={teams} categories={categories} staff={staff} venues={venues} onClose={() => setEditor(null)} onDelete={() => void deleteEditor()} onSave={(form) => void saveEditor(form)} /> : null}
     </div>
   );
 }

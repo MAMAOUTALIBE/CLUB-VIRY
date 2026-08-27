@@ -4,6 +4,7 @@ import type { AdminEventPayload } from "@/lib/api/validation";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { ClubEvent, Match } from "@/lib/db/types";
 import { dedupeRowsById } from "@/lib/publication-activity";
+import type { PublicPlanningItem } from "@/lib/public-weekly-planning";
 
 export type CalendarRange = {
   limit?: number;
@@ -25,6 +26,7 @@ export async function listPublicHomeMatches(): Promise<PublicHomeMatchRow[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("matches")
     .select("*, teams(name)")
+    .eq("visibility", "PUBLIC")
     .is("deleted_at", null)
     .in("status", ["LIVE", "FINISHED"])
     .order("starts_at", { ascending: false })
@@ -41,6 +43,7 @@ export async function getPublicMatchById(id: string): Promise<PublicHomeMatchRow
     .from("matches")
     .select("*, teams(name)")
     .eq("id", id)
+    .eq("visibility", "PUBLIC")
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -56,6 +59,11 @@ type DateRangeQuery = {
 function eventPayloadToRow(input: AdminEventPayload, actorId?: string) {
   return {
     ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
+    ...(input.categoryId !== undefined ? { category_id: input.categoryId ?? null } : {}),
+    ...(input.groupLabel !== undefined ? { group_label: input.groupLabel ?? null } : {}),
+    ...(input.pitchCode !== undefined ? { pitch_code: input.pitchCode ?? null } : {}),
+    ...(input.opponentName !== undefined ? { opponent_name: input.opponentName ?? null } : {}),
+    ...(input.educatorId !== undefined ? { educator_id: input.educatorId ?? null } : {}),
     ...(input.title ? { title: input.title } : {}),
     ...(input.type ? { type: input.type } : {}),
     ...(input.startsAt ? { starts_at: input.startsAt } : {}),
@@ -90,7 +98,7 @@ export async function listPublicCalendar(range: CalendarRange = {}): Promise<Pub
     supabase.from("club_events").select("*").eq("visibility", "PUBLIC").is("deleted_at", null).order("starts_at", { ascending: true }).limit(limit),
     range
   );
-  const matchesQuery = applyDateRange(supabase.from("matches").select("*").is("deleted_at", null).order("starts_at", { ascending: true }).limit(limit), range);
+  const matchesQuery = applyDateRange(supabase.from("matches").select("*").eq("visibility", "PUBLIC").is("deleted_at", null).order("starts_at", { ascending: true }).limit(limit), range);
 
   const [{ data: events, error: eventsError }, { data: matches, error: matchesError }] = await Promise.all([eventsQuery, matchesQuery]);
 
@@ -111,8 +119,49 @@ export async function listPublicCalendar(range: CalendarRange = {}): Promise<Pub
 export async function listPublicCalendarRangeExact(from: string, to: string): Promise<PublicCalendarPayload> {
   const pageSize = 1000;
   async function eventsPages() { const rows: ClubEvent[] = []; for (let offset = 0; ; offset += pageSize) { const { data, error } = await getSupabaseAdminClient().from("club_events").select("*").eq("visibility", "PUBLIC").is("deleted_at", null).gte("starts_at", from).lte("starts_at", to).order("starts_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + pageSize - 1); if (error) throw new Error(`Unable to fetch exact calendar events: ${error.message}`); rows.push(...((data ?? []) as ClubEvent[])); if ((data ?? []).length < pageSize) return dedupeRowsById(rows); } }
-  async function matchPages() { const rows: Match[] = []; for (let offset = 0; ; offset += pageSize) { const { data, error } = await getSupabaseAdminClient().from("matches").select("*").is("deleted_at", null).gte("starts_at", from).lte("starts_at", to).order("starts_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + pageSize - 1); if (error) throw new Error(`Unable to fetch exact calendar matches: ${error.message}`); rows.push(...((data ?? []) as Match[])); if ((data ?? []).length < pageSize) return dedupeRowsById(rows); } }
+  async function matchPages() { const rows: Match[] = []; for (let offset = 0; ; offset += pageSize) { const { data, error } = await getSupabaseAdminClient().from("matches").select("*").eq("visibility", "PUBLIC").is("deleted_at", null).gte("starts_at", from).lte("starts_at", to).order("starts_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + pageSize - 1); if (error) throw new Error(`Unable to fetch exact calendar matches: ${error.message}`); rows.push(...((data ?? []) as Match[])); if ((data ?? []).length < pageSize) return dedupeRowsById(rows); } }
   const [events, matches] = await Promise.all([eventsPages(), matchPages()]); return { events, matches };
+}
+
+type PublicPlanningRow = {
+  id: string;
+  starts_at: string;
+  ends_at: string | null;
+  category_id: string | null;
+  group_label: string | null;
+  pitch_code: PublicPlanningItem["pitchCode"];
+  teams: { name: string; categories: { name: string } | null } | null;
+  categories: { name: string } | null;
+};
+
+function toPublicPlanningItem(row: PublicPlanningRow, source: PublicPlanningItem["source"]): PublicPlanningItem {
+  return {
+    id: row.id,
+    source,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    categoryId: row.category_id,
+    categoryName: row.categories?.name ?? row.teams?.categories?.name ?? null,
+    teamName: row.teams?.name ?? null,
+    groupLabel: row.group_label,
+    pitchCode: row.pitch_code
+  };
+}
+
+/** Public planning cards and CRM cards are projections of these exact rows. */
+export async function listPublicWeeklyPlanning(from: string, toExclusive: string): Promise<PublicPlanningItem[]> {
+  const fields = "id,starts_at,ends_at,category_id,group_label,pitch_code,teams(name,categories(name)),categories(name)";
+  const supabase = getSupabaseAdminClient();
+  const [eventsResult, matchesResult] = await Promise.all([
+    supabase.from("club_events").select(fields).eq("visibility", "PUBLIC").eq("status", "SCHEDULED").is("deleted_at", null).gte("starts_at", from).lt("starts_at", toExclusive).order("starts_at", { ascending: true }),
+    supabase.from("matches").select(fields).eq("visibility", "PUBLIC").neq("status", "CANCELLED").is("deleted_at", null).gte("starts_at", from).lt("starts_at", toExclusive).order("starts_at", { ascending: true })
+  ]);
+  if (eventsResult.error) throw new Error(`Unable to fetch public planning events: ${eventsResult.error.message}`);
+  if (matchesResult.error) throw new Error(`Unable to fetch public planning matches: ${matchesResult.error.message}`);
+  return [
+    ...((eventsResult.data ?? []) as unknown as PublicPlanningRow[]).map((row) => toPublicPlanningItem(row, "event")),
+    ...((matchesResult.data ?? []) as unknown as PublicPlanningRow[]).map((row) => toPublicPlanningItem(row, "match"))
+  ].sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt));
 }
 
 export async function listEventsForAdmin(range: CalendarRange = {}): Promise<ClubEvent[]> {

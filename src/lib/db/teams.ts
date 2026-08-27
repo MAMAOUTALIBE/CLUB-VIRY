@@ -43,6 +43,11 @@ function matchPayloadToRow(input: AdminMatchPayload) {
   return {
     ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
     ...(input.seasonId !== undefined ? { season_id: input.seasonId ?? null } : {}),
+    ...(input.title !== undefined ? { title: input.title ?? null } : {}),
+    ...(input.categoryId !== undefined ? { category_id: input.categoryId ?? null } : {}),
+    ...(input.groupLabel !== undefined ? { group_label: input.groupLabel ?? null } : {}),
+    ...(input.pitchCode !== undefined ? { pitch_code: input.pitchCode ?? null } : {}),
+    ...(input.educatorId !== undefined ? { educator_id: input.educatorId ?? null } : {}),
     ...(input.opponentName ? { opponent_name: input.opponentName } : {}),
     ...(input.opponentLogoUrl !== undefined ? { opponent_logo_url: input.opponentLogoUrl ?? null } : {}),
     ...(input.location ? { location: input.location } : {}),
@@ -55,7 +60,8 @@ function matchPayloadToRow(input: AdminMatchPayload) {
     ...(input.awayScore !== undefined ? { away_score: input.awayScore } : {}),
     ...(input.liveMinute !== undefined ? { live_minute: input.liveMinute } : {}),
     ...(input.followUrl !== undefined ? { follow_url: input.followUrl ?? null } : {}),
-    ...(input.notes !== undefined ? { notes: input.notes ?? null } : {})
+    ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
+    ...(input.visibility ? { visibility: input.visibility } : {})
   };
 }
 
@@ -149,7 +155,7 @@ export async function getTeamBySlug(slug: string): Promise<TeamDetail | null> {
 
   const [{ data: staff, error: staffError }, { data: matches, error: matchesError }] = await Promise.all([
     supabase.from("team_staff").select("*").eq("team_id", team.id).order("is_head_coach", { ascending: false }),
-    supabase.from("matches").select("*").eq("team_id", team.id).is("deleted_at", null).order("starts_at", { ascending: true })
+    supabase.from("matches").select("*").eq("team_id", team.id).eq("visibility", "PUBLIC").is("deleted_at", null).order("starts_at", { ascending: true })
   ]);
 
   if (staffError) {
@@ -171,6 +177,7 @@ export async function listMatches(limit = 20): Promise<Match[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("matches")
     .select("*")
+    .eq("visibility", "PUBLIC")
     .is("deleted_at", null)
     .order("starts_at", { ascending: true })
     .limit(limit);

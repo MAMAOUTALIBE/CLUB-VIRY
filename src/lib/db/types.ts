@@ -228,6 +228,11 @@ export type Match = {
   id: string;
   team_id: string | null;
   season_id: string | null;
+  title: string | null;
+  category_id: string | null;
+  group_label: string | null;
+  pitch_code: "T1" | "T2" | "T3" | "T4" | null;
+  educator_id: string | null;
   opponent_name: string;
   opponent_logo_url: string | null;
   location: MatchLocation;
@@ -241,6 +246,7 @@ export type Match = {
   live_minute: number | null;
   follow_url: string | null;
   notes: string | null;
+  visibility: ClubEventVisibility;
   created_at: string;
   updated_at: string;
 };
@@ -248,6 +254,11 @@ export type Match = {
 export type ClubEvent = {
   id: string;
   team_id: string | null;
+  category_id: string | null;
+  group_label: string | null;
+  pitch_code: "T1" | "T2" | "T3" | "T4" | null;
+  opponent_name: string | null;
+  educator_id: string | null;
   title: string;
   type: ClubEventType;
   starts_at: string;

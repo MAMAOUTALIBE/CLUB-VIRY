@@ -170,6 +170,11 @@ export type AdminNewsPayload = {
 export type AdminMatchPayload = {
   teamId?: string | null;
   seasonId?: string;
+  title?: string | null;
+  categoryId?: string | null;
+  groupLabel?: string | null;
+  pitchCode?: "T1" | "T2" | "T3" | "T4" | null;
+  educatorId?: string | null;
   opponentName?: string;
   opponentLogoUrl?: string;
   location?: "HOME" | "AWAY" | "NEUTRAL";
@@ -183,10 +188,16 @@ export type AdminMatchPayload = {
   liveMinute?: number | null;
   followUrl?: string | null;
   notes?: string | null;
+  visibility?: "PUBLIC" | "MEMBERS" | "STAFF";
 };
 
 export type AdminEventPayload = {
   teamId?: string | null;
+  categoryId?: string | null;
+  groupLabel?: string | null;
+  pitchCode?: "T1" | "T2" | "T3" | "T4" | null;
+  opponentName?: string | null;
+  educatorId?: string | null;
   title?: string;
   type?: "TRAINING" | "STAGE" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
   startsAt?: string;
@@ -1384,6 +1395,10 @@ function isClubEventVisibility(value: unknown): value is NonNullable<AdminEventP
 
 function isClubEventStatus(value: unknown): value is NonNullable<AdminEventPayload["status"]> {
   return value === "SCHEDULED" || value === "CANCELLED";
+}
+
+function isPlanningPitch(value: unknown): value is "T1" | "T2" | "T3" | "T4" {
+  return value === "T1" || value === "T2" || value === "T3" || value === "T4";
 }
 
 function isCategoryGender(value: unknown): value is NonNullable<AdminTeamPayload["gender"]> {
@@ -2598,6 +2613,11 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
 
   const teamId = normalizeString(body.teamId);
   const seasonId = normalizeString(body.seasonId);
+  const title = body.title === null ? null : normalizeString(body.title);
+  const categoryId = body.categoryId === null ? null : normalizeString(body.categoryId);
+  const groupLabel = body.groupLabel === null ? null : normalizeString(body.groupLabel);
+  const pitchCode = body.pitchCode === null ? null : normalizeString(body.pitchCode);
+  const educatorId = body.educatorId === null ? null : normalizeString(body.educatorId);
   const opponentName = normalizeString(body.opponentName);
   const opponentLogoUrl = normalizeString(body.opponentLogoUrl);
   const location = normalizeString(body.location);
@@ -2611,6 +2631,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   const liveMinute = body.liveMinute === null ? null : typeof body.liveMinute === "number" ? body.liveMinute : undefined;
   const followUrl = body.followUrl === null ? null : normalizeString(body.followUrl);
   const notes = body.notes === null ? null : normalizeString(body.notes);
+  const visibility = normalizeString(body.visibility);
 
   if (typeof teamId === "string" && !isUuid(teamId)) {
     issues.push({ field: "teamId", message: "Identifiant equipe invalide." });
@@ -2619,6 +2640,12 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   if (seasonId && !isUuid(seasonId)) {
     issues.push({ field: "seasonId", message: "Identifiant saison invalide." });
   }
+
+  if (typeof categoryId === "string" && !isUuid(categoryId)) issues.push({ field: "categoryId", message: "Identifiant categorie invalide." });
+  if (typeof educatorId === "string" && !isUuid(educatorId)) issues.push({ field: "educatorId", message: "Identifiant educateur invalide." });
+  if (title && (title.length < 2 || title.length > 180)) issues.push({ field: "title", message: "Titre du match invalide." });
+  if (groupLabel && groupLabel.length > 120) issues.push({ field: "groupLabel", message: "Groupe trop long." });
+  if (typeof pitchCode === "string" && !isPlanningPitch(pitchCode)) issues.push({ field: "pitchCode", message: "Terrain invalide." });
 
   if (!options.partial && (!opponentName || opponentName.length < 2 || opponentName.length > 160)) {
     issues.push({ field: "opponentName", message: "Adversaire invalide." });
@@ -2672,6 +2699,8 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
     issues.push({ field: "notes", message: "Notes trop longues." });
   }
 
+  if (visibility && !isClubEventVisibility(visibility)) issues.push({ field: "visibility", message: "Visibilite du match invalide." });
+
   if (options.partial && Object.keys(body).length === 0) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
   }
@@ -2685,6 +2714,11 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
     data: {
       ...(body.teamId !== undefined ? { teamId: teamId ?? null } : {}),
       ...(seasonId ? { seasonId } : {}),
+      ...(body.title !== undefined ? { title: title ?? null } : {}),
+      ...(body.categoryId !== undefined ? { categoryId: categoryId ?? null } : {}),
+      ...(body.groupLabel !== undefined ? { groupLabel: groupLabel ?? null } : {}),
+      ...(body.pitchCode !== undefined ? { pitchCode: (pitchCode ?? null) as AdminMatchPayload["pitchCode"] } : {}),
+      ...(body.educatorId !== undefined ? { educatorId: educatorId ?? null } : {}),
       ...(opponentName ? { opponentName } : {}),
       ...(opponentLogoUrl ? { opponentLogoUrl } : {}),
       ...(location ? { location: location as AdminMatchPayload["location"] } : {}),
@@ -2697,7 +2731,8 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
       ...(awayScore !== undefined ? { awayScore } : {}),
       ...(liveMinute !== undefined ? { liveMinute } : {}),
       ...(body.followUrl !== undefined ? { followUrl: followUrl ?? null } : {}),
-      ...(body.notes !== undefined ? { notes: notes ?? null } : {})
+      ...(body.notes !== undefined ? { notes: notes ?? null } : {}),
+      ...(visibility ? { visibility: visibility as AdminMatchPayload["visibility"] } : {})
     }
   };
 }
@@ -2711,6 +2746,11 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
   }
 
   const teamId = body.teamId === null ? null : normalizeString(body.teamId);
+  const categoryId = body.categoryId === null ? null : normalizeString(body.categoryId);
+  const groupLabel = body.groupLabel === null ? null : normalizeString(body.groupLabel);
+  const pitchCode = body.pitchCode === null ? null : normalizeString(body.pitchCode);
+  const opponentName = body.opponentName === null ? null : normalizeString(body.opponentName);
+  const educatorId = body.educatorId === null ? null : normalizeString(body.educatorId);
   const title = normalizeString(body.title);
   const type = normalizeString(body.type);
   const startsAt = normalizeString(body.startsAt);
@@ -2724,6 +2764,12 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
   if (typeof teamId === "string" && !isUuid(teamId)) {
     issues.push({ field: "teamId", message: "Identifiant equipe invalide." });
   }
+
+  if (typeof categoryId === "string" && !isUuid(categoryId)) issues.push({ field: "categoryId", message: "Identifiant categorie invalide." });
+  if (typeof educatorId === "string" && !isUuid(educatorId)) issues.push({ field: "educatorId", message: "Identifiant educateur invalide." });
+  if (groupLabel && groupLabel.length > 120) issues.push({ field: "groupLabel", message: "Groupe trop long." });
+  if (typeof pitchCode === "string" && !isPlanningPitch(pitchCode)) issues.push({ field: "pitchCode", message: "Terrain invalide." });
+  if (opponentName && (opponentName.length < 2 || opponentName.length > 160)) issues.push({ field: "opponentName", message: "Adversaire invalide." });
 
   if (!options.partial && (!title || title.length < 2 || title.length > 180)) {
     issues.push({ field: "title", message: "Titre evenement invalide." });
@@ -2781,6 +2827,11 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
     ok: true,
     data: {
       ...(body.teamId !== undefined ? { teamId: teamId ?? null } : {}),
+      ...(body.categoryId !== undefined ? { categoryId: categoryId ?? null } : {}),
+      ...(body.groupLabel !== undefined ? { groupLabel: groupLabel ?? null } : {}),
+      ...(body.pitchCode !== undefined ? { pitchCode: (pitchCode ?? null) as AdminEventPayload["pitchCode"] } : {}),
+      ...(body.opponentName !== undefined ? { opponentName: opponentName ?? null } : {}),
+      ...(body.educatorId !== undefined ? { educatorId: educatorId ?? null } : {}),
       ...(title ? { title } : {}),
       ...(type ? { type: type as AdminEventPayload["type"] } : {}),
       ...(startsAt ? { startsAt } : {}),

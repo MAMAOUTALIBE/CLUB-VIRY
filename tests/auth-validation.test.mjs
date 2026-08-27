@@ -534,6 +534,24 @@ test("admin match validation accepte et borne la minute de direct CRM", () => {
   assert.equal(rejected.ok, false);
 });
 
+test("admin match validation conserve les détails complets du planning", () => {
+  const result = validateAdminMatchPayload({
+    opponentName: "Massy",
+    startsAt: "2026-09-03T17:30:00.000Z",
+    title: "U18 vs Massy",
+    categoryId: "11111111-1111-4111-8111-111111111111",
+    groupLabel: "U18 A",
+    pitchCode: "T2",
+    educatorId: "22222222-2222-4222-8222-222222222222",
+    visibility: "MEMBERS"
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.pitchCode, "T2");
+  assert.equal(result.data.groupLabel, "U18 A");
+  assert.equal(result.data.visibility, "MEMBERS");
+  assert.equal(validateAdminMatchPayload({ pitchCode: "T5" }, { partial: true }).ok, false);
+});
+
 test("admin event validation rejects inverted dates", () => {
   const result = validateAdminEventPayload({
     title: "Reunion educateurs",
@@ -572,6 +590,21 @@ test("admin event validation accepts a public club event", () => {
 
   assert.equal(result.ok, true);
   assert.equal(result.data.status, "SCHEDULED");
+});
+
+test("admin event validation conserve catégorie, groupe, terrain et éducateur", () => {
+  const result = validateAdminEventPayload({
+    title: "Entraînement U8/U9",
+    startsAt: "2026-09-02T15:30:00.000Z",
+    categoryId: "11111111-1111-4111-8111-111111111111",
+    groupLabel: "U8/U9 A",
+    pitchCode: "T4",
+    educatorId: "22222222-2222-4222-8222-222222222222",
+    visibility: "PUBLIC"
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.data.groupLabel, "U8/U9 A");
+  assert.equal(result.data.pitchCode, "T4");
 });
 
 test("admin event validation persists cancellations and rejects unknown statuses", () => {

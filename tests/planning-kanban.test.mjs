@@ -40,4 +40,5 @@ test("le contrat Kanban expose le panneau, le drag and drop, les filtres et les 
   for (const contract of ["DndContext", "useDraggable", "useDroppable", "Créer un événement", "Déposer ici", "Toutes les équipes", "Tous les terrains", "Conflit de planning"]) {
     assert.match(source, new RegExp(contract));
   }
+  for (const field of ["Catégorie", "Groupe", "Terrain", "Lieu", "Éducateur", "Description", "Statut", "Visibilité"]) assert.match(source, new RegExp(field));
 });

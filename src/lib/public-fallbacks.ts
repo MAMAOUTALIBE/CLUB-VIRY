@@ -63,6 +63,11 @@ export function getFallbackMatches(limit = 20): Match[] {
     id: `fallback-match-${index + 1}`,
     team_id: null,
     season_id: null,
+    title: null,
+    category_id: null,
+    group_label: null,
+    pitch_code: null,
+    educator_id: null,
     opponent_name: match.away,
     opponent_logo_url: null,
     location: "HOME",
@@ -76,6 +81,7 @@ export function getFallbackMatches(limit = 20): Match[] {
     live_minute: null,
     follow_url: null,
     notes: null,
+    visibility: "PUBLIC",
     created_at: now,
     updated_at: now
   }));
@@ -93,6 +99,11 @@ export function getFallbackRecentResults(): Match[] {
     id: `fallback-result-${index + 1}`,
     team_id: null,
     season_id: null,
+    title: null,
+    category_id: null,
+    group_label: null,
+    pitch_code: null,
+    educator_id: null,
     opponent_name: opponent,
     opponent_logo_url: null,
     location: "HOME",
@@ -106,6 +117,7 @@ export function getFallbackRecentResults(): Match[] {
     live_minute: null,
     follow_url: null,
     notes: null,
+    visibility: "PUBLIC",
     created_at: now,
     updated_at: now
   }));
