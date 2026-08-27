@@ -1,6 +1,7 @@
-import { Medal, Trophy } from "lucide-react";
+import { ArrowRight, Medal, Trophy } from "lucide-react";
+import Link from "next/link";
 
-import { DesktopOnly, MobileCard, MobileScreen } from "@/components/MobilePage";
+import { DesktopOnly, MobileCard, MobileLinkCard, MobileScreen } from "@/components/MobilePage";
 import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -8,6 +9,7 @@ import { StandingsTables } from "@/components/club/StandingsTables";
 import { images } from "@/lib/images";
 import { getPublicStandings } from "@/lib/public-content";
 import { getResultsPageData } from "@/lib/results-view";
+import { isUuid } from "@/lib/api/validation";
 import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
@@ -26,24 +28,33 @@ export default async function ResultsPage() {
         scrollable
       >
         <div className="grid gap-3 pb-2 md:grid-cols-2 lg:grid-cols-3">
-          {results.items.map((item) => (
-            <MobileCard key={item.id}>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase text-[#664d00]">{item.competition}</p>
-                <p className="text-xs font-bold text-slate-600">{item.dateLabel}</p>
-              </div>
-              <div className="mt-3 grid gap-2">
-                <p className="flex items-center justify-between gap-3 rounded-md bg-slate-100 px-3 py-2 text-sm font-black uppercase text-[#002f1d]">
-                  <span className="truncate">{item.home}</span>
-                  <span>{item.homeScore}</span>
-                </p>
-                <p className="flex items-center justify-between gap-3 rounded-md bg-slate-100 px-3 py-2 text-sm font-black uppercase text-[#002f1d]">
-                  <span className="truncate">{item.away}</span>
-                  <span>{item.awayScore}</span>
-                </p>
-              </div>
-            </MobileCard>
-          ))}
+          {results.items.map((item) => {
+            const detailHref = !results.isFallback && isUuid(item.id) ? `/matchs/${item.id}` : null;
+            const card = (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase text-[#664d00]">{item.competition}</p>
+                  <p className="text-xs font-bold text-slate-600">{item.dateLabel}</p>
+                </div>
+                <div className="mt-3 grid gap-2">
+                  <p className="flex items-center justify-between gap-3 rounded-md bg-slate-100 px-3 py-2 text-sm font-black uppercase text-[#002f1d]">
+                    <span className="truncate">{item.home}</span>
+                    <span>{item.homeScore}</span>
+                  </p>
+                  <p className="flex items-center justify-between gap-3 rounded-md bg-slate-100 px-3 py-2 text-sm font-black uppercase text-[#002f1d]">
+                    <span className="truncate">{item.away}</span>
+                    <span>{item.awayScore}</span>
+                  </p>
+                </div>
+              </>
+            );
+
+            return detailHref ? (
+              <MobileLinkCard href={detailHref} key={item.id}>{card}</MobileLinkCard>
+            ) : (
+              <MobileCard key={item.id}>{card}</MobileCard>
+            );
+          })}
         </div>
         {standings.length > 0 ? (
           <section className="mt-5 pb-4">
@@ -74,8 +85,10 @@ export default async function ResultsPage() {
           {results.items.map((item) => {
             const homeWins = item.homeScore > item.awayScore;
             const awayWins = item.awayScore > item.homeScore;
-            return (
-              <article className="official-card rounded-lg bg-white p-5" key={item.id}>
+            // Seuls les résultats issus du CRM ont un identifiant exploitable par /matchs/[id].
+            const detailHref = !results.isFallback && isUuid(item.id) ? `/matchs/${item.id}` : null;
+            const card = (
+              <>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-black uppercase text-[#664d00]">{item.competition}</p>
                   <Medal className="text-[#f7c600]" size={20} aria-hidden="true" />
@@ -94,6 +107,21 @@ export default async function ResultsPage() {
                 </div>
 
                 <p className="mt-4 text-sm font-semibold text-slate-600">{item.place}</p>
+                {detailHref ? (
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-black uppercase text-[#07542f]">
+                    Voir le match <ArrowRight size={14} aria-hidden="true" />
+                  </span>
+                ) : null}
+              </>
+            );
+
+            return detailHref ? (
+              <Link className="focus-ring official-card block rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-xl" href={detailHref} key={item.id}>
+                {card}
+              </Link>
+            ) : (
+              <article className="official-card rounded-lg bg-white p-5" key={item.id}>
+                {card}
               </article>
             );
           })}

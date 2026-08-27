@@ -151,7 +151,7 @@ export default async function HomePage() {
 
       </div>
 
-      <section className="mx-auto hidden max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:block xl:pb-14 xl:pt-0">
+      <section className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:pb-14 xl:pt-0">
         <div className="relative isolate overflow-hidden rounded-3xl border border-[#f7c600]/20 text-white shadow-[0_30px_70px_rgba(0,18,11,0.45)]">
           <Image src={images.youthTeam} alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
           {/* Overlays : profondeur + lisibilité */}

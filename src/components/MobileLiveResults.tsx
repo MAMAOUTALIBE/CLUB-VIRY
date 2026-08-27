@@ -8,11 +8,15 @@ function TeamLogo({ src, name }: { src: string | null; name: string }) {
 
 function ResultRow({ match }: { match: MobileMatchCard }) {
   return (
-    <article className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-2xl border border-[#f7c600]/40 bg-[#002b1d]/60 px-3 py-4 backdrop-blur-md">
-      <div className="min-w-0 text-left"><TeamLogo src={match.homeLogoUrl} name={match.home} /><p className="text-[10px] font-black uppercase text-[#f7c600]">{match.category}</p><p className="mt-1 truncate text-xs font-bold text-white">{match.home}</p></div>
-      <p className="whitespace-nowrap text-2xl font-black text-white">{match.homeScore} – {match.awayScore}</p>
-      <div className="flex min-w-0 flex-col items-end text-right"><TeamLogo src={match.awayLogoUrl} name={match.away} /><p className="truncate text-xs font-bold text-white">{match.away}</p></div>
-    </article>
+    <Link
+      href={`/matchs/${match.id}`}
+      aria-label={`${match.home} ${match.homeScore} – ${match.awayScore} ${match.away} : voir le détail`}
+      className="focus-ring grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 rounded-2xl border border-[#f7c600]/40 bg-[#002b1d]/60 px-3 py-4 backdrop-blur-md transition hover:border-[#f7c600] hover:bg-[#003b28]/70"
+    >
+      <span className="min-w-0 text-left"><TeamLogo src={match.homeLogoUrl} name={match.home} /><span className="block text-[10px] font-black uppercase text-[#f7c600]">{match.category}</span><span className="mt-1 block truncate text-xs font-bold text-white">{match.home}</span></span>
+      <span className="whitespace-nowrap text-2xl font-black text-white">{match.homeScore} – {match.awayScore}</span>
+      <span className="flex min-w-0 flex-col items-end text-right"><TeamLogo src={match.awayLogoUrl} name={match.away} /><span className="block truncate text-xs font-bold text-white">{match.away}</span></span>
+    </Link>
   );
 }
 

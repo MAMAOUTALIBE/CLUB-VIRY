@@ -70,11 +70,15 @@ test("la section reste mobile/tablette et la source ne contient aucun fallback",
   assert.doesNotMatch(view, /getMobileMatchFeed[\s\S]{0,500}getFallbackCalendarItems/);
 });
 
-test("le direct remplace l'inscription sous xl sans modifier sa version desktop", async () => {
+test("le direct s'ajoute sous xl sans priver le mobile de l'appel a l'inscription", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/MobileLiveResults.tsx", import.meta.url), "utf8");
 
-  assert.match(page, /<section className="mx-auto hidden max-w-7xl[^"]*xl:block[^"]*">[\s\S]*Rejoignez la/);
+  // Le bloc « Rejoignez la famille Viry » est rendu a TOUTES les largeurs : c'est le
+  // seul appel a l'inscription de l'accueil, le masquer prive le mobile de ce chemin.
+  assert.match(page, /<section className="mx-auto max-w-7xl px-4 pb-10 pt-10[^"]*">[\s\S]*Rejoignez la/);
+  assert.doesNotMatch(page, /<section className="mx-auto hidden max-w-7xl[^"]*xl:block[^"]*">[\s\S]*Rejoignez la/);
+  // Le direct, lui, reste propre au mobile.
   assert.match(page, /<section className="bg-\[#f7f8f4\] xl:hidden">[\s\S]*<MobileLiveResults/);
   assert.match(component, /id="mobile-live-title" className="[^"]*whitespace-nowrap[^"]*uppercase[^"]*text-red-500"[^>]*>Match en direct<\/h2>/);
 });

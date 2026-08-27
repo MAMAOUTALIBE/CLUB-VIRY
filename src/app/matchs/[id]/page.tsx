@@ -28,12 +28,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const liveMinute = row.status === "LIVE" ? row.live_minute : null;
 
   return (
-    <main className="relative min-h-[70svh] overflow-hidden bg-[#001f16] px-4 py-10 text-white sm:px-6 sm:py-16">
+    <section className="relative min-h-[70svh] overflow-hidden bg-[#001f16] px-4 py-10 text-white sm:px-6 sm:py-16">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(247,198,0,.14),transparent_42%),linear-gradient(180deg,rgba(0,47,29,.72),rgba(0,18,12,.98))]" aria-hidden="true" />
       <article className="relative mx-auto max-w-4xl rounded-[2rem] border border-[#f7c600]/45 bg-[#002f1d]/65 p-5 shadow-[0_0_45px_rgba(247,198,0,.1)] backdrop-blur-xl sm:p-10">
         <Link href="/calendrier" className="inline-flex items-center gap-2 text-xs font-black uppercase text-[#f7c600] hover:text-white"><ArrowLeft size={17} aria-hidden="true" /> Calendrier</Link>
         <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
-          <div><p className="text-xs font-black uppercase tracking-[.18em] text-[#f7c600]">{identity.category}</p><h1 className="mt-2 text-3xl font-black uppercase sm:text-5xl">Détail du match</h1></div>
+          <div><p className="text-xs font-black uppercase tracking-[.18em] text-[#f7c600]">{identity.category}</p><h1 className="mt-2 text-3xl font-black uppercase leading-tight sm:text-5xl">{identity.home} <span className="text-[#f7c600]">–</span> {identity.away}</h1></div>
           {row.status === "LIVE" && liveMinute !== null ? <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-sm font-black uppercase"><Radio size={16} aria-hidden="true" /> En direct · {liveMinute}’</span> : <span className="rounded-full border border-[#f7c600]/45 px-4 py-2 text-xs font-black uppercase text-[#f7c600]">{row.status === "FINISHED" ? "Terminé" : row.status === "CANCELLED" ? "Annulé" : row.status === "POSTPONED" ? "Reporté" : "Programmé"}</span>}
         </div>
         <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-3xl border border-[#f7c600]/40 bg-[#001f16]/65 p-5 text-center sm:p-8">
@@ -48,6 +48,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </dl>
         {row.competition ? <p className="mt-6 text-center text-sm font-bold uppercase tracking-wider text-white/65">{row.competition}</p> : null}
       </article>
-    </main>
+    </section>
   );
 }

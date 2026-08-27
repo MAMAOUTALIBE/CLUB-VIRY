@@ -58,6 +58,7 @@ const PUBLIC_HERO_ROUTES = new Set([
 
 const PUBLIC_HERO_DYNAMIC_ROUTES = [
   /^\/actualites\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
+  /^\/matchs\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
   /^\/equipes\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
   /^\/le-club\/encadrement\/[a-z0-9]+(?:-[a-z0-9]+)*$/,
   /^\/le-club\/organigramme\/[a-z0-9]+(?:-[a-z0-9]+)*$/

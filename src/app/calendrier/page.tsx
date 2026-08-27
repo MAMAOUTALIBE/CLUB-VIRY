@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight, Clock, MapPin, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronRight, Clock, MapPin, Shield, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { DesktopOnly, MobileCard, MobileScreen, MobileScrollableList } from "@/components/MobilePage";
@@ -6,6 +6,7 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData } from "@/lib/calendar-view";
+import { isUuid } from "@/lib/api/validation";
 import { getSiteSettings } from "@/lib/public-content";
 import { images } from "@/lib/images";
 import { hasLiveSocials, socialItems, socialUrl } from "@/lib/socials";
@@ -238,8 +239,12 @@ export default async function CalendarPage() {
         <div>
           <SectionTitle eyebrow="Matchs et événements" title="Prochains rendez-vous" />
           <div className="space-y-4 2xl:grid 2xl:grid-cols-2 2xl:gap-4 2xl:space-y-0">
-            {calendar.items.map((item) => (
-              <article className="official-card group rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl" key={item.id}>
+            {calendar.items.map((item) => {
+              // Seuls les matchs issus du CRM ont un identifiant exploitable par
+              // /matchs/[id] ; les repères du repli vitrine restent non cliquables.
+              const detailHref = item.kind === "match" && isUuid(item.id) ? `/matchs/${item.id}` : null;
+              const card = (
+              <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-black uppercase text-[#664d00]">
                     {item.dateLabel} · {item.timeLabel}
@@ -258,8 +263,28 @@ export default async function CalendarPage() {
                   <MapPin size={17} className="text-[#002f1d]" />
                   {item.place}
                 </p>
-              </article>
-            ))}
+                {detailHref ? (
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-black uppercase text-[#07542f]">
+                    Voir le match <ArrowRight size={14} aria-hidden="true" />
+                  </span>
+                ) : null}
+              </>
+              );
+
+              return detailHref ? (
+                <Link
+                  className="focus-ring official-card group block rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl"
+                  href={detailHref}
+                  key={item.id}
+                >
+                  {card}
+                </Link>
+              ) : (
+                <article className="official-card group rounded-lg bg-white p-5 transition hover:-translate-y-1 hover:shadow-2xl" key={item.id}>
+                  {card}
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>

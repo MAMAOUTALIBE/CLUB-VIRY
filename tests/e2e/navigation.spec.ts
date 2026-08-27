@@ -204,6 +204,9 @@ test.describe("Appels a l'action", () => {
   });
 
   test("les onglets du hub sportif changent de panneau", async ({ page }) => {
+    // Le hub à onglets n'existe que sur ordinateur : sous 1280 px, l'accueil affiche
+    // le programme du jour et le bloc direct à la place.
+    test.skip(await isMobileLayout(page), "hub sportif : ordinateur uniquement");
     await page.goto("/");
     const tablist = page.getByRole("tablist", { name: "Choisir le calendrier" });
     await expect(tablist.getByRole("tab", { name: "Entraînements" })).toHaveAttribute("aria-selected", "true");
@@ -214,6 +217,24 @@ test.describe("Appels a l'action", () => {
 
     await tablist.getByRole("tab", { name: "Résultats" }).click();
     await expect(page.getByRole("link", { name: /Voir tous les résultats/ })).toBeVisible();
+  });
+
+  test("l'accueil mobile affiche le programme du jour et mène au planning", async ({ page }) => {
+    test.skip(!(await isMobileLayout(page)), "accueil mobile uniquement");
+    await page.goto("/");
+
+    const program = page.getByRole("region", { name: "Programme du jour" });
+    await expect(program).toBeVisible();
+    await program.getByRole("link", { name: /Voir tout le planning/ }).click();
+    await expect(page).toHaveURL(/\/calendrier$/);
+  });
+
+  test("l'appel à l'inscription reste accessible à toutes les largeurs", async ({ page }) => {
+    await page.goto("/");
+    const cta = page.getByRole("link", { name: /Je m'inscris en ligne/ });
+    await expect(cta).toBeVisible();
+    await cta.click();
+    await expect(page).toHaveURL(/\/inscriptions$/);
   });
 
   test("les actualites sont accessibles a toutes les largeurs", async ({ page }) => {
