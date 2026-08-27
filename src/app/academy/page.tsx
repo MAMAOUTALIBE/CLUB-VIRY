@@ -25,6 +25,12 @@ import { coachesByTeam } from "@/lib/club-pages-data";
 import { getPublicEducators, getSiteSettings } from "@/lib/public-content";
 import { pageMetadata } from "@/lib/seo";
 
+// La page lit l'encadrement et les réglages du CRM. Sans `revalidate`, Next.js la fige
+// au BUILD (s-maxage=31536000) — et l'image Docker se construit hors du réseau Supabase,
+// donc avec les seules données de repli. On aligne la cadence sur les autres pages
+// publiques alimentées par la base (/equipes, /actualites, /le-club…).
+export const revalidate = 300;
+
 export const metadata = pageMetadata("/academy");
 
 // la Plateforme Academy = service EXTERNE déjà développé. La page ne fait que présenter

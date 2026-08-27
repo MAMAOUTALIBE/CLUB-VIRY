@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PublicWeeklyPlanning } from "@/components/PublicWeeklyPlanning";
@@ -8,7 +9,16 @@ import { publicPlanningWeek } from "@/lib/public-weekly-planning";
 import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
-export const metadata = pageMetadata("/calendrier");
+
+// Les flèches « semaine précédente / suivante » n'ont aucune borne : un robot peut
+// remonter indéfiniment de semaine en semaine et faire rendre (force-dynamic) autant
+// de pages quasi vides. Le canonique pointe déjà sur /calendrier ; on ajoute noindex
+// sur les vues datées, pour que les flèches restent suivies mais pas indexées.
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ week?: string }> }): Promise<Metadata> {
+  const { week } = await searchParams;
+  const base = pageMetadata("/calendrier");
+  return week ? { ...base, robots: { index: false, follow: true } } : base;
+}
 
 function requestedReference(value: string | undefined): Date {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date();
