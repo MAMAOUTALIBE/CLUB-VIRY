@@ -1443,6 +1443,22 @@ function isSafePublicUrl(value: string): boolean {
   }
 }
 
+/**
+ * Variante pour les URL d'IMAGE (logo partenaire, photo dirigeant). Meme garde-fou que
+ * isSafePublicUrl contre javascript:, data: et les identifiants dans l'URL, mais http
+ * reste accepte : le televersement passe par Supabase Storage, dont l'URL publique suit
+ * NEXT_PUBLIC_SUPABASE_URL — en auto-heberge c'est une origine http interne.
+ */
+function isSafeImageUrl(value: string): boolean {
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")) return true;
+  try {
+    const url = new URL(value);
+    return (url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 function isRequestStatus(value: unknown): value is NonNullable<AdminPartnershipRequestReviewPayload["status"]> {
   return value === "PENDING" || value === "CONTACTED" || value === "ACCEPTED" || value === "REJECTED" || value === "ARCHIVED";
 }
@@ -3426,6 +3442,12 @@ export function validateAdminOfficialPayload(input: unknown, options: { partial?
     issues.push({ field: "orderIndex", message: "Ordre invalide." });
   }
 
+  // La photo est rendue telle quelle dans un <img src>, dans le JSON-LD et dans les
+  // metadonnees OpenGraph de la fiche publique : elle doit rester une URL d'image.
+  if (photoUrl && (photoUrl.length > 1000 || !isSafeImageUrl(photoUrl))) {
+    issues.push({ field: "photoUrl", message: "Photo invalide : utilisez un chemin interne /… ou une URL http(s)." });
+  }
+
   if (options.partial && Object.keys(body).length === 0) {
     issues.push({ field: "body", message: "Au moins un champ est obligatoire." });
   }
@@ -3474,6 +3496,18 @@ export function validateAdminPartnerPayload(input: unknown, options: { partial?:
 
   if (slug && !isSlug(slug)) {
     issues.push({ field: "slug", message: "Slug partenaire invalide." });
+  }
+
+  // Le logo finit dans un <img src> et le site dans un <a href> de l'accueil : meme
+  // controle que pour les medias et le lien de suivi d'un match, qui passent deja par
+  // ces garde-fous. Sans quoi un javascript: saisi dans le CRM atterrit sur une page
+  // publique (la CSP autorise 'unsafe-inline', elle ne bloquerait pas).
+  if (logoUrl && (logoUrl.length > 1000 || !isSafeImageUrl(logoUrl))) {
+    issues.push({ field: "logoUrl", message: "Logo invalide : utilisez un chemin interne /… ou une URL http(s)." });
+  }
+
+  if (websiteUrl && (websiteUrl.length > 1000 || !isSafePublicUrl(websiteUrl))) {
+    issues.push({ field: "websiteUrl", message: "Site web invalide : utilisez une URL HTTPS." });
   }
 
   if (tier && tier.length > 80) {
