@@ -79,17 +79,34 @@ test("la section reste mobile/tablette et la source ne contient aucun fallback",
   assert.doesNotMatch(view, /getMobileMatchFeed[\s\S]{0,500}getFallbackCalendarItems/);
 });
 
-test("le direct s'ajoute sous xl sans priver le mobile de l'appel a l'inscription", async () => {
+test("le bloc d'accueil garde le direct desktop et réserve la priorité média au mobile", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/MobileLiveResults.tsx", import.meta.url), "utf8");
+  const homeLiveGallery = await readFile(new URL("../src/components/HomeLiveGallery.tsx", import.meta.url), "utf8");
 
-  // Le bloc « Rejoignez la famille Viry » est rendu a TOUTES les largeurs : c'est le
-  // seul appel a l'inscription de l'accueil, le masquer prive le mobile de ce chemin.
-  assert.match(page, /<section className="mx-auto max-w-7xl px-4 pb-10 pt-10[^"]*">[\s\S]*Rejoignez la/);
-  assert.doesNotMatch(page, /<section className="mx-auto hidden max-w-7xl[^"]*xl:block[^"]*">[\s\S]*Rejoignez la/);
-  // Le direct, lui, reste propre au mobile.
+  assert.doesNotMatch(page, /Rejoignez la[\s\S]{0,30}famille Viry/);
+  assert.match(page, /selectHomeMediaCard\(mobileMatchFeed\.live, homepageVideoMedia, now\)/);
+  assert.match(page, /<HomeLiveGallery desktopLiveMatch=\{desktopLiveMatch\} media=\{homepageMedia\} photos=\{latestGalleryPhotos\} \/>/);
+  assert.match(homeLiveGallery, /grid gap-5 lg:grid-cols-2/);
+  assert.match(homeLiveGallery, /Aucun match en direct/);
+  assert.match(homeLiveGallery, /\{media \? <div className="lg:hidden"><DynamicMediaCard media=\{media\} \/><\/div> : null\}/);
+  assert.match(homeLiveGallery, /<div className="hidden lg:block">[\s\S]*desktopLiveMatch \? <LiveMatchCard/);
+  assert.match(homeLiveGallery, /Aucune photo publiée/);
+  assert.match(homeLiveGallery, /href="\/medias"/);
+  assert.match(homeLiveGallery, /Voir toutes les photos/);
+
+  // Les autres blocs mobiles déjà présents restent inchangés.
   assert.match(page, /<section className="bg-\[#f7f8f4\] xl:hidden">[\s\S]*<MobileLiveResults/);
   assert.match(component, /id="mobile-live-title" className="[^"]*whitespace-nowrap[^"]*uppercase[^"]*text-red-500"[^>]*>Match en direct<\/h2>/);
+});
+
+test("les photos de l'accueil viennent uniquement des assets PHOTO publiés du CRM", async () => {
+  const db = await readFile(new URL("../src/lib/db/content.ts", import.meta.url), "utf8");
+  const publicContent = await readFile(new URL("../src/lib/public-content.ts", import.meta.url), "utf8");
+
+  assert.match(db, /listLatestPublishedPhotos[\s\S]*?\.eq\("type", "PHOTO"\)[\s\S]*?\.not\("published_at", "is", null\)[\s\S]*?\.lte\("published_at", nowIso\)[\s\S]*?\.order\("published_at", \{ ascending: false \}\)/);
+  assert.match(publicContent, /getLatestPublishedGalleryPhotos[\s\S]*?readPublicDb\(\(\) => listLatestPublishedPhotos\(limit\)\)[\s\S]*?return \(assets \?\? \[\]\)\.map/);
+  assert.doesNotMatch(publicContent, /getLatestPublishedGalleryPhotos[\s\S]{0,500}(?:mockNews|images\.)/);
 });
 
 test("le direct pointe vers une vraie route publique de match", async () => {
@@ -99,6 +116,14 @@ test("le direct pointe vers une vraie route publique de match", async () => {
   assert.match(component, />Suivre le match /);
   assert.match(route, /getPublicMatchDetail\(id\)/);
   assert.match(route, /if \(!detail\) notFound\(\)/);
+});
+
+test("la carte dynamique utilise le lien de suivi CRM puis la fiche publique", async () => {
+  const component = await readFile(new URL("../src/components/HomeLiveGallery.tsx", import.meta.url), "utf8");
+  const feed = await readFile(new URL("../src/lib/mobile-match-feed.ts", import.meta.url), "utf8");
+
+  assert.match(feed, /followUrl: row\.follow_url\?\.trim\(\) \|\| null/);
+  assert.match(component, /match\.followUrl \?\? `\/matchs\/\$\{match\.id\}`/);
 });
 
 test("la lecture détail valide l'UUID et reste DB-only sans fallback", async () => {

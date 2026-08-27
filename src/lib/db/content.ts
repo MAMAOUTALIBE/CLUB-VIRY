@@ -69,11 +69,17 @@ function mediaAssetPayloadToRow(input: AdminMediaAssetPayload) {
     ...(input.albumId !== undefined ? { album_id: input.albumId ?? null } : {}),
     ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
     ...(input.type ? { type: input.type } : {}),
+    ...(input.contentKind !== undefined ? { content_kind: input.contentKind ?? null } : {}),
+    ...(input.playbackKind ? { playback_kind: input.playbackKind } : {}),
+    ...(input.status ? { status: input.status } : {}),
     ...(input.title ? { title: input.title } : {}),
     ...(input.url ? { url: input.url } : {}),
     ...(input.thumbnailUrl !== undefined ? { thumbnail_url: input.thumbnailUrl ?? null } : {}),
     ...(input.altText !== undefined ? { alt_text: input.altText ?? null } : {}),
     ...(input.isFeatured !== undefined ? { is_featured: input.isFeatured } : {}),
+    ...(input.isLive !== undefined ? { is_live: input.isLive } : {}),
+    ...(input.startsAt !== undefined ? { starts_at: input.startsAt ?? null } : {}),
+    ...(input.endsAt !== undefined ? { ends_at: input.endsAt ?? null } : {}),
     ...(input.publishedAt !== undefined ? { published_at: input.publishedAt ?? null } : {})
   };
 }
@@ -275,6 +281,48 @@ export async function listPublicMedia(): Promise<MediaPayload> {
     albums: (albums ?? []) as MediaAlbum[],
     assets: (assets ?? []) as MediaAsset[]
   };
+}
+
+/** Latest gallery photos explicitly published by the CRM. */
+export async function listLatestPublishedPhotos(limit = 4): Promise<MediaAsset[]> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await getSupabaseAdminClient()
+    .from("media_assets")
+    .select("*")
+    .eq("type", "PHOTO")
+    .eq("status", "PUBLISHED")
+    .not("published_at", "is", null)
+    .lte("published_at", nowIso)
+    .order("published_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 12));
+
+  if (error) {
+    throw new Error(`Unable to fetch latest published photos: ${error.message}`);
+  }
+
+  return (data ?? []) as MediaAsset[];
+}
+
+/** CRM-only candidates for the dynamic homepage media card. */
+export async function listHomepageVideoMedia(limit = 50): Promise<MediaAsset[]> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await getSupabaseAdminClient()
+    .from("media_assets")
+    .select("*")
+    .eq("type", "VIDEO")
+    .eq("status", "PUBLISHED")
+    .not("content_kind", "is", null)
+    .not("published_at", "is", null)
+    .lte("published_at", nowIso)
+    .order("published_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 100));
+
+  if (error) {
+    throw new Error(`Unable to fetch homepage video media: ${error.message}`);
+  }
+
+  return (data ?? []) as MediaAsset[];
 }
 
 export async function listMediaForAdmin(limit = 100): Promise<MediaPayload> {

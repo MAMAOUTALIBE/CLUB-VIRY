@@ -72,6 +72,7 @@ export function CalendarAdmin() {
     { name: "homeScore", label: "Score domicile", type: "number", rowKey: "home_score" },
     { name: "awayScore", label: "Score extérieur", type: "number", rowKey: "away_score" },
     { name: "liveMinute", label: "Minute du direct", type: "number", rowKey: "live_minute", placeholder: "67", emptyEditPayload: null, help: "Saisie réelle uniquement ; laissez vide hors direct." },
+    { name: "followUrl", label: "Lien de suivi du direct", type: "url", rowKey: "follow_url", placeholder: "https://… ou /matchs/…", emptyEditPayload: null, help: "Facultatif. Sans lien, la fiche publique du match est utilisée." },
     { name: "notes", label: "Notes", type: "textarea" }
   ];
 

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, CalendarDays, Clock, MapPin, Sparkles, Ticket, Trophy } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Clock, MapPin, Sparkles, Ticket } from "lucide-react";
 import { ButtonLink } from "@/components/ButtonLink";
+import { HomeLiveGallery } from "@/components/HomeLiveGallery";
 import { HomeHeroCarousel } from "@/components/HomeHeroCarousel";
 import { HomeSportsHub } from "@/components/HomeSportsHub";
 import { MobileDailyProgram } from "@/components/MobileDailyProgram";
@@ -11,8 +12,9 @@ import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData, getMobileMatchFeed, getTodayCalendarItems } from "@/lib/calendar-view";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
+import { selectHomeMediaCard } from "@/lib/home-media-card";
 import { getPartnerLogo } from "@/lib/partner-logos";
-import { getPublicNews, getPublicPartners, getSiteSettings, type DisplayPartner } from "@/lib/public-content";
+import { getHomepageVideoMedia, getLatestPublishedGalleryPhotos, getPublicNews, getPublicPartners, getSiteSettings, type DisplayPartner } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
 import type { RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
 
@@ -74,7 +76,18 @@ function InstitutionalPartnerCard({ partner, className, interactive = true }: { 
 
 export default async function HomePage() {
   const now = new Date();
-  const [allNews, settings, featuredPartners, calendar, todayCalendarItems, mobileMatchFeed] = await Promise.all([getPublicNews(5), getSiteSettings(), getPublicPartners(), getCalendarPageData(), getTodayCalendarItems(now), getMobileMatchFeed()]);
+  const [allNews, settings, featuredPartners, calendar, todayCalendarItems, mobileMatchFeed, latestGalleryPhotos, homepageVideoMedia] = await Promise.all([
+    getPublicNews(5),
+    getSiteSettings(),
+    getPublicPartners(),
+    getCalendarPageData(),
+    getTodayCalendarItems(now),
+    getMobileMatchFeed(),
+    getLatestPublishedGalleryPhotos(4),
+    getHomepageVideoMedia()
+  ]);
+  const homepageMedia = selectHomeMediaCard(mobileMatchFeed.live, homepageVideoMedia, now);
+  const desktopLiveMatch = mobileMatchFeed.live ? { kind: "LIVE_MATCH" as const, match: mobileMatchFeed.live } : null;
   const institutionalPartners = getInstitutionalPartners(featuredPartners);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
@@ -151,37 +164,7 @@ export default async function HomePage() {
 
       </div>
 
-      <section className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:pb-14 xl:pt-0">
-        <div className="relative isolate overflow-hidden rounded-3xl border border-[#f7c600]/20 text-white shadow-[0_30px_70px_rgba(0,18,11,0.45)]">
-          <Image src={images.youthTeam} alt="" fill sizes="100vw" className="object-cover object-center" style={{ zIndex: 0 }} />
-          {/* Overlays : profondeur + lisibilité */}
-          <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#001c10]/92 via-[#001c10]/70 to-[#001c10]/20" aria-hidden="true" />
-          <div className="absolute inset-0 z-[1] bg-gradient-to-t from-[#001c10]/80 to-transparent" aria-hidden="true" />
-          <div className="stadium-grid pointer-events-none absolute inset-0 z-[1] opacity-40" aria-hidden="true" />
-          <div className="relative z-[2] grid gap-8 p-7 sm:p-10 lg:grid-cols-[1.4fr_0.9fr] lg:items-center">
-            <div>
-              <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[#f7c600]/12 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#f7c600] ring-1 ring-[#f7c600]/30">
-                Inscriptions 2025 / 2026
-              </p>
-              <h2 className="mt-4 max-w-2xl text-4xl font-black uppercase leading-[0.95] sm:text-5xl">
-                Rejoignez la <span className="text-[#f7c600]">famille Viry</span>
-              </h2>
-              <p className="mt-4 max-w-xl text-lg leading-7 text-white/85">École de foot, préformation, formation, compétitions : il y a une place pour chacun.</p>
-              <div className="mt-7 flex flex-wrap gap-4">
-                <ButtonLink href="/inscriptions">Je m'inscris en ligne</ButtonLink>
-                <ButtonLink href="/detections-recrutement" variant="outline">Détections</ButtonLink>
-              </div>
-            </div>
-            <div className="relative overflow-hidden rounded-2xl border border-[#f7c600]/35 bg-[#001c10]/70 p-6 backdrop-blur-md sm:p-7">
-              <span className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#f7c600]/15 blur-3xl" aria-hidden="true" />
-              <Trophy className="text-[#f7c600]" size={42} aria-hidden="true" />
-              <p className="mt-4 text-2xl font-black uppercase leading-tight">Former aujourd'hui</p>
-              <p className="text-2xl font-black uppercase leading-tight text-[#f7c600]">Préparer demain</p>
-              <p className="mt-3 text-sm leading-6 text-white/80">Un encadrement diplômé et un vrai projet de jeu, de l'école de foot aux seniors.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HomeLiveGallery desktopLiveMatch={desktopLiveMatch} media={homepageMedia} photos={latestGalleryPhotos} />
 
       {gridNews.length > 0 ? (
         <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 xl:py-14">

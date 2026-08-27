@@ -649,6 +649,49 @@ test("admin media asset validation requires an url on creation", () => {
   assert.match(JSON.stringify(result), /URL media invalide/);
 });
 
+test("admin media asset validation accepte un direct entraînement planifié", () => {
+  const result = validateAdminMediaAssetPayload({
+    title: "Direct entraînement U16",
+    type: "VIDEO",
+    contentKind: "TRAINING",
+    playbackKind: "BROADCAST_LINK",
+    status: "PUBLISHED",
+    url: "https://video.example/live.m3u8",
+    thumbnailUrl: "https://video.example/cover.jpg",
+    isLive: true,
+    startsAt: "2026-08-27T18:00:00.000Z",
+    endsAt: "2026-08-27T20:00:00.000Z",
+    publishedAt: "2026-08-27T17:00:00.000Z"
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.data.isLive, true);
+});
+
+test("admin media asset validation refuse un direct match dans la médiathèque et les dates inversées", () => {
+  const result = validateAdminMediaAssetPayload({
+    title: "Mauvais direct",
+    type: "VIDEO",
+    contentKind: "MATCH",
+    url: "https://video.example/live.mp4",
+    isLive: true,
+    startsAt: "2026-08-27T20:00:00.000Z",
+    endsAt: "2026-08-27T18:00:00.000Z"
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(JSON.stringify(result), /reserve aux entrainements/);
+  assert.match(JSON.stringify(result), /fin doit etre apres le debut/);
+});
+
+test("admin media asset partial update does not overwrite the media type", () => {
+  const result = validateAdminMediaAssetPayload({ isLive: false }, { partial: true });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.data.isLive, false);
+  assert.equal("type" in result.data, false);
+});
+
 test("admin partner validation rejects invalid slugs", () => {
   const result = validateAdminPartnerPayload({
     name: "Partenaire Local",

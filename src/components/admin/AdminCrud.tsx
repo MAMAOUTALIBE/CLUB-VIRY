@@ -30,6 +30,8 @@ export type CrudField = {
   toPayload?: (raw: string) => unknown;
   /** Valeur explicitement envoyée à l'édition lorsque le champ est vidé. */
   emptyEditPayload?: unknown;
+  /** Valeur initiale à la création. */
+  defaultValue?: string;
   /** Calcule la valeur initiale du champ lors de l'édition (ex: centimes -> euros). */
   fromRowValue?: (row: Row) => string;
   /** Endpoint multipart pour les champs fichier. Doit retourner data[uploadResponseKey]. */
@@ -194,7 +196,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
     customValuesRef.current = null;
     tagsRef.current = null;
     const blank: Record<string, string> = {};
-    for (const f of fields) blank[f.name] = f.type === "boolean" ? "true" : f.type === "select" && f.options?.[0] ? f.options[0].value : "";
+    for (const f of fields) blank[f.name] = f.defaultValue ?? (f.type === "boolean" ? "true" : f.type === "select" && f.options?.[0] ? f.options[0].value : "");
     setForm(blank);
     setEditing({});
     setFormError("");

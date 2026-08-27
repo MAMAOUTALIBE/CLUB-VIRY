@@ -229,12 +229,24 @@ test.describe("Appels a l'action", () => {
     await expect(page).toHaveURL(/\/calendrier$/);
   });
 
-  test("l'appel à l'inscription reste accessible à toutes les largeurs", async ({ page }) => {
+  test("le bloc direct et photos est accessible à toutes les largeurs", async ({ page }, testInfo) => {
     await page.goto("/");
-    const cta = page.getByRole("link", { name: /Je m'inscris en ligne/ });
-    await expect(cta).toBeVisible();
-    await cta.click();
-    await expect(page).toHaveURL(/\/inscriptions$/);
+    const section = page.getByRole("region", { name: "Direct et photos des matchs" });
+    await expect(section).toBeVisible();
+    await expect(section.getByRole("heading", { name: "Dernières images des matchs" })).toBeVisible();
+
+    const mediaHeading = section.getByRole("heading", { name: /Match en direct|Dernier match en vidéo|Entraînement en direct|Dernier entraînement en vidéo/ });
+    if (testInfo.project.name === "ordinateur") {
+      await expect(section.getByText(/En direct|Aucun match en direct/).first()).toBeVisible();
+      await expect(mediaHeading).toHaveCount(1);
+    } else {
+      await expect(mediaHeading).toHaveCount((await mediaHeading.count()) > 0 ? 1 : 0);
+    }
+
+    const galleryLink = section.getByRole("link", { name: "Voir toutes les photos" });
+    await expect(galleryLink).toBeVisible();
+    await galleryLink.click();
+    await expect(page).toHaveURL(/\/medias$/);
   });
 
   test("le calendrier et les résultats mènent à la fiche du match", async ({ page }) => {

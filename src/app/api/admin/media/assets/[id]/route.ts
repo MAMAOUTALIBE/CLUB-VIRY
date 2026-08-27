@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
@@ -38,6 +39,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
   try {
     const asset = await updateMediaAsset(id, payload.data);
+    revalidatePath("/");
+    revalidatePath("/medias");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "media.asset.updated",
@@ -71,6 +74,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     if (!deleted) {
       return jsonError(404, "NOT_FOUND", "Média introuvable.");
     }
+
+    revalidatePath("/");
+    revalidatePath("/medias");
 
     await recordActivity({
       actorId: admin.context.user.id,

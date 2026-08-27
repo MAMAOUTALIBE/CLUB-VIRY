@@ -180,6 +180,7 @@ export type AdminMatchPayload = {
   homeScore?: number;
   awayScore?: number;
   liveMinute?: number | null;
+  followUrl?: string | null;
   notes?: string;
 };
 
@@ -258,12 +259,18 @@ export type AdminMediaAssetPayload = {
   albumId?: string;
   teamId?: string;
   type?: "PHOTO" | "VIDEO";
+  contentKind?: "MATCH" | "TRAINING" | null;
+  playbackKind?: "VIDEO" | "BROADCAST_LINK";
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   title?: string;
   url?: string;
-  thumbnailUrl?: string;
+  thumbnailUrl?: string | null;
   altText?: string;
   isFeatured?: boolean;
-  publishedAt?: string;
+  isLive?: boolean;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  publishedAt?: string | null;
 };
 
 export type AdminPartnerPayload = {
@@ -1400,6 +1407,24 @@ function isDocumentStatus(value: unknown): value is NonNullable<AdminDocumentRev
 
 function isMediaType(value: unknown): value is NonNullable<AdminMediaAssetPayload["type"]> {
   return value === "PHOTO" || value === "VIDEO";
+}
+
+function isMediaContentKind(value: unknown): value is NonNullable<AdminMediaAssetPayload["contentKind"]> {
+  return value === "MATCH" || value === "TRAINING";
+}
+
+function isMediaPlaybackKind(value: unknown): value is NonNullable<AdminMediaAssetPayload["playbackKind"]> {
+  return value === "VIDEO" || value === "BROADCAST_LINK";
+}
+
+function isSafePublicUrl(value: string): boolean {
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("\\")) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password;
+  } catch {
+    return false;
+  }
 }
 
 function isRequestStatus(value: unknown): value is NonNullable<AdminPartnershipRequestReviewPayload["status"]> {
@@ -2582,6 +2607,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   const homeScore = typeof body.homeScore === "number" ? body.homeScore : undefined;
   const awayScore = typeof body.awayScore === "number" ? body.awayScore : undefined;
   const liveMinute = body.liveMinute === null ? null : typeof body.liveMinute === "number" ? body.liveMinute : undefined;
+  const followUrl = body.followUrl === null ? null : normalizeString(body.followUrl);
   const notes = normalizeString(body.notes);
 
   if (teamId && !isUuid(teamId)) {
@@ -2628,6 +2654,10 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
     issues.push({ field: "liveMinute", message: "Minute de direct invalide." });
   }
 
+  if (typeof followUrl === "string" && (followUrl.length > 1500 || !isSafePublicUrl(followUrl))) {
+    issues.push({ field: "followUrl", message: "Lien de suivi invalide." });
+  }
+
   if (notes && notes.length > 1000) {
     issues.push({ field: "notes", message: "Notes trop longues." });
   }
@@ -2655,6 +2685,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
       ...(homeScore !== undefined ? { homeScore } : {}),
       ...(awayScore !== undefined ? { awayScore } : {}),
       ...(liveMinute !== undefined ? { liveMinute } : {}),
+      ...(body.followUrl !== undefined ? { followUrl: followUrl ?? null } : {}),
       ...(notes ? { notes } : {})
     }
   };
@@ -3179,13 +3210,19 @@ export function validateAdminMediaAssetPayload(
 
   const albumId = normalizeString(body.albumId);
   const teamId = normalizeString(body.teamId);
-  const type = normalizeString(body.type) ?? "PHOTO";
+  const type = normalizeString(body.type) ?? (options.partial ? undefined : "PHOTO");
+  const contentKind = body.contentKind === null ? null : normalizeString(body.contentKind);
+  const playbackKind = normalizeString(body.playbackKind);
+  const status = normalizeString(body.status);
   const title = normalizeString(body.title);
   const url = normalizeString(body.url);
-  const thumbnailUrl = normalizeString(body.thumbnailUrl);
+  const thumbnailUrl = body.thumbnailUrl === null ? null : normalizeString(body.thumbnailUrl);
   const altText = normalizeString(body.altText);
   const isFeatured = typeof body.isFeatured === "boolean" ? body.isFeatured : undefined;
-  const publishedAt = normalizeString(body.publishedAt);
+  const isLive = typeof body.isLive === "boolean" ? body.isLive : undefined;
+  const startsAt = body.startsAt === null ? null : normalizeString(body.startsAt);
+  const endsAt = body.endsAt === null ? null : normalizeString(body.endsAt);
+  const publishedAt = body.publishedAt === null ? null : normalizeString(body.publishedAt);
 
   if (albumId && !isUuid(albumId)) {
     issues.push({ field: "albumId", message: "Identifiant album invalide." });
@@ -3199,6 +3236,18 @@ export function validateAdminMediaAssetPayload(
     issues.push({ field: "type", message: "Type media invalide." });
   }
 
+  if (typeof contentKind === "string" && !isMediaContentKind(contentKind)) {
+    issues.push({ field: "contentKind", message: "Contexte media invalide." });
+  }
+
+  if (playbackKind && !isMediaPlaybackKind(playbackKind)) {
+    issues.push({ field: "playbackKind", message: "Mode de lecture invalide." });
+  }
+
+  if (status && !isPublicationStatus(status)) {
+    issues.push({ field: "status", message: "Statut media invalide." });
+  }
+
   if (!options.partial && (!title || title.length < 2 || title.length > 180)) {
     issues.push({ field: "title", message: "Titre media invalide." });
   }
@@ -3207,20 +3256,42 @@ export function validateAdminMediaAssetPayload(
     issues.push({ field: "title", message: "Titre media invalide." });
   }
 
-  if (!options.partial && (!url || url.length > 1000)) {
+  if (!options.partial && (!url || url.length > 1000 || !isSafePublicUrl(url))) {
     issues.push({ field: "url", message: "URL media invalide." });
   }
 
-  if (url && url.length > 1000) {
+  if (url && (url.length > 1000 || !isSafePublicUrl(url))) {
     issues.push({ field: "url", message: "URL media invalide." });
+  }
+
+
+  if (typeof thumbnailUrl === "string" && (thumbnailUrl.length > 1000 || !isSafePublicUrl(thumbnailUrl))) {
+    issues.push({ field: "thumbnailUrl", message: "Image de couverture invalide." });
   }
 
   if (altText && altText.length > 220) {
     issues.push({ field: "altText", message: "Texte alternatif trop long." });
   }
 
-  if (publishedAt && !isIsoDateTime(publishedAt)) {
+  if (typeof publishedAt === "string" && !isIsoDateTime(publishedAt)) {
     issues.push({ field: "publishedAt", message: "Date publication media invalide." });
+  }
+
+
+  if (typeof startsAt === "string" && !isIsoDateTime(startsAt)) {
+    issues.push({ field: "startsAt", message: "Date de debut media invalide." });
+  }
+
+  if (typeof endsAt === "string" && !isIsoDateTime(endsAt)) {
+    issues.push({ field: "endsAt", message: "Date de fin media invalide." });
+  }
+
+  if (typeof startsAt === "string" && typeof endsAt === "string" && Date.parse(endsAt) <= Date.parse(startsAt)) {
+    issues.push({ field: "endsAt", message: "La fin doit etre apres le debut." });
+  }
+
+  if (isLive && contentKind === "MATCH") {
+    issues.push({ field: "isLive", message: "Le direct media est reserve aux entrainements ; utilisez le module Matchs pour un match en direct." });
   }
 
   if (options.partial && Object.keys(body).length === 0) {
@@ -3237,12 +3308,18 @@ export function validateAdminMediaAssetPayload(
       ...(albumId ? { albumId } : {}),
       ...(teamId ? { teamId } : {}),
       ...(type ? { type: type as AdminMediaAssetPayload["type"] } : {}),
+      ...(body.contentKind !== undefined ? { contentKind: (contentKind as AdminMediaAssetPayload["contentKind"]) ?? null } : {}),
+      ...(playbackKind ? { playbackKind: playbackKind as AdminMediaAssetPayload["playbackKind"] } : {}),
+      ...(status ? { status: status as AdminMediaAssetPayload["status"] } : {}),
       ...(title ? { title } : {}),
       ...(url ? { url } : {}),
-      ...(thumbnailUrl ? { thumbnailUrl } : {}),
+      ...(body.thumbnailUrl !== undefined ? { thumbnailUrl: thumbnailUrl ?? null } : {}),
       ...(altText ? { altText } : {}),
       ...(isFeatured !== undefined ? { isFeatured } : {}),
-      ...(publishedAt ? { publishedAt } : {})
+      ...(isLive !== undefined ? { isLive } : {}),
+      ...(body.startsAt !== undefined ? { startsAt: startsAt ?? null } : {}),
+      ...(body.endsAt !== undefined ? { endsAt: endsAt ?? null } : {}),
+      ...(body.publishedAt !== undefined ? { publishedAt: publishedAt ?? null } : {})
     }
   };
 }

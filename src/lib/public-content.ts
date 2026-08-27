@@ -5,7 +5,7 @@ import { cache } from "react";
 import type { LucideIcon } from "lucide-react";
 
 import { news as mockNews, partners as mockPartners, products as mockProducts, teams as mockTeams } from "@/lib/data";
-import { getPublishedNewsBySlug, listPartnersForAdmin, listPublicMedia, listPublishedNews, listTeamMedia } from "@/lib/db/content";
+import { getPublishedNewsBySlug, listHomepageVideoMedia, listLatestPublishedPhotos, listPartnersForAdmin, listPublicMedia, listPublishedNews, listTeamMedia } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { getAllSettings } from "@/lib/db/settings";
 import { getPublicTeamRosterBySlug, listTeams } from "@/lib/db/teams";
@@ -410,6 +410,23 @@ export async function getPublicAlbums(): Promise<DisplayAlbum[]> {
     return payload.albums.map((a) => ({ title: a.title, image: a.cover_image_url || images.teamHuddle }));
   }
   return mockNews.map((n) => ({ title: n.title, image: n.image }));
+}
+
+export type DisplayGalleryPhoto = { id: string; title: string; image: string };
+
+/** Homepage gallery preview: CRM-only, with no showcase fallback. */
+export async function getLatestPublishedGalleryPhotos(limit = 4): Promise<DisplayGalleryPhoto[]> {
+  const assets = await readPublicDb(() => listLatestPublishedPhotos(limit));
+  return (assets ?? []).map((asset) => ({
+    id: asset.id,
+    title: asset.alt_text?.trim() || asset.title,
+    image: asset.url
+  }));
+}
+
+/** Dynamic homepage card candidates: exact CRM rows, without fallback. */
+export async function getHomepageVideoMedia() {
+  return (await readPublicDb(() => listHomepageVideoMedia())) ?? [];
 }
 
 export type DisplayTeam = { slug: string; name: string; category: string; level: string; pool: string | null; season: string; description: string; image: string };

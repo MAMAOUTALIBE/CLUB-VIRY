@@ -73,6 +73,7 @@ export function getFallbackMatches(limit = 20): Match[] {
     home_score: null,
     away_score: null,
     live_minute: null,
+    follow_url: null,
     notes: null,
     created_at: now,
     updated_at: now
@@ -101,6 +102,7 @@ export function getFallbackRecentResults(): Match[] {
     home_score: homeScore,
     away_score: awayScore,
     live_minute: null,
+    follow_url: null,
     notes: null,
     created_at: now,
     updated_at: now
