@@ -12,7 +12,7 @@ import { images } from "@/lib/images";
 import { hasLiveSocials, socialItems, socialUrl } from "@/lib/socials";
 import { pageMetadata } from "@/lib/seo";
 
-export const revalidate = 300; // ISR : contenu CMS rafraichi toutes les 5 min
+export const dynamic = "force-dynamic"; // lecture DB : le pré-rendu au build fige le repli de démonstration
 
 export const metadata = pageMetadata("/calendrier");
 

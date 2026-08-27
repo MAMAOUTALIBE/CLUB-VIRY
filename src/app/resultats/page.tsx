@@ -12,7 +12,7 @@ import { getResultsPageData } from "@/lib/results-view";
 import { isUuid } from "@/lib/api/validation";
 import { pageMetadata } from "@/lib/seo";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic"; // lecture DB : le pré-rendu au build fige le repli de démonstration
 
 export const metadata = pageMetadata("/resultats");
 
