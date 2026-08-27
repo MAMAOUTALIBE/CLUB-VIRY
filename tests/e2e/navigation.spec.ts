@@ -17,7 +17,9 @@ const PUBLIC_PAGES: Array<{ route: string; title: RegExp; heading: RegExp }> = [
   { route: "/academy", title: /Academy/, heading: /academy|sport/i },
   { route: "/equipes", title: /quipes/, heading: /quipes|cat[ée]gories/i },
   { route: "/actualites", title: /Actualit/, heading: /actualit|vie du club/i },
-  { route: "/calendrier", title: /Calendrier/, heading: /calendrier/i },
+  // Le <h1> public annonce la semaine de planning (et non le mot « calendrier »)
+  // depuis la separation des vues CRM / publique.
+  { route: "/calendrier", title: /Calendrier/, heading: /semaine|calendrier/i },
   { route: "/resultats", title: /sultats/, heading: /sultats/i },
   { route: "/medias", title: /dias/, heading: /galerie|dias/i },
   { route: "/boutique", title: /Boutique/, heading: /boutique|produits/i },
@@ -65,6 +67,20 @@ test.describe("Pages publiques", () => {
       await expect(visibleHeadings.first()).toHaveText(heading);
     });
   }
+});
+
+test.describe("Indexation", () => {
+  test("les semaines datees du calendrier ne sont pas indexables", async ({ page }) => {
+    await page.goto("/calendrier");
+    // La vue « cette semaine » reste la page de reference indexee.
+    await expect(page.locator('head meta[name="robots"][content*="noindex"]')).toHaveCount(0);
+
+    // Les fleches precedent/suivant ouvrent une infinite de semaines : elles restent
+    // navigables mais ne doivent pas entrer dans l'index.
+    await page.goto("/calendrier?week=2026-01-05");
+    await expect(page.locator('head meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute("href", /\/calendrier$/);
+  });
 });
 
 test.describe("Redirections et ancres", () => {
