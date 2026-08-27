@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { jsonOk, parseLimit } from "@/lib/api/http";
+import { toPublicEvent, toPublicMatch } from "@/lib/api/public-projection";
 import { listPublicCalendar } from "@/lib/db/calendar";
 import { getFallbackCalendar } from "@/lib/public-fallbacks";
 import { readPublicDb } from "@/lib/public-db";
@@ -23,8 +24,9 @@ export async function GET(request: NextRequest) {
   const calendar = await readPublicDb(() => listPublicCalendar({ limit, from, to }));
 
   if (calendar && (calendar.events.length > 0 || calendar.matches.length > 0)) {
-    return jsonOk(calendar);
+    return jsonOk({ events: calendar.events.map(toPublicEvent), matches: calendar.matches.map(toPublicMatch) });
   }
 
-  return jsonOk(getFallbackCalendar(limit));
+  const fallback = getFallbackCalendar(limit);
+  return jsonOk({ events: fallback.events.map(toPublicEvent), matches: fallback.matches.map(toPublicMatch) });
 }
