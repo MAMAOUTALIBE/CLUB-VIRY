@@ -61,10 +61,15 @@ test("toute page publique alimentee par la base declare une politique de fraiche
 
 test("le plan de site se regenere au runtime", async () => {
   const source = await readFile(new URL("sitemap.ts", appDir), "utf8");
-  const match = source.match(/^export const revalidate\s*=\s*(\d+)/m);
 
-  assert.ok(match, "sitemap.ts doit exporter revalidate");
-  assert.ok(Number(match[1]) > 0 && Number(match[1]) <= 86_400, "le plan de site doit se rafraichir au moins une fois par jour");
+  // sitemap.ts est un Route Handler, pas une page : il est mis en cache par defaut et
+  // seule une config dynamique le rend a la demande. Un `revalidate` seul laissait la
+  // reponse en HIT permanent, donc fige sur le rendu de build (sans base, donc mocke).
+  assert.match(
+    source,
+    /^export const dynamic\s*=\s*"force-dynamic"/m,
+    "sitemap.ts doit etre force-dynamic : un revalidate seul ne sort pas le Route Handler du cache"
+  );
 });
 
 test("le plan de site couvre les fiches personnes publiees (dirigeants ET educateurs)", async () => {
