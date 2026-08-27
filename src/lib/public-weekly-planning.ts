@@ -13,6 +13,8 @@ export type PublicPlanningItem = {
   endsAt: string | null;
   categoryId: string | null;
   categoryName: string | null;
+  categorySubtitle: string | null;
+  categoryOrder: number | null;
   teamName: string | null;
   groupLabel: string | null;
   pitchCode: "T1" | "T2" | "T3" | "T4" | null;
@@ -21,6 +23,8 @@ export type PublicPlanningItem = {
 export type PublicPlanningRow = {
   key: string;
   label: string;
+  subtitle: string | null;
+  order: number;
   items: PublicPlanningItem[];
 };
 
@@ -29,13 +33,20 @@ export function publicPlanningRows(items: PublicPlanningItem[]): PublicPlanningR
   for (const item of items) {
     const key = item.categoryId ?? "uncategorized";
     const label = item.categoryName?.trim() || "Sans catégorie";
-    const row = rows.get(key) ?? { key, label, items: [] };
+    const subtitle = item.categorySubtitle?.trim() || null;
+    const row = rows.get(key) ?? {
+      key,
+      label,
+      subtitle: subtitle?.localeCompare(label, "fr", { sensitivity: "base" }) === 0 ? null : subtitle,
+      order: item.categoryOrder ?? Number.MAX_SAFE_INTEGER,
+      items: []
+    };
     row.items.push(item);
     rows.set(key, row);
   }
   return [...rows.values()]
     .map((row) => ({ ...row, items: row.items.sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt)) }))
-    .sort((left, right) => left.label.localeCompare(right.label, "fr"));
+    .sort((left, right) => left.order - right.order || left.label.localeCompare(right.label, "fr"));
 }
 
 export function publicPlanningWeek(reference = new Date()) {

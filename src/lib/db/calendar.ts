@@ -130,8 +130,8 @@ type PublicPlanningRow = {
   category_id: string | null;
   group_label: string | null;
   pitch_code: PublicPlanningItem["pitchCode"];
-  teams: { name: string; categories: { name: string } | null } | null;
-  categories: { name: string } | null;
+  teams: { category_id: string | null; name: string; categories: { name: string; age_range: string; order_index: number } | null } | null;
+  categories: { name: string; age_range: string; order_index: number } | null;
 };
 
 function toPublicPlanningItem(row: PublicPlanningRow, source: PublicPlanningItem["source"]): PublicPlanningItem {
@@ -140,8 +140,10 @@ function toPublicPlanningItem(row: PublicPlanningRow, source: PublicPlanningItem
     source,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
-    categoryId: row.category_id,
+    categoryId: row.category_id ?? row.teams?.category_id ?? null,
     categoryName: row.categories?.name ?? row.teams?.categories?.name ?? null,
+    categorySubtitle: row.categories?.age_range ?? row.teams?.categories?.age_range ?? null,
+    categoryOrder: row.categories?.order_index ?? row.teams?.categories?.order_index ?? null,
     teamName: row.teams?.name ?? null,
     groupLabel: row.group_label,
     pitchCode: row.pitch_code
@@ -150,7 +152,7 @@ function toPublicPlanningItem(row: PublicPlanningRow, source: PublicPlanningItem
 
 /** Public planning cards and CRM cards are projections of these exact rows. */
 export async function listPublicWeeklyPlanning(from: string, toExclusive: string): Promise<PublicPlanningItem[]> {
-  const fields = "id,starts_at,ends_at,category_id,group_label,pitch_code,teams(name,categories(name)),categories(name)";
+  const fields = "id,starts_at,ends_at,category_id,group_label,pitch_code,teams(category_id,name,categories(name,age_range,order_index)),categories(name,age_range,order_index)";
   const supabase = getSupabaseAdminClient();
   const [eventsResult, matchesResult] = await Promise.all([
     supabase.from("club_events").select(fields).eq("visibility", "PUBLIC").eq("status", "SCHEDULED").is("deleted_at", null).gte("starts_at", from).lt("starts_at", toExclusive).order("starts_at", { ascending: true }),

@@ -10,15 +10,23 @@ const base = {
   endsAt: "2026-09-02T17:00:00.000Z",
   categoryId: "u11-u14",
   categoryName: "U11 à U14",
+  categorySubtitle: "Collège",
+  categoryOrder: 20,
   teamName: "U12",
   groupLabel: "A – B – C",
   pitchCode: "T2"
 };
 
-test("la vue publique regroupe les mêmes lignes CRM par catégorie", () => {
-  const rows = publicPlanningRows([{ ...base, id: "one" }, { ...base, id: "two", categoryId: "primary", categoryName: "U6 à U10" }]);
-  assert.deepEqual(rows.map((row) => row.label), ["U11 à U14", "U6 à U10"]);
+test("la vue publique regroupe et ordonne les lignes selon les catégories CRM", () => {
+  const rows = publicPlanningRows([{ ...base, id: "one" }, { ...base, id: "two", categoryId: "primary", categoryName: "U6 à U10", categorySubtitle: "École primaire", categoryOrder: 10 }]);
+  assert.deepEqual(rows.map((row) => row.label), ["U6 à U10", "U11 à U14"]);
+  assert.deepEqual(rows.map((row) => row.subtitle), ["École primaire", "Collège"]);
   assert.equal(rows.flatMap((row) => row.items).length, 2);
+});
+
+test("un sous-titre identique au titre reste masqué", () => {
+  const [row] = publicPlanningRows([{ ...base, id: "one", categoryName: "Féminines", categorySubtitle: "FÉMININES" }]);
+  assert.equal(row.subtitle, null);
 });
 
 test("la semaine publique commence le lundi et affiche les cinq jours ouvrés", () => {
@@ -37,5 +45,6 @@ test("le composant public reste compact et n’expose aucun contrôle administra
 test("la requête publique filtre visibilité et annulation sans fallback", async () => {
   const source = await readFile(new URL("../src/lib/db/calendar.ts", import.meta.url), "utf8");
   assert.match(source, /listPublicWeeklyPlanning[\s\S]*eq\("visibility", "PUBLIC"\)[\s\S]*neq\("status", "CANCELLED"\)/);
+  assert.match(source, /categoryId: row\.category_id \?\? row\.teams\?\.category_id \?\? null/);
   assert.doesNotMatch(source.slice(source.indexOf("listPublicWeeklyPlanning")), /Fallback|fallback/);
 });

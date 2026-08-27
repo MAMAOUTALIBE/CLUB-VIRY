@@ -36,7 +36,13 @@ export function PublicWeeklyPlanning({ items, weekKeys }: { items: PublicPlannin
         </div>
         {rows.length ? rows.map((row) => (
           <div key={row.key} className="grid min-h-[132px] grid-cols-[210px_repeat(5,minmax(150px,1fr))] border-b border-[#77762f] last:border-b-0">
-            <div className="flex items-center gap-3 px-5 py-4 text-white"><UsersRound className="shrink-0 text-[#f7c600]" size={27} aria-hidden="true" /><p className="text-lg font-black uppercase leading-tight">{row.label}</p></div>
+            <div className="flex items-center gap-3 px-5 py-4 text-white">
+              <UsersRound className="shrink-0 text-[#f7c600]" size={27} aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-lg font-black uppercase leading-tight">{row.label}</p>
+                {row.subtitle ? <p className="mt-1 text-xs font-black uppercase leading-tight text-[#f7c600]">{row.subtitle}</p> : null}
+              </div>
+            </div>
             {weekKeys.map((key) => <div key={key} className="flex flex-col justify-center gap-2 border-l border-[#77762f] py-3">{row.items.filter((item) => publicPlanningDateKey(item.startsAt) === key).map((item) => <PlanningSlot key={`${item.source}:${item.id}`} item={item} />)}</div>)}
           </div>
         )) : <div className="flex min-h-52 items-center justify-center px-6 text-center text-sm font-bold text-white/65">Aucun événement public planifié cette semaine.</div>}
