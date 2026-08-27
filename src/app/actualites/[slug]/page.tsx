@@ -11,6 +11,11 @@ type ArticlePageProps = {
   params: Promise<{ slug: string }>;
 };
 
+// generateStaticParams fige au BUILD les articles connus à ce moment-là. L'image Docker
+// étant construite hors du réseau Supabase, ce sont les articles de repli qui étaient
+// prérendus pour un an. `revalidate` aligne ces pages sur l'index /actualites.
+export const revalidate = 300;
+
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
