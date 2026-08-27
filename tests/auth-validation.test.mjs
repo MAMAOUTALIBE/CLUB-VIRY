@@ -505,6 +505,24 @@ test("admin match validation accepts a scheduled match", () => {
   assert.equal(result.ok, true);
 });
 
+test("admin match validation accepte une plage horaire et refuse une fin antérieure", () => {
+  const accepted = validateAdminMatchPayload({
+    opponentName: "Evry FC",
+    startsAt: "2026-09-01T15:00:00.000Z",
+    endsAt: "2026-09-01T16:30:00.000Z"
+  });
+  const rejected = validateAdminMatchPayload({
+    opponentName: "Evry FC",
+    startsAt: "2026-09-01T15:00:00.000Z",
+    endsAt: "2026-09-01T14:30:00.000Z"
+  });
+
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.data.endsAt, "2026-09-01T16:30:00.000Z");
+  assert.equal(rejected.ok, false);
+  assert.match(JSON.stringify(rejected), /fin doit etre apres le debut/);
+});
+
 test("admin match validation accepte et borne la minute de direct CRM", () => {
   const accepted = validateAdminMatchPayload({ liveMinute: 67 }, { partial: true });
   const cleared = validateAdminMatchPayload({ liveMinute: null }, { partial: true });
@@ -525,6 +543,19 @@ test("admin event validation rejects inverted dates", () => {
 
   assert.equal(result.ok, false);
   assert.match(JSON.stringify(result), /fin doit etre apres le debut/);
+});
+
+test("admin event validation accepte un stage planifié", () => {
+  const result = validateAdminEventPayload({
+    title: "Stage gardiens U12",
+    type: "STAGE",
+    startsAt: "2026-09-02T08:00:00.000Z",
+    endsAt: "2026-09-02T14:00:00.000Z",
+    venue: "Terrain T3"
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.data.type, "STAGE");
 });
 
 test("admin event validation accepts a public club event", () => {

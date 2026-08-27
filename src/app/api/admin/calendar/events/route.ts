@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, parseLimit, readJsonBody } from "@/lib/api/http";
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const event = await createEvent(payload.data, admin.context.user.id);
+    revalidatePath("/calendrier");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "calendar.event.created",

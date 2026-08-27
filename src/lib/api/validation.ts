@@ -168,30 +168,31 @@ export type AdminNewsPayload = {
 };
 
 export type AdminMatchPayload = {
-  teamId?: string;
+  teamId?: string | null;
   seasonId?: string;
   opponentName?: string;
   opponentLogoUrl?: string;
   location?: "HOME" | "AWAY" | "NEUTRAL";
   startsAt?: string;
-  venue?: string;
-  competition?: string;
+  endsAt?: string | null;
+  venue?: string | null;
+  competition?: string | null;
   status?: "SCHEDULED" | "LIVE" | "FINISHED" | "POSTPONED" | "CANCELLED";
   homeScore?: number;
   awayScore?: number;
   liveMinute?: number | null;
   followUrl?: string | null;
-  notes?: string;
+  notes?: string | null;
 };
 
 export type AdminEventPayload = {
-  teamId?: string;
+  teamId?: string | null;
   title?: string;
-  type?: "TRAINING" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
+  type?: "TRAINING" | "STAGE" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
   startsAt?: string;
-  endsAt?: string;
-  venue?: string;
-  description?: string;
+  endsAt?: string | null;
+  venue?: string | null;
+  description?: string | null;
   visibility?: "PUBLIC" | "MEMBERS" | "STAFF";
   status?: "SCHEDULED" | "CANCELLED";
   isFeatured?: boolean;
@@ -1374,7 +1375,7 @@ function isMatchStatus(value: unknown): value is NonNullable<AdminMatchPayload["
 }
 
 function isClubEventType(value: unknown): value is NonNullable<AdminEventPayload["type"]> {
-  return value === "TRAINING" || value === "MEETING" || value === "TOURNAMENT" || value === "CLUB_EVENT" || value === "DEADLINE" || value === "OTHER";
+  return value === "TRAINING" || value === "STAGE" || value === "MEETING" || value === "TOURNAMENT" || value === "CLUB_EVENT" || value === "DEADLINE" || value === "OTHER";
 }
 
 function isClubEventVisibility(value: unknown): value is NonNullable<AdminEventPayload["visibility"]> {
@@ -2508,7 +2509,7 @@ export function validateAdminNewsPayload(input: unknown, options: { partial?: bo
   }
 
   const title = normalizeString(body.title);
-  const teamId = normalizeString(body.teamId);
+  const teamId = body.teamId === null ? null : normalizeString(body.teamId);
   const slug = normalizeString(body.slug);
   const excerpt = normalizeString(body.excerpt);
   const content = normalizeString(body.content);
@@ -2601,16 +2602,17 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   const opponentLogoUrl = normalizeString(body.opponentLogoUrl);
   const location = normalizeString(body.location);
   const startsAt = normalizeString(body.startsAt);
-  const venue = normalizeString(body.venue);
-  const competition = normalizeString(body.competition);
+  const endsAt = body.endsAt === null ? null : normalizeString(body.endsAt);
+  const venue = body.venue === null ? null : normalizeString(body.venue);
+  const competition = body.competition === null ? null : normalizeString(body.competition);
   const status = normalizeString(body.status);
   const homeScore = typeof body.homeScore === "number" ? body.homeScore : undefined;
   const awayScore = typeof body.awayScore === "number" ? body.awayScore : undefined;
   const liveMinute = body.liveMinute === null ? null : typeof body.liveMinute === "number" ? body.liveMinute : undefined;
   const followUrl = body.followUrl === null ? null : normalizeString(body.followUrl);
-  const notes = normalizeString(body.notes);
+  const notes = body.notes === null ? null : normalizeString(body.notes);
 
-  if (teamId && !isUuid(teamId)) {
+  if (typeof teamId === "string" && !isUuid(teamId)) {
     issues.push({ field: "teamId", message: "Identifiant equipe invalide." });
   }
 
@@ -2636,6 +2638,14 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
 
   if (startsAt && !isIsoDateTime(startsAt)) {
     issues.push({ field: "startsAt", message: "Date du match invalide." });
+  }
+
+  if (typeof endsAt === "string" && !isIsoDateTime(endsAt)) {
+    issues.push({ field: "endsAt", message: "Date de fin du match invalide." });
+  }
+
+  if (startsAt && typeof endsAt === "string" && isIsoDateTime(startsAt) && isIsoDateTime(endsAt) && new Date(endsAt) < new Date(startsAt)) {
+    issues.push({ field: "endsAt", message: "La fin doit etre apres le debut." });
   }
 
   if (status && !isMatchStatus(status)) {
@@ -2673,20 +2683,21 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   return {
     ok: true,
     data: {
-      ...(teamId ? { teamId } : {}),
+      ...(body.teamId !== undefined ? { teamId: teamId ?? null } : {}),
       ...(seasonId ? { seasonId } : {}),
       ...(opponentName ? { opponentName } : {}),
       ...(opponentLogoUrl ? { opponentLogoUrl } : {}),
       ...(location ? { location: location as AdminMatchPayload["location"] } : {}),
       ...(startsAt ? { startsAt } : {}),
-      ...(venue ? { venue } : {}),
-      ...(competition ? { competition } : {}),
+      ...(body.endsAt !== undefined ? { endsAt: endsAt ?? null } : {}),
+      ...(body.venue !== undefined ? { venue: venue ?? null } : {}),
+      ...(body.competition !== undefined ? { competition: competition ?? null } : {}),
       ...(status ? { status: status as AdminMatchPayload["status"] } : {}),
       ...(homeScore !== undefined ? { homeScore } : {}),
       ...(awayScore !== undefined ? { awayScore } : {}),
       ...(liveMinute !== undefined ? { liveMinute } : {}),
       ...(body.followUrl !== undefined ? { followUrl: followUrl ?? null } : {}),
-      ...(notes ? { notes } : {})
+      ...(body.notes !== undefined ? { notes: notes ?? null } : {})
     }
   };
 }
@@ -2699,18 +2710,18 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
     return { ok: false, issues: [{ field: "body", message: "Le corps de la requete doit etre un objet JSON." }] };
   }
 
-  const teamId = normalizeString(body.teamId);
+  const teamId = body.teamId === null ? null : normalizeString(body.teamId);
   const title = normalizeString(body.title);
   const type = normalizeString(body.type);
   const startsAt = normalizeString(body.startsAt);
-  const endsAt = normalizeString(body.endsAt);
-  const venue = normalizeString(body.venue);
-  const description = normalizeString(body.description);
+  const endsAt = body.endsAt === null ? null : normalizeString(body.endsAt);
+  const venue = body.venue === null ? null : normalizeString(body.venue);
+  const description = body.description === null ? null : normalizeString(body.description);
   const visibility = normalizeString(body.visibility);
   const status = normalizeString(body.status);
   const isFeatured = typeof body.isFeatured === "boolean" ? body.isFeatured : undefined;
 
-  if (teamId && !isUuid(teamId)) {
+  if (typeof teamId === "string" && !isUuid(teamId)) {
     issues.push({ field: "teamId", message: "Identifiant equipe invalide." });
   }
 
@@ -2769,13 +2780,13 @@ export function validateAdminEventPayload(input: unknown, options: { partial?: b
   return {
     ok: true,
     data: {
-      ...(teamId ? { teamId } : {}),
+      ...(body.teamId !== undefined ? { teamId: teamId ?? null } : {}),
       ...(title ? { title } : {}),
       ...(type ? { type: type as AdminEventPayload["type"] } : {}),
       ...(startsAt ? { startsAt } : {}),
-      ...(endsAt ? { endsAt } : {}),
-      ...(venue ? { venue } : {}),
-      ...(description ? { description } : {}),
+      ...(body.endsAt !== undefined ? { endsAt: endsAt ?? null } : {}),
+      ...(body.venue !== undefined ? { venue: venue ?? null } : {}),
+      ...(body.description !== undefined ? { description: description ?? null } : {}),
       ...(visibility ? { visibility: visibility as AdminEventPayload["visibility"] } : {}),
       ...(status ? { status: status as AdminEventPayload["status"] } : {}),
       ...(isFeatured !== undefined ? { isFeatured } : {})

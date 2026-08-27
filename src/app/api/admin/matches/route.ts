@@ -5,10 +5,14 @@ import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, parseLimit, readJsonBody } from "@/lib/api/http";
 import { validateAdminMatchPayload } from "@/lib/api/validation";
 import { recordActivity } from "@/lib/db/foundations";
-import { createMatch, listMatches } from "@/lib/db/teams";
+import { createMatch, listMatchesForAdmin } from "@/lib/db/teams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function getDateParam(value: string | null): string | undefined {
+  return value && !Number.isNaN(new Date(value).getTime()) ? value : undefined;
+}
 
 export async function GET(request: NextRequest) {
   const admin = await getAdminContext(request, "matches:manage");
@@ -17,10 +21,12 @@ export async function GET(request: NextRequest) {
     return admin.response;
   }
 
-  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 50, 100);
+  const limit = parseLimit(request.nextUrl.searchParams.get("limit"), 100, 2000);
+  const from = getDateParam(request.nextUrl.searchParams.get("from"));
+  const to = getDateParam(request.nextUrl.searchParams.get("to"));
 
   try {
-    const matches = await listMatches(limit);
+    const matches = await listMatchesForAdmin({ limit, from, to });
     return jsonOk({ matches });
   } catch (error) {
     return handleDbError("admin/matches", error);

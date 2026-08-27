@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const event = await updateEvent(id, payload.data);
     if (!event) return jsonError(404, "NOT_FOUND", "Événement introuvable.");
+    revalidatePath("/calendrier");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "calendar.event.updated",

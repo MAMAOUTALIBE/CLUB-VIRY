@@ -37,6 +37,7 @@ const clubName = "ES Viry-Châtillon";
 
 const eventTypeLabels: Record<ClubEventType, string> = {
   TRAINING: "Entraînement",
+  STAGE: "Stage",
   MEETING: "Réunion",
   TOURNAMENT: "Tournoi",
   CLUB_EVENT: "Événement club",

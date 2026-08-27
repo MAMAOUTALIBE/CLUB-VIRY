@@ -8,7 +8,7 @@ export type RegistrationStatus = "DRAFT" | "SUBMITTED" | "IN_REVIEW" | "MISSING_
 export type DocumentStatus = "REQUESTED" | "UPLOADED" | "VALIDATED" | "REJECTED";
 export type MatchStatus = "SCHEDULED" | "LIVE" | "FINISHED" | "POSTPONED" | "CANCELLED";
 export type MatchLocation = "HOME" | "AWAY" | "NEUTRAL";
-export type ClubEventType = "TRAINING" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
+export type ClubEventType = "TRAINING" | "STAGE" | "MEETING" | "TOURNAMENT" | "CLUB_EVENT" | "DEADLINE" | "OTHER";
 export type ClubEventVisibility = "PUBLIC" | "MEMBERS" | "STAFF";
 export type ClubEventStatus = "SCHEDULED" | "CANCELLED";
 export type PublicationStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
@@ -232,6 +232,7 @@ export type Match = {
   opponent_logo_url: string | null;
   location: MatchLocation;
   starts_at: string;
+  ends_at: string | null;
   venue: string | null;
   competition: string | null;
   status: MatchStatus;

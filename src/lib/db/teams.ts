@@ -47,6 +47,7 @@ function matchPayloadToRow(input: AdminMatchPayload) {
     ...(input.opponentLogoUrl !== undefined ? { opponent_logo_url: input.opponentLogoUrl ?? null } : {}),
     ...(input.location ? { location: input.location } : {}),
     ...(input.startsAt ? { starts_at: input.startsAt } : {}),
+    ...(input.endsAt !== undefined ? { ends_at: input.endsAt ?? null } : {}),
     ...(input.venue !== undefined ? { venue: input.venue ?? null } : {}),
     ...(input.competition !== undefined ? { competition: input.competition ?? null } : {}),
     ...(input.status ? { status: input.status } : {}),
@@ -178,6 +179,22 @@ export async function listMatches(limit = 20): Promise<Match[]> {
     throw new Error(`Unable to fetch matches: ${error.message}`);
   }
 
+  return (data ?? []) as Match[];
+}
+
+export async function listMatchesForAdmin({ limit = 500, from, to }: { limit?: number; from?: string; to?: string } = {}): Promise<Match[]> {
+  let query = getSupabaseAdminClient()
+    .from("matches")
+    .select("*")
+    .is("deleted_at", null)
+    .order("starts_at", { ascending: true })
+    .limit(limit);
+
+  if (from) query = query.gte("starts_at", from);
+  if (to) query = query.lte("starts_at", to);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Unable to fetch admin matches: ${error.message}`);
   return (data ?? []) as Match[];
 }
 

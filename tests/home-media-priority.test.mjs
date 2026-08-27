@@ -106,7 +106,7 @@ test("le CRM expose le cycle de publication et tous les champs de pilotage", asy
     assert.match(admin, new RegExp(`name: "${field}"`));
   }
   assert.match(admin, /DRAFT[\s\S]*PUBLISHED[\s\S]*ARCHIVED/);
-  assert.match(calendar, /name: "followUrl"/);
+  assert.match(calendar, /name="followUrl"/);
   assert.match(migration, /content_kind[\s\S]*playback_kind[\s\S]*status public\.publication_status[\s\S]*is_live[\s\S]*starts_at[\s\S]*ends_at/);
   assert.match(migration, /add column if not exists follow_url/);
 });

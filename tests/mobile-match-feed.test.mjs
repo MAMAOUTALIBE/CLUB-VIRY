@@ -65,9 +65,10 @@ test("le rendu et l'administration câblent uniquement les logos CRM", async () 
   const admin = await readFile(new URL("../src/components/admin/modules/CalendarAdmin.tsx", import.meta.url), "utf8");
   assert.match(component, /<TeamLogo src=\{match\.homeLogoUrl\}/);
   assert.match(component, /<TeamLogo src=\{match\.awayLogoUrl\}/);
-  assert.match(admin, /name: "teamId"/);
+  assert.match(admin, /name="teamId"/);
   assert.match(admin, /\/api\/admin\/teams\?limit=200/);
-  assert.match(admin, /name: "opponentLogoUrl"[\s\S]*emptyEditPayload: null/);
+  assert.match(admin, /name="opponentLogoUrl"/);
+  assert.match(admin, /opponentLogoUrl: form\.opponentLogoUrl/);
 });
 
 test("la section reste mobile/tablette et la source ne contient aucun fallback", async () => {
