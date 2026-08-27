@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 
 import { jsonOk, parseLimit } from "@/lib/api/http";
+import { toPublicMatch } from "@/lib/api/public-projection";
 import { listMatches } from "@/lib/db/teams";
 import { getFallbackMatches } from "@/lib/public-fallbacks";
 import { readPublicDb } from "@/lib/public-db";
@@ -13,8 +14,8 @@ export async function GET(request: NextRequest) {
   const matches = await readPublicDb(() => listMatches(limit));
 
   if (matches && matches.length > 0) {
-    return jsonOk({ matches });
+    return jsonOk({ matches: matches.map(toPublicMatch) });
   }
 
-  return jsonOk({ matches: getFallbackMatches(limit) });
+  return jsonOk({ matches: getFallbackMatches(limit).map(toPublicMatch) });
 }

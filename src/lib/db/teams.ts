@@ -396,7 +396,10 @@ export async function getPublicTeamRosterBySlug(slug: string): Promise<TeamRoste
   const [{ data: staff, error: staffError }, { data: matches, error: matchesError }, { data: assignments, error: assignmentsError }] =
     await Promise.all([
       supabase.from("team_staff").select("*").eq("team_id", team.id).order("is_head_coach", { ascending: false }),
-      supabase.from("matches").select("*").eq("team_id", team.id).is("deleted_at", null).order("starts_at", { ascending: true }),
+      // Meme regle de visibilite que listMatches / listPublicCalendar : un match passe en
+      // MEMBERS ou STAFF dans le CRM ne doit pas ressortir en « prochain match » sur la
+      // page publique de l'equipe.
+      supabase.from("matches").select("*").eq("team_id", team.id).eq("visibility", "PUBLIC").is("deleted_at", null).order("starts_at", { ascending: true }),
       supabase
         .from("team_players")
         .select("*")
