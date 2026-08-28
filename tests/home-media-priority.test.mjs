@@ -42,52 +42,39 @@ test("priorité 1 : un vrai match en direct masque tous les médias", () => {
   assert.equal(selected?.kind, "LIVE_MATCH");
 });
 
-test("priorité 2 : la dernière vidéo de match passe avant un direct entraînement", () => {
+test("priorité 2 : la dernière vidéo de match publiée est utilisée", () => {
   const selected = selectHomeMediaCard(null, [
-    media({ id: "training-live", is_live: true }),
-    media({ id: "match-video", content_kind: "MATCH", published_at: "2026-08-26T09:00:00.000Z" })
+    media({ id: "older-match", content_kind: "MATCH", published_at: "2026-08-25T09:00:00.000Z" }),
+    media({ id: "latest-match", content_kind: "MATCH", published_at: "2026-08-26T09:00:00.000Z" })
   ], now);
   assert.equal(selected?.kind, "VIDEO");
-  assert.equal(selected?.id, "match-video");
+  assert.equal(selected?.id, "latest-match");
 });
 
-test("priorité 3 : le direct entraînement actif passe avant la vidéo d'entraînement", () => {
+test("priorité 3 : les contenus d'entraînement ne remplacent jamais les photos", () => {
   const selected = selectHomeMediaCard(null, [
     media({ id: "recording" }),
     media({ id: "training-live", is_live: true, starts_at: "2026-08-27T11:00:00.000Z", ends_at: "2026-08-27T13:00:00.000Z" })
   ], now);
-  assert.equal(selected?.kind, "VIDEO");
-  assert.equal(selected?.id, "training-live");
-  assert.equal(selected?.isLive, true);
-});
-
-test("priorité 4 : la dernière vidéo d'entraînement publiée est utilisée", () => {
-  const selected = selectHomeMediaCard(null, [
-    media({ id: "older", published_at: "2026-08-25T10:00:00.000Z" }),
-    media({ id: "latest", published_at: "2026-08-27T10:00:00.000Z" })
-  ], now);
-  assert.equal(selected?.kind, "VIDEO");
-  assert.equal(selected?.id, "latest");
-});
-
-test("priorité 5 : aucun contenu éligible retourne null", () => {
-  const selected = selectHomeMediaCard(null, [
-    media({ status: "DRAFT" }),
-    media({ status: "ARCHIVED" }),
-    media({ published_at: "2026-08-28T10:00:00.000Z" }),
-    media({ starts_at: "2026-08-28T10:00:00.000Z" }),
-    media({ ends_at: "2026-08-27T11:59:59.000Z" }),
-    media({ url: "" }),
-    media({ type: "PHOTO" })
-  ], now);
   assert.equal(selected, null);
 });
 
-test("un direct entraînement désactivé n'est jamais traité comme actif", () => {
-  const selected = selectHomeMediaCard(null, [media({ id: "recording", is_live: false })], now);
-  assert.equal(selected?.kind, "VIDEO");
-  assert.equal(selected?.id, "recording");
-  assert.equal(selected?.isLive, false);
+test("un média de match marqué direct ne simule pas un match LIVE du calendrier", () => {
+  const selected = selectHomeMediaCard(null, [media({ content_kind: "MATCH", is_live: true })], now);
+  assert.equal(selected, null);
+});
+
+test("un match non publié, programmé ou expiré ne remplace jamais les photos", () => {
+  const selected = selectHomeMediaCard(null, [
+    media({ content_kind: "MATCH", status: "DRAFT" }),
+    media({ content_kind: "MATCH", status: "ARCHIVED" }),
+    media({ content_kind: "MATCH", published_at: "2026-08-28T10:00:00.000Z" }),
+    media({ content_kind: "MATCH", starts_at: "2026-08-28T10:00:00.000Z" }),
+    media({ content_kind: "MATCH", ends_at: "2026-08-27T11:59:59.000Z" }),
+    media({ content_kind: "MATCH", url: "" }),
+    media({ content_kind: "MATCH", type: "PHOTO" })
+  ], now);
+  assert.equal(selected, null);
 });
 
 test("le lecteur public reste en 16:9 avec la couverture CRM avant lecture", async () => {

@@ -61,12 +61,6 @@ export function selectHomeMediaCard(liveMatch: MobileMatchCard | null, assets: H
   if (liveMatch) return { kind: "LIVE_MATCH", match: liveMatch };
 
   const visible = assets.filter((asset) => isVisibleVideo(asset, now.getTime()));
-  const latestMatchVideo = latest(visible.filter((asset) => asset.content_kind === "MATCH"));
-  if (latestMatchVideo) return toVideoCard(latestMatchVideo);
-
-  const liveTraining = latest(visible.filter((asset) => asset.content_kind === "TRAINING" && asset.is_live));
-  if (liveTraining) return toVideoCard(liveTraining);
-
-  const latestTrainingVideo = latest(visible.filter((asset) => asset.content_kind === "TRAINING" && !asset.is_live));
-  return toVideoCard(latestTrainingVideo);
+  const latestMatchVideo = latest(visible.filter((asset) => asset.content_kind === "MATCH" && !asset.is_live));
+  return toVideoCard(latestMatchVideo);
 }

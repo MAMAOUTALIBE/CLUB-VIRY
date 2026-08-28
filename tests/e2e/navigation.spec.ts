@@ -245,24 +245,29 @@ test.describe("Appels a l'action", () => {
     await expect(page).toHaveURL(/\/calendrier$/);
   });
 
-  test("le bloc direct et photos est visible uniquement sur mobile", async ({ page }, testInfo) => {
+  test("la carte match ou photos est visible uniquement sur mobile", async ({ page }, testInfo) => {
     await page.goto("/");
-    const section = page.locator('section[aria-label="Direct et photos des matchs"]');
+    const section = page.locator('section[aria-label="Match en direct, dernier match ou photos"]');
     if (testInfo.project.name !== "mobile") {
       await expect(section).toBeHidden();
       return;
     }
 
     await expect(section).toBeVisible();
-    await expect(section.getByRole("heading", { name: "Dernières images des matchs" })).toBeVisible();
-
-    const mediaHeading = section.getByRole("heading", { name: /Match en direct|Dernier match en vidéo|Entraînement en direct|Dernier entraînement en vidéo/ });
-    await expect(mediaHeading).toHaveCount((await mediaHeading.count()) > 0 ? 1 : 0);
-
+    const selectedHeading = section.getByRole("heading", { name: /Match en direct|Dernier match en vidéo|Dernières images des matchs/ });
+    await expect(selectedHeading).toHaveCount(1);
     const galleryLink = section.getByRole("link", { name: "Voir toutes les photos" });
-    await expect(galleryLink).toBeVisible();
-    await galleryLink.click();
-    await expect(page).toHaveURL(/\/medias$/);
+    const heading = await selectedHeading.textContent();
+    if (heading === "Dernières images des matchs") {
+      await expect(galleryLink).toBeVisible();
+      await galleryLink.click();
+      await expect(page).toHaveURL(/\/medias$/);
+    } else {
+      await expect(galleryLink).toHaveCount(0);
+      if (heading === "Match en direct") {
+        await expect(section.getByRole("link", { name: /Voir le match en direct/ })).toBeVisible();
+      }
+    }
   });
 
   test("le calendrier et les résultats mènent à la fiche du match", async ({ page }) => {

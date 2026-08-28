@@ -88,8 +88,9 @@ test("le bloc direct et photos reste strictement réservé au mobile", async () 
   assert.doesNotMatch(page, /Rejoignez la[\s\S]{0,30}famille Viry/);
   assert.match(page, /selectHomeMediaCard\(mobileMatchFeed\.live, homepageVideoMedia, now\)/);
   assert.match(page, /<HomeLiveGallery media=\{homepageMedia\} photos=\{latestGalleryPhotos\} \/>/);
-  assert.match(homeLiveGallery, /aria-label="Direct et photos des matchs" className="[^"]*md:hidden"/);
-  assert.match(homeLiveGallery, /\{media \? <DynamicMediaCard media=\{media\} \/> : null\}/);
+  assert.match(homeLiveGallery, /aria-label="Match en direct, dernier match ou photos" className="[^"]*md:hidden"/);
+  assert.match(homeLiveGallery, /\{media \? <DynamicMediaCard media=\{media\} \/> : <LatestPhotosCard photos=\{photos\} \/>\}/);
+  assert.equal((homeLiveGallery.match(/<LatestPhotosCard photos=\{photos\} \/>/g) ?? []).length, 1);
   assert.doesNotMatch(homeLiveGallery, /desktopLiveMatch|NoLiveMatchCard|hidden lg:block|lg:grid-cols-2/);
   assert.match(homeLiveGallery, /Aucune photo publiée/);
   assert.match(homeLiveGallery, /href="\/medias"/);
@@ -124,6 +125,7 @@ test("la carte dynamique utilise le lien de suivi CRM puis la fiche publique", a
 
   assert.match(feed, /followUrl: row\.follow_url\?\.trim\(\) \|\| null/);
   assert.match(component, /match\.followUrl \?\? `\/matchs\/\$\{match\.id\}`/);
+  assert.match(component, />\s*Voir le match en direct /);
 });
 
 test("la lecture détail valide l'UUID et reste DB-only sans fallback", async () => {

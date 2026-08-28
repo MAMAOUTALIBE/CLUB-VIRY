@@ -54,21 +54,19 @@ function LiveMatchCard({ media }: { media: Extract<HomeMediaCard, { kind: "LIVE_
         rel={external ? "noreferrer" : undefined}
         className="focus-ring relative mt-auto flex min-h-14 items-center justify-center gap-3 rounded-xl bg-[#f7c600] px-5 pt-0.5 text-sm font-black uppercase text-[#002f1d] transition hover:bg-[#ffd84d] sm:text-base"
       >
-        Suivre le match <ArrowRight size={19} aria-hidden="true" />
+        Voir le match en direct <ArrowRight size={19} aria-hidden="true" />
       </Link>
     </article>
   );
 }
 
 function VideoMediaCard({ media }: { media: Extract<HomeMediaCard, { kind: "VIDEO" }> }) {
-  const heading = media.contentKind === "MATCH" ? "Dernier match en vidéo" : media.isLive ? "Entraînement en direct" : "Dernier entraînement en vidéo";
-
   return (
     <article className="stadium-grid relative overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-5 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)] sm:p-7">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(0,77,47,.55),rgba(0,31,22,.92))]" aria-hidden="true" />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-2xl font-black leading-tight sm:text-3xl">{heading}</h2>
+          <h2 className="text-2xl font-black leading-tight sm:text-3xl">Dernier match en vidéo</h2>
           <p className="mt-1 line-clamp-2 text-sm font-bold text-white/70">{media.title}</p>
         </div>
         {media.isLive ? <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-red-600 px-3 py-2 text-xs font-black uppercase"><Radio size={15} aria-hidden="true" /> En direct</span> : null}
@@ -122,10 +120,9 @@ function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
 
 export function HomeLiveGallery({ media, photos }: { media: HomeMediaCard | null; photos: DisplayGalleryPhoto[] }) {
   return (
-    <section aria-label="Direct et photos des matchs" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
+    <section aria-label="Match en direct, dernier match ou photos" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
       <div className="grid gap-5">
-        {media ? <DynamicMediaCard media={media} /> : null}
-        <LatestPhotosCard photos={photos} />
+        {media ? <DynamicMediaCard media={media} /> : <LatestPhotosCard photos={photos} />}
       </div>
     </section>
   );
