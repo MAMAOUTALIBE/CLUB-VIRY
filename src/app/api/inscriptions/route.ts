@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { validateRegistrationLeadPayload } from "@/lib/api/validation";
+import { getActiveSeason } from "@/lib/db/foundations";
 import { captureLead } from "@/lib/leads";
 
 export const runtime = "nodejs";
@@ -39,7 +40,15 @@ export async function POST(request: NextRequest) {
     ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip")
   };
 
-  const result = await captureLead("registration", payload.data, meta);
+  const activeSeason = await getActiveSeason().catch(() => null);
+  const result = await captureLead(
+    "registration",
+    {
+      ...payload.data,
+      ...(activeSeason ? { seasonId: activeSeason.id, season: activeSeason.name } : {})
+    },
+    meta
+  );
 
   if (!result.captured) {
     return jsonError(500, "CONFIGURATION_ERROR", "Impossible d'enregistrer la demande. Contactez le club par telephone.");

@@ -265,7 +265,7 @@ const SETTINGS_DEFAULTS: SiteContent = {
     ]
   },
   inscriptionsPage: {
-    heroDescription: "Rejoignez la famille Viry pour la saison 2025 / 2026.",
+    heroDescription: "Rejoignez la famille Viry pour la nouvelle saison.",
     steps: ["Choisir sa catégorie", "Remplir le formulaire en ligne", "Fournir les pièces demandées", "Paiement de la licence"],
     features: [
       { title: "Catégories", text: "Identifier rapidement la bonne catégorie selon l'âge et le niveau.", iconName: "Users" },

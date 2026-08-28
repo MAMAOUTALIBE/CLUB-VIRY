@@ -1,5 +1,5 @@
 insert into public.seasons (name, starts_on, ends_on, is_active)
-values ('2025 / 2026', '2025-07-01', '2026-06-30', true)
+values ('2026 / 2027', '2026-07-01', '2027-06-30', true)
 on conflict (name) do update set
   starts_on = excluded.starts_on,
   ends_on = excluded.ends_on,

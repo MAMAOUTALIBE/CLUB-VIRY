@@ -4,6 +4,7 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { RegistrationForm } from "@/components/Forms";
 import { PageHero } from "@/components/PageHero";
 import { SectionTitle } from "@/components/SectionTitle";
+import { getActiveSeason } from "@/lib/db/foundations";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { getSiteSettings } from "@/lib/public-content";
@@ -13,12 +14,18 @@ export const metadata = pageMetadata("/inscriptions");
 export const dynamic = "force-dynamic"; // CMS : contenu éditorial à jour immédiatement
 
 export default async function RegistrationPage() {
-  const { inscriptionsPage } = await getSiteSettings();
+  const [{ inscriptionsPage }, activeSeason] = await Promise.all([
+    getSiteSettings(),
+    getActiveSeason().catch(() => null)
+  ]);
+  const mobileTitle = activeSeason ? `Saison ${activeSeason.name}` : "Inscriptions";
+  const desktopTitle = activeSeason ? `Inscriptions ${activeSeason.name}` : "Inscriptions";
+
   return (
     <>
       <MobileScreen
         eyebrow="Inscriptions"
-        title="Saison 2025 / 2026"
+        title={mobileTitle}
         scrollable
       >
         <div className="grid gap-3 pb-2">
@@ -26,7 +33,7 @@ export default async function RegistrationPage() {
         </div>
       </MobileScreen>
       <DesktopOnly>
-      <PageHero description={inscriptionsPage.heroDescription} image={images.youthTeam} title="Inscriptions 2025 / 2026" />
+      <PageHero description={inscriptionsPage.heroDescription} image={images.youthTeam} title={desktopTitle} />
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 3xl:grid-cols-[0.72fr_minmax(0,0.95fr)] 3xl:justify-center">
         <div>
           <SectionTitle title="Comment s'inscrire ?" text="Préparez les pièces demandées, remplissez le formulaire puis le club vous recontacte pour finaliser la licence." />
