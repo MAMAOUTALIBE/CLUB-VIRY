@@ -245,19 +245,19 @@ test.describe("Appels a l'action", () => {
     await expect(page).toHaveURL(/\/calendrier$/);
   });
 
-  test("le bloc direct et photos est accessible à toutes les largeurs", async ({ page }, testInfo) => {
+  test("le bloc direct et photos est visible uniquement sur mobile", async ({ page }, testInfo) => {
     await page.goto("/");
-    const section = page.getByRole("region", { name: "Direct et photos des matchs" });
+    const section = page.locator('section[aria-label="Direct et photos des matchs"]');
+    if (testInfo.project.name !== "mobile") {
+      await expect(section).toBeHidden();
+      return;
+    }
+
     await expect(section).toBeVisible();
     await expect(section.getByRole("heading", { name: "Dernières images des matchs" })).toBeVisible();
 
     const mediaHeading = section.getByRole("heading", { name: /Match en direct|Dernier match en vidéo|Entraînement en direct|Dernier entraînement en vidéo/ });
-    if (testInfo.project.name === "ordinateur") {
-      await expect(section.getByText(/En direct|Aucun match en direct/).first()).toBeVisible();
-      await expect(mediaHeading).toHaveCount(1);
-    } else {
-      await expect(mediaHeading).toHaveCount((await mediaHeading.count()) > 0 ? 1 : 0);
-    }
+    await expect(mediaHeading).toHaveCount((await mediaHeading.count()) > 0 ? 1 : 0);
 
     const galleryLink = section.getByRole("link", { name: "Voir toutes les photos" });
     await expect(galleryLink).toBeVisible();

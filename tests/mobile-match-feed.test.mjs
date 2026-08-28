@@ -80,18 +80,17 @@ test("la section reste mobile/tablette et la source ne contient aucun fallback",
   assert.doesNotMatch(view, /getMobileMatchFeed[\s\S]{0,500}getFallbackCalendarItems/);
 });
 
-test("le bloc d'accueil garde le direct desktop et réserve la priorité média au mobile", async () => {
+test("le bloc direct et photos reste strictement réservé au mobile", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/MobileLiveResults.tsx", import.meta.url), "utf8");
   const homeLiveGallery = await readFile(new URL("../src/components/HomeLiveGallery.tsx", import.meta.url), "utf8");
 
   assert.doesNotMatch(page, /Rejoignez la[\s\S]{0,30}famille Viry/);
   assert.match(page, /selectHomeMediaCard\(mobileMatchFeed\.live, homepageVideoMedia, now\)/);
-  assert.match(page, /<HomeLiveGallery desktopLiveMatch=\{desktopLiveMatch\} media=\{homepageMedia\} photos=\{latestGalleryPhotos\} \/>/);
-  assert.match(homeLiveGallery, /grid gap-5 lg:grid-cols-2/);
-  assert.match(homeLiveGallery, /Aucun match en direct/);
-  assert.match(homeLiveGallery, /\{media \? <div className="lg:hidden"><DynamicMediaCard media=\{media\} \/><\/div> : null\}/);
-  assert.match(homeLiveGallery, /<div className="hidden lg:block">[\s\S]*desktopLiveMatch \? <LiveMatchCard/);
+  assert.match(page, /<HomeLiveGallery media=\{homepageMedia\} photos=\{latestGalleryPhotos\} \/>/);
+  assert.match(homeLiveGallery, /aria-label="Direct et photos des matchs" className="[^"]*md:hidden"/);
+  assert.match(homeLiveGallery, /\{media \? <DynamicMediaCard media=\{media\} \/> : null\}/);
+  assert.doesNotMatch(homeLiveGallery, /desktopLiveMatch|NoLiveMatchCard|hidden lg:block|lg:grid-cols-2/);
   assert.match(homeLiveGallery, /Aucune photo publiée/);
   assert.match(homeLiveGallery, /href="\/medias"/);
   assert.match(homeLiveGallery, /Voir toutes les photos/);

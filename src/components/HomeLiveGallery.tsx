@@ -84,19 +84,6 @@ function DynamicMediaCard({ media }: { media: HomeMediaCard }) {
   return media.kind === "LIVE_MATCH" ? <LiveMatchCard media={media} /> : <VideoMediaCard media={media} />;
 }
 
-function NoLiveMatchCard() {
-  return (
-    <article className="stadium-grid relative flex min-h-[25rem] flex-col overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-7 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(0,77,47,.55),rgba(0,31,22,.92))]" aria-hidden="true" />
-      <h2 className="relative text-3xl font-black leading-tight">Match en direct</h2>
-      <div className="relative flex flex-1 flex-col items-center justify-center text-center">
-        <Radio size={42} className="text-[#f7c600]" aria-hidden="true" />
-        <p className="mt-4 text-xl font-black">Aucun match en direct</p>
-      </div>
-    </article>
-  );
-}
-
 function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
   return (
     <article className="stadium-grid relative flex min-h-[25rem] flex-col overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-5 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)] sm:p-7">
@@ -133,17 +120,12 @@ function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
   );
 }
 
-export function HomeLiveGallery({ desktopLiveMatch, media, photos }: { desktopLiveMatch: Extract<HomeMediaCard, { kind: "LIVE_MATCH" }> | null; media: HomeMediaCard | null; photos: DisplayGalleryPhoto[] }) {
+export function HomeLiveGallery({ media, photos }: { media: HomeMediaCard | null; photos: DisplayGalleryPhoto[] }) {
   return (
-    <section aria-label="Direct et photos des matchs" className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8 xl:pb-14 xl:pt-0">
-      <div className="grid gap-5 lg:grid-cols-2">
-        {media ? <div className="lg:hidden"><DynamicMediaCard media={media} /></div> : null}
-        <div className="hidden lg:block">
-          {desktopLiveMatch ? <LiveMatchCard media={desktopLiveMatch} /> : <NoLiveMatchCard />}
-        </div>
-        <div>
-          <LatestPhotosCard photos={photos} />
-        </div>
+    <section aria-label="Direct et photos des matchs" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
+      <div className="grid gap-5">
+        {media ? <DynamicMediaCard media={media} /> : null}
+        <LatestPhotosCard photos={photos} />
       </div>
     </section>
   );

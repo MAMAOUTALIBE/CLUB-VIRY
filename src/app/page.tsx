@@ -87,7 +87,6 @@ export default async function HomePage() {
     getHomepageVideoMedia()
   ]);
   const homepageMedia = selectHomeMediaCard(mobileMatchFeed.live, homepageVideoMedia, now);
-  const desktopLiveMatch = mobileMatchFeed.live ? { kind: "LIVE_MATCH" as const, match: mobileMatchFeed.live } : null;
   const institutionalPartners = getInstitutionalPartners(featuredPartners);
   const leadNews = allNews[0];
   const gridNews = allNews.slice(1, 5);
@@ -164,7 +163,7 @@ export default async function HomePage() {
 
       </div>
 
-      <HomeLiveGallery desktopLiveMatch={desktopLiveMatch} media={homepageMedia} photos={latestGalleryPhotos} />
+      <HomeLiveGallery media={homepageMedia} photos={latestGalleryPhotos} />
 
       {gridNews.length > 0 ? (
         <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 xl:py-14">
