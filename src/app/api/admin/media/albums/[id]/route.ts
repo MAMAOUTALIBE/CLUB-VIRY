@@ -46,6 +46,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const album = await updateMediaAlbum(id, payload.data);
     if (!album) return jsonError(404, "NOT_FOUND", "Album introuvable.");
+    revalidatePath("/");
+    revalidatePath("/medias");
     await recordActivity({
       actorId: admin.context.user.id,
       action: "media.album.updated",
@@ -69,6 +71,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const trashed = await softDeleteRow("albums", id, admin.context.user.id);
     if (!trashed) return jsonError(404, "NOT_FOUND", "Album introuvable.");
     await recordActivity({ actorId: admin.context.user.id, action: "media.album.trashed", entityType: "media_albums", entityId: id });
+    revalidatePath("/");
     revalidatePath("/medias");
     return jsonOk({ trashed: true });
   } catch (error) {

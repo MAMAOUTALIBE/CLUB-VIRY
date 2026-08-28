@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ApiErrorCode } from "@/lib/api/http";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
+import { resolvePublicStorageUrl } from "@/lib/public-storage-url";
 
 export type UploadImageType = "image/jpeg" | "image/png" | "image/webp";
 
@@ -120,6 +121,7 @@ export async function uploadImageToBucket(opts: {
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  const url = resolvePublicStorageUrl(data.publicUrl, process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", process.env.NEXT_PUBLIC_SITE_URL);
 
-  return { ok: true, url: data.publicUrl, path, contentType: detected, size: file.size };
+  return { ok: true, url, path, contentType: detected, size: file.size };
 }
