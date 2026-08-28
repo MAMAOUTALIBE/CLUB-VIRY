@@ -125,6 +125,7 @@ export async function listPublicCalendarRangeExact(from: string, to: string): Pr
 
 type PublicPlanningRow = {
   id: string;
+  title: string | null;
   starts_at: string;
   ends_at: string | null;
   category_id: string | null;
@@ -138,6 +139,7 @@ function toPublicPlanningItem(row: PublicPlanningRow, source: PublicPlanningItem
   return {
     id: row.id,
     source,
+    title: row.title,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     categoryId: row.category_id ?? row.teams?.category_id ?? null,
@@ -152,7 +154,7 @@ function toPublicPlanningItem(row: PublicPlanningRow, source: PublicPlanningItem
 
 /** Public planning cards and CRM cards are projections of these exact rows. */
 export async function listPublicWeeklyPlanning(from: string, toExclusive: string): Promise<PublicPlanningItem[]> {
-  const fields = "id,starts_at,ends_at,category_id,group_label,pitch_code,teams(category_id,name,categories(name,age_range,order_index)),categories(name,age_range,order_index)";
+  const fields = "id,title,starts_at,ends_at,category_id,group_label,pitch_code,teams(category_id,name,categories(name,age_range,order_index)),categories(name,age_range,order_index)";
   const supabase = getSupabaseAdminClient();
   const [eventsResult, matchesResult] = await Promise.all([
     supabase.from("club_events").select(fields).eq("visibility", "PUBLIC").eq("status", "SCHEDULED").is("deleted_at", null).gte("starts_at", from).lt("starts_at", toExclusive).order("starts_at", { ascending: true }),

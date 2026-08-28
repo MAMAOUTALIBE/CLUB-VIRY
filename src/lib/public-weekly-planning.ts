@@ -9,6 +9,7 @@ function shiftDateKey(dateKey: string, days: number): string {
 export type PublicPlanningItem = {
   id: string;
   source: "event" | "match";
+  title: string | null;
   startsAt: string;
   endsAt: string | null;
   categoryId: string | null;

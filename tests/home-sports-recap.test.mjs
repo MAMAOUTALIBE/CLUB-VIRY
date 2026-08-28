@@ -10,7 +10,9 @@ test("desktop keeps its sports hub and mobile uses the daily CRM program", () =>
 
   assert.equal(homeHubCalls.length, 1);
   assert.ok(homeHubCalls.every((call) => call.includes("matches={sportsMatches}")));
-  assert.ok(homeHubCalls.every((call) => call.includes("results={calendar.isFallback ? undefined : sportsResults}")));
+  assert.ok(homeHubCalls.every((call) => call.includes("results={calendar.isFallback ? [] : sportsResults}")));
+  assert.ok(homeHubCalls.every((call) => call.includes("planningItems={trainingPlanningItems}")));
+  assert.ok(homeHubCalls.every((call) => call.includes("weekKeys={planningWeek.keys}")));
   assert.ok(homeHubCalls.every((call) => !call.includes("showRecap")));
   assert.match(homeSource, /<MobileDailyProgram items=\{todayCalendarItems\} now=\{now\}/);
 });
@@ -33,6 +35,8 @@ test("the sports hub exposes three exclusive accessible calendars with training 
   assert.match(hubSource, /const showTraining = active === "training"/);
   assert.match(hubSource, /const showMatches = active === "matches"/);
   assert.match(hubSource, /const showResults = active === "results"/);
+  assert.match(hubSource, /publicPlanningRows\(planningItems\)/);
+  assert.doesNotMatch(hubSource, /fallbackSchedule|fallbackResults|trainingSchedule/);
   assert.match(hubSource, /grid grid-cols-3/);
   assert.doesNotMatch(hubSource, /min-w-max/);
   assert.match(hubSource, /displayedResults\.slice\(0, 2\)/);

@@ -10,6 +10,7 @@ import { MobileLiveResults } from "@/components/MobileLiveResults";
 import { Stagger, StaggerItem } from "@/components/Motion";
 import { SectionTitle } from "@/components/SectionTitle";
 import { getCalendarPageData, getMobileMatchFeed, getTodayCalendarItems } from "@/lib/calendar-view";
+import { listPublicWeeklyPlanning } from "@/lib/db/calendar";
 import { iconByName } from "@/lib/icon-map";
 import { images } from "@/lib/images";
 import { selectHomeMediaCard } from "@/lib/home-media-card";
@@ -17,6 +18,8 @@ import { getPartnerLogo } from "@/lib/partner-logos";
 import { getHomepageVideoMedia, getLatestPublishedGalleryPhotos, getPublicNews, getPublicPartners, getSiteSettings, type DisplayPartner } from "@/lib/public-content";
 import { jsonLdScript } from "@/lib/jsonld";
 import type { RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
+import { getParisWeekWindow } from "@/lib/publication-activity";
+import { publicPlanningWeek } from "@/lib/public-weekly-planning";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -76,7 +79,9 @@ function InstitutionalPartnerCard({ partner, className, interactive = true }: { 
 
 export default async function HomePage() {
   const now = new Date();
-  const [allNews, settings, featuredPartners, calendar, todayCalendarItems, mobileMatchFeed, latestGalleryPhotos, homepageVideoMedia] = await Promise.all([
+  const planningWindow = getParisWeekWindow(now);
+  const planningWeek = publicPlanningWeek(now);
+  const [allNews, settings, featuredPartners, calendar, todayCalendarItems, mobileMatchFeed, latestGalleryPhotos, homepageVideoMedia, weeklyPlanningItems] = await Promise.all([
     getPublicNews(5),
     getSiteSettings(),
     getPublicPartners(),
@@ -84,7 +89,8 @@ export default async function HomePage() {
     getTodayCalendarItems(now),
     getMobileMatchFeed(),
     getLatestPublishedGalleryPhotos(4),
-    getHomepageVideoMedia()
+    getHomepageVideoMedia(),
+    listPublicWeeklyPlanning(planningWindow.startIso, planningWindow.endExclusiveIso).catch(() => [])
   ]);
   const homepageMedia = selectHomeMediaCard(mobileMatchFeed.live, homepageVideoMedia, now);
   const institutionalPartners = getInstitutionalPartners(featuredPartners);
@@ -93,9 +99,8 @@ export default async function HomePage() {
   const clubStats = settings.club_stats;
   const values = settings.values;
   const heroSlides = settings.homeHero;
-  // Prochains matchs : depuis le calendrier DB (matchs publiés), avec repli sur le mock
-  // partagé via getCalendarPageData — même contenu qu'auparavant en mode vitrine.
-  const homeMatches = calendar.items
+  // Le hub sportif n'affiche jamais les données de démonstration du calendrier.
+  const homeMatches = (calendar.isFallback ? [] : calendar.items)
     .filter((item) => item.kind === "match" && item.status !== "FINISHED" && item.status !== "CANCELLED")
     .slice(0, 3)
     .map((item) => ({ team: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", date: item.dateLabel, time: item.timeLabel, place: item.place }));
@@ -105,6 +110,9 @@ export default async function HomePage() {
     .slice(-3)
     .reverse()
     .map((item) => ({ category: item.title, home: item.home ?? "ES Viry", away: item.away ?? "", homeScore: item.homeScore as number, awayScore: item.awayScore as number, date: item.dateLabel, venue: item.place ?? "" }));
+  const trainingPlanningItems = weeklyPlanningItems.filter((item) => item.source === "event");
+  const weekDate = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", year: "numeric" });
+  const planningWeekLabel = `Du ${weekDate.format(new Date(`${planningWeek.mondayKey}T12:00:00Z`))} au ${weekDate.format(new Date(`${planningWeek.fridayKey}T12:00:00Z`))}`;
   const isClub = (name: string) => name.toLowerCase().includes("viry");
   const shortTeam = (name: string) => (isClub(name) ? "ES Viry" : name);
   const teamInitials = (name: string) => name.replace(/^ES\s+/i, "").split(/[\s-]+/).filter(Boolean).map((word) => word[0]).join("").slice(0, 3).toUpperCase();
@@ -159,7 +167,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? undefined : sportsResults} schedule={settings.homeSports.trainingSchedule} weekLabel={settings.homeSports.weekLabel} />
+      <HomeSportsHub matches={sportsMatches} results={calendar.isFallback ? [] : sportsResults} planningItems={trainingPlanningItems} weekKeys={planningWeek.keys} weekLabel={planningWeekLabel} />
 
       </div>
 

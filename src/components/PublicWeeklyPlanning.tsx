@@ -7,17 +7,18 @@ const dateFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris
 const timeFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
 
 function PlanningSlot({ item }: { item: PublicPlanningItem }) {
-  const audience = item.groupLabel?.trim() || item.teamName?.trim() || null;
   return (
     <article className="mx-2 flex min-h-[86px] w-[calc(100%-1rem)] flex-col items-center justify-center rounded-lg border border-[#77762f] bg-[#11523f] px-3 py-3 text-center text-white shadow-sm">
       <p className="inline-flex items-center justify-center gap-1.5 text-sm font-black tabular-nums">
         <Clock3 size={16} aria-hidden="true" />
         {timeFormatter.format(new Date(item.startsAt))}{item.endsAt ? ` – ${timeFormatter.format(new Date(item.endsAt))}` : ""}
       </p>
-      {item.pitchCode || audience ? <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm font-bold text-white/85">
+      {item.title ? <p className="mt-2 text-sm font-black leading-tight text-white">{item.title}</p> : null}
+      {item.pitchCode || item.teamName ? <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm font-bold text-white/85">
         {item.pitchCode ? <span className="rounded bg-[#d92d72] px-2 py-0.5 text-xs font-black text-white">{item.pitchCode}</span> : null}
-        {audience ? <span>{audience}</span> : null}
+        {item.teamName ? <span>{item.teamName}</span> : null}
       </p> : null}
+      {item.groupLabel ? <p className="mt-1 text-xs font-bold text-white/70">Groupe · {item.groupLabel}</p> : null}
     </article>
   );
 }

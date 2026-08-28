@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const event = await createEvent(payload.data, admin.context.user.id);
+    revalidatePath("/");
     revalidatePath("/calendrier");
     await recordActivity({
       actorId: admin.context.user.id,

@@ -6,6 +6,7 @@ import { publicPlanningDateKey, publicPlanningRows, publicPlanningWeek } from ".
 
 const base = {
   source: "event",
+  title: "U12 · Groupe A",
   startsAt: "2026-09-02T15:30:00.000Z",
   endsAt: "2026-09-02T17:00:00.000Z",
   categoryId: "u11-u14",
@@ -37,7 +38,7 @@ test("la semaine publique commence le lundi et affiche les cinq jours ouvrés", 
 
 test("le composant public reste compact et n’expose aucun contrôle administratif", async () => {
   const source = await readFile(new URL("../src/components/PublicWeeklyPlanning.tsx", import.meta.url), "utf8");
-  for (const visible of ["startsAt", "endsAt", "pitchCode", "groupLabel", "teamName"]) assert.match(source, new RegExp(visible));
+  for (const visible of ["title", "startsAt", "endsAt", "pitchCode", "groupLabel", "teamName"]) assert.match(source, new RegExp(visible));
   for (const forbidden of ["useDraggable", "Pencil", "Trash2", "description", "visibility", "status"]) assert.doesNotMatch(source, new RegExp(forbidden));
   assert.match(source, /min-h-\[86px\][\s\S]*w-\[calc\(100%-1rem\)\][\s\S]*bg-\[#11523f\]/);
 });
@@ -45,6 +46,7 @@ test("le composant public reste compact et n’expose aucun contrôle administra
 test("la requête publique filtre visibilité et annulation sans fallback", async () => {
   const source = await readFile(new URL("../src/lib/db/calendar.ts", import.meta.url), "utf8");
   assert.match(source, /listPublicWeeklyPlanning[\s\S]*eq\("visibility", "PUBLIC"\)[\s\S]*neq\("status", "CANCELLED"\)/);
+  assert.match(source, /const fields = "id,title,starts_at/);
   assert.match(source, /categoryId: row\.category_id \?\? row\.teams\?\.category_id \?\? null/);
   assert.doesNotMatch(source.slice(source.indexOf("listPublicWeeklyPlanning")), /Fallback|fallback/);
 });

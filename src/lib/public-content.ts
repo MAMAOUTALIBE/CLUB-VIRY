@@ -31,7 +31,6 @@ import {
   trainingSlots as defaultTrainingSlots
 } from "@/lib/club-pages-data";
 import type { ConductBlock, Installation, RegulationItem, Stage, StaffPerson } from "@/lib/club-pages-data";
-import { trainingSchedule, type TrainingRow } from "@/lib/home-sports-data";
 
 export type TrainingSlot = { category: string; time: string; place: string };
 export type SchoolProjectStep = { year: string; title: string; text: string };
@@ -176,7 +175,6 @@ export type SiteContent = {
   boutiqueLivraison: EditorialPage;
   inscriptionsPage: InscriptionsPage;
   detectionsPage: DetectionsPage;
-  homeSports: { weekLabel: string; trainingSchedule: TrainingRow[] };
 };
 
 const SETTINGS_DEFAULTS: SiteContent = {
@@ -285,8 +283,7 @@ const SETTINGS_DEFAULTS: SiteContent = {
       { title: "Progresser", text: "Accompagner le joueur selon son profil et sa catégorie.", iconName: "Dumbbell" },
       { title: "Intégrer", text: "Rejoindre un groupe adapté aux ambitions du club.", iconName: "Target" }
     ]
-  },
-  homeSports: { weekLabel: "Semaine du 2 au 6 septembre 2026", trainingSchedule }
+  }
 };
 
 /** Retourne le tableau stocké s'il est non vide, sinon le défaut (saisie CMS défensive). */
@@ -340,7 +337,6 @@ export async function getSiteSettings(): Promise<SiteContent> {
     const fProjet = all.formation_projet as Record<string, unknown> | undefined;
     const fStages = all.formation_stages as Record<string, unknown> | undefined;
     const gal = all.galerie_archives as Record<string, unknown> | undefined;
-    const homeSports = all.home_sports as Record<string, unknown> | undefined;
     return {
       socials: { ...SETTINGS_DEFAULTS.socials, ...(all.socials ?? {}) },
       contact: { ...SETTINGS_DEFAULTS.contact, ...(all.contact ?? {}) },
@@ -394,10 +390,6 @@ export async function getSiteSettings(): Promise<SiteContent> {
         heroDescription: pickStr((all.detections_page as Record<string, unknown> | undefined)?.heroDescription, SETTINGS_DEFAULTS.detectionsPage.heroDescription),
         categories: pickArray<string>((all.detections_page as Record<string, unknown> | undefined)?.categories, SETTINGS_DEFAULTS.detectionsPage.categories),
         features: pickArray<FeatureItem>((all.detections_page as Record<string, unknown> | undefined)?.features, SETTINGS_DEFAULTS.detectionsPage.features)
-      },
-      homeSports: {
-        weekLabel: pickStr(homeSports?.weekLabel, SETTINGS_DEFAULTS.homeSports.weekLabel),
-        trainingSchedule: Array.isArray(homeSports?.trainingSchedule) ? homeSports.trainingSchedule as TrainingRow[] : SETTINGS_DEFAULTS.homeSports.trainingSchedule
       }
     } as SiteContent;
   }

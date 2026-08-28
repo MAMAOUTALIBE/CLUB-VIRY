@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, Info, MapPin, Trophy, UsersRound } from "lucide-react";
 import { useRef, useState, type KeyboardEvent } from "react";
-import { recentResults as fallbackResults, trainingSchedule as fallbackSchedule, type RecentResult, type TrainingRow, type UpcomingMatch } from "@/lib/home-sports-data";
+import type { RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
+import { publicPlanningDateKey, publicPlanningRows, type PublicPlanningItem } from "@/lib/public-weekly-planning";
 
 type Filter = "training" | "matches" | "results";
 const filters: Array<{ value: Filter; label: string; icon: typeof CalendarDays }> = [
@@ -13,7 +14,20 @@ const filters: Array<{ value: Filter; label: string; icon: typeof CalendarDays }
 ];
 const pitchColors = { T1: "bg-[#9b5a17]", T2: "bg-[#d93670]", T3: "bg-[#e85e32]", T4: "bg-[#7040a8]" };
 const pitchLabels = { T1: "Honneur", T2: "Synthétique", T3: "Annexe", T4: "Stade Henri Perrain" };
-const shortWeekdays = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven."];
+const rowAccents = ["#f7c600", "#ef5b8c", "#f47b35", "#52b7ff", "#b8d34a"];
+const shortDayFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "short" });
+const dayFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long" });
+const timeFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
+
+function dateFromKey(key: string) {
+  return new Date(`${key}T12:00:00Z`);
+}
+
+function slotTime(item: PublicPlanningItem) {
+  const start = timeFormatter.format(new Date(item.startsAt)).replace(":", "h");
+  const end = item.endsAt ? timeFormatter.format(new Date(item.endsAt)).replace(":", "h") : null;
+  return end ? `${start} – ${end}` : start;
+}
 
 function Crest({ name }: { name: string }) {
   const viry = name.toLowerCase().includes("viry");
@@ -24,13 +38,13 @@ function PanelHeading({ icon: Icon, title, href, link }: { icon: typeof Trophy; 
   return <div className="flex items-center justify-between gap-2 px-3 py-3"><h3 className="flex items-center gap-2 text-base font-black uppercase tracking-tight text-white"><Icon size={19} className="shrink-0 text-[#f5c400]" />{title}</h3><Link href={href} className="focus-ring flex shrink-0 items-center gap-1 text-[8px] font-black uppercase text-[#f5c400] hover:text-white">{link}<ArrowRight size={11} /></Link></div>;
 }
 
-export function HomeSportsHub(props: { matches?: UpcomingMatch[]; results?: RecentResult[]; schedule?: TrainingRow[]; weekLabel?: string }) {
-  const { matches, results, schedule, weekLabel = "Semaine du 2 au 6 septembre 2026" } = props;
+export function HomeSportsHub(props: { matches?: UpcomingMatch[]; results?: RecentResult[]; planningItems: PublicPlanningItem[]; weekKeys: string[]; weekLabel: string }) {
+  const { matches, results, planningItems, weekKeys, weekLabel } = props;
   const [active, setActive] = useState<Filter>("training");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const displayedMatches = matches?.length ? matches : [];
-  const displayedResults = results ?? fallbackResults;
-  const displayedSchedule = schedule ?? fallbackSchedule;
+  const displayedResults = results ?? [];
+  const planningRows = publicPlanningRows(planningItems);
   const showTraining = active === "training";
   const showMatches = active === "matches";
   const showResults = active === "results";
@@ -69,22 +83,26 @@ export function HomeSportsHub(props: { matches?: UpcomingMatch[]; results?: Rece
               <p className="mt-2 text-sm font-bold text-[#f5c400]">{weekLabel}</p>
             </div>
             <div className="mt-3 grid gap-3">
-              {displayedSchedule.slice(0, 2).map((row) => {
-                const dayIndex = row.days.findIndex((slots) => slots.length > 0);
-                const slot = dayIndex >= 0 ? row.days[dayIndex][0] : undefined;
+              {planningRows.slice(0, 2).map((row, rowIndex) => {
+                const slot = row.items[0];
+                const dayIndex = slot ? weekKeys.indexOf(publicPlanningDateKey(slot.startsAt)) : -1;
+                const accent = rowAccents[rowIndex % rowAccents.length];
 
-                return <article key={row.category} className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 rounded-2xl border border-[#f5c400]/45 bg-[#002f21]/55 p-4">
-                  <div className="flex items-center justify-center border-r border-[#f5c400]/25 pr-3" style={{ color: row.accent }}><UsersRound size={34} /></div>
+                return <article key={row.key} className="grid grid-cols-[44px_minmax(0,1fr)] gap-3 rounded-2xl border border-[#f5c400]/45 bg-[#002f21]/55 p-4">
+                  <div className="flex items-center justify-center border-r border-[#f5c400]/25 pr-3" style={{ color: accent }}><UsersRound size={34} /></div>
                   <div className="min-w-0">
-                    <h4 className="text-xl font-black uppercase leading-none text-white">{row.category}</h4>
-                    {row.subtitle ? <p className="mt-2 text-xs font-black uppercase" style={{ color: row.accent }}>{row.subtitle}</p> : null}
+                    <h4 className="text-xl font-black uppercase leading-none text-white">{row.label}</h4>
+                    {row.subtitle ? <p className="mt-2 text-xs font-black uppercase" style={{ color: accent }}>{row.subtitle}</p> : null}
                     {slot ? <div className="mt-4 grid gap-2 text-sm">
-                      <p className="flex items-center gap-2 font-bold text-white"><Clock3 size={17} className="shrink-0 text-[#f5c400]" />{shortWeekdays[dayIndex]} {slot.time}</p>
-                      <p className="flex items-center gap-2 text-white/90"><b className={`rounded px-2 py-1 text-xs text-white ${pitchColors[slot.pitch]}`}>{slot.pitch}</b><span>{pitchLabels[slot.pitch]}</span></p>
+                      <p className="flex items-center gap-2 font-bold text-white"><Clock3 size={17} className="shrink-0 text-[#f5c400]" />{dayIndex >= 0 ? shortDayFormatter.format(dateFromKey(weekKeys[dayIndex])) : ""} {slotTime(slot)}</p>
+                      {slot.title ? <p className="font-black leading-tight text-white">{slot.title}</p> : null}
+                      {slot.pitchCode || slot.teamName ? <p className="flex items-center gap-2 text-white/90">{slot.pitchCode ? <b className={`rounded px-2 py-1 text-xs text-white ${pitchColors[slot.pitchCode]}`}>{slot.pitchCode}</b> : null}<span>{slot.teamName}</span></p> : null}
+                      {slot.groupLabel ? <p className="text-xs font-bold text-white/70">Groupe · {slot.groupLabel}</p> : null}
                     </div> : <p className="mt-4 text-sm text-white/65">Aucun créneau renseigné.</p>}
                   </div>
                 </article>;
               })}
+              {!planningRows.length ? <p className="rounded-2xl border border-white/10 p-5 text-sm text-white/70">Aucun entraînement public planifié cette semaine.</p> : null}
             </div>
           </div>
 
@@ -95,11 +113,12 @@ export function HomeSportsHub(props: { matches?: UpcomingMatch[]; results?: Rece
           </div>
           <div className="mt-3 overflow-x-auto rounded-xl border border-[#f5c400]/20 [scrollbar-color:#f5c400_#003c29]">
             <div className="min-w-[760px] lg:min-w-0">
-              <div className="grid grid-cols-[140px_repeat(5,minmax(0,1fr))] bg-[#002f21]/70 text-center text-xs font-black uppercase tracking-wide text-[#f5c400]"><span className="p-3" />{["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"].map(day => <span key={day} className="border-l border-[#f5c400]/18 p-3">{day}</span>)}</div>
-              {displayedSchedule.map(row => <div key={row.category} className="grid min-h-24 grid-cols-[140px_repeat(5,minmax(0,1fr))] border-t border-[#f5c400]/18">
-                <div className="flex items-center gap-2 px-3" style={{ color: row.accent }}><UsersRound size={24} /><div><p className="text-sm font-black uppercase text-white">{row.category}</p>{row.subtitle ? <p className="mt-1 text-[9px] font-bold uppercase" style={{ color: row.accent }}>{row.subtitle}</p> : null}</div></div>
-                {row.days.map((slots, dayIndex) => <div className="flex flex-col justify-center gap-1.5 border-l border-[#f5c400]/18 p-2" key={dayIndex}>{slots.map((slot, slotIndex) => <div key={slot.time + slotIndex} className="rounded-xl border border-[#f5c400]/15 bg-white/[.035] p-2 text-center text-[10px]"><p className="flex items-center justify-center gap-1 font-bold text-white"><Clock3 size={12} />{slot.time}</p><p className="mt-1 text-white/85"><b className={`mr-1 rounded px-1 py-0.5 text-[9px] text-white ${pitchColors[slot.pitch]}`}>{slot.pitch}</b>{slot.group}</p></div>)}</div>)}
+              <div className="grid grid-cols-[140px_repeat(5,minmax(0,1fr))] bg-[#002f21]/70 text-center text-xs font-black uppercase tracking-wide text-[#f5c400]"><span className="p-3" />{weekKeys.map((key) => <span key={key} className="border-l border-[#f5c400]/18 p-3">{dayFormatter.format(dateFromKey(key))}</span>)}</div>
+              {planningRows.map((row, rowIndex) => <div key={row.key} className="grid min-h-24 grid-cols-[140px_repeat(5,minmax(0,1fr))] border-t border-[#f5c400]/18">
+                <div className="flex items-center gap-2 px-3" style={{ color: rowAccents[rowIndex % rowAccents.length] }}><UsersRound size={24} /><div><p className="text-sm font-black uppercase text-white">{row.label}</p>{row.subtitle ? <p className="mt-1 text-[9px] font-bold uppercase" style={{ color: rowAccents[rowIndex % rowAccents.length] }}>{row.subtitle}</p> : null}</div></div>
+                {weekKeys.map((key) => <div className="flex flex-col justify-center gap-1.5 border-l border-[#f5c400]/18 p-2" key={key}>{row.items.filter((item) => publicPlanningDateKey(item.startsAt) === key).map((slot) => <div key={`${slot.source}:${slot.id}`} className="rounded-xl border border-[#f5c400]/15 bg-white/[.035] p-2 text-center text-[10px]"><p className="flex items-center justify-center gap-1 font-bold text-white"><Clock3 size={12} />{slotTime(slot)}</p>{slot.title ? <p className="mt-1 font-black leading-tight text-white">{slot.title}</p> : null}{slot.pitchCode || slot.teamName ? <p className="mt-1 text-white/85">{slot.pitchCode ? <b className={`mr-1 rounded px-1 py-0.5 text-[9px] text-white ${pitchColors[slot.pitchCode]}`}>{slot.pitchCode}</b> : null}{slot.teamName}</p> : null}{slot.groupLabel ? <p className="mt-1 text-[9px] font-bold text-white/65">Groupe · {slot.groupLabel}</p> : null}</div>)}</div>)}
               </div>)}
+              {!planningRows.length ? <p className="border-t border-[#f5c400]/18 px-5 py-10 text-center text-sm font-bold text-white/65">Aucun entraînement public planifié cette semaine.</p> : null}
             </div>
           </div>
           <div className="px-1 pt-3 text-[11px]"><p className="flex items-center gap-2 text-white/75"><Info size={15} className="text-[#f5c400]" />Les horaires peuvent être modifiés. Vérifiez régulièrement les communications du club.</p></div>

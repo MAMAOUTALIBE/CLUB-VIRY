@@ -11,7 +11,7 @@ test("the training calendar no longer exposes a misleading formation link", () =
   assert.doesNotMatch(sportsHubSource, /href="\/formation"/);
   assert.doesNotMatch(sportsHubSource, /Voir tout le planning|Voir le planning complet/);
   assert.match(sportsHubSource, /Planning des entraînements/);
-  assert.match(sportsHubSource, /displayedSchedule\.map/);
+  assert.match(sportsHubSource, /planningRows\.map/);
 });
 
 test("the CRM header contains no inactive search or fake notification control", () => {

@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const event = await updateEvent(id, payload.data);
     if (!event) return jsonError(404, "NOT_FOUND", "Événement introuvable.");
+    revalidatePath("/");
     revalidatePath("/calendrier");
     await recordActivity({
       actorId: admin.context.user.id,
@@ -71,6 +72,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const trashed = await softDeleteRow("events", id, admin.context.user.id);
     if (!trashed) return jsonError(404, "NOT_FOUND", "Événement introuvable.");
     await recordActivity({ actorId: admin.context.user.id, action: "calendar.event.trashed", entityType: "club_events", entityId: id });
+    revalidatePath("/");
     revalidatePath("/calendrier");
     return jsonOk({ trashed: true });
   } catch (error) {
