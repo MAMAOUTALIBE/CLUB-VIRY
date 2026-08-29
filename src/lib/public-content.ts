@@ -2,9 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import type { LucideIcon } from "lucide-react";
-
-import { news as mockNews, partners as mockPartners, products as mockProducts, teams as mockTeams } from "@/lib/data";
+import { news as mockNews, partners as mockPartners, teams as mockTeams } from "@/lib/data";
 import { getPublishedNewsBySlug, listHomepageVideoMedia, listLatestPublishedPhotos, listPartnersForAdmin, listPublicMedia, listPublishedNews, listTeamMedia } from "@/lib/db/content";
 import { listPublicProducts } from "@/lib/db/recruitment-shop";
 import { getAllSettings } from "@/lib/db/settings";
@@ -17,6 +15,7 @@ import { images } from "@/lib/images";
 import { getPartnerLogo, getPartnerWebsite } from "@/lib/partner-logos";
 import { readPublicDb } from "@/lib/public-db";
 import { slugify } from "@/lib/slug";
+import { buildShopCatalog, type DisplayProduct } from "@/lib/shop-catalog";
 import { getVisibleHeroSlides, validateHomeHeroSetting, type HomeHeroSlide } from "@/lib/home-hero";
 import { getVisibleAnnouncements, validateAnnouncementsSetting, type SiteAnnouncement } from "@/lib/announcements";
 import {
@@ -124,18 +123,9 @@ export async function getPublicPartners(): Promise<DisplayPartner[]> {
   return mockPartners.map((name) => ({ name, logoUrl: getPartnerLogo(name), websiteUrl: getPartnerWebsite(name), tier: null }));
 }
 
-export type DisplayProduct = { name: string; price: string; category: string; imageUrl: string | null; icon: LucideIcon | null };
-
-function priceFr(cents: number, currency: string): string {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: currency || "EUR" }).format(cents / 100);
-}
-
 export async function getPublicProducts(): Promise<DisplayProduct[]> {
   const payload = await readPublicDb(() => listPublicProducts());
-  if (payload && payload.products.length > 0) {
-    return payload.products.map((p) => ({ name: p.name, price: priceFr(p.price_cents, p.currency), category: "Boutique", imageUrl: p.image_url, icon: null }));
-  }
-  return mockProducts.map((p) => ({ name: p.name, price: p.price, category: p.category, imageUrl: null, icon: p.icon }));
+  return payload ? buildShopCatalog(payload) : [];
 }
 
 export type DisplayAlbum = { title: string; image: string };

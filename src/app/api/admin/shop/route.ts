@@ -18,7 +18,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const shop = await listShopForAdmin(limit);
-    return jsonOk(shop);
+    const productNames = new Map(shop.products.map((product) => [product.id, product.name]));
+    return jsonOk({
+      ...shop,
+      variants: shop.variants.map((variant) => ({
+        ...variant,
+        product_name: productNames.get(variant.product_id) ?? "Produit archivé"
+      }))
+    });
   } catch (error) {
     return handleDbError("admin/shop", error);
   }

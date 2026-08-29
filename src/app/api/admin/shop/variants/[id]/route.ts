@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
@@ -45,6 +46,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       entityId: variant.id,
       metadata: { productId: variant.product_id, label: variant.label, stockQuantity: variant.stock_quantity }
     });
+    revalidatePath("/boutique");
 
     return jsonOk({ variant });
   } catch (error) {

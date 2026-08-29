@@ -613,93 +613,46 @@ export async function updatePaymentForAdmin(id: string, input: AdminPaymentUpdat
 
 export async function createOrder(input: CreateOrderInput): Promise<OrderBundle> {
   const supabase = getSupabaseAdminClient();
-  const productIds = [...new Set(input.items.map((item) => item.productId))];
-  const variantIds = [...new Set(input.items.map((item) => item.variantId).filter((variantId): variantId is string => Boolean(variantId)))];
-
-  const [{ data: products, error: productsError }, { data: variants, error: variantsError }] = await Promise.all([
-    supabase.from("products").select("*").in("id", productIds).eq("status", "ACTIVE"),
-    variantIds.length > 0
-      ? supabase.from("product_variants").select("*").in("id", variantIds).eq("is_active", true)
-      : Promise.resolve({ data: [], error: null })
-  ]);
-
-  if (productsError) {
-    throw new Error(`Unable to fetch products: ${productsError.message}`);
-  }
-
-  if (variantsError) {
-    throw new Error(`Unable to fetch product variants: ${variantsError.message}`);
-  }
-
-  const productsById = new Map((products ?? []).map((product) => [product.id as string, product as Product]));
-  const variantsById = new Map((variants ?? []).map((variant) => [variant.id as string, variant as ProductVariant]));
-
-  const orderItems = input.items.map((item) => {
-    const product = productsById.get(item.productId);
-
-    if (!product) {
-      throw new OrderValidationError("Produit indisponible.");
-    }
-
-    const variant = item.variantId ? variantsById.get(item.variantId) : null;
-
-    if (item.variantId && !variant) {
-      throw new OrderValidationError("Variante indisponible.");
-    }
-
-    if (variant && variant.product_id !== product.id) {
-      throw new OrderValidationError("La variante ne correspond pas au produit selectionne.");
-    }
-
-    const unitPrice = product.price_cents + (variant?.price_delta_cents ?? 0);
-
-    if (!Number.isInteger(unitPrice) || unitPrice < 1) {
-      throw new OrderValidationError("Prix produit invalide.");
-    }
-
-    return {
-      product_id: product.id,
-      variant_id: variant?.id ?? null,
-      label: variant ? `${product.name} - ${variant.label}` : product.name,
-      quantity: item.quantity,
-      unit_price_cents: unitPrice,
-      total_cents: unitPrice * item.quantity
-    };
+  const { data: orderId, error } = await supabase.rpc("create_shop_order_atomic", {
+    p_profile_id: input.profileId ?? null,
+    p_email: input.email,
+    p_customer_name: input.customerName,
+    p_phone: input.phone ?? null,
+    p_notes: input.notes ?? null,
+    p_items: input.items
   });
 
-  const totalCents = orderItems.reduce((total, item) => total + item.total_cents, 0);
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      profile_id: input.profileId ?? null,
-      email: input.email,
-      customer_name: input.customerName,
-      phone: input.phone ?? null,
-      notes: input.notes ?? null,
-      total_cents: totalCents,
-      currency: "EUR",
-      status: "PENDING"
-    })
-    .select("*")
-    .single();
+  if (error) {
+    const validationMessages: Record<string, string> = {
+      SHOP_INVALID_ITEMS: "Commande invalide.",
+      SHOP_INVALID_QUANTITY: "Quantité invalide.",
+      SHOP_PRODUCT_UNAVAILABLE: "Produit indisponible.",
+      SHOP_VARIANT_UNAVAILABLE: "Option indisponible.",
+      SHOP_VARIANT_REQUIRED: "Une option produit est obligatoire.",
+      SHOP_INSUFFICIENT_STOCK: "Stock insuffisant pour cette commande.",
+      SHOP_INVALID_PRICE: "Prix produit invalide."
+    };
+    const validationCode = Object.keys(validationMessages).find((code) => error.message.includes(code));
 
-  if (orderError) {
-    throw new Error(`Unable to create order: ${orderError.message}`);
+    if (validationCode) {
+      throw new OrderValidationError(validationMessages[validationCode]);
+    }
+
+    throw new Error(`Unable to create order: ${error.message}`);
   }
 
-  const { data: createdItems, error: itemsError } = await supabase
-    .from("order_items")
-    .insert(
-      orderItems.map((item) => ({
-        ...item,
-        order_id: order.id
-      }))
-    )
-    .select("*");
-
-  if (itemsError) {
-    throw new Error(`Unable to create order items: ${itemsError.message}`);
+  if (typeof orderId !== "string") {
+    throw new Error("Unable to create order: missing order identifier.");
   }
+
+  const bundle = await getOrderBundleForAdmin(orderId);
+
+  if (!bundle) {
+    throw new Error("Unable to create order: order not found after creation.");
+  }
+
+  const totalCents = bundle.order.total_cents;
+  const itemCount = bundle.items.reduce((total, item) => total + item.quantity, 0);
 
   await Promise.all([
     queueAdminNotification(
@@ -707,11 +660,11 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderBundle>
         template: "shop_order_received",
         subject: `Nouvelle commande boutique : ${input.customerName}`,
         payload: {
-          orderId: order.id,
+          orderId: bundle.order.id,
           customerName: input.customerName,
           email: input.email,
           totalCents,
-          itemCount: orderItems.reduce((total, item) => total + item.quantity, 0)
+          itemCount
         }
       },
       supabase
@@ -722,7 +675,7 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderBundle>
         template: "shop_order_confirmation",
         subject: "Votre commande ES Viry-Châtillon",
         payload: {
-          orderId: order.id,
+          orderId: bundle.order.id,
           customerName: input.customerName,
           totalCents,
           currency: "EUR"
@@ -735,20 +688,16 @@ export async function createOrder(input: CreateOrderInput): Promise<OrderBundle>
   await recordActivity({
     action: "shop.order_created",
     entityType: "order",
-    entityId: order.id,
+    entityId: bundle.order.id,
     metadata: {
       customerName: input.customerName,
       email: input.email,
       totalCents,
-      itemCount: orderItems.reduce((total, item) => total + item.quantity, 0)
+      itemCount
     }
   });
 
-  return {
-    order: order as Order,
-    items: (createdItems ?? []) as OrderItem[],
-    payments: []
-  };
+  return bundle;
 }
 
 export async function createCheckout(input: CreateCheckoutInput): Promise<Payment> {

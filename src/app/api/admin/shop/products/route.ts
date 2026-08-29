@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getAdminContext } from "@/lib/api/admin-auth";
 import { handleDbError, jsonError, jsonOk, readJsonBody } from "@/lib/api/http";
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       entityId: product.id,
       metadata: { name: product.name, slug: product.slug, status: product.status }
     });
+    revalidatePath("/boutique");
 
     return jsonOk({ product }, 201);
   } catch (error) {

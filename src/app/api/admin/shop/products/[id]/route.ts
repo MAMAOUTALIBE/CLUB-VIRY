@@ -47,6 +47,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       entityId: product.id,
       metadata: { name: product.name, slug: product.slug, status: product.status }
     });
+    revalidatePath("/boutique");
 
     return jsonOk({ product });
   } catch (error) {

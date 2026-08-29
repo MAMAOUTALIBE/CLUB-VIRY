@@ -3,30 +3,36 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type CartItem = {
+  productId: string;
+  variantId: string | null;
   name: string;
   price: string | null;
   imageUrl: string | null;
+  maxQuantity: number;
   quantity: number;
 };
 
 export type CartProductInput = {
+  productId: string;
+  variantId?: string | null;
   name: string;
   price?: string | null;
   imageUrl?: string | null;
+  maxQuantity?: number;
 };
 
 type ShopContextValue = {
   items: CartItem[];
   count: number;
   addItem: (product: CartProductInput) => void;
-  removeItem: (name: string) => void;
-  setQuantity: (name: string, quantity: number) => void;
+  removeItem: (productId: string) => void;
+  setQuantity: (productId: string, quantity: number) => void;
   clear: () => void;
 };
 
 const ShopContext = createContext<ShopContextValue | null>(null);
-const STORAGE_KEY = "esviry-cart-v1";
-const MAX_QUANTITY = 99;
+const STORAGE_KEY = "esviry-cart-v2";
+const MAX_QUANTITY = 20;
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -44,12 +50,28 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
           setItems(
             parsed
-              .filter((item): item is CartItem => Boolean(item) && typeof item.name === "string" && typeof item.quantity === "number")
+              .filter(
+                (item): item is CartItem =>
+                  Boolean(item) &&
+                  typeof item.productId === "string" &&
+                  typeof item.name === "string" &&
+                  typeof item.quantity === "number"
+              )
               .map((item) => ({
+                productId: item.productId,
+                variantId: typeof item.variantId === "string" ? item.variantId : null,
                 name: item.name,
                 price: typeof item.price === "string" ? item.price : null,
                 imageUrl: typeof item.imageUrl === "string" ? item.imageUrl : null,
-                quantity: Math.min(MAX_QUANTITY, Math.max(1, Math.trunc(item.quantity)))
+                maxQuantity: Math.min(
+                  MAX_QUANTITY,
+                  Math.max(1, typeof item.maxQuantity === "number" ? Math.trunc(item.maxQuantity) : MAX_QUANTITY)
+                ),
+                quantity: Math.min(
+                  MAX_QUANTITY,
+                  Math.max(1, Math.trunc(item.quantity)),
+                  Math.max(1, typeof item.maxQuantity === "number" ? Math.trunc(item.maxQuantity) : MAX_QUANTITY)
+                )
               }))
           );
         }
@@ -78,20 +100,36 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
       count: items.reduce((sum, item) => sum + item.quantity, 0),
       addItem: (product) =>
         setItems((current) => {
-          const existing = current.find((item) => item.name === product.name);
+          const maxQuantity = Math.min(MAX_QUANTITY, Math.max(1, product.maxQuantity ?? MAX_QUANTITY));
+          const existing = current.find((item) => item.productId === product.productId);
           if (existing) {
             return current.map((item) =>
-              item.name === product.name ? { ...item, quantity: Math.min(MAX_QUANTITY, item.quantity + 1) } : item
+              item.productId === product.productId
+                ? { ...item, maxQuantity, quantity: Math.min(maxQuantity, item.quantity + 1) }
+                : item
             );
           }
-          return [...current, { name: product.name, price: product.price ?? null, imageUrl: product.imageUrl ?? null, quantity: 1 }];
+          return [
+            ...current,
+            {
+              productId: product.productId,
+              variantId: product.variantId ?? null,
+              name: product.name,
+              price: product.price ?? null,
+              imageUrl: product.imageUrl ?? null,
+              maxQuantity,
+              quantity: 1
+            }
+          ];
         }),
-      removeItem: (name) => setItems((current) => current.filter((item) => item.name !== name)),
-      setQuantity: (name, quantity) =>
+      removeItem: (productId) => setItems((current) => current.filter((item) => item.productId !== productId)),
+      setQuantity: (productId, quantity) =>
         setItems((current) =>
           quantity <= 0
-            ? current.filter((item) => item.name !== name)
-            : current.map((item) => (item.name === name ? { ...item, quantity: Math.min(MAX_QUANTITY, quantity) } : item))
+            ? current.filter((item) => item.productId !== productId)
+            : current.map((item) =>
+                item.productId === productId ? { ...item, quantity: Math.min(item.maxQuantity, MAX_QUANTITY, quantity) } : item
+              )
         ),
       clear: () => setItems([])
     }),

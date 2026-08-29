@@ -52,15 +52,19 @@ export function CartDrawer() {
     setFeedback("");
 
     try {
-      const response = await fetch("/api/order-requests", {
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName: String(data.get("fullName") ?? "").trim(),
+          customerName: String(data.get("fullName") ?? "").trim(),
           email: String(data.get("email") ?? "").trim(),
           phone: String(data.get("phone") ?? "").trim() || undefined,
-          message: String(data.get("message") ?? "").trim() || undefined,
-          items: items.map((item) => ({ name: item.name, quantity: item.quantity, price: item.price ?? undefined }))
+          notes: String(data.get("message") ?? "").trim() || undefined,
+          items: items.map((item) => ({
+            productId: item.productId,
+            ...(item.variantId ? { variantId: item.variantId } : {}),
+            quantity: item.quantity
+          }))
         })
       });
       const result = await response.json().catch(() => null);
@@ -74,7 +78,10 @@ export function CartDrawer() {
       form.reset();
       clear();
       setStatus("success");
-      setFeedback("Votre demande de commande est bien envoyée. Le club vous recontacte pour la finaliser.");
+      const reference = typeof result?.data?.order?.id === "string" ? result.data.order.id.slice(0, 8).toUpperCase() : null;
+      setFeedback(
+        `Votre commande est enregistrée${reference ? ` sous la référence ${reference}` : ""}. Le club vous recontacte pour le règlement.`
+      );
     } catch {
       setStatus("error");
       setFeedback("Connexion impossible. Vérifiez votre réseau puis réessayez.");
@@ -131,23 +138,23 @@ export function CartDrawer() {
               ) : (
                 <ul className="space-y-3">
                   {items.map((item) => (
-                    <li key={item.name} className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
+                    <li key={item.productId} className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-black uppercase text-[#002f1d]">{item.name}</p>
                         {item.price ? <p className="text-sm font-bold text-slate-600">{item.price}</p> : null}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => setQuantity(item.name, item.quantity - 1)} aria-label="Diminuer la quantité" className="focus-ring rounded border border-slate-300 p-1 hover:bg-slate-100">
+                        <button type="button" onClick={() => setQuantity(item.productId, item.quantity - 1)} aria-label="Diminuer la quantité" className="focus-ring rounded border border-slate-300 p-1 hover:bg-slate-100">
                           <Minus size={14} aria-hidden="true" />
                         </button>
                         <span className="min-w-7 text-center text-sm font-black" aria-label={`Quantité : ${item.quantity}`}>
                           {item.quantity}
                         </span>
-                        <button type="button" onClick={() => setQuantity(item.name, item.quantity + 1)} aria-label="Augmenter la quantité" className="focus-ring rounded border border-slate-300 p-1 hover:bg-slate-100">
+                        <button type="button" disabled={item.quantity >= item.maxQuantity} onClick={() => setQuantity(item.productId, item.quantity + 1)} aria-label="Augmenter la quantité" className="focus-ring rounded border border-slate-300 p-1 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40">
                           <Plus size={14} aria-hidden="true" />
                         </button>
                       </div>
-                      <button type="button" onClick={() => removeItem(item.name)} aria-label={`Retirer ${item.name}`} className="focus-ring rounded p-1 text-red-600 hover:bg-red-50">
+                      <button type="button" onClick={() => removeItem(item.productId)} aria-label={`Retirer ${item.name}`} className="focus-ring rounded p-1 text-red-600 hover:bg-red-50">
                         <Trash2 size={16} aria-hidden="true" />
                       </button>
                     </li>
@@ -158,7 +165,7 @@ export function CartDrawer() {
 
             {items.length > 0 && status !== "success" ? (
               <form onSubmit={handleSubmit} noValidate className="border-t border-slate-200 px-5 py-4">
-                <p className="text-xs font-bold text-slate-500">Commande à régler et à retirer au club. Le club vous recontacte pour la finaliser.</p>
+                <p className="text-xs font-bold text-slate-500">Commande à régler auprès du club. Le club vous recontacte pour la finaliser.</p>
                 <div className="mt-3 grid gap-2">
                   <input name="fullName" required maxLength={160} autoComplete="name" placeholder="Nom complet *" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-[#fbfcf8] px-3 py-2 text-sm" />
                   <input name="email" type="email" required maxLength={160} autoComplete="email" inputMode="email" placeholder="Email *" className="focus-ring min-h-11 rounded-md border border-slate-300 bg-[#fbfcf8] px-3 py-2 text-sm" />

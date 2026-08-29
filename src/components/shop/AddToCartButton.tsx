@@ -19,10 +19,13 @@ export function AddToCartButton({ product }: { product: CartProductInput }) {
     <button
       type="button"
       onClick={handleClick}
+      disabled={product.maxQuantity === 0}
       aria-label={`Ajouter ${product.name} au panier`}
-      className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#002f1d] px-4 py-3 text-sm font-black uppercase text-white transition hover:bg-[#07542f]"
+      className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#002f1d] px-4 py-3 text-sm font-black uppercase text-white transition hover:bg-[#07542f] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
     >
-      {added ? (
+      {product.maxQuantity === 0 ? (
+        <span>Épuisé</span>
+      ) : added ? (
         <>
           <Check size={16} aria-hidden="true" />
           <span className="sm:hidden">Ajouté</span>
