@@ -22,6 +22,9 @@ function ResultRow({ match }: { match: MobileMatchCard }) {
 
 export function MobileLiveResults({ live, results }: { live: MobileMatchCard | null; results: MobileMatchCard[] }) {
   if (!live && results.length === 0) return null;
+  const liveHref = live ? live.followUrl ?? `/matchs/${live.id}` : null;
+  const liveExternal = liveHref?.startsWith("https://") ?? false;
+
   return (
     <section aria-labelledby="mobile-live-title" className="relative overflow-hidden bg-[#001f16] px-4 py-10 text-white xl:hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(247,198,0,.13),transparent_38%),linear-gradient(180deg,rgba(0,47,29,.78),rgba(0,22,15,.96))]" aria-hidden="true" />
@@ -36,7 +39,7 @@ export function MobileLiveResults({ live, results }: { live: MobileMatchCard | n
               <div className="flex min-w-0 flex-col items-center"><TeamLogo src={live.awayLogoUrl} name={live.away} /><p className="mt-2 text-sm font-black uppercase leading-tight">{live.away}</p></div>
             </div>
             <p className="mt-5 text-center text-xs font-bold uppercase tracking-wider text-white/60">{[live.competition, live.category].filter(Boolean).join(" · ")}</p>
-            <Link href={`/matchs/${live.id}`} className="mt-5 flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-[#f7c600] px-4 text-sm font-black uppercase text-[#002f1d] transition hover:bg-[#ffd84d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Suivre le match <ArrowRight size={19} aria-hidden="true" /></Link>
+            <Link href={liveHref ?? `/matchs/${live.id}`} target={liveExternal ? "_blank" : undefined} rel={liveExternal ? "noreferrer" : undefined} className="mt-5 flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-[#f7c600] px-4 text-sm font-black uppercase text-[#002f1d] transition hover:bg-[#ffd84d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Voir le match en direct <ArrowRight size={19} aria-hidden="true" /></Link>
           </article>
         </> : <h2 id="mobile-live-title" className="sr-only">Matchs et résultats</h2>}
 

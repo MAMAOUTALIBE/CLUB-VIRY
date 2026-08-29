@@ -80,7 +80,7 @@ test("la section reste mobile/tablette et la source ne contient aucun fallback",
   assert.doesNotMatch(view, /getMobileMatchFeed[\s\S]{0,500}getFallbackCalendarItems/);
 });
 
-test("le bloc direct et photos reste strictement réservé au mobile", async () => {
+test("le repli média reste mobile et le direct est aussi disponible sur tablette et ordinateur", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const component = await readFile(new URL("../src/components/MobileLiveResults.tsx", import.meta.url), "utf8");
   const homeLiveGallery = await readFile(new URL("../src/components/HomeLiveGallery.tsx", import.meta.url), "utf8");
@@ -91,7 +91,9 @@ test("le bloc direct et photos reste strictement réservé au mobile", async () 
   assert.match(homeLiveGallery, /aria-label="Match en direct, dernier match ou photos" className="[^"]*md:hidden"/);
   assert.match(homeLiveGallery, /\{media \? <DynamicMediaCard media=\{media\} \/> : <LatestPhotosCard photos=\{photos\} \/>\}/);
   assert.equal((homeLiveGallery.match(/<LatestPhotosCard photos=\{photos\} \/>/g) ?? []).length, 1);
-  assert.doesNotMatch(homeLiveGallery, /desktopLiveMatch|NoLiveMatchCard|hidden lg:block|lg:grid-cols-2/);
+  assert.match(homeLiveGallery, /media\?\.kind === "LIVE_MATCH"[\s\S]*aria-label="Match en direct sur ordinateur" className="[^"]*hidden[^"]*xl:block/);
+  assert.match(homeLiveGallery, /<LiveMatchCard media=\{media\} \/>/);
+  assert.doesNotMatch(homeLiveGallery, /Match en direct sur ordinateur[\s\S]{0,500}<LatestPhotosCard/);
   assert.match(homeLiveGallery, /Aucune photo publiée/);
   assert.match(homeLiveGallery, /href="\/medias"/);
   assert.match(homeLiveGallery, /Voir toutes les photos/);
@@ -99,6 +101,9 @@ test("le bloc direct et photos reste strictement réservé au mobile", async () 
   // Les autres blocs mobiles déjà présents restent inchangés.
   assert.match(page, /<section className="bg-\[#f7f8f4\] xl:hidden">[\s\S]*<MobileLiveResults/);
   assert.match(component, /id="mobile-live-title" className="[^"]*whitespace-nowrap[^"]*uppercase[^"]*text-red-500"[^>]*>Match en direct<\/h2>/);
+  assert.match(component, /className="relative overflow-hidden[^"]*xl:hidden"/);
+  assert.match(component, /live \? live\.followUrl \?\? `\/matchs\/\$\{live\.id\}` : null/);
+  assert.match(component, />Voir le match en direct /);
 });
 
 test("les photos de l'accueil viennent uniquement des assets PHOTO publiés du CRM", async () => {
@@ -110,11 +115,12 @@ test("les photos de l'accueil viennent uniquement des assets PHOTO publiés du C
   assert.doesNotMatch(publicContent, /getLatestPublishedGalleryPhotos[\s\S]{0,500}(?:mockNews|images\.)/);
 });
 
-test("le direct pointe vers une vraie route publique de match", async () => {
+test("le direct tablette utilise le lien CRM puis la vraie route publique de match", async () => {
   const component = await readFile(new URL("../src/components/MobileLiveResults.tsx", import.meta.url), "utf8");
   const route = await readFile(new URL("../src/app/matchs/[id]/page.tsx", import.meta.url), "utf8");
-  assert.match(component, /href=\{`\/matchs\/\$\{live\.id\}`\}/);
-  assert.match(component, />Suivre le match /);
+  assert.match(component, /live \? live\.followUrl \?\? `\/matchs\/\$\{live\.id\}` : null/);
+  assert.match(component, /href=\{liveHref \?\? `\/matchs\/\$\{live\.id\}`\}/);
+  assert.match(component, />Voir le match en direct /);
   assert.match(route, /getPublicMatchDetail\(id\)/);
   assert.match(route, /if \(!detail\) notFound\(\)/);
 });

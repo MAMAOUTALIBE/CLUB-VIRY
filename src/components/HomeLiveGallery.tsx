@@ -120,10 +120,20 @@ function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
 
 export function HomeLiveGallery({ media, photos }: { media: HomeMediaCard | null; photos: DisplayGalleryPhoto[] }) {
   return (
-    <section aria-label="Match en direct, dernier match ou photos" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
-      <div className="grid gap-5">
-        {media ? <DynamicMediaCard media={media} /> : <LatestPhotosCard photos={photos} />}
-      </div>
-    </section>
+    <>
+      <section aria-label="Match en direct, dernier match ou photos" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
+        <div className="grid gap-5">
+          {media ? <DynamicMediaCard media={media} /> : <LatestPhotosCard photos={photos} />}
+        </div>
+      </section>
+
+      {media?.kind === "LIVE_MATCH" ? (
+        <section aria-label="Match en direct sur ordinateur" className="hidden px-6 py-14 xl:block 3xl:py-16">
+          <div className="mx-auto max-w-5xl">
+            <LiveMatchCard media={media} />
+          </div>
+        </section>
+      ) : null}
+    </>
   );
 }
