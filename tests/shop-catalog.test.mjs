@@ -84,3 +84,16 @@ test("la migration lance exactement les deux pass sans écraser les modification
   assert.match(sql, /create_shop_order_atomic/);
   assert.match(sql, /for update/i);
 });
+
+test("une annulation CRM restitue le stock et une réouverture le réserve", async () => {
+  const sql = await readFile(
+    new URL("../supabase/migrations/20260829123000_restore_cancelled_shop_stock.sql", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(sql, /new\.status in \('CANCELLED', 'REFUNDED'\)/);
+  assert.match(sql, /stock_quantity = variant\.stock_quantity \+ ordered\.quantity/);
+  assert.match(sql, /old\.status in \('CANCELLED', 'REFUNDED'\).*new\.status not in/s);
+  assert.match(sql, /SHOP_INSUFFICIENT_STOCK/);
+  assert.match(sql, /before update of status on public\.orders/);
+});
