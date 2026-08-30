@@ -69,7 +69,7 @@ export function toPublicMatch(match: Match): PublicMatch {
     home_score: match.home_score,
     away_score: match.away_score,
     live_minute: match.live_minute,
-    follow_url: match.follow_url
+    follow_url: match.access_level === "FAMILY_PASS" ? null : match.follow_url
   };
 }
 

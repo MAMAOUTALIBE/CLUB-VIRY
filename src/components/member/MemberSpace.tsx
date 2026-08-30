@@ -1,9 +1,11 @@
 "use client";
 
-import { Bell, CalendarDays, Camera, CheckCheck, Loader2, LogIn, LogOut, Megaphone, Trophy, Users } from "lucide-react";
+import { Bell, CalendarDays, Camera, CheckCheck, Clapperboard, ExternalLink, Loader2, LockKeyhole, LogIn, LogOut, Megaphone, Radio, Trophy, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+
+import { familyMediaDateKey, isFamilyMediaPassCurrent } from "@/lib/family-media-entitlement";
 
 type Player = { id: string; first_name: string; last_name: string };
 type Notif = {
@@ -17,6 +19,29 @@ type Notif = {
   created_at: string;
 };
 type Pref = { category: string; email: boolean; push: boolean };
+type MediaPass = {
+  id: string;
+  status: "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED" | "CANCELLED" | "EXPIRED";
+  startsOn: string;
+  endsOn: string;
+  allowPhotos: boolean;
+  allowTrainingVideos: boolean;
+  allowLiveMatches: boolean;
+  teamNames: string[];
+};
+type ProtectedMedia = {
+  id: string;
+  team_id: string;
+  type: "PHOTO" | "VIDEO";
+  content_kind: "MATCH" | "TRAINING" | null;
+  playback_kind: "VIDEO" | "BROADCAST_LINK";
+  title: string;
+  thumbnail_url: string | null;
+  alt_text: string | null;
+  is_live: boolean;
+  published_at: string | null;
+  access_path: string;
+};
 
 const CATEGORIES: Record<string, { label: string; icon: LucideIcon }> = {
   convocation: { label: "Convocations", icon: Trophy },
@@ -81,6 +106,10 @@ export function MemberSpace() {
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
   const [prefs, setPrefs] = useState<Pref[]>([]);
+  const [mediaPasses, setMediaPasses] = useState<MediaPass[]>([]);
+  const [protectedMedia, setProtectedMedia] = useState<ProtectedMedia[]>([]);
+  const [mediaBusy, setMediaBusy] = useState(false);
+  const [mediaMessage, setMediaMessage] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -106,6 +135,16 @@ export function MemberSpace() {
     if (json?.ok) setPrefs(json.data.preferences ?? []);
   }, []);
 
+  const loadMedia = useCallback(async () => {
+    const [passResponse, mediaResponse] = await Promise.all([
+      fetch("/api/family/media-pass", { credentials: "same-origin" }),
+      fetch("/api/family/media?limit=100", { credentials: "same-origin" })
+    ]);
+    const [passJson, mediaJson] = await Promise.all([passResponse.json().catch(() => null), mediaResponse.json().catch(() => null)]);
+    if (passResponse.ok && passJson?.ok) setMediaPasses(passJson.data.passes ?? []);
+    setProtectedMedia(mediaResponse.ok && mediaJson?.ok ? mediaJson.data.assets ?? [] : []);
+  }, []);
+
   const load = useCallback(async () => {
     setStatus("loading");
     const res = await fetch("/api/family", { credentials: "same-origin" });
@@ -116,12 +155,12 @@ export function MemberSpace() {
     const json = await res.json().catch(() => null);
     if (json?.ok) {
       setPlayers(json.data.players ?? []);
-      await Promise.all([loadNotifs(), loadPrefs()]);
+      await Promise.all([loadNotifs(), loadPrefs(), loadMedia()]);
       setStatus("ready");
     } else {
       setStatus("unauth");
     }
-  }, [loadNotifs, loadPrefs]);
+  }, [loadMedia, loadNotifs, loadPrefs]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -178,6 +217,8 @@ export function MemberSpace() {
     setPlayers([]);
     setNotifs([]);
     setPrefs([]);
+    setMediaPasses([]);
+    setProtectedMedia([]);
     setStatus("unauth");
   }
 
@@ -196,6 +237,24 @@ export function MemberSpace() {
     }).catch(() => null);
     const json = res ? await res.json().catch(() => null) : null;
     if (json?.ok) setPrefs(json.data.preferences ?? []);
+  }
+
+  async function openProtectedBroadcast(media: ProtectedMedia) {
+    setMediaBusy(true);
+    setMediaMessage("");
+    try {
+      const response = await fetch(media.access_path, { credentials: "same-origin" });
+      const json = await response.json().catch(() => null);
+      if (!response.ok || !json?.ok || typeof json.data?.url !== "string") {
+        setMediaMessage(json?.error?.message ?? "Cette diffusion n’est pas accessible.");
+        return;
+      }
+      window.location.assign(json.data.url);
+    } catch {
+      setMediaMessage("La diffusion ne peut pas être ouverte actuellement.");
+    } finally {
+      setMediaBusy(false);
+    }
   }
 
   if (status === "loading") {
@@ -250,6 +309,10 @@ export function MemberSpace() {
   }
 
   const convocations = notifs.filter((notif) => notif.category === "convocation" || notif.template === "match_callup");
+  const today = familyMediaDateKey();
+  const currentMediaPass = mediaPasses.find((pass) => isFamilyMediaPassCurrent(pass, today)) ?? mediaPasses.find((pass) => pass.status === "ACTIVE") ?? mediaPasses[0] ?? null;
+  const currentMediaPassIsActive = currentMediaPass ? isFamilyMediaPassCurrent(currentMediaPass, today) : false;
+  const passStatusLabel = currentMediaPassIsActive ? "Actif" : currentMediaPass?.status === "ACTIVE" && currentMediaPass.startsOn > today ? "Programmé" : currentMediaPass?.status === "ACTIVE" && currentMediaPass.endsOn < today ? "Expiré" : currentMediaPass?.status === "PENDING_REVIEW" ? "En attente de validation" : currentMediaPass?.status === "SUSPENDED" ? "Suspendu" : currentMediaPass?.status === "REJECTED" ? "Refusé" : currentMediaPass?.status === "CANCELLED" ? "Annulé" : currentMediaPass?.status === "EXPIRED" ? "Expiré" : "Non attribué";
 
   return (
     <div className="grid gap-6">
@@ -259,6 +322,24 @@ export function MemberSpace() {
           <LogOut size={16} aria-hidden="true" /> Déconnexion
         </button>
       </div>
+
+      <section className="official-card rounded-2xl bg-white p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]"><LockKeyhole size={18} aria-hidden="true" /> Pass Famille Média</h3>{currentMediaPass ? <p className="mt-1 text-sm font-semibold text-slate-600">{currentMediaPass.startsOn} au {currentMediaPass.endsOn} · {currentMediaPass.teamNames.join(", ")}</p> : null}</div>
+          <span className={`rounded-full px-3 py-1.5 text-xs font-black uppercase ${currentMediaPassIsActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{passStatusLabel}</span>
+        </div>
+        {currentMediaPass ? <div className="mt-4 flex flex-wrap gap-2">{[[currentMediaPass.allowPhotos, "Photos"], [currentMediaPass.allowTrainingVideos, "Vidéos d’entraînement"], [currentMediaPass.allowLiveMatches, "Matchs en direct"]].filter(([allowed]) => allowed).map(([, label]) => <span key={String(label)} className="rounded-md border border-[#07542f]/20 bg-emerald-50 px-2.5 py-1 text-xs font-black uppercase text-[#07542f]">{label}</span>)}</div> : <p className="mt-4 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-5 text-center text-sm font-semibold text-slate-500">Aucun accès média annuel n’est actif pour cette famille.</p>}
+
+        {currentMediaPassIsActive ? protectedMedia.length > 0 ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {protectedMedia.map((media) => <article key={media.id} className="overflow-hidden rounded-lg border border-slate-200 bg-[#fbfcf8]">
+              {media.type === "PHOTO" ? <img src={`/api/family/media/${media.id}/file`} alt={media.alt_text ?? media.title} className="aspect-video w-full object-cover" loading="lazy" /> : media.playback_kind === "VIDEO" ? <video controls playsInline preload="metadata" poster={media.thumbnail_url ?? undefined} src={`/api/family/media/${media.id}/file`} className="aspect-video w-full bg-black object-contain" aria-label={media.title} /> : <button type="button" disabled={mediaBusy} onClick={() => void openProtectedBroadcast(media)} className="focus-ring group relative block aspect-video w-full overflow-hidden bg-[#002f1d] text-white disabled:opacity-60">{media.thumbnail_url ? <img src={media.thumbnail_url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" /> : null}<span className="absolute inset-0 flex items-center justify-center"><span className="inline-flex items-center gap-2 rounded-md bg-[#f7c600] px-4 py-3 text-sm font-black uppercase text-[#002f1d]"><ExternalLink size={17} /> Ouvrir le direct</span></span></button>}
+              <div className="p-3"><p className="flex items-center gap-2 text-[11px] font-black uppercase text-[#07542f]">{media.is_live ? <Radio size={14} className="text-red-600" /> : media.type === "PHOTO" ? <Camera size={14} /> : <Clapperboard size={14} />}{media.is_live ? "En direct" : media.content_kind === "TRAINING" ? "Entraînement" : media.type === "PHOTO" ? "Photo" : "Match"}</p><h4 className="mt-1 text-sm font-black text-[#002f1d]">{media.title}</h4></div>
+            </article>)}
+          </div>
+        ) : <p className="mt-5 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-5 text-center text-sm font-semibold text-slate-500">Aucun média réservé n’est publié pour vos équipes.</p> : null}
+        {mediaMessage ? <p role="alert" className="mt-3 text-sm font-bold text-red-700">{mediaMessage}</p> : null}
+      </section>
 
       {/* Convocations */}
       <section className="official-card rounded-2xl bg-white p-5 sm:p-6">

@@ -65,15 +65,24 @@ function mediaAlbumPayloadToRow(input: AdminMediaAlbumPayload) {
 }
 
 function mediaAssetPayloadToRow(input: AdminMediaAssetPayload) {
+  const switchingToPublic = input.accessLevel === "PUBLIC";
+  const privateBroadcastSelected = input.accessLevel === "FAMILY_PASS" && input.playbackKind === "BROADCAST_LINK";
+  const privateFileSelected =
+    input.accessLevel === "FAMILY_PASS" && input.playbackKind !== "BROADCAST_LINK" && Boolean(input.storagePath);
   return {
     ...(input.albumId !== undefined ? { album_id: input.albumId ?? null } : {}),
     ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
     ...(input.type ? { type: input.type } : {}),
     ...(input.contentKind !== undefined ? { content_kind: input.contentKind ?? null } : {}),
     ...(input.playbackKind ? { playback_kind: input.playbackKind } : {}),
+    ...(input.accessLevel ? { access_level: input.accessLevel } : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.title ? { title: input.title } : {}),
-    ...(input.url ? { url: input.url } : {}),
+    ...(input.url !== undefined ? { url: input.url ?? null } : {}),
+    ...(input.storagePath !== undefined ? { storage_path: input.storagePath ?? null } : {}),
+    ...(switchingToPublic ? { storage_path: null } : {}),
+    ...(privateFileSelected ? { url: null } : {}),
+    ...(privateBroadcastSelected ? { storage_path: null } : {}),
     ...(input.thumbnailUrl !== undefined ? { thumbnail_url: input.thumbnailUrl ?? null } : {}),
     ...(input.altText !== undefined ? { alt_text: input.altText ?? null } : {}),
     ...(input.isFeatured !== undefined ? { is_featured: input.isFeatured } : {}),
@@ -251,6 +260,7 @@ export async function listTeamMedia(teamId: string, limit = 12): Promise<MediaAs
     .from("media_assets")
     .select("*")
     .eq("team_id", teamId)
+    .eq("access_level", "PUBLIC")
     .not("published_at", "is", null)
     .order("published_at", { ascending: false })
     .limit(limit);
@@ -266,7 +276,7 @@ export async function listPublicMedia(): Promise<MediaPayload> {
   const supabase = getSupabaseAdminClient();
   const [{ data: albums, error: albumsError }, { data: assets, error: assetsError }] = await Promise.all([
     supabase.from("media_albums").select("*").eq("status", "PUBLISHED").is("deleted_at", null).order("published_at", { ascending: false }),
-    supabase.from("media_assets").select("*").order("created_at", { ascending: false }).limit(60)
+    supabase.from("media_assets").select("*").eq("access_level", "PUBLIC").order("created_at", { ascending: false }).limit(60)
   ]);
 
   if (albumsError) {
@@ -290,6 +300,7 @@ export async function listLatestPublishedPhotos(limit = 4): Promise<MediaAsset[]
     .from("media_assets")
     .select("*")
     .eq("type", "PHOTO")
+    .eq("access_level", "PUBLIC")
     .eq("status", "PUBLISHED")
     .not("published_at", "is", null)
     .lte("published_at", nowIso)
@@ -311,6 +322,7 @@ export async function listHomepageVideoMedia(limit = 50): Promise<MediaAsset[]> 
     .from("media_assets")
     .select("*")
     .eq("type", "VIDEO")
+    .eq("access_level", "PUBLIC")
     .eq("status", "PUBLISHED")
     .not("content_kind", "is", null)
     .not("published_at", "is", null)

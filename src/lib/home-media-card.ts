@@ -26,7 +26,7 @@ function validDate(value: string | null): number | null {
 }
 
 function isVisibleVideo(asset: HomepageMediaAsset, now: number): boolean {
-  if (asset.type !== "VIDEO" || asset.status !== "PUBLISHED" || !asset.content_kind || !asset.url.trim()) return false;
+  if (asset.type !== "VIDEO" || asset.status !== "PUBLISHED" || !asset.content_kind || !asset.url?.trim()) return false;
   const publishedAt = validDate(asset.published_at);
   if (publishedAt === null || publishedAt > now) return false;
   const startsAt = validDate(asset.starts_at);
@@ -52,7 +52,7 @@ function toVideoCard(asset: HomepageMediaAsset | null): HomeMediaCard | null {
     playbackKind: asset.playback_kind,
     isLive: asset.is_live,
     title: asset.title,
-    videoUrl: asset.url,
+    videoUrl: asset.url ?? "",
     coverImageUrl: asset.thumbnail_url
   };
 }

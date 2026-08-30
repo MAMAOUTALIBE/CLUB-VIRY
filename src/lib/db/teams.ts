@@ -60,6 +60,7 @@ function matchPayloadToRow(input: AdminMatchPayload) {
     ...(input.awayScore !== undefined ? { away_score: input.awayScore } : {}),
     ...(input.liveMinute !== undefined ? { live_minute: input.liveMinute } : {}),
     ...(input.followUrl !== undefined ? { follow_url: input.followUrl ?? null } : {}),
+    ...(input.accessLevel ? { access_level: input.accessLevel } : {}),
     ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
     ...(input.visibility ? { visibility: input.visibility } : {})
   };

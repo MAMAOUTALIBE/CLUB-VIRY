@@ -111,7 +111,7 @@ test("les photos de l'accueil viennent uniquement des assets PHOTO publiés du C
   const publicContent = await readFile(new URL("../src/lib/public-content.ts", import.meta.url), "utf8");
 
   assert.match(db, /listLatestPublishedPhotos[\s\S]*?\.eq\("type", "PHOTO"\)[\s\S]*?\.not\("published_at", "is", null\)[\s\S]*?\.lte\("published_at", nowIso\)[\s\S]*?\.order\("published_at", \{ ascending: false \}\)/);
-  assert.match(publicContent, /getLatestPublishedGalleryPhotos[\s\S]*?readPublicDb\(\(\) => listLatestPublishedPhotos\(limit\)\)[\s\S]*?return \(assets \?\? \[\]\)\.map/);
+  assert.match(publicContent, /getLatestPublishedGalleryPhotos[\s\S]*?readPublicDb\(\(\) => listLatestPublishedPhotos\(limit\)\)[\s\S]*?return \(assets \?\? \[\]\)[\s\S]*?\.map/);
   assert.doesNotMatch(publicContent, /getLatestPublishedGalleryPhotos[\s\S]{0,500}(?:mockNews|images\.)/);
 });
 
@@ -129,7 +129,7 @@ test("la carte dynamique utilise le lien de suivi CRM puis la fiche publique", a
   const component = await readFile(new URL("../src/components/HomeLiveGallery.tsx", import.meta.url), "utf8");
   const feed = await readFile(new URL("../src/lib/mobile-match-feed.ts", import.meta.url), "utf8");
 
-  assert.match(feed, /followUrl: row\.follow_url\?\.trim\(\) \|\| null/);
+  assert.match(feed, /followUrl: row\.access_level === "FAMILY_PASS" \? null : row\.follow_url\?\.trim\(\) \|\| null/);
   assert.match(component, /match\.followUrl \?\? `\/matchs\/\$\{match\.id\}`/);
   assert.match(component, />\s*Voir le match en direct /);
 });

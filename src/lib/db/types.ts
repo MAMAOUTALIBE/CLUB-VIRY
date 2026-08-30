@@ -15,12 +15,14 @@ export type PublicationStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 export type MediaType = "PHOTO" | "VIDEO";
 export type MediaContentKind = "MATCH" | "TRAINING";
 export type MediaPlaybackKind = "VIDEO" | "BROADCAST_LINK";
+export type ContentAccessLevel = "PUBLIC" | "FAMILY_PASS";
 export type RequestStatus = "PENDING" | "CONTACTED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
 export type ApplicationStatus = "PENDING" | "CONTACTED" | "TRIAL_SCHEDULED" | "ACCEPTED" | "REJECTED" | "ARCHIVED";
 export type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 export type OrderStatus = "PENDING" | "PAID" | "PREPARING" | "READY" | "DELIVERED" | "CANCELLED" | "REFUNDED";
 export type PaymentStatus = "PENDING" | "SUCCEEDED" | "FAILED" | "CANCELLED" | "REFUNDED";
 export type NotificationStatus = "QUEUED" | "SENDING" | "SENT" | "FAILED" | "CANCELLED";
+export type FamilyMediaPassStatus = "PENDING_REVIEW" | "ACTIVE" | "SUSPENDED" | "REJECTED" | "CANCELLED" | "EXPIRED";
 
 export type Profile = {
   id: string;
@@ -125,6 +127,31 @@ export type FamilyMember = {
   profile_id: string;
   relationship: FamilyRelationship;
   is_primary_contact: boolean;
+  created_at: string;
+};
+
+export type FamilyMediaPass = {
+  id: string;
+  family_id: string;
+  season_id: string;
+  status: FamilyMediaPassStatus;
+  starts_on: string;
+  ends_on: string;
+  allow_photos: boolean;
+  allow_training_videos: boolean;
+  allow_live_matches: boolean;
+  review_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FamilyMediaPassTeam = {
+  pass_id: string;
+  team_id: string;
   created_at: string;
 };
 
@@ -245,6 +272,7 @@ export type Match = {
   away_score: number | null;
   live_minute: number | null;
   follow_url: string | null;
+  access_level: ContentAccessLevel;
   notes: string | null;
   visibility: ClubEventVisibility;
   created_at: string;
@@ -312,7 +340,9 @@ export type MediaAsset = {
   playback_kind: MediaPlaybackKind;
   status: PublicationStatus;
   title: string;
-  url: string;
+  url: string | null;
+  storage_path: string | null;
+  access_level: ContentAccessLevel;
   thumbnail_url: string | null;
   alt_text: string | null;
   is_featured: boolean;

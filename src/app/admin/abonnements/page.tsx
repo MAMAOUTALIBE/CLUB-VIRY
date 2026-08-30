@@ -1,4 +1,5 @@
 import { AbonnementsAdmin } from "@/components/admin/modules/AbonnementsAdmin";
+import { FamilyMediaPassesAdmin } from "@/components/admin/modules/FamilyMediaPassesAdmin";
 
 export const metadata = {
   title: "CRM Abonnements"
@@ -6,8 +7,9 @@ export const metadata = {
 
 export default function AdminAbonnementsPage() {
   return (
-    <>
-          <AbonnementsAdmin />
-    </>
+    <div className="grid gap-6">
+      <FamilyMediaPassesAdmin />
+      <AbonnementsAdmin />
+    </div>
   );
 }

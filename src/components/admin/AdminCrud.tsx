@@ -10,7 +10,7 @@ import { showToast } from "@/components/admin/Toast";
 
 type Row = Record<string, unknown>;
 
-export type CrudFieldType = "text" | "textarea" | "url" | "date" | "datetime" | "number" | "select" | "boolean" | "file";
+export type CrudFieldType = "text" | "textarea" | "url" | "date" | "datetime" | "number" | "select" | "boolean" | "file" | "hidden";
 
 export type CrudField = {
   /** Clé du payload envoyé à l'API (camelCase). */
@@ -44,6 +44,8 @@ export type CrudField = {
   uploadSuccessMessage?: string;
   /** Champs multipart supplémentaires envoyés avec le fichier (ex: { folder: "actualites" }). */
   uploadExtraFields?: Record<string, string>;
+  /** Champs multipart alimentés depuis le formulaire courant (ex: { teamId: "teamId" }). */
+  uploadExtraFieldSources?: Record<string, string>;
   accept?: string;
   maxBytes?: number;
 };
@@ -358,6 +360,14 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
       for (const [key, value] of Object.entries(field.uploadExtraFields ?? {})) {
         body.append(key, value);
       }
+      for (const [key, sourceField] of Object.entries(field.uploadExtraFieldSources ?? {})) {
+        const value = form[sourceField]?.trim();
+        if (!value) {
+          setFormError(`Renseignez d'abord le champ « ${sourceField} » avant l'envoi.`);
+          return;
+        }
+        body.append(key, value);
+      }
 
       const res = await fetch(field.uploadEndpoint, {
         method: "POST",
@@ -502,6 +512,9 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {fields.map((f) => {
               const id = `crud-${f.name}`;
+              if (f.type === "hidden") {
+                return <input key={f.name} type="hidden" name={f.name} value={form[f.name] ?? ""} readOnly />;
+              }
               const common = {
                 id,
                 value: form[f.name] ?? "",
@@ -542,7 +555,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
                         )}
                       </div>
                       {typeof targetValue === "string" && targetValue ? (
-                        <p className="mt-2 break-all text-xs font-medium text-slate-500">Image prête : {targetValue}</p>
+                        <p className="mt-2 break-all text-xs font-medium text-slate-500">Fichier prêt : {targetValue}</p>
                       ) : null}
                     </div>
                     {f.help ? <span className="text-xs font-medium text-slate-500">{f.help}</span> : null}

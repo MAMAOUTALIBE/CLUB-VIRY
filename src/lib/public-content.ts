@@ -399,11 +399,13 @@ export type DisplayGalleryPhoto = { id: string; title: string; image: string };
 /** Homepage gallery preview: CRM-only, with no showcase fallback. */
 export async function getLatestPublishedGalleryPhotos(limit = 4): Promise<DisplayGalleryPhoto[]> {
   const assets = await readPublicDb(() => listLatestPublishedPhotos(limit));
-  return (assets ?? []).map((asset) => ({
-    id: asset.id,
-    title: asset.alt_text?.trim() || asset.title,
-    image: asset.url
-  }));
+  return (assets ?? [])
+    .filter((asset): asset is typeof asset & { url: string } => Boolean(asset.url))
+    .map((asset) => ({
+      id: asset.id,
+      title: asset.alt_text?.trim() || asset.title,
+      image: asset.url
+    }));
 }
 
 /** Dynamic homepage card candidates: exact CRM rows, without fallback. */
@@ -493,7 +495,9 @@ export async function getPublicTeamBySlug(slug: string): Promise<DisplayTeamDeta
         shirtNumber: p.assignment.shirt_number
       })),
       nextMatch: formatNextMatch(roster.matches),
-      media: (media ?? []).map((asset) => ({ type: asset.type, url: asset.url, thumbnail: asset.thumbnail_url, title: asset.title }))
+      media: (media ?? [])
+        .filter((asset): asset is typeof asset & { url: string } => Boolean(asset.url))
+        .map((asset) => ({ type: asset.type, url: asset.url, thumbnail: asset.thumbnail_url, title: asset.title }))
     };
   }
   const mock = mockTeams.find((t) => t.slug === slug);

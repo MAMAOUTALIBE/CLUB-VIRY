@@ -187,6 +187,7 @@ export type AdminMatchPayload = {
   awayScore?: number;
   liveMinute?: number | null;
   followUrl?: string | null;
+  accessLevel?: "PUBLIC" | "FAMILY_PASS";
   notes?: string | null;
   visibility?: "PUBLIC" | "MEMBERS" | "STAFF";
 };
@@ -269,13 +270,15 @@ export type AdminMediaAlbumPayload = {
 
 export type AdminMediaAssetPayload = {
   albumId?: string;
-  teamId?: string;
+  teamId?: string | null;
   type?: "PHOTO" | "VIDEO";
   contentKind?: "MATCH" | "TRAINING" | null;
   playbackKind?: "VIDEO" | "BROADCAST_LINK";
+  accessLevel?: "PUBLIC" | "FAMILY_PASS";
   status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   title?: string;
-  url?: string;
+  url?: string | null;
+  storagePath?: string | null;
   thumbnailUrl?: string | null;
   altText?: string;
   isFeatured?: boolean;
@@ -284,6 +287,58 @@ export type AdminMediaAssetPayload = {
   endsAt?: string | null;
   publishedAt?: string | null;
 };
+
+export const PRIVATE_MEDIA_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"] as const;
+
+export type PrivateMediaMimeType = (typeof PRIVATE_MEDIA_MIME_TYPES)[number];
+
+export function detectPrivateMediaMimeType(header: Uint8Array): PrivateMediaMimeType | null {
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
+
+  if (startsWith(0xff, 0xd8, 0xff)) return "image/jpeg";
+  if (startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return "image/png";
+  if (
+    startsWith(0x52, 0x49, 0x46, 0x46) &&
+    header[8] === 0x57 &&
+    header[9] === 0x45 &&
+    header[10] === 0x42 &&
+    header[11] === 0x50
+  ) {
+    return "image/webp";
+  }
+  if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) return "video/mp4";
+  if (startsWith(0x1a, 0x45, 0xdf, 0xa3)) return "video/webm";
+  return null;
+}
+
+export type PrivateMediaUploadPayload = {
+  fileName: string;
+  contentType: PrivateMediaMimeType;
+  teamId: string;
+};
+
+export function validatePrivateMediaUploadPayload(input: unknown): ValidationResult<PrivateMediaUploadPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+
+  const fileName = normalizeString(body.fileName);
+  const contentType = normalizeString(body.contentType);
+  const teamId = normalizeString(body.teamId);
+
+  if (!fileName || fileName.length > 180 || /[\\/\u0000-\u001f]/.test(fileName)) {
+    issues.push({ field: "fileName", message: "Nom de fichier invalide." });
+  }
+  if (!contentType || !(PRIVATE_MEDIA_MIME_TYPES as readonly string[]).includes(contentType)) {
+    issues.push({ field: "contentType", message: "Type de fichier non autorisé." });
+  }
+  if (!teamId || !isUuid(teamId)) {
+    issues.push({ field: "teamId", message: "Identifiant équipe invalide." });
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return { ok: true, data: { fileName: fileName!, contentType: contentType as PrivateMediaUploadPayload["contentType"], teamId: teamId! } };
+}
 
 export type AdminPartnerPayload = {
   name?: string;
@@ -499,6 +554,137 @@ export function validateAdminSeasonPayload(input: unknown, options: { partial?: 
   }
 
   return { ok: true, data };
+}
+
+export const FAMILY_MEDIA_PASS_STATUSES = [
+  "PENDING_REVIEW",
+  "ACTIVE",
+  "SUSPENDED",
+  "REJECTED",
+  "CANCELLED",
+  "EXPIRED"
+] as const;
+
+export type FamilyMediaPassStatusValue = (typeof FAMILY_MEDIA_PASS_STATUSES)[number];
+
+export type AdminFamilyMediaPassPayload = {
+  familyId?: string;
+  seasonId?: string;
+  status?: FamilyMediaPassStatusValue;
+  startsOn?: string;
+  endsOn?: string;
+  allowPhotos?: boolean;
+  allowTrainingVideos?: boolean;
+  allowLiveMatches?: boolean;
+  teamIds?: string[];
+  reviewNote?: string | null;
+};
+
+/** Valide les droits saisonniers accordes manuellement a une famille. */
+export function validateAdminFamilyMediaPassPayload(
+  input: unknown,
+  options: { partial?: boolean } = {}
+): ValidationResult<AdminFamilyMediaPassPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+  }
+
+  const partial = options.partial ?? false;
+  const data: AdminFamilyMediaPassPayload = {};
+
+  for (const field of ["familyId", "seasonId"] as const) {
+    const value = normalizeString(body[field]);
+    if (value !== undefined) {
+      if (!isUuid(value)) {
+        issues.push({ field, message: "Identifiant invalide." });
+      } else {
+        data[field] = value;
+      }
+    } else if (!partial) {
+      issues.push({ field, message: "Identifiant requis." });
+    }
+  }
+
+  if (body.status !== undefined) {
+    if (typeof body.status !== "string" || !(FAMILY_MEDIA_PASS_STATUSES as readonly string[]).includes(body.status)) {
+      issues.push({ field: "status", message: "Statut de Pass Famille Média invalide." });
+    } else {
+      data.status = body.status as FamilyMediaPassStatusValue;
+    }
+  } else if (!partial) {
+    data.status = "PENDING_REVIEW";
+  }
+
+  for (const field of ["startsOn", "endsOn"] as const) {
+    const value = normalizeString(body[field]);
+    if (value !== undefined) {
+      if (!isIsoDate(value)) {
+        issues.push({ field, message: "Date invalide (format attendu : AAAA-MM-JJ)." });
+      } else {
+        data[field] = value;
+      }
+    } else if (!partial) {
+      issues.push({ field, message: "La date est requise." });
+    }
+  }
+
+  if (data.startsOn && data.endsOn && data.endsOn < data.startsOn) {
+    issues.push({ field: "endsOn", message: "La date de fin doit être égale ou postérieure à la date de début." });
+  }
+
+  for (const field of ["allowPhotos", "allowTrainingVideos", "allowLiveMatches"] as const) {
+    if (body[field] !== undefined) {
+      if (typeof body[field] !== "boolean") {
+        issues.push({ field, message: "Doit être un booléen." });
+      } else {
+        data[field] = body[field];
+      }
+    } else if (!partial) {
+      data[field] = false;
+    }
+  }
+
+  const allRightsProvided = [data.allowPhotos, data.allowTrainingVideos, data.allowLiveMatches].every(
+    (value) => value !== undefined
+  );
+  if (allRightsProvided && !data.allowPhotos && !data.allowTrainingVideos && !data.allowLiveMatches) {
+    issues.push({ field: "rights", message: "Au moins un droit média doit être activé." });
+  }
+
+  if (body.teamIds !== undefined) {
+    if (!Array.isArray(body.teamIds) || body.teamIds.length === 0 || body.teamIds.length > 50) {
+      issues.push({ field: "teamIds", message: "Sélectionnez entre 1 et 50 équipes." });
+    } else if (!body.teamIds.every((value) => typeof value === "string" && isUuid(value))) {
+      issues.push({ field: "teamIds", message: "Chaque équipe doit avoir un identifiant valide." });
+    } else if (new Set(body.teamIds).size !== body.teamIds.length) {
+      issues.push({ field: "teamIds", message: "Une équipe ne peut être sélectionnée qu'une fois." });
+    } else {
+      data.teamIds = body.teamIds as string[];
+    }
+  } else if (!partial) {
+    issues.push({ field: "teamIds", message: "Au moins une équipe est requise." });
+  }
+
+  if (body.reviewNote !== undefined) {
+    if (body.reviewNote === null || (typeof body.reviewNote === "string" && body.reviewNote.trim().length === 0)) {
+      data.reviewNote = null;
+    } else if (typeof body.reviewNote !== "string") {
+      issues.push({ field: "reviewNote", message: "La note de validation doit être un texte." });
+    } else if (body.reviewNote.trim().length > 1000) {
+      issues.push({ field: "reviewNote", message: "La note de validation est trop longue (1000 caractères max)." });
+    } else {
+      data.reviewNote = body.reviewNote.trim();
+    }
+  }
+
+  if (partial && Object.keys(data).length === 0 && issues.length === 0) {
+    issues.push({ field: "body", message: "Au moins un champ doit être fourni." });
+  }
+
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, data };
 }
 
 export type AdminStandingPayload = {
@@ -2646,6 +2832,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
   const awayScore = typeof body.awayScore === "number" ? body.awayScore : undefined;
   const liveMinute = body.liveMinute === null ? null : typeof body.liveMinute === "number" ? body.liveMinute : undefined;
   const followUrl = body.followUrl === null ? null : normalizeString(body.followUrl);
+  const accessLevel = normalizeString(body.accessLevel) ?? (options.partial ? undefined : "PUBLIC");
   const notes = body.notes === null ? null : normalizeString(body.notes);
   const visibility = normalizeString(body.visibility);
 
@@ -2711,6 +2898,14 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
     issues.push({ field: "followUrl", message: "Lien de suivi invalide." });
   }
 
+  if (accessLevel && accessLevel !== "PUBLIC" && accessLevel !== "FAMILY_PASS") {
+    issues.push({ field: "accessLevel", message: "Niveau d'accès au match invalide." });
+  }
+
+  if (!options.partial && accessLevel === "FAMILY_PASS" && !teamId) {
+    issues.push({ field: "teamId", message: "Une équipe est requise pour un match réservé au Pass Famille Média." });
+  }
+
   if (notes && notes.length > 1000) {
     issues.push({ field: "notes", message: "Notes trop longues." });
   }
@@ -2747,6 +2942,7 @@ export function validateAdminMatchPayload(input: unknown, options: { partial?: b
       ...(awayScore !== undefined ? { awayScore } : {}),
       ...(liveMinute !== undefined ? { liveMinute } : {}),
       ...(body.followUrl !== undefined ? { followUrl: followUrl ?? null } : {}),
+      ...(accessLevel ? { accessLevel: accessLevel as AdminMatchPayload["accessLevel"] } : {}),
       ...(body.notes !== undefined ? { notes: notes ?? null } : {}),
       ...(visibility ? { visibility: visibility as AdminMatchPayload["visibility"] } : {})
     }
@@ -3287,13 +3483,15 @@ export function validateAdminMediaAssetPayload(
   }
 
   const albumId = normalizeString(body.albumId);
-  const teamId = normalizeString(body.teamId);
+  const teamId = body.teamId === null ? null : normalizeString(body.teamId);
   const type = normalizeString(body.type) ?? (options.partial ? undefined : "PHOTO");
   const contentKind = body.contentKind === null ? null : normalizeString(body.contentKind);
-  const playbackKind = normalizeString(body.playbackKind);
+  const playbackKind = normalizeString(body.playbackKind) ?? (options.partial ? undefined : "VIDEO");
+  const accessLevel = normalizeString(body.accessLevel) ?? (options.partial ? undefined : "PUBLIC");
   const status = normalizeString(body.status);
   const title = normalizeString(body.title);
-  const url = normalizeString(body.url);
+  const url = body.url === null ? null : normalizeString(body.url);
+  const storagePath = body.storagePath === null ? null : normalizeString(body.storagePath);
   const thumbnailUrl = body.thumbnailUrl === null ? null : normalizeString(body.thumbnailUrl);
   const altText = normalizeString(body.altText);
   const isFeatured = typeof body.isFeatured === "boolean" ? body.isFeatured : undefined;
@@ -3322,6 +3520,10 @@ export function validateAdminMediaAssetPayload(
     issues.push({ field: "playbackKind", message: "Mode de lecture invalide." });
   }
 
+  if (accessLevel && accessLevel !== "PUBLIC" && accessLevel !== "FAMILY_PASS") {
+    issues.push({ field: "accessLevel", message: "Niveau d'accès au média invalide." });
+  }
+
   if (status && !isPublicationStatus(status)) {
     issues.push({ field: "status", message: "Statut media invalide." });
   }
@@ -3334,12 +3536,29 @@ export function validateAdminMediaAssetPayload(
     issues.push({ field: "title", message: "Titre media invalide." });
   }
 
-  if (!options.partial && (!url || url.length > 1000 || !isSafePublicUrl(url))) {
+  if (typeof url === "string" && (url.length > 1000 || !isSafePublicUrl(url))) {
     issues.push({ field: "url", message: "URL media invalide." });
   }
 
-  if (url && (url.length > 1000 || !isSafePublicUrl(url))) {
+  if (typeof storagePath === "string" && (storagePath.length > 500 || storagePath.startsWith("/") || storagePath.includes(".."))) {
+    issues.push({ field: "storagePath", message: "Chemin de stockage privé invalide." });
+  }
+
+  if (!options.partial && accessLevel === "PUBLIC" && !url) {
     issues.push({ field: "url", message: "URL media invalide." });
+  }
+
+  if (!options.partial && accessLevel === "FAMILY_PASS") {
+    if (!teamId) issues.push({ field: "teamId", message: "Une équipe est requise pour un média Pass Famille." });
+    if (playbackKind === "BROADCAST_LINK" && !url) {
+      issues.push({ field: "url", message: "Un lien de diffusion est requis." });
+    }
+    if (playbackKind !== "BROADCAST_LINK" && !storagePath) {
+      issues.push({ field: "storagePath", message: "Un fichier privé est requis." });
+    }
+    if (type === "VIDEO" && !contentKind) {
+      issues.push({ field: "contentKind", message: "Le contexte du contenu vidéo est requis." });
+    }
   }
 
 
@@ -3384,13 +3603,15 @@ export function validateAdminMediaAssetPayload(
     ok: true,
     data: {
       ...(albumId ? { albumId } : {}),
-      ...(teamId ? { teamId } : {}),
+      ...(body.teamId !== undefined ? { teamId: teamId ?? null } : {}),
       ...(type ? { type: type as AdminMediaAssetPayload["type"] } : {}),
       ...(body.contentKind !== undefined ? { contentKind: (contentKind as AdminMediaAssetPayload["contentKind"]) ?? null } : {}),
       ...(playbackKind ? { playbackKind: playbackKind as AdminMediaAssetPayload["playbackKind"] } : {}),
+      ...(accessLevel ? { accessLevel: accessLevel as AdminMediaAssetPayload["accessLevel"] } : {}),
       ...(status ? { status: status as AdminMediaAssetPayload["status"] } : {}),
       ...(title ? { title } : {}),
-      ...(url ? { url } : {}),
+      ...(body.url !== undefined ? { url: url ?? null } : {}),
+      ...(body.storagePath !== undefined ? { storagePath: storagePath ?? null } : {}),
       ...(body.thumbnailUrl !== undefined ? { thumbnailUrl: thumbnailUrl ?? null } : {}),
       ...(altText ? { altText } : {}),
       ...(isFeatured !== undefined ? { isFeatured } : {}),

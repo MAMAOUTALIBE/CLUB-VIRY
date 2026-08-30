@@ -67,6 +67,7 @@ type MatchRow = {
   away_score: number | null;
   live_minute: number | null;
   follow_url: string | null;
+  access_level: "PUBLIC" | "FAMILY_PASS";
   notes: string | null;
   visibility: "PUBLIC" | "MEMBERS" | "STAFF";
 };
@@ -129,6 +130,7 @@ type EditorForm = {
   awayScore: string;
   liveMinute: string;
   followUrl: string;
+  accessLevel: MatchRow["access_level"];
   visibility: EventRow["visibility"];
   eventStatus: EventRow["status"];
 };
@@ -214,7 +216,7 @@ function itemFromEvent(row: EventRow): PlanningItem {
 
 function formFromEditor(editor: NonNullable<EditorState>): EditorForm {
   if (editor.mode === "create") {
-    return { kind: "TRAINING", title: "", opponentName: "", opponentLogoUrl: "", date: editor.date, start: "18:00", end: "19:30", teamId: "", categoryId: "", groupLabel: "", pitchCode: "", educatorId: "", venue: "", description: "", competition: "", location: "HOME", matchStatus: "SCHEDULED", homeScore: "", awayScore: "", liveMinute: "", followUrl: "", visibility: "PUBLIC", eventStatus: "SCHEDULED" };
+    return { kind: "TRAINING", title: "", opponentName: "", opponentLogoUrl: "", date: editor.date, start: "18:00", end: "19:30", teamId: "", categoryId: "", groupLabel: "", pitchCode: "", educatorId: "", venue: "", description: "", competition: "", location: "HOME", matchStatus: "SCHEDULED", homeScore: "", awayScore: "", liveMinute: "", followUrl: "", accessLevel: "PUBLIC", visibility: "PUBLIC", eventStatus: "SCHEDULED" };
   }
   const item = editor.item;
   return {
@@ -239,6 +241,7 @@ function formFromEditor(editor: NonNullable<EditorState>): EditorForm {
     awayScore: item.match?.away_score == null ? "" : String(item.match.away_score),
     liveMinute: item.match?.live_minute == null ? "" : String(item.match.live_minute),
     followUrl: item.match?.follow_url ?? "",
+    accessLevel: item.match?.access_level ?? "PUBLIC",
     visibility: item.visibility,
     eventStatus: item.event?.status ?? "SCHEDULED"
   };
@@ -329,6 +332,7 @@ function EventEditor({ categories, editor, saving, staff, teams, venues, onClose
             {form.matchStatus === "LIVE" || form.matchStatus === "FINISHED" ? <div className="grid grid-cols-2 gap-3"><label className="grid gap-1.5 text-xs font-black text-slate-700">Score domicile<input min="0" max="99" type="number" value={form.homeScore} onChange={(event) => setForm({ ...form, homeScore: event.target.value })} className={INPUT} /></label><label className="grid gap-1.5 text-xs font-black text-slate-700">Score extérieur<input min="0" max="99" type="number" value={form.awayScore} onChange={(event) => setForm({ ...form, awayScore: event.target.value })} className={INPUT} /></label></div> : null}
             {form.matchStatus === "LIVE" ? <label className="grid gap-1.5 text-xs font-black text-slate-700">Minute du direct<input name="liveMinute" min="0" max="130" type="number" value={form.liveMinute} onChange={(event) => setForm({ ...form, liveMinute: event.target.value })} className={INPUT} /></label> : null}
             <label className="grid gap-1.5 text-xs font-black text-slate-700">Lien de suivi du direct<input name="followUrl" type="url" value={form.followUrl} onChange={(event) => setForm({ ...form, followUrl: event.target.value })} className={INPUT} placeholder="https://…" /></label>
+            <label className="grid gap-1.5 text-xs font-black text-slate-700">Accès à la diffusion<select name="accessLevel" value={form.accessLevel} onChange={(event) => setForm({ ...form, accessLevel: event.target.value as EditorForm["accessLevel"] })} className={INPUT}><option value="PUBLIC">Public</option><option value="FAMILY_PASS">Familles sélectionnées uniquement</option></select><span className="text-[11px] font-semibold text-slate-500">Le score et la minute restent visibles ; le lien est protégé par le Pass Famille.</span></label>
           </> : null}
           <label className="grid gap-1.5 text-xs font-black text-slate-700">Description (optionnel)<textarea rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className={`${INPUT} py-3`} placeholder="Ajouter des détails…" /></label>
           <div className="grid grid-cols-2 gap-3">
@@ -413,7 +417,7 @@ export function CalendarAdmin() {
     setSaving(true); setMessage(null);
     try {
       if (form.kind === "MATCH") {
-        const payload = { teamId: form.teamId || null, title: form.title, categoryId: form.categoryId || null, groupLabel: form.groupLabel || null, pitchCode: form.pitchCode || null, educatorId: form.educatorId || null, opponentName: form.opponentName, opponentLogoUrl: form.opponentLogoUrl || undefined, startsAt, endsAt, venue: form.venue || null, competition: form.competition || null, location: form.location, notes: form.description || null, status: form.matchStatus, visibility: form.visibility, homeScore: form.homeScore === "" ? undefined : Number(form.homeScore), awayScore: form.awayScore === "" ? undefined : Number(form.awayScore), liveMinute: form.liveMinute === "" ? null : Number(form.liveMinute), followUrl: form.followUrl || null };
+        const payload = { teamId: form.teamId || null, title: form.title, categoryId: form.categoryId || null, groupLabel: form.groupLabel || null, pitchCode: form.pitchCode || null, educatorId: form.educatorId || null, opponentName: form.opponentName, opponentLogoUrl: form.opponentLogoUrl || undefined, startsAt, endsAt, venue: form.venue || null, competition: form.competition || null, location: form.location, notes: form.description || null, status: form.matchStatus, visibility: form.visibility, homeScore: form.homeScore === "" ? undefined : Number(form.homeScore), awayScore: form.awayScore === "" ? undefined : Number(form.awayScore), liveMinute: form.liveMinute === "" ? null : Number(form.liveMinute), followUrl: form.followUrl || null, accessLevel: form.accessLevel };
         await request(editor.mode === "edit" ? `/api/admin/matches/${editor.item.id}` : "/api/admin/matches", editor.mode === "edit" ? "PATCH" : "POST", payload);
       } else {
         const existing = editor.mode === "edit" ? editor.item.event : null;

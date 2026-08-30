@@ -45,7 +45,7 @@ test("un match public ne transporte aucun champ de travail interne", () => {
     id: "m1", team_id: null, season_id: "s1", title: null, category_id: null, group_label: null, pitch_code: null,
     educator_id: "profil-interne", opponent_name: "Adversaire", opponent_logo_url: null, location: "HOME",
     starts_at: "2026-09-05T13:00:00+00:00", ends_at: null, venue: null, competition: null, status: "SCHEDULED",
-    home_score: null, away_score: null, live_minute: null, follow_url: null,
+    home_score: null, away_score: null, live_minute: null, follow_url: null, access_level: "PUBLIC",
     notes: "Note interne a ne jamais publier", visibility: "PUBLIC",
     created_at: "2026-09-01T10:00:00+00:00", updated_at: "2026-09-01T10:00:00+00:00",
     deleted_at: null, deleted_by: null

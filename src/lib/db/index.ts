@@ -2,6 +2,7 @@ import "server-only";
 
 export * from "@/lib/db/foundations";
 export * from "@/lib/db/family";
+export * from "@/lib/db/family-media-passes";
 export * from "@/lib/db/profiles";
 export * from "@/lib/db/calendar";
 export * from "@/lib/db/notifications";

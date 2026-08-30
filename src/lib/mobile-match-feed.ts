@@ -10,6 +10,7 @@ export type MobileMatchFeedRow = {
   away_score: number | null;
   live_minute: number | null;
   follow_url?: string | null;
+  access_level?: "PUBLIC" | "FAMILY_PASS";
   teams: { name: string } | null;
 };
 
@@ -61,7 +62,7 @@ function toCard(row: MobileMatchFeedRow): MobileMatchCard | null {
     homeScore: row.home_score,
     awayScore: row.away_score,
     minute: row.live_minute,
-    followUrl: row.follow_url?.trim() || null,
+    followUrl: row.access_level === "FAMILY_PASS" ? null : row.follow_url?.trim() || null,
     // Le CRM ne possède pas de champ logo pour l'équipe du club. On ne détourne
     // pas la photo de couverture et on n'invente aucun écusson.
     homeLogoUrl: identity.homeLogoUrl,

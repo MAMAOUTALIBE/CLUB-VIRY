@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, Clock, MapPin, Radio } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock, ExternalLink, MapPin, Radio } from "lucide-react";
+import { ProtectedLiveButton } from "@/components/ProtectedLiveButton";
 import { getPublicMatchDetail } from "@/lib/public-match";
 
 type MatchPageProps = { params: Promise<{ id: string }> };
@@ -47,6 +48,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           {row.venue ? <div className="flex items-center gap-3 rounded-xl bg-white/[.06] p-4 sm:col-span-2"><MapPin className="text-[#f7c600]" aria-hidden="true" /><div><dt className="sr-only">Lieu</dt><dd>{row.venue}</dd></div></div> : null}
         </dl>
         {row.competition ? <p className="mt-6 text-center text-sm font-bold uppercase tracking-wider text-white/65">{row.competition}</p> : null}
+        {row.status === "LIVE" && row.follow_url ? row.access_level === "FAMILY_PASS" ? <ProtectedLiveButton matchId={row.id} /> : <div className="mt-7 text-center"><a href={row.follow_url} target="_blank" rel="noreferrer" className="focus-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d]">Voir le match en direct <ExternalLink size={17} /></a></div> : null}
       </article>
     </section>
   );
