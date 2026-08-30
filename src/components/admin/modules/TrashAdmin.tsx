@@ -3,7 +3,7 @@
 import { Loader2, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 import { showToast } from "@/components/admin/Toast";
 
 type TrashedItem = {
@@ -111,8 +111,7 @@ export function TrashAdmin() {
 
       {state === "auth" ? (
         <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4">
-          <p className="mb-3 text-sm font-bold text-amber-900">Session expirée — reconnectez-vous.</p>
-          <AdminAccessControl loading={false} onAuthenticated={() => void load()} />
+          <AdminSessionRedirect />
         </div>
       ) : null}
 

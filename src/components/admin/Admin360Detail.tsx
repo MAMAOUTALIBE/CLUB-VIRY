@@ -3,7 +3,7 @@
 import { ArrowLeft, FileText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 
 type DetailKind = "family" | "player" | "registration";
 
@@ -251,7 +251,7 @@ function buildDetail(kind: DetailKind, payload: unknown): DetailView {
 
 export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
   const [detail, setDetail] = useState<DetailView | null>(null);
-  const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "error">("demo");
+  const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "auth" | "error">("demo");
   const [message, setMessage] = useState("Connectez-vous pour charger la fiche 360.");
   const [actionStatus, setActionStatus] = useState<"idle" | "loading" | "error">("idle");
   const [actionMessage, setActionMessage] = useState("");
@@ -273,6 +273,14 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
       // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
       const response = await fetch(endpoint, { credentials: "same-origin" });
       const payload: unknown = await response.json();
+
+      if (response.status === 401) {
+        setDetail(null);
+        setStatus("auth");
+        setAdminNotes("");
+        return;
+      }
+
       const failure = parseFailure(payload);
 
       if (failure) {
@@ -400,15 +408,15 @@ export function Admin360Detail({ backHref, endpoint, kind }: DetailProps) {
         Retour
       </Link>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_auto] xl:items-start">
+      <div className="mt-5">
         <div>
           <p className="text-xs font-black uppercase text-[#07542f]">Fiche 360</p>
           <h2 className="mt-1 text-3xl font-black uppercase text-[#002f1d]">{detail?.title ?? "Detail CRM"}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{detail?.subtitle ?? message}</p>
         </div>
-
-        <AdminAccessControl loading={status === "loading"} onAuthenticated={() => void loadDetail()} />
       </div>
+
+      {status === "auth" ? <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4"><AdminSessionRedirect /></div> : null}
 
       <div className="mt-5 flex items-start gap-3 rounded-lg border border-slate-200 bg-[#fbfcf8] p-3">
         <ShieldCheck className="mt-0.5 text-[#07542f]" size={18} aria-hidden="true" />

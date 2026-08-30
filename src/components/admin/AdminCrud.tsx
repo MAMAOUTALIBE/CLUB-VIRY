@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomFieldsFieldset } from "@/components/admin/CustomFieldsFieldset";
 import { TagsFieldset } from "@/components/admin/TagsFieldset";
 import { ViewsToolbar } from "@/components/admin/ViewsToolbar";
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 import { showToast } from "@/components/admin/Toast";
 
 type Row = Record<string, unknown>;
@@ -495,8 +495,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
 
       {state === "auth" ? (
         <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4">
-          <p className="mb-3 text-sm font-bold text-amber-900">Session expirée — reconnectez-vous.</p>
-          <AdminAccessControl loading={false} onAuthenticated={() => void load()} />
+          <AdminSessionRedirect />
         </div>
       ) : null}
 

@@ -2,7 +2,7 @@
 
 import { Download, Search, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 import { showToast } from "@/components/admin/Toast";
 import { ProgressBar } from "@/components/admin/charts/ProgressBar";
 import { StatusBarChart } from "@/components/admin/charts/StatusBarChart";
@@ -142,7 +142,7 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
   const createdAtField = props.createdAtField ?? "created_at";
 
   const [rows, setRows] = useState<Row[]>([]);
-  const [state, setState] = useState<"loading" | "connected" | "error">("loading");
+  const [state, setState] = useState<"loading" | "connected" | "auth" | "error">("loading");
   const [message, setMessage] = useState("Chargement via la session admin...");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -164,6 +164,14 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
     try {
       // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
       const response = await fetch(withLimit(endpoint, targetLimit), { credentials: "same-origin" });
+
+      if (response.status === 401) {
+        setRows([]);
+        setState("auth");
+        setHasMore(false);
+        return;
+      }
+
       const parsed = extractRows(await response.json(), dataKey);
 
       if (!parsed.ok) {
@@ -356,18 +364,19 @@ export function AdminModuleBoard(props: AdminModuleBoardProps) {
           <h2 className="mt-1 text-2xl font-black uppercase text-[#002f1d]">{title}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
-        <div className="flex flex-col items-stretch gap-2 xl:items-end">
-          {exportHref ? (
+        {exportHref ? (
+          <div className="flex flex-col items-stretch gap-2 xl:items-end">
             <a
               href={exportHref}
               className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#002f1d]/20 px-4 py-2 text-xs font-black uppercase text-[#002f1d] transition-colors hover:border-[#f7c600]"
             >
               <Download size={16} aria-hidden="true" /> Exporter CSV
             </a>
-          ) : null}
-          <AdminAccessControl loading={state === "loading"} onAuthenticated={() => void load()} />
-        </div>
+          </div>
+        ) : null}
       </div>
+
+      {state === "auth" ? <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4"><AdminSessionRedirect /></div> : null}
 
       <div className="mt-4 flex items-center gap-2 rounded-md bg-[#fbfcf8] px-3 py-2 text-sm font-bold text-slate-700" role="status" aria-live="polite">
         <ShieldCheck className="text-[#07542f]" size={18} aria-hidden="true" />

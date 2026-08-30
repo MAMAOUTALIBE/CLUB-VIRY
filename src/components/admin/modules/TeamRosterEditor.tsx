@@ -3,7 +3,7 @@
 import { ArrowLeft, Crown, Link2 as LinkIcon, Loader2, Plus, Save, Trash2, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 
 type StaffRow = { id: string; display_name: string; role_title: string; is_head_coach: boolean; profile_id: string | null };
 type PlayerLite = { id: string; first_name: string; last_name: string };
@@ -193,8 +193,7 @@ export function TeamRosterEditor({ teamId }: { teamId: string }) {
       <div className="grid gap-6">
         <Back />
         <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-          <p className="mb-3 text-sm font-bold text-amber-900">Session expirée — reconnectez-vous.</p>
-          <AdminAccessControl loading={false} onAuthenticated={() => void load()} />
+          <AdminSessionRedirect />
         </div>
       </div>
     );

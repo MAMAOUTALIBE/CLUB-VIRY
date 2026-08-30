@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, Check, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 import { validateHomeHeroSetting, type HomeHeroSlide as HeroSlideForm } from "@/lib/home-hero";
 import { validateAnnouncementsSetting, type SiteAnnouncement } from "@/lib/announcements";
 
@@ -446,8 +446,7 @@ export function SettingsAdmin() {
       ) : null}
       {state === "auth" ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-          <p className="mb-3 text-sm font-bold text-amber-900">Session expirée — reconnectez-vous.</p>
-          <AdminAccessControl loading={false} onAuthenticated={() => void load()} />
+          <AdminSessionRedirect />
         </div>
       ) : null}
       {message ? <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{message}</p> : null}

@@ -3,7 +3,7 @@
 import { History, Loader2, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 
 type ActivityLog = {
   id: string;
@@ -107,8 +107,7 @@ export function AuditLogAdmin() {
 
       {state === "auth" ? (
         <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4">
-          <p className="mb-3 text-sm font-bold text-amber-900">Session expirée — reconnectez-vous.</p>
-          <AdminAccessControl loading={false} onAuthenticated={() => void load()} />
+          <AdminSessionRedirect />
         </div>
       ) : null}
 

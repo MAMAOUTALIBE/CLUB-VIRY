@@ -3,7 +3,7 @@
 import { Loader2, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminAccessControl } from "@/components/admin/AdminAccessControl";
+import { AdminSessionRedirect } from "@/components/admin/AdminSessionRedirect";
 import { showToast } from "@/components/admin/Toast";
 
 type ResourceKind = "families" | "players" | "registrations";
@@ -270,7 +270,7 @@ function withLimit(endpoint: string, limit: number): string {
 
 export function Admin360Explorer({ kind, endpoint, title, description }: ExplorerProps) {
   const [records, setRecords] = useState<CardRecord[]>([]);
-  const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "error">("demo");
+  const [status, setStatus] = useState<"demo" | "loading" | "loaded" | "auth" | "error">("demo");
   const [message, setMessage] = useState("Connectez-vous pour charger les données réelles.");
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -303,6 +303,14 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
       // Auth par cookie HttpOnly `admin_session` (envoyé automatiquement, même origine).
       const response = await fetch(withLimit(endpoint, limit), { credentials: "same-origin" });
       const payload: unknown = await response.json();
+
+      if (response.status === 401) {
+        setRecords([]);
+        setStatus("auth");
+        setHasMore(false);
+        return;
+      }
+
       const failure = parseFailure(payload);
 
       if (failure) {
@@ -419,15 +427,15 @@ export function Admin360Explorer({ kind, endpoint, title, description }: Explore
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="grid gap-5 xl:grid-cols-[1fr_auto] xl:items-start">
+      <div>
         <div>
           <p className="text-xs font-black uppercase text-[#07542f]">Fiches 360</p>
           <h2 className="mt-1 text-3xl font-black uppercase text-[#002f1d]">{title}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
-
-        <AdminAccessControl loading={status === "loading"} onAuthenticated={() => void loadRecords()} />
       </div>
+
+      {status === "auth" ? <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4"><AdminSessionRedirect /></div> : null}
 
       <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
         <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-[#fbfcf8] p-3">
