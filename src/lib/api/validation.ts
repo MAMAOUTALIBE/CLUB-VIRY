@@ -317,6 +317,32 @@ export type PrivateMediaUploadPayload = {
   teamId: string;
 };
 
+export const FAMILY_MEDIA_AUDIENCE_RIGHTS = ["PHOTOS", "TRAINING_VIDEOS", "LIVE_MATCHES"] as const;
+
+export type FamilyMediaAudiencePreviewPayload = {
+  teamId: string;
+  right: (typeof FAMILY_MEDIA_AUDIENCE_RIGHTS)[number];
+};
+
+export function validateFamilyMediaAudiencePreviewPayload(input: unknown): ValidationResult<FamilyMediaAudiencePreviewPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Paramètres invalides." }] };
+
+  const teamId = normalizeString(body.teamId);
+  const right = normalizeString(body.right);
+  if (!teamId || !isUuid(teamId)) issues.push({ field: "teamId", message: "Identifiant équipe invalide." });
+  if (!right || !(FAMILY_MEDIA_AUDIENCE_RIGHTS as readonly string[]).includes(right)) {
+    issues.push({ field: "right", message: "Droit média invalide." });
+  }
+  if (issues.length > 0) return { ok: false, issues };
+
+  return {
+    ok: true,
+    data: { teamId: teamId!, right: right as FamilyMediaAudiencePreviewPayload["right"] }
+  };
+}
+
 export function validatePrivateMediaUploadPayload(input: unknown): ValidationResult<PrivateMediaUploadPayload> {
   const body = asRecord(input);
   const issues: ValidationIssue[] = [];
@@ -599,6 +625,43 @@ export type AdminFamilyMediaPassPayload = {
   teamIds?: string[];
   reviewNote?: string | null;
 };
+
+export const FAMILY_MEDIA_PASS_BULK_STATUSES = ["ACTIVE", "SUSPENDED", "CANCELLED"] as const;
+
+export type AdminFamilyMediaPassBulkPayload = {
+  ids: string[];
+  status: (typeof FAMILY_MEDIA_PASS_BULK_STATUSES)[number];
+};
+
+export function validateAdminFamilyMediaPassBulkPayload(input: unknown): ValidationResult<AdminFamilyMediaPassBulkPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+  if (!body) return { ok: false, issues: [{ field: "body", message: "Corps de requête invalide." }] };
+
+  if (!Array.isArray(body.ids) || body.ids.length === 0 || body.ids.length > 100) {
+    issues.push({ field: "ids", message: "Sélectionnez entre 1 et 100 pass." });
+  } else if (!body.ids.every((id) => typeof id === "string" && isUuid(id))) {
+    issues.push({ field: "ids", message: "Chaque pass doit avoir un identifiant valide." });
+  } else if (new Set(body.ids).size !== body.ids.length) {
+    issues.push({ field: "ids", message: "Un pass ne peut être sélectionné qu'une fois." });
+  }
+
+  if (
+    typeof body.status !== "string" ||
+    !(FAMILY_MEDIA_PASS_BULK_STATUSES as readonly string[]).includes(body.status)
+  ) {
+    issues.push({ field: "status", message: "Action groupée invalide." });
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return {
+    ok: true,
+    data: {
+      ids: body.ids as string[],
+      status: body.status as AdminFamilyMediaPassBulkPayload["status"]
+    }
+  };
+}
 
 /** Valide les droits saisonniers accordes manuellement a une famille. */
 export function validateAdminFamilyMediaPassPayload(

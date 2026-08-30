@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AdminFamilyMediaPassPayload } from "@/lib/api/validation";
+import type { AdminFamilyMediaPassBulkPayload, AdminFamilyMediaPassPayload } from "@/lib/api/validation";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { FamilyMediaPass, FamilyMediaPassStatus, Team } from "@/lib/db/types";
 
@@ -74,6 +74,17 @@ export async function listFamilyMediaPassesForAdmin(limit = 200): Promise<AdminF
     .select("*")
     .order("created_at", { ascending: false })
     .limit(limit);
+
+  if (error) throw new Error(`Unable to fetch family media passes: ${error.message}`);
+  return hydratePasses((data ?? []) as FamilyMediaPass[]);
+}
+
+export async function listFamilyMediaPassesForFamilyAdmin(familyId: string): Promise<AdminFamilyMediaPass[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("family_media_passes")
+    .select("*")
+    .eq("family_id", familyId)
+    .order("created_at", { ascending: false });
 
   if (error) throw new Error(`Unable to fetch family media passes: ${error.message}`);
   return hydratePasses((data ?? []) as FamilyMediaPass[]);
@@ -159,4 +170,34 @@ export async function updateFamilyMediaPass(
     },
     actorId
   );
+}
+
+export type BulkFamilyMediaPassStatusResult = {
+  succeeded: string[];
+  failed: Array<{ id: string; reason: "NOT_FOUND" }>;
+};
+
+export async function bulkUpdateFamilyMediaPassStatus(
+  ids: string[],
+  status: AdminFamilyMediaPassBulkPayload["status"],
+  actorId: string
+): Promise<BulkFamilyMediaPassStatusResult> {
+  const reviewed = status === "ACTIVE";
+  const { data, error } = await getSupabaseAdminClient()
+    .from("family_media_passes")
+    .update({
+      status,
+      updated_by: actorId,
+      ...(reviewed ? { reviewed_by: actorId, reviewed_at: new Date().toISOString() } : {})
+    })
+    .in("id", ids)
+    .select("id");
+
+  if (error) throw new Error(`Unable to bulk update family media passes: ${error.message}`);
+
+  const updatedIds = new Set((data ?? []).map((row) => row.id as string));
+  return {
+    succeeded: ids.filter((id) => updatedIds.has(id)),
+    failed: ids.filter((id) => !updatedIds.has(id)).map((id) => ({ id, reason: "NOT_FOUND" as const }))
+  };
 }

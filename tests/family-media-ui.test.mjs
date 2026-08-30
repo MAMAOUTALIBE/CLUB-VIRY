@@ -25,8 +25,8 @@ test("la médiathèque CRM sépare URL publique et fichier privé rattaché à u
   assert.match(source, /maxBytes: 100 \* 1024 \* 1024/);
   assert.match(crud, /uploadExtraFieldSources/);
   assert.match(crud, /body\.append\(key, value\)/);
-  assert.match(content, /privateFileSelected[\s\S]*playbackKind !== "BROADCAST_LINK"/);
-  assert.match(content, /privateBroadcastSelected[\s\S]*storage_path: null/);
+  assert.match(content, /normalizeMediaAssetPayload\(input\)/);
+  assert.match(content, /normalized\.storagePath[\s\S]*storage_path/);
 });
 
 test("le calendrier CRM protège le lien d'un direct sans masquer score et minute", async () => {

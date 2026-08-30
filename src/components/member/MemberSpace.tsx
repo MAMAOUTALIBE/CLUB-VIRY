@@ -1,11 +1,16 @@
 "use client";
 
-import { Bell, CalendarDays, Camera, CheckCheck, Clapperboard, Download, ExternalLink, Loader2, LockKeyhole, LogIn, LogOut, Megaphone, Radio, Trophy, Users } from "lucide-react";
+import { Bell, CalendarDays, Camera, CheckCheck, Clapperboard, Download, ExternalLink, Library, Loader2, LockKeyhole, LogIn, LogOut, Megaphone, Radio, RotateCcw, Trophy, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { familyMediaDateKey, isFamilyMediaPassCurrent } from "@/lib/family-media-entitlement";
+import {
+  countFamilyMediaLibrary,
+  filterFamilyMediaLibrary,
+  type FamilyMediaLibraryCategory
+} from "@/lib/family-media-library";
 
 type Player = { id: string; first_name: string; last_name: string };
 type Notif = {
@@ -32,6 +37,7 @@ type MediaPass = {
 type ProtectedMedia = {
   id: string;
   team_id: string;
+  team_name: string;
   type: "PHOTO" | "VIDEO";
   content_kind: "MATCH" | "TRAINING" | null;
   playback_kind: "VIDEO" | "BROADCAST_LINK";
@@ -42,6 +48,13 @@ type ProtectedMedia = {
   published_at: string | null;
   access_path: string;
 };
+
+const MEDIA_CATEGORIES: Array<{ value: FamilyMediaLibraryCategory; label: string; icon: LucideIcon }> = [
+  { value: "ALL", label: "Tout", icon: Library },
+  { value: "PHOTOS", label: "Photos", icon: Camera },
+  { value: "MATCH_VIDEOS", label: "Vidéos de match", icon: Clapperboard },
+  { value: "TRAINING", label: "Entraînements", icon: CalendarDays }
+];
 type LiveMatch = {
   id: string;
   teamId: string;
@@ -76,6 +89,13 @@ function relativeFr(iso: string): string {
   if (abs < 3600) return rtf.format(Math.round(diff / 60), "minute");
   if (abs < 86400) return rtf.format(Math.round(diff / 3600), "hour");
   return rtf.format(Math.round(diff / 86400), "day");
+}
+
+function formatMediaDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(date);
 }
 
 function notifLine(notif: Notif): string {
@@ -115,6 +135,7 @@ function convocationRows(notif: Notif): Array<{ label: string; value: string }> 
 }
 
 export function MemberSpace() {
+  const mediaTeamFilterId = useId();
   const [status, setStatus] = useState<"loading" | "unauth" | "ready">("loading");
   const [players, setPlayers] = useState<Player[]>([]);
   const [notifs, setNotifs] = useState<Notif[]>([]);
@@ -125,6 +146,8 @@ export function MemberSpace() {
   const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
   const [mediaBusy, setMediaBusy] = useState(false);
   const [mediaMessage, setMediaMessage] = useState("");
+  const [mediaCategory, setMediaCategory] = useState<FamilyMediaLibraryCategory>("ALL");
+  const [mediaTeamId, setMediaTeamId] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -132,6 +155,23 @@ export function MemberSpace() {
   const [loginError, setLoginError] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
+
+  const mediaTeams = useMemo(() => {
+    const byId = new Map<string, string>();
+    for (const media of protectedMedia) {
+      if (media.team_id && media.team_name) byId.set(media.team_id, media.team_name);
+    }
+    return Array.from(byId, ([id, name]) => ({ id, name })).sort((left, right) => left.name.localeCompare(right.name, "fr"));
+  }, [protectedMedia]);
+  const effectiveMediaTeamId = mediaTeamId && mediaTeams.some((team) => team.id === mediaTeamId) ? mediaTeamId : null;
+  const mediaCounts = useMemo(
+    () => countFamilyMediaLibrary(protectedMedia, effectiveMediaTeamId),
+    [effectiveMediaTeamId, protectedMedia]
+  );
+  const visibleProtectedMedia = useMemo(
+    () => filterFamilyMediaLibrary(protectedMedia, { category: mediaCategory, teamId: effectiveMediaTeamId }),
+    [effectiveMediaTeamId, mediaCategory, protectedMedia]
+  );
 
   const loadNotifs = useCallback(async () => {
     const res = await fetch("/api/family/notifications", { credentials: "same-origin" });
@@ -241,6 +281,8 @@ export function MemberSpace() {
     setMediaPasses([]);
     setProtectedMedia([]);
     setLiveMatches([]);
+    setMediaCategory("ALL");
+    setMediaTeamId(null);
     setStatus("unauth");
   }
 
@@ -339,6 +381,8 @@ export function MemberSpace() {
   const currentMediaPass = mediaPasses.find((pass) => isFamilyMediaPassCurrent(pass, today)) ?? mediaPasses.find((pass) => pass.status === "ACTIVE") ?? mediaPasses[0] ?? null;
   const currentMediaPassIsActive = currentMediaPass ? isFamilyMediaPassCurrent(currentMediaPass, today) : false;
   const passStatusLabel = currentMediaPassIsActive ? "Actif" : currentMediaPass?.status === "ACTIVE" && currentMediaPass.startsOn > today ? "Programmé" : currentMediaPass?.status === "ACTIVE" && currentMediaPass.endsOn < today ? "Expiré" : currentMediaPass?.status === "PENDING_REVIEW" ? "En attente de validation" : currentMediaPass?.status === "SUSPENDED" ? "Suspendu" : currentMediaPass?.status === "REJECTED" ? "Refusé" : currentMediaPass?.status === "CANCELLED" ? "Annulé" : currentMediaPass?.status === "EXPIRED" ? "Expiré" : "Non attribué";
+  const selectedMediaCategoryLabel = MEDIA_CATEGORIES.find((category) => category.value === mediaCategory)?.label ?? "ressource";
+  const selectedMediaTeamName = mediaTeams.find((team) => team.id === effectiveMediaTeamId)?.name ?? null;
 
   return (
     <div className="grid gap-6">
@@ -355,20 +399,26 @@ export function MemberSpace() {
           <span className={`rounded-full px-3 py-1.5 text-xs font-black uppercase ${currentMediaPassIsActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{passStatusLabel}</span>
         </div>
         {currentMediaPass ? <div className="mt-4 flex flex-wrap gap-2">{[[currentMediaPass.allowPhotos, "Photos"], [currentMediaPass.allowTrainingVideos, "Vidéos d’entraînement"], [currentMediaPass.allowLiveMatches, "Matchs en direct"]].filter(([allowed]) => allowed).map(([, label]) => <span key={String(label)} className="rounded-md border border-[#07542f]/20 bg-emerald-50 px-2.5 py-1 text-xs font-black uppercase text-[#07542f]">{label}</span>)}</div> : <p className="mt-4 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-5 text-center text-sm font-semibold text-slate-500">Aucun accès média annuel n’est actif pour cette famille.</p>}
+      </section>
 
-        {currentMediaPassIsActive && liveMatches.length > 0 ? (
-          <div className="mt-5 grid gap-3">
+      {currentMediaPassIsActive && liveMatches.length > 0 ? (
+        <section aria-labelledby="family-live-matches-title">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]" id="family-live-matches-title"><Radio size={18} className="text-red-600" aria-hidden="true" /> Matchs en direct</h3>
+            <span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-black text-white">{liveMatches.length}</span>
+          </div>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
             {liveMatches.map((match) => {
               const homeName = match.location === "AWAY" ? match.opponentName : match.teamName;
               const awayName = match.location === "AWAY" ? match.teamName : match.opponentName;
               const hasScore = match.homeScore !== null && match.awayScore !== null;
               return (
-                <article className="rounded-lg border border-red-200 bg-red-50 p-4" key={match.id}>
+                <article className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm" key={match.id}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <p className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 text-xs font-black uppercase text-white"><Radio size={14} aria-hidden="true" /> En direct{match.liveMinute !== null ? ` · ${match.liveMinute}’` : ""}</p>
-                      <h4 className="mt-3 text-base font-black uppercase text-[#002f1d]">{homeName} - {awayName}</h4>
-                      <p className="mt-1 text-sm font-bold text-slate-700">{hasScore ? `${match.homeScore} - ${match.awayScore}` : "Score en attente"}{match.competition ? ` · ${match.competition}` : ""}</p>
+                      <h4 className="mt-3 break-words text-base font-black uppercase text-[#002f1d]">{homeName} - {awayName}</h4>
+                      <p className="mt-1 break-words text-sm font-bold text-slate-700">{hasScore ? `${match.homeScore} - ${match.awayScore}` : "Score en attente"}{match.competition ? ` · ${match.competition}` : ""}</p>
                     </div>
                     <button className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-4 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:opacity-60" disabled={mediaBusy} type="button" onClick={() => void openAuthorizedLink(match.accessPath, "Le lien du match n’est pas accessible.")}><ExternalLink size={17} aria-hidden="true" /> Voir le match</button>
                   </div>
@@ -376,18 +426,44 @@ export function MemberSpace() {
               );
             })}
           </div>
-        ) : null}
+        </section>
+      ) : null}
 
-        {currentMediaPassIsActive ? protectedMedia.length > 0 ? (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {protectedMedia.map((media) => <article key={media.id} className="overflow-hidden rounded-lg border border-slate-200 bg-[#fbfcf8]">
-              {media.type === "PHOTO" ? <img src={`/api/family/media/${media.id}/file`} alt={media.alt_text ?? media.title} className="aspect-video w-full object-cover" loading="lazy" /> : media.playback_kind === "VIDEO" ? <video controls playsInline preload="metadata" poster={media.thumbnail_url ?? undefined} src={`/api/family/media/${media.id}/file`} className="aspect-video w-full bg-black object-contain" aria-label={media.title} /> : <button type="button" disabled={mediaBusy} onClick={() => void openProtectedBroadcast(media)} className="focus-ring group relative block aspect-video w-full overflow-hidden bg-[#002f1d] text-white disabled:opacity-60">{media.thumbnail_url ? <img src={media.thumbnail_url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" /> : null}<span className="absolute inset-0 flex items-center justify-center"><span className="inline-flex items-center gap-2 rounded-md bg-[#f7c600] px-4 py-3 text-sm font-black uppercase text-[#002f1d]"><ExternalLink size={17} /> Ouvrir le direct</span></span></button>}
-              <div className="p-3"><p className="flex items-center gap-2 text-[11px] font-black uppercase text-[#07542f]">{media.is_live ? <Radio size={14} className="text-red-600" /> : media.type === "PHOTO" ? <Camera size={14} /> : <Clapperboard size={14} />}{media.is_live ? "En direct" : media.content_kind === "TRAINING" ? "Entraînement" : media.type === "PHOTO" ? "Photo" : "Match"}</p><h4 className="mt-1 text-sm font-black text-[#002f1d]">{media.title}</h4>{media.type === "PHOTO" || media.playback_kind === "VIDEO" ? <a className="focus-ring mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-md border border-[#002f1d]/20 px-3 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" download href={`/api/family/media/${media.id}/file?download=1`}><Download size={15} aria-hidden="true" /> Télécharger</a> : null}</div>
-            </article>)}
+      {currentMediaPassIsActive ? (
+        <section aria-labelledby="family-media-library-title">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="inline-flex items-center gap-2 text-lg font-black uppercase text-[#002f1d]" id="family-media-library-title"><Library size={18} aria-hidden="true" /> Mes ressources</h3>
+              <p className="mt-1 text-sm font-semibold text-slate-600">{protectedMedia.length} ressource{protectedMedia.length > 1 ? "s" : ""} accessible{protectedMedia.length > 1 ? "s" : ""}</p>
+            </div>
+            {(mediaCategory !== "ALL" || effectiveMediaTeamId) ? <button className="focus-ring inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button" onClick={() => { setMediaCategory("ALL"); setMediaTeamId(null); }}><RotateCcw size={15} aria-hidden="true" /> Réinitialiser</button> : null}
           </div>
-        ) : <p className="mt-5 rounded-lg border border-dashed border-slate-300 bg-[#fbfcf8] p-5 text-center text-sm font-semibold text-slate-500">Aucun média réservé n’est publié pour vos équipes.</p> : null}
-        {mediaMessage ? <p role="alert" className="mt-3 text-sm font-bold text-red-700">{mediaMessage}</p> : null}
-      </section>
+
+          {protectedMedia.length > 0 ? (
+            <>
+              <div className="mt-4 grid gap-3 border-y border-slate-200 py-4 lg:flex lg:flex-wrap lg:items-end lg:justify-between" aria-label="Filtres des ressources">
+                <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap" role="group" aria-label="Type de ressource">
+                  {MEDIA_CATEGORIES.map((category) => {
+                    const Icon = category.icon;
+                    const selected = mediaCategory === category.value;
+                    return <button key={category.value} type="button" aria-pressed={selected} onClick={() => setMediaCategory(category.value)} className={`focus-ring inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-md border px-3 text-center text-xs font-black uppercase ${selected ? "border-[#002f1d] bg-[#002f1d] text-white" : "border-slate-300 bg-white text-[#002f1d] hover:border-[#f7c600]"}`}><Icon className="shrink-0" size={15} aria-hidden="true" /><span className="min-w-0 break-words">{category.label} <span aria-label={`${mediaCounts[category.value]} ressource${mediaCounts[category.value] > 1 ? "s" : ""}`}>({mediaCounts[category.value]})</span></span></button>;
+                  })}
+                </div>
+                {mediaTeams.length > 1 ? <label className="grid gap-1 text-xs font-black uppercase text-slate-600" htmlFor={mediaTeamFilterId}><span>Équipe</span><select id={mediaTeamFilterId} className="focus-ring min-h-11 max-w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-bold normal-case text-slate-900" value={effectiveMediaTeamId ?? ""} onChange={(event) => setMediaTeamId(event.target.value || null)}><option value="">Toutes les équipes</option>{mediaTeams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label> : null}
+              </div>
+
+              {visibleProtectedMedia.length > 0 ? <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {visibleProtectedMedia.map((media) => <article key={media.id} className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                  {media.type === "PHOTO" ? <img src={`/api/family/media/${media.id}/file`} alt={media.alt_text ?? media.title} className="aspect-video w-full object-cover" loading="lazy" /> : media.playback_kind === "VIDEO" ? <video controls playsInline preload="metadata" poster={media.thumbnail_url ?? undefined} src={`/api/family/media/${media.id}/file`} className="aspect-video w-full bg-black object-contain" aria-label={media.title} /> : <button type="button" disabled={mediaBusy} onClick={() => void openProtectedBroadcast(media)} className="focus-ring group relative block aspect-video w-full overflow-hidden bg-[#002f1d] text-white disabled:opacity-60">{media.thumbnail_url ? <img src={media.thumbnail_url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" /> : null}<span className="absolute inset-0 flex items-center justify-center p-3"><span className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-4 py-3 text-sm font-black uppercase text-[#002f1d]"><ExternalLink size={17} aria-hidden="true" /> Ouvrir le direct</span></span></button>}
+                  <div className="p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="flex items-center gap-2 text-[11px] font-black uppercase text-[#07542f]">{media.is_live ? <Radio size={14} className="text-red-600" aria-hidden="true" /> : media.type === "PHOTO" ? <Camera size={14} aria-hidden="true" /> : <Clapperboard size={14} aria-hidden="true" />}{media.is_live ? "En direct" : media.content_kind === "TRAINING" ? "Entraînement" : media.type === "PHOTO" ? "Photo" : "Match"}</p><span className="max-w-full break-words rounded bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-600">{media.team_name}</span></div><h4 className="mt-2 break-words text-sm font-black text-[#002f1d]">{media.title}</h4>{formatMediaDate(media.published_at) ? <p className="mt-1 text-xs font-semibold text-slate-500">Publié le {formatMediaDate(media.published_at)}</p> : null}{media.type === "PHOTO" || media.playback_kind === "VIDEO" ? <a className="focus-ring mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-md border border-[#002f1d]/20 px-3 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" download href={`/api/family/media/${media.id}/file?download=1`}><Download size={15} aria-hidden="true" /> Télécharger</a> : null}</div>
+                </article>)}
+              </div> : <p className="mt-4 rounded-lg border border-dashed border-slate-300 bg-white p-5 text-center text-sm font-semibold text-slate-600">Aucune ressource « {selectedMediaCategoryLabel} »{selectedMediaTeamName ? ` pour ${selectedMediaTeamName}` : ""} ne correspond à ces filtres.</p>}
+            </>
+          ) : <p className="mt-4 rounded-lg border border-dashed border-slate-300 bg-white p-5 text-center text-sm font-semibold text-slate-600">Aucune ressource réservée n’est publiée pour vos équipes.</p>}
+        </section>
+      ) : null}
+
+      {mediaMessage ? <p role="alert" className="text-sm font-bold text-red-700">{mediaMessage}</p> : null}
 
       {/* Convocations */}
       <section className="official-card rounded-2xl bg-white p-5 sm:p-6">

@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { validateAdminFamilyMediaPassPayload } from "../src/lib/api/validation.ts";
+import {
+  validateAdminFamilyMediaPassBulkPayload,
+  validateAdminFamilyMediaPassPayload
+} from "../src/lib/api/validation.ts";
 
 const FAMILY_ID = "11111111-1111-4111-8111-111111111111";
 const SEASON_ID = "22222222-2222-4222-8222-222222222222";
@@ -74,6 +77,23 @@ test("Pass Famille Média : accepte une vraie modification partielle et refuse u
   });
   assert.ok(issueFields(validateAdminFamilyMediaPassPayload({}, { partial: true })).includes("body"));
   assert.ok(issueFields(validateAdminFamilyMediaPassPayload({ reviewNote: "x".repeat(1001) }, { partial: true })).includes("reviewNote"));
+});
+
+test("Pass Famille Média : l'action groupée est bornée, unique et limitée aux statuts sûrs", () => {
+  assert.deepEqual(validateAdminFamilyMediaPassBulkPayload({ ids: [FAMILY_ID, TEAM_ID], status: "SUSPENDED" }), {
+    ok: true,
+    data: { ids: [FAMILY_ID, TEAM_ID], status: "SUSPENDED" }
+  });
+  for (const invalid of [
+    { ids: [], status: "ACTIVE" },
+    { ids: Array.from({ length: 101 }, () => FAMILY_ID), status: "ACTIVE" },
+    { ids: [FAMILY_ID, FAMILY_ID], status: "ACTIVE" },
+    { ids: ["bad"], status: "ACTIVE" },
+    { ids: [FAMILY_ID], status: "REJECTED" },
+    { ids: [FAMILY_ID], status: "EXPIRED" }
+  ]) {
+    assert.equal(validateAdminFamilyMediaPassBulkPayload(invalid).ok, false);
+  }
 });
 
 test("Pass Famille Média : la migration impose l'isolation, la portée saisonnière et l'écriture atomique", async () => {

@@ -12,6 +12,7 @@ import { recordActivity } from "@/lib/db/foundations";
 import { queueAdminNotification } from "@/lib/db/notifications";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
 import type { MediaAlbum, MediaAsset, NewsArticle, Partner, PartnershipRequest } from "@/lib/db/types";
+import { normalizeMediaAssetPayload } from "@/lib/media-asset-state";
 import { effectivePublicationTimestamps, getPublicationActivityWindow } from "@/lib/publication-activity";
 
 export type MediaPayload = {
@@ -65,31 +66,25 @@ function mediaAlbumPayloadToRow(input: AdminMediaAlbumPayload) {
 }
 
 function mediaAssetPayloadToRow(input: AdminMediaAssetPayload) {
-  const switchingToPublic = input.accessLevel === "PUBLIC";
-  const privateBroadcastSelected = input.accessLevel === "FAMILY_PASS" && input.playbackKind === "BROADCAST_LINK";
-  const privateFileSelected =
-    input.accessLevel === "FAMILY_PASS" && input.playbackKind !== "BROADCAST_LINK" && Boolean(input.storagePath);
+  const normalized = normalizeMediaAssetPayload(input);
   return {
-    ...(input.albumId !== undefined ? { album_id: input.albumId ?? null } : {}),
-    ...(input.teamId !== undefined ? { team_id: input.teamId ?? null } : {}),
-    ...(input.type ? { type: input.type } : {}),
-    ...(input.contentKind !== undefined ? { content_kind: input.contentKind ?? null } : {}),
-    ...(input.playbackKind ? { playback_kind: input.playbackKind } : {}),
-    ...(input.accessLevel ? { access_level: input.accessLevel } : {}),
-    ...(input.status ? { status: input.status } : {}),
-    ...(input.title ? { title: input.title } : {}),
-    ...(input.url !== undefined ? { url: input.url ?? null } : {}),
-    ...(input.storagePath !== undefined ? { storage_path: input.storagePath ?? null } : {}),
-    ...(switchingToPublic ? { storage_path: null } : {}),
-    ...(privateFileSelected ? { url: null } : {}),
-    ...(privateBroadcastSelected ? { storage_path: null } : {}),
-    ...(input.thumbnailUrl !== undefined ? { thumbnail_url: input.thumbnailUrl ?? null } : {}),
-    ...(input.altText !== undefined ? { alt_text: input.altText ?? null } : {}),
-    ...(input.isFeatured !== undefined ? { is_featured: input.isFeatured } : {}),
-    ...(input.isLive !== undefined ? { is_live: input.isLive } : {}),
-    ...(input.startsAt !== undefined ? { starts_at: input.startsAt ?? null } : {}),
-    ...(input.endsAt !== undefined ? { ends_at: input.endsAt ?? null } : {}),
-    ...(input.publishedAt !== undefined ? { published_at: input.publishedAt ?? null } : {})
+    ...(normalized.albumId !== undefined ? { album_id: normalized.albumId ?? null } : {}),
+    ...(normalized.teamId !== undefined ? { team_id: normalized.teamId ?? null } : {}),
+    ...(normalized.type ? { type: normalized.type } : {}),
+    ...(normalized.contentKind !== undefined ? { content_kind: normalized.contentKind ?? null } : {}),
+    ...(normalized.playbackKind ? { playback_kind: normalized.playbackKind } : {}),
+    ...(normalized.accessLevel ? { access_level: normalized.accessLevel } : {}),
+    ...(normalized.status ? { status: normalized.status } : {}),
+    ...(normalized.title ? { title: normalized.title } : {}),
+    ...(normalized.url !== undefined ? { url: normalized.url ?? null } : {}),
+    ...(normalized.storagePath !== undefined ? { storage_path: normalized.storagePath ?? null } : {}),
+    ...(normalized.thumbnailUrl !== undefined ? { thumbnail_url: normalized.thumbnailUrl ?? null } : {}),
+    ...(normalized.altText !== undefined ? { alt_text: normalized.altText ?? null } : {}),
+    ...(normalized.isFeatured !== undefined ? { is_featured: normalized.isFeatured } : {}),
+    ...(normalized.isLive !== undefined ? { is_live: normalized.isLive } : {}),
+    ...(normalized.startsAt !== undefined ? { starts_at: normalized.startsAt ?? null } : {}),
+    ...(normalized.endsAt !== undefined ? { ends_at: normalized.endsAt ?? null } : {}),
+    ...(normalized.publishedAt !== undefined ? { published_at: normalized.publishedAt ?? null } : {})
   };
 }
 
@@ -414,19 +409,33 @@ export async function createMediaAsset(input: AdminMediaAssetPayload): Promise<M
   return asset;
 }
 
-export async function updateMediaAsset(id: string, input: AdminMediaAssetPayload): Promise<MediaAsset> {
+export async function getMediaAssetForAdminById(id: string): Promise<MediaAsset | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("media_assets")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Unable to fetch media asset: ${error.message}`);
+  }
+
+  return (data as MediaAsset | null) ?? null;
+}
+
+export async function updateMediaAsset(id: string, input: AdminMediaAssetPayload): Promise<MediaAsset | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("media_assets")
     .update(mediaAssetPayloadToRow(input))
     .eq("id", id)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to update media asset: ${error.message}`);
   }
 
-  return data as MediaAsset;
+  return (data as MediaAsset | null) ?? null;
 }
 
 /** Supprime un média. Renvoie false si l'id n'existe pas (-> 404 côté route). */

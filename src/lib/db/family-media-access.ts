@@ -26,7 +26,7 @@ export type FamilyMediaSummary = Pick<
   | "starts_at"
   | "ends_at"
   | "published_at"
-> & { access_path: string };
+> & { access_path: string; team_name: string };
 
 export type FamilyMediaPassOverview = {
   id: string;
@@ -196,30 +196,52 @@ export async function listAuthorizedFamilyMedia(
     .in("team_id", teamIds)
     .not("published_at", "is", null)
     .lte("published_at", nowIso)
+    .order("is_live", { ascending: false })
     .order("published_at", { ascending: false })
     .limit(Math.min(Math.max(options.limit ?? 100, 1), 200));
 
   if (error) throw new Error(`Unable to fetch authorized family media: ${error.message}`);
 
-  const assets = (data ?? []) as Array<Omit<FamilyMediaSummary, "access_path">>;
+  const assets = (data ?? []) as Array<Omit<FamilyMediaSummary, "access_path" | "team_name">>;
+  const authorizedAssets = assets.filter((asset) => {
+    if (
+      (asset.starts_at !== null && Date.parse(asset.starts_at) > now.getTime()) ||
+      (asset.ends_at !== null && Date.parse(asset.ends_at) <= now.getTime())
+    ) {
+      return false;
+    }
+    const right = requiredRightForMedia(asset);
+    return Boolean(
+      right &&
+        asset.team_id &&
+        evaluateFamilyMediaAccess(snapshot, { right, teamId: asset.team_id, dateKey }).ok
+    );
+  });
+
+  const authorizedTeamIds = Array.from(
+    new Set(authorizedAssets.map((asset) => asset.team_id).filter((teamId): teamId is string => Boolean(teamId)))
+  );
+  const teamNames = new Map<string, string>();
+  if (authorizedTeamIds.length > 0) {
+    const { data: teams, error: teamsError } = await getSupabaseAdminClient()
+      .from("teams")
+      .select("id,name")
+      .in("id", authorizedTeamIds)
+      .is("deleted_at", null);
+    if (teamsError) throw new Error(`Unable to fetch authorized family media teams: ${teamsError.message}`);
+    for (const team of teams ?? []) {
+      const name = typeof team.name === "string" ? team.name.trim() : "";
+      if (name) teamNames.set(team.id as string, name);
+    }
+  }
+
   return {
     authorized: true,
-    assets: assets
-      .filter((asset) => {
-        if (
-          (asset.starts_at !== null && Date.parse(asset.starts_at) > now.getTime()) ||
-          (asset.ends_at !== null && Date.parse(asset.ends_at) <= now.getTime())
-        ) {
-          return false;
-        }
-        const right = requiredRightForMedia(asset);
-        return Boolean(
-          right &&
-            asset.team_id &&
-            evaluateFamilyMediaAccess(snapshot, { right, teamId: asset.team_id, dateKey }).ok
-        );
-      })
-      .map((asset) => ({ ...asset, access_path: `/api/family/media/${asset.id}/access` }))
+    assets: authorizedAssets.flatMap((asset): FamilyMediaSummary[] => {
+      const teamName = asset.team_id ? teamNames.get(asset.team_id) : null;
+      if (!teamName) return [];
+      return [{ ...asset, team_name: teamName, access_path: `/api/family/media/${asset.id}/access` }];
+    })
   };
 }
 

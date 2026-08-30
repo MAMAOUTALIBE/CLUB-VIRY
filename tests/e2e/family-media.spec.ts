@@ -6,7 +6,8 @@ const json = (data: unknown) => ({
   body: JSON.stringify({ ok: true, data })
 });
 
-test("une famille autorisée retrouve, télécharge ses ressources et ouvre le direct sécurisé", async ({ page }) => {
+test("une famille autorisée retrouve, télécharge ses ressources et ouvre le direct sécurisé", async ({ page }, testInfo) => {
+  if (testInfo.project.name === "mobile") await page.setViewportSize({ width: 390, height: 844 });
   await page.route("**/api/family", (route) => route.fulfill(json({ players: [{ id: "player-1", first_name: "Lina", last_name: "Test" }] })));
   await page.route("**/api/family/notifications", (route) => route.fulfill(json({ notifications: [], unread: 0 })));
   await page.route("**/api/family/notifications/preferences", (route) => route.fulfill(json({ preferences: [] })));
@@ -19,13 +20,14 @@ test("une famille autorisée retrouve, télécharge ses ressources et ouvre le d
       allowPhotos: true,
       allowTrainingVideos: true,
       allowLiveMatches: true,
-      teamNames: ["U16"]
+      teamNames: ["U16", "U18"]
     }]
   })));
   await page.route("**/api/family/media?limit=100", (route) => route.fulfill(json({
     assets: [{
       id: "asset-1",
       team_id: "team-1",
+      team_name: "U16 Viry-Châtillon",
       type: "PHOTO",
       content_kind: "MATCH",
       playback_kind: "VIDEO",
@@ -35,6 +37,32 @@ test("une famille autorisée retrouve, télécharge ses ressources et ouvre le d
       is_live: false,
       published_at: "2026-08-30T10:00:00Z",
       access_path: "/api/family/media/asset-1/access"
+    }, {
+      id: "asset-2",
+      team_id: "team-2",
+      team_name: "U18 Viry-Châtillon",
+      type: "VIDEO",
+      content_kind: "MATCH",
+      playback_kind: "VIDEO",
+      title: "Replay U18 - championnat",
+      thumbnail_url: null,
+      alt_text: null,
+      is_live: false,
+      published_at: "2026-08-29T10:00:00Z",
+      access_path: "/api/family/media/asset-2/access"
+    }, {
+      id: "asset-3",
+      team_id: "team-2",
+      team_name: "U18 Viry-Châtillon",
+      type: "VIDEO",
+      content_kind: "TRAINING",
+      playback_kind: "BROADCAST_LINK",
+      title: "Entraînement U18 en direct",
+      thumbnail_url: null,
+      alt_text: null,
+      is_live: true,
+      published_at: "2026-08-28T10:00:00Z",
+      access_path: "/api/family/media/asset-3/access"
     }]
   })));
   await page.route("**/api/family/matches/live", (route) => route.fulfill(json({
@@ -78,8 +106,22 @@ test("une famille autorisée retrouve, télécharge ses ressources et ouvre le d
   await expect(page.getByText("U16 Viry-Châtillon - Massy").filter({ visible: true })).toBeVisible();
   await expect(page.getByText("2 - 1 · Championnat").filter({ visible: true })).toBeVisible();
   await expect(page.getByText(/En direct · 67/).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mes ressources" }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Tout.*3 ressources/i }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByLabel("Équipe").filter({ visible: true })).toBeVisible();
 
-  const downloadLink = page.getByRole("link", { name: "Télécharger" }).filter({ visible: true });
+  await page.getByRole("button", { name: /Entraînements.*1 ressource/i }).filter({ visible: true }).click();
+  await expect(page.getByRole("heading", { name: "Entraînement U18 en direct" }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Photos U16 - Viry contre Massy" }).filter({ visible: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Réinitialiser" }).filter({ visible: true }).click();
+  await expect(page.getByRole("heading", { name: "Photos U16 - Viry contre Massy" }).filter({ visible: true })).toBeVisible();
+  await page.getByLabel("Équipe").filter({ visible: true }).selectOption("team-1");
+  await expect(page.getByRole("heading", { name: "Photos U16 - Viry contre Massy" }).filter({ visible: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Entraînement U18 en direct" }).filter({ visible: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Réinitialiser" }).filter({ visible: true }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+
+  const downloadLink = page.getByRole("heading", { name: "Photos U16 - Viry contre Massy" }).filter({ visible: true }).locator("..").getByRole("link", { name: "Télécharger" });
   await expect(downloadLink).toHaveAttribute("href", "/api/family/media/asset-1/file?download=1");
   await expect(downloadLink).toHaveAttribute("download", "");
 

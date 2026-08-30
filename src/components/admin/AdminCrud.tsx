@@ -18,7 +18,7 @@ export type CrudField = {
   label: string;
   type?: CrudFieldType;
   options?: Array<{ value: string; label: string }>;
-  required?: boolean;
+  required?: boolean | ((form: Readonly<Record<string, string>>) => boolean);
   placeholder?: string;
   help?: string;
   fullWidth?: boolean;
@@ -48,6 +48,10 @@ export type CrudField = {
   uploadExtraFieldSources?: Record<string, string>;
   accept?: string;
   maxBytes?: number;
+  /** Affiche le champ uniquement lorsque l'état courant du formulaire le rend pertinent. */
+  visibleWhen?: (form: Readonly<Record<string, string>>) => boolean;
+  /** Valeur envoyée à l'édition pour nettoyer une donnée devenue hors contexte. */
+  hiddenEditPayload?: unknown;
 };
 
 export type CrudColumn = { label: string; render: (row: Row) => React.ReactNode };
@@ -72,6 +76,8 @@ type AdminCrudProps = {
   disableCreate?: boolean;
   /** Actions supplémentaires par ligne, rendues avant le bouton « Éditer » (ex: lien vers un sous-écran). */
   rowActions?: (row: Row, helpers: AdminCrudHelpers) => React.ReactNode;
+  /** Présentation compacte optionnelle d'une ligne sous le breakpoint tablette. */
+  renderMobileRow?: (row: Row) => React.ReactNode;
   /** Active un bouton « Supprimer » par ligne (DELETE endpoint/[id], avec confirmation). */
   allowDelete?: boolean;
   /** "soft" = déplacé en corbeille (restaurable), "hard" = suppression définitive. Défaut: "hard". */
@@ -88,6 +94,13 @@ type AdminCrudProps = {
   tagsEntity?: string;
   /** Opt-in : active la barre recherche + colonnes + vues enregistrées (clé de portée, ex: "partners"). */
   viewsScope?: string;
+  /** Encart métier rendu sous les champs avec accès en lecture seule au formulaire courant. */
+  renderFormSupplement?: (context: {
+    form: Readonly<Record<string, string>>;
+    editing: Readonly<Row>;
+  }) => React.ReactNode;
+  /** Empêche l'enregistrement tant que les invariants métier du formulaire ne sont pas remplis. */
+  validateForm?: (form: Readonly<Record<string, string>>) => string | null;
 };
 
 function camelToSnake(s: string): string {
@@ -133,7 +146,7 @@ function withLimit(endpoint: string, limit: number): string {
   return `${path}?${params.toString()}`;
 }
 
-export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity, tagsEntity, viewsScope }: AdminCrudProps) {
+export function AdminCrud({ title, description, endpoint, listEndpoint, listKey, itemKey, fields, columns, idField = "id", newLabel = "Nouveau", disableCreate = false, rowActions, renderMobileRow, allowDelete = false, deleteMode = "hard", rowLabel, reorderEndpoint, allowBulkDelete = false, customFieldsEntity, tagsEntity, viewsScope, renderFormSupplement, validateForm }: AdminCrudProps) {
   const getUrl = listEndpoint ?? endpoint;
   const [rows, setRows] = useState<Row[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "auth" | "error">("loading");
@@ -396,11 +409,23 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
   }
 
   async function submit() {
+    const clientValidationError = validateForm?.(form);
+    if (clientValidationError) {
+      setFormError(clientValidationError);
+      return;
+    }
     setSaving(true);
     setFormError("");
     // payload : on n'envoie que les champs renseignés (les vides deviennent omis)
     const payload: Record<string, unknown> = {};
     for (const f of fields) {
+      const visible = f.visibleWhen?.(form) ?? true;
+      if (!visible) {
+        if (editing?.[idField] && f.payloadKey !== false && f.type !== "file" && f.hiddenEditPayload !== undefined) {
+          payload[f.payloadKey ?? f.name] = f.hiddenEditPayload;
+        }
+        continue;
+      }
       if (f.type === "file" || f.payloadKey === false) {
         continue;
       }
@@ -511,12 +536,16 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {fields.map((f) => {
               const id = `crud-${f.name}`;
+              const visible = f.visibleWhen?.(form) ?? true;
+              if (!visible) return null;
+              const required = typeof f.required === "function" ? f.required(form) : Boolean(f.required);
               if (f.type === "hidden") {
                 return <input key={f.name} type="hidden" name={f.name} value={form[f.name] ?? ""} readOnly />;
               }
               const common = {
                 id,
                 value: form[f.name] ?? "",
+                required,
                 onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm((s) => ({ ...s, [f.name]: e.target.value })),
                 className: "focus-ring min-h-11 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-900"
               };
@@ -526,7 +555,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
 
                 return (
                   <label key={f.name} className={`grid gap-1.5 text-sm font-bold text-slate-800 ${f.fullWidth ? "sm:col-span-2" : ""}`} htmlFor={id}>
-                    <span>{f.label}{f.required ? <span className="text-red-600"> *</span> : null}</span>
+                    <span>{f.label}{required ? <span className="text-red-600"> *</span> : null}</span>
                     <div className="rounded-md border border-dashed border-slate-300 bg-white p-3">
                       <div className="flex flex-wrap items-center gap-3">
                         <input
@@ -564,7 +593,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
 
               return (
                 <label key={f.name} className={`grid gap-1.5 text-sm font-bold text-slate-800 ${f.fullWidth || f.type === "textarea" ? "sm:col-span-2" : ""}`} htmlFor={id}>
-                  <span>{f.label}{f.required ? <span className="text-red-600"> *</span> : null}</span>
+                  <span>{f.label}{required ? <span className="text-red-600"> *</span> : null}</span>
                   {f.type === "textarea" ? (
                     <textarea {...common} rows={5} placeholder={f.placeholder} />
                   ) : f.type === "select" ? (
@@ -584,6 +613,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               );
             })}
           </div>
+          {renderFormSupplement ? renderFormSupplement({ form, editing }) : null}
           {customFieldsEntity ? (
             <CustomFieldsFieldset
               key={`${customFieldsEntity}-${(editing[idField] as string) ?? "new"}`}
@@ -602,7 +632,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
           ) : null}
           {formError ? <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{formError}</p> : null}
           <div className="mt-4 flex gap-2">
-            <button onClick={() => void submit()} disabled={saving} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:cursor-wait disabled:opacity-70" type="button">
+            <button onClick={() => void submit()} disabled={saving || Boolean(validateForm?.(form))} title={validateForm?.(form) ?? undefined} className="focus-ring inline-flex min-h-11 items-center gap-2 rounded-md bg-[#f7c600] px-5 text-sm font-black uppercase text-[#002f1d] hover:bg-[#002f1d] hover:text-white disabled:cursor-not-allowed disabled:opacity-50" type="button">
               {saving ? <Loader2 className="animate-spin" size={18} /> : null} Enregistrer
             </button>
             <button onClick={() => setEditing(null)} className="focus-ring min-h-11 rounded-md border border-slate-300 px-4 text-sm font-black uppercase text-slate-700 hover:border-[#f7c600]" type="button">Annuler</button>
@@ -623,7 +653,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
         />
       ) : null}
       {/* Liste */}
-      <div className="mt-5 overflow-x-auto">
+      <div className="mt-5">
         {state === "loading" ? (
           <p className="flex items-center gap-2 px-1 py-6 text-sm font-bold text-slate-500"><Loader2 className="animate-spin" size={18} /> Chargement…</p>
         ) : state === "ready" && rows.length === 0 ? (
@@ -651,6 +681,41 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               </button>
             </div>
           ) : null}
+          {renderMobileRow ? (
+            <div className="grid gap-3 md:hidden">
+              {displayRows.map((row, index) => {
+                const id = rowId(row);
+                return (
+                  <article key={String(row[idField] ?? index)} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      {canBulk && id ? (
+                        <input
+                          type="checkbox"
+                          aria-label="Sélectionner cette ligne"
+                          checked={selected.has(id)}
+                          onChange={() => toggleOne(id)}
+                          className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-[#002f1d]"
+                        />
+                      ) : null}
+                      <div className="min-w-0 flex-1">{renderMobileRow(row)}</div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                      {rowActions ? rowActions(row, { reload: load }) : null}
+                      <button onClick={() => openEdit(row)} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md border border-slate-300 px-3 text-xs font-black uppercase text-[#002f1d] hover:border-[#f7c600]" type="button">
+                        <Pencil size={14} /> Éditer
+                      </button>
+                      {allowDelete ? (
+                        <button onClick={() => void deleteRow(row)} className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md border border-red-200 px-3 text-xs font-black uppercase text-red-700 hover:bg-red-50" type="button">
+                          <Trash2 size={14} /> Supprimer
+                        </button>
+                      ) : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
+          <div className={renderMobileRow ? "hidden overflow-x-auto md:block" : "overflow-x-auto"}>
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs font-black uppercase text-slate-500">
@@ -744,6 +809,7 @@ export function AdminCrud({ title, description, endpoint, listEndpoint, listKey,
               ))}
             </tbody>
           </table>
+          </div>
           </>
         )}
       </div>
