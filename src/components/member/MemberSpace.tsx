@@ -298,9 +298,9 @@ export function MemberSpace() {
               {loginBusy ? <Loader2 className="animate-spin" size={18} aria-hidden="true" /> : <LogIn size={18} aria-hidden="true" />} Se connecter
             </button>
             {loginError ? <p className="text-sm font-bold text-red-700">{loginError}</p> : null}
-            <div className="flex items-center justify-between text-sm">
-              <button className="focus-ring font-bold text-[#07542f] underline" type="button" onClick={() => setResetMode(true)}>Mot de passe oublié ?</button>
-              <Link className="focus-ring font-bold text-[#07542f] underline" href="/inscriptions">Demander une inscription</Link>
+            <div className="grid gap-2 text-sm sm:flex sm:items-center sm:justify-between">
+              <button className="focus-ring justify-self-center font-bold text-[#07542f] underline sm:justify-self-auto" type="button" onClick={() => setResetMode(true)}>Mot de passe oublié ?</button>
+              <Link className="focus-ring justify-self-center font-bold text-[#07542f] underline sm:justify-self-auto" href="/inscriptions">Demander une inscription</Link>
             </div>
           </form>
         )}

@@ -433,6 +433,26 @@ export type PasswordUpdatePayload = {
   password: string;
 };
 
+export type AdminFamilyAccessCreatePayload = {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+export type AdminFamilyAccessLinkPayload = {
+  email: string;
+};
+
+export type AdminFamilyAccessPasswordPayload = {
+  profileId: string;
+  password: string;
+};
+
+export type AdminFamilyAccessUnlinkPayload = {
+  profileId: string;
+};
+
 type ValidationResult<T> =
   | {
       ok: true;
@@ -4364,4 +4384,96 @@ export function validateAdminFamilyPayload(input: unknown): ValidationResult<Adm
   }
 
   return { ok: true, data: { name } };
+}
+
+export function validateAdminFamilyAccessCreatePayload(input: unknown): ValidationResult<AdminFamilyAccessCreatePayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requête doit être un objet JSON." }] };
+  }
+
+  const email = normalizeEmail(body.email);
+  const password = normalizeString(body.password);
+  const firstName = normalizeString(body.firstName);
+  const lastName = normalizeString(body.lastName);
+
+  if (!email || !isValidEmail(email)) {
+    issues.push({ field: "email", message: "Adresse email invalide." });
+  }
+  if (!password) {
+    issues.push({ field: "password", message: "Mot de passe obligatoire." });
+  } else {
+    issues.push(...getPasswordIssues(password));
+  }
+  if (firstName && firstName.length > 80) {
+    issues.push({ field: "firstName", message: "Prénom trop long." });
+  }
+  if (lastName && lastName.length > 80) {
+    issues.push({ field: "lastName", message: "Nom trop long." });
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return {
+    ok: true,
+    data: {
+      email: email as string,
+      password: password as string,
+      ...(firstName ? { firstName } : {}),
+      ...(lastName ? { lastName } : {})
+    }
+  };
+}
+
+export function validateAdminFamilyAccessLinkPayload(input: unknown): ValidationResult<AdminFamilyAccessLinkPayload> {
+  const body = asRecord(input);
+  const email = body ? normalizeEmail(body.email) : undefined;
+
+  if (!email || !isValidEmail(email)) {
+    return { ok: false, issues: [{ field: "email", message: "Adresse email invalide." }] };
+  }
+
+  return { ok: true, data: { email } };
+}
+
+export function validateAdminFamilyAccessPasswordPayload(input: unknown): ValidationResult<AdminFamilyAccessPasswordPayload> {
+  const body = asRecord(input);
+  const issues: ValidationIssue[] = [];
+
+  if (!body) {
+    return { ok: false, issues: [{ field: "body", message: "Le corps de la requête doit être un objet JSON." }] };
+  }
+
+  const profileId = normalizeString(body.profileId);
+  const password = normalizeString(body.password);
+
+  if (!profileId || !isUuid(profileId)) {
+    issues.push({ field: "profileId", message: "Compte famille invalide." });
+  }
+  if (!password) {
+    issues.push({ field: "password", message: "Mot de passe obligatoire." });
+  } else {
+    issues.push(...getPasswordIssues(password));
+  }
+
+  if (issues.length > 0) {
+    return { ok: false, issues };
+  }
+
+  return { ok: true, data: { profileId: profileId as string, password: password as string } };
+}
+
+export function validateAdminFamilyAccessUnlinkPayload(input: unknown): ValidationResult<AdminFamilyAccessUnlinkPayload> {
+  const body = asRecord(input);
+  const profileId = body ? normalizeString(body.profileId) : undefined;
+
+  if (!profileId || !isUuid(profileId)) {
+    return { ok: false, issues: [{ field: "profileId", message: "Compte famille invalide." }] };
+  }
+
+  return { ok: true, data: { profileId } };
 }

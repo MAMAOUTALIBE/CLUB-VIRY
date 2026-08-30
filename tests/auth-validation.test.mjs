@@ -23,6 +23,10 @@ import {
   validateAdminTeamPlayerPayload,
   validateAdminTeamStaffPayload,
   validateAdminCampaignPayload,
+  validateAdminFamilyAccessCreatePayload,
+  validateAdminFamilyAccessLinkPayload,
+  validateAdminFamilyAccessPasswordPayload,
+  validateAdminFamilyAccessUnlinkPayload,
   validateAdminUserInvitePayload,
   validateAdminUserUpdatePayload,
   validateChildPayload,
@@ -96,6 +100,31 @@ test("login validation requires a valid email", () => {
 
   assert.equal(result.ok, false);
   assert.match(JSON.stringify(result), /Adresse email invalide/);
+});
+
+test("admin family access validates simple temporary credentials", () => {
+  const created = validateAdminFamilyAccessCreatePayload({
+    email: " Parent@Example.COM ",
+    password: "Viry-123456",
+    firstName: "Awa",
+    lastName: "Diallo"
+  });
+
+  assert.equal(created.ok, true);
+  if (created.ok) assert.equal(created.data.email, "parent@example.com");
+
+  assert.equal(validateAdminFamilyAccessCreatePayload({ email: "parent@example.com", password: "viry" }).ok, false);
+  assert.equal(validateAdminFamilyAccessLinkPayload({ email: "parent@example.com" }).ok, true);
+  assert.equal(validateAdminFamilyAccessLinkPayload({ email: "incorrect" }).ok, false);
+});
+
+test("admin family access password and unlink require a profile UUID", () => {
+  const profileId = "3d594650-3436-4e88-8e9d-510e194ea97a";
+
+  assert.equal(validateAdminFamilyAccessPasswordPayload({ profileId, password: "Viry-654321" }).ok, true);
+  assert.equal(validateAdminFamilyAccessPasswordPayload({ profileId: "invalide", password: "Viry-654321" }).ok, false);
+  assert.equal(validateAdminFamilyAccessUnlinkPayload({ profileId }).ok, true);
+  assert.equal(validateAdminFamilyAccessUnlinkPayload({ profileId: "invalide" }).ok, false);
 });
 
 test("same-origin guard accepts same origin and server clients", () => {
