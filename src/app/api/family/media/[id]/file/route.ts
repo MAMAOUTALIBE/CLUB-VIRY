@@ -20,6 +20,17 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   webm: "video/webm"
 };
 
+function downloadFilename(title: string, storagePath: string): string {
+  const extension = storagePath.split(".").pop()?.toLowerCase();
+  const base = title
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "media-es-viry";
+  return extension ? `${base}.${extension}` : base;
+}
+
 type RouteContext = { params: Promise<{ id: string }> };
 
 function storageObjectUrl(storagePath: string): URL {
@@ -91,6 +102,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const contentType = MIME_BY_EXTENSION[extension] ?? "application/octet-stream";
     const contentLength = storageResponse.headers.get("content-length");
     const contentRange = storageResponse.headers.get("content-range");
+    const shouldDownload = request.nextUrl.searchParams.get("download") === "1";
+    const disposition = shouldDownload
+      ? `attachment; filename*=UTF-8''${encodeURIComponent(downloadFilename(asset.title, asset.storage_path))}`
+      : "inline";
 
     return new Response(storageResponse.body, {
       status: storageResponse.status,
@@ -99,7 +114,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         ...(contentLength ? { "Content-Length": contentLength } : {}),
         ...(contentRange ? { "Content-Range": contentRange } : {}),
         "Accept-Ranges": "bytes",
-        "Content-Disposition": "inline",
+        "Content-Disposition": disposition,
         "X-Content-Type-Options": "nosniff",
         "Cache-Control": "private, no-store"
       }

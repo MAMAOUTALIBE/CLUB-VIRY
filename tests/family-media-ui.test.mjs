@@ -41,12 +41,16 @@ test("l'espace famille consomme uniquement les routes protégées", async () => 
   const source = await readFile(new URL("../src/components/member/MemberSpace.tsx", import.meta.url), "utf8");
   assert.match(source, /fetch\("\/api\/family\/media-pass"/);
   assert.match(source, /fetch\("\/api\/family\/media\?limit=100"/);
+  assert.match(source, /fetch\("\/api\/family\/matches\/live"/);
   assert.match(source, /src=\{`\/api\/family\/media\/\$\{media\.id\}\/file`\}/);
+  assert.match(source, /href=\{`\/api\/family\/media\/\$\{media\.id\}\/file\?download=1`\}/);
+  assert.match(source, /openAuthorizedLink\(match\.accessPath/);
   assert.match(source, /poster=\{media\.thumbnail_url \?\? undefined\}/);
-  assert.match(source, /fetch\(media\.access_path/);
+  assert.match(source, /fetch\(accessPath/);
   assert.match(source, /currentMediaPassIsActive/);
   assert.match(source, /isFamilyMediaPassCurrent\(currentMediaPass, today\)/);
   assert.doesNotMatch(source, /media\.url/);
+  assert.doesNotMatch(source, /followUrl|follow_url/);
 });
 
 test("la fiche match vérifie le Pass Famille avant d'ouvrir un direct premium", async () => {

@@ -31,7 +31,7 @@ const PUBLIC_PAGES: Array<{ route: string; title: RegExp; heading: RegExp }> = [
   { route: "/plan-du-site", title: /Plan du site/, heading: /plan du site/i },
   { route: "/mentions-legales", title: /Mentions/, heading: /mentions/i },
   { route: "/politique-confidentialite", title: /confidentialit/, heading: /confidentialit/i },
-  { route: "/espace-membre", title: /Espace membre/, heading: /espace membre/i }
+  { route: "/espace-membre", title: /Espace famille/, heading: /espace famille/i }
 ];
 
 /** Redirections historiques : URL demandee → ancre qui doit etre visible a l'arrivee. */

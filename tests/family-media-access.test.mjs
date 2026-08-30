@@ -196,12 +196,24 @@ test("contrats backend : bucket privé, filtres publics, auth et refus 403", asy
   assert.match(fileRoute, /status: storageResponse\.status/);
   assert.match(fileRoute, /new Response\(storageResponse\.body/);
   assert.match(fileRoute, /"Content-Range": contentRange/);
+  assert.match(fileRoute, /searchParams\.get\("download"\) === "1"/);
+  assert.match(fileRoute, /attachment; filename\*=UTF-8''/);
+  assert.match(fileRoute, /downloadFilename\(asset\.title, asset\.storage_path\)/);
   assert.doesNotMatch(fileRoute, /\.arrayBuffer\(\)|\.download\(/);
+
+  const liveListRoute = await readFile(new URL("../src/app/api/family/matches/live/route.ts", import.meta.url), "utf8");
+  const familyAccessSource = await readFile(new URL("../src/lib/db/family-media-access.ts", import.meta.url), "utf8");
+  assert.match(liveListRoute, /listAuthorizedLiveMatches\(auth\.context\.user\.id\)/);
+  assert.match(familyAccessSource, /\.eq\("status", "LIVE"\)/);
+  assert.match(familyAccessSource, /\.eq\("access_level", "FAMILY_PASS"\)/);
+  assert.match(familyAccessSource, /accessPath: `\/api\/family\/matches\/\$\{row\.id as string\}\/live`/);
+  assert.doesNotMatch(liveListRoute, /followUrl|follow_url/);
 
   for (const path of [
     "../src/app/api/family/media/route.ts",
     "../src/app/api/family/media/[id]/access/route.ts",
     "../src/app/api/family/media/[id]/file/route.ts",
+    "../src/app/api/family/matches/live/route.ts",
     "../src/app/api/family/matches/[id]/live/route.ts"
   ]) {
     const route = await readFile(new URL(path, import.meta.url), "utf8");

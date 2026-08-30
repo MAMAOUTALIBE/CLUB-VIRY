@@ -10,7 +10,7 @@ import {
   type FamilyMediaRight
 } from "@/lib/family-media-entitlement";
 import { getSupabaseAdminClient } from "@/lib/db/supabase-admin";
-import type { FamilyMediaPass, MediaAsset, ProfileStatus } from "@/lib/db/types";
+import type { FamilyMediaPass, MatchLocation, MediaAsset, ProfileStatus } from "@/lib/db/types";
 
 export type FamilyMediaSummary = Pick<
   MediaAsset,
@@ -40,6 +40,21 @@ export type FamilyMediaPassOverview = {
 };
 
 export type PremiumMediaAsset = MediaAsset & { access_level: "FAMILY_PASS" };
+
+export type AuthorizedLiveMatchSummary = {
+  id: string;
+  teamId: string;
+  teamName: string;
+  opponentName: string;
+  opponentLogoUrl: string | null;
+  location: MatchLocation;
+  startsAt: string;
+  competition: string | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  liveMinute: number | null;
+  accessPath: string;
+};
 
 export async function loadFamilyMediaAccessSnapshot(profileId: string): Promise<FamilyMediaAccessSnapshot> {
   const supabase = getSupabaseAdminClient();
@@ -260,4 +275,81 @@ export async function getAuthorizedLiveMatch(
 
   const decision = await authorizeFamilyMediaAccess({ profileId, right: "LIVE_MATCHES", teamId: data.team_id as string, now });
   return { decision, followUrl: decision.ok ? (data.follow_url as string) : null };
+}
+
+export async function listAuthorizedLiveMatches(
+  profileId: string,
+  now = new Date()
+): Promise<{ authorized: boolean; matches: AuthorizedLiveMatchSummary[] }> {
+  const snapshot = await loadFamilyMediaAccessSnapshot(profileId);
+  const dateKey = familyMediaDateKey(now);
+  const familyIds = new Set(snapshot.familyIds);
+  const teamIds = Array.from(
+    new Set(
+      snapshot.passes
+        .filter(
+          (pass) =>
+            snapshot.profileStatus === "ACTIVE" &&
+            familyIds.has(pass.familyId) &&
+            pass.status === "ACTIVE" &&
+            pass.startsOn <= dateKey &&
+            pass.endsOn >= dateKey &&
+            pass.allowLiveMatches
+        )
+        .flatMap((pass) => pass.teamIds)
+    )
+  );
+
+  if (teamIds.length === 0) {
+    return { authorized: false, matches: [] };
+  }
+
+  const { data, error } = await getSupabaseAdminClient()
+    .from("matches")
+    .select("id,team_id,opponent_name,opponent_logo_url,location,starts_at,competition,home_score,away_score,live_minute,teams(name)")
+    .eq("access_level", "FAMILY_PASS")
+    .eq("status", "LIVE")
+    .is("deleted_at", null)
+    .not("follow_url", "is", null)
+    .in("team_id", teamIds)
+    .order("starts_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Unable to list authorized live matches: ${error.message}`);
+  }
+
+  const matches = (data ?? []).flatMap((row): AuthorizedLiveMatchSummary[] => {
+    const teamId = row.team_id as string | null;
+    const teams = row.teams as { name?: string } | null;
+    const teamName = teams?.name?.trim();
+    const opponentName = typeof row.opponent_name === "string" ? row.opponent_name.trim() : "";
+
+    if (
+      !teamId ||
+      !teamName ||
+      !opponentName ||
+      !evaluateFamilyMediaAccess(snapshot, { right: "LIVE_MATCHES", teamId, dateKey }).ok
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        id: row.id as string,
+        teamId,
+        teamName,
+        opponentName,
+        opponentLogoUrl: (row.opponent_logo_url as string | null) ?? null,
+        location: row.location as MatchLocation,
+        startsAt: row.starts_at as string,
+        competition: (row.competition as string | null) ?? null,
+        homeScore: (row.home_score as number | null) ?? null,
+        awayScore: (row.away_score as number | null) ?? null,
+        liveMinute: (row.live_minute as number | null) ?? null,
+        accessPath: `/api/family/matches/${row.id as string}/live`
+      }
+    ];
+  });
+
+  return { authorized: true, matches };
 }
