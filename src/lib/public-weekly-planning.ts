@@ -1,5 +1,12 @@
 const parisDateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" });
 
+export const publicPitchLabels = {
+  T1: "Honneur",
+  T2: "Synthétique",
+  T3: "Annexe",
+  T4: "Stade Raoul Perrin"
+} as const;
+
 function shiftDateKey(dateKey: string, days: number): string {
   const [year, month, day] = dateKey.split("-").map(Number);
   const shifted = new Date(Date.UTC(year, month - 1, day + days));

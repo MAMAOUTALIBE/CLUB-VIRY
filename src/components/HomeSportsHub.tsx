@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, Info, MapPin, Trophy, UsersRound } from "lucide-react";
 import { useRef, useState, type KeyboardEvent } from "react";
 import type { RecentResult, UpcomingMatch } from "@/lib/home-sports-data";
-import { publicPlanningDateKey, publicPlanningRows, type PublicPlanningItem } from "@/lib/public-weekly-planning";
+import { publicPitchLabels, publicPlanningDateKey, publicPlanningRows, type PublicPlanningItem } from "@/lib/public-weekly-planning";
 
 type Filter = "training" | "matches" | "results";
 const filters: Array<{ value: Filter; label: string; icon: typeof CalendarDays }> = [
@@ -13,7 +13,6 @@ const filters: Array<{ value: Filter; label: string; icon: typeof CalendarDays }
   { value: "matches", label: "Matchs à venir", icon: Trophy }, { value: "results", label: "Résultats", icon: Trophy }
 ];
 const pitchColors = { T1: "bg-[#9b5a17]", T2: "bg-[#d93670]", T3: "bg-[#e85e32]", T4: "bg-[#7040a8]" };
-const pitchLabels = { T1: "Honneur", T2: "Synthétique", T3: "Annexe", T4: "Stade Henri Perrain" };
 const rowAccents = ["#f7c600", "#ef5b8c", "#f47b35", "#52b7ff", "#b8d34a"];
 const shortDayFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "short" });
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long" });
@@ -109,7 +108,7 @@ export function HomeSportsHub(props: { matches?: UpcomingMatch[]; results?: Rece
           <div className="hidden sm:block">
           <div className="flex flex-wrap items-start justify-between gap-4 px-1 py-2">
             <div><h3 className="flex items-center gap-2 text-xl font-black uppercase text-white"><CalendarDays size={25} />Planning des entraînements</h3><p className="mt-1 pl-8 text-sm font-bold text-[#f5c400]">{weekLabel}</p></div>
-            <div className="flex flex-wrap gap-3 text-[11px] font-bold">{Object.entries(pitchLabels).map(([pitch, label]) => <span className="flex items-center gap-1.5" key={pitch}><b className={`rounded px-1.5 py-1 text-white ${pitchColors[pitch as keyof typeof pitchColors]}`}>{pitch}</b>{label}</span>)}</div>
+            <div className="flex flex-wrap gap-3 text-[11px] font-bold">{Object.entries(publicPitchLabels).map(([pitch, label]) => <span className="flex items-center gap-1.5" key={pitch}><b className={`rounded px-1.5 py-1 text-white ${pitchColors[pitch as keyof typeof pitchColors]}`}>{pitch}</b>{label}</span>)}</div>
           </div>
           <div className="mt-3 overflow-x-auto rounded-xl border border-[#f5c400]/20 [scrollbar-color:#f5c400_#003c29]">
             <div className="min-w-[760px] lg:min-w-0">

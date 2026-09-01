@@ -1,6 +1,6 @@
-import { Clock3, UsersRound } from "lucide-react";
+import { Clock3, MapPin, UsersRound } from "lucide-react";
 
-import { publicPlanningDateKey, publicPlanningRows, type PublicPlanningItem } from "@/lib/public-weekly-planning";
+import { publicPitchLabels, publicPlanningDateKey, publicPlanningRows, type PublicPlanningItem } from "@/lib/public-weekly-planning";
 
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long" });
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "short" });
@@ -28,6 +28,10 @@ export function PublicWeeklyPlanning({ items, weekKeys }: { items: PublicPlannin
   return (
     <div className="overflow-x-auto rounded-lg border border-[#77762f] bg-[#003e2d] [scrollbar-color:#f7c600_#003e2d]">
       <div className="min-w-[980px]">
+        <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 border-b border-[#77762f] bg-[#002f21] px-4 py-3 text-xs font-bold text-white/80" aria-label="Légende des terrains">
+          <MapPin className="text-[#f7c600]" size={16} aria-hidden="true" />
+          {Object.entries(publicPitchLabels).map(([pitch, label]) => <span className="inline-flex items-center gap-1.5" key={pitch}><b className="rounded bg-[#d92d72] px-2 py-0.5 text-[11px] font-black text-white">{pitch}</b>{label}</span>)}
+        </div>
         <div className="grid grid-cols-[210px_repeat(5,minmax(150px,1fr))] border-b border-[#77762f] bg-[#003526]">
           <span aria-hidden="true" />
           {weekKeys.map((key) => {
