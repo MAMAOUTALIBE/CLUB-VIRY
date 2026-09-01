@@ -241,6 +241,17 @@ test.describe("Appels a l'action", () => {
 
     const program = page.getByRole("region", { name: "Programme du jour" });
     await expect(program).toBeVisible();
+
+    const programItems = program.locator("article");
+    const itemCount = await programItems.count();
+    expect(itemCount).toBeLessThanOrEqual(3);
+
+    const totalLabel = program.getByText(/\d+ événements?/i);
+    if (await totalLabel.count()) {
+      const total = Number.parseInt((await totalLabel.textContent()) ?? "0", 10);
+      expect(itemCount).toBe(Math.min(total, 3));
+    }
+
     await program.getByRole("link", { name: /Voir tout le planning/ }).click();
     await expect(page).toHaveURL(/\/calendrier$/);
   });
