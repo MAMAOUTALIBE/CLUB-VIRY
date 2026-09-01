@@ -15,10 +15,10 @@ test("desktop preserves the existing widescreen crop", () => {
   assert.match(liveVideoSource, /object-contain xl:object-cover/);
 });
 
-test("the match viewer exposes the nine supplied media in order", () => {
-  const sequenceEntries = liveVideoSource.match(/label: "Séquence \d"/g) ?? [];
-  assert.equal(sequenceEntries.length, 9);
-  for (let index = 1; index <= 9; index += 1) {
+test("the match viewer exposes the twelve supplied media in order", () => {
+  const sequenceEntries = liveVideoSource.match(/label: "Séquence \d+"/g) ?? [];
+  assert.equal(sequenceEntries.length, 12);
+  for (let index = 1; index <= 12; index += 1) {
     assert.match(liveVideoSource, new RegExp(`match-direct-sequence-${index}\\.(?:mp4|jpg)`));
   }
 });

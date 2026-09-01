@@ -17,7 +17,10 @@ const MATCH_MEDIA: readonly MatchMedia[] = [
   { label: "Séquence 6", src: "/matches/match-direct-sequence-6.mp4", type: "video" },
   { label: "Séquence 7", src: "/matches/match-direct-sequence-7.mp4", type: "video" },
   { label: "Séquence 8", src: "/matches/match-direct-sequence-8.mp4", type: "video" },
-  { label: "Séquence 9", src: "/matches/match-direct-sequence-9.mp4", type: "video" }
+  { label: "Séquence 9", src: "/matches/match-direct-sequence-9.mp4", type: "video" },
+  { label: "Séquence 10", src: "/matches/match-direct-sequence-10.mp4", type: "video" },
+  { label: "Séquence 11", src: "/matches/match-direct-sequence-11.mp4", type: "video" },
+  { label: "Séquence 12", src: "/matches/match-direct-sequence-12.mp4", type: "video" }
 ] as const;
 
 export function LiveVideo() {
