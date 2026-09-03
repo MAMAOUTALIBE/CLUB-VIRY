@@ -22,13 +22,14 @@ test("l'équipe féminine est retirée de toutes les entrées publiques", async 
 
 test("la migration supprime les dépendances avant l'équipe et ses catégories", async () => {
   const migration = await source("supabase/migrations/20260903090000_remove_feminine_team.sql");
+  const emptyFamilyPasses = migration.indexOf("delete from public.family_media_passes");
   const familyPasses = migration.indexOf("delete from public.family_media_pass_teams");
   const events = migration.indexOf("delete from public.club_events");
   const matches = migration.indexOf("delete from public.matches");
   const teams = migration.indexOf("delete from public.teams");
   const categories = migration.indexOf("delete from public.categories");
 
-  assert.ok(familyPasses >= 0 && events > familyPasses && matches > events && teams > matches && categories > teams);
+  assert.ok(emptyFamilyPasses >= 0 && familyPasses > emptyFamilyPasses && events > familyPasses && matches > events && teams > matches && categories > teams);
   assert.match(migration, /where slug = 'feminines'/);
   assert.match(migration, /'FÉMININES', 'Féminines', 'Feminines'/);
   assert.match(migration, /where key = 'organigramme'/);

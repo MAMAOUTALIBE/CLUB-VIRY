@@ -17,6 +17,15 @@ select category_id
 from removed_feminine_teams
 where category_id is not null;
 
+create temporary table removed_feminine_only_passes on commit drop as
+select link.pass_id
+from public.family_media_pass_teams as link
+group by link.pass_id
+having bool_and(link.team_id in (select id from removed_feminine_teams));
+
+delete from public.family_media_passes
+where id in (select pass_id from removed_feminine_only_passes);
+
 delete from public.family_media_pass_teams
 where team_id in (select id from removed_feminine_teams);
 
