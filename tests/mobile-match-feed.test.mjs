@@ -97,6 +97,8 @@ test("le repli média reste mobile et le direct est aussi disponible sur tablett
   assert.match(homeLiveGallery, /Aucune photo publiée/);
   assert.match(homeLiveGallery, /href="\/medias"/);
   assert.match(homeLiveGallery, /Voir toutes les photos/);
+  assert.match(homeLiveGallery, /className=\{isSinglePhoto \? "block h-auto w-full object-contain" : "h-full w-full object-contain"\}/);
+  assert.doesNotMatch(homeLiveGallery, /photo\.image[\s\S]{0,180}object-cover/);
   assert.match(homeLiveGallery, /Replay du dernier match/);
   assert.match(homeLiveGallery, /Dans les coulisses de l’entraînement/);
   assert.match(homeLiveGallery, /Regarder le replay/);

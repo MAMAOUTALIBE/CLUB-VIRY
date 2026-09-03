@@ -271,6 +271,10 @@ test.describe("Appels a l'action", () => {
     const heading = await selectedHeading.textContent();
     if (heading === "Dernières images des matchs") {
       await expect(galleryLink).toBeVisible();
+      const photo = section.locator("img").first();
+      if (await photo.count()) {
+        await expect(photo).toHaveCSS("object-fit", "contain");
+      }
       await galleryLink.click();
       await expect(page).toHaveURL(/\/medias$/);
     } else {

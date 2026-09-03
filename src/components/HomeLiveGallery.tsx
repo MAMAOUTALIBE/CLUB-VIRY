@@ -109,21 +109,28 @@ function DynamicMediaCard({ media }: { media: HomeMediaCard }) {
 }
 
 function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
+  const isSinglePhoto = photos.length === 1;
+
   return (
     <article className="stadium-grid relative flex flex-col overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-5 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)] sm:p-7">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(0,77,47,.48),rgba(0,31,22,.94))]" aria-hidden="true" />
       <h2 className="relative text-2xl font-black leading-tight sm:text-3xl">Dernières images des matchs</h2>
 
       {photos.length > 0 ? (
-        <div className={`relative mt-6 grid gap-2.5 ${photos.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
+        <div className={`relative mt-6 grid gap-2.5 ${isSinglePhoto ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
           {photos.map((photo) => (
             <Link
               key={photo.id}
               href="/medias"
               aria-label={`${photo.title} : ouvrir la galerie`}
-              className={`focus-ring group relative overflow-hidden rounded-xl border border-[#f7c600]/55 bg-[#001f16] ${photos.length === 1 ? "aspect-video" : "aspect-square"}`}
+              className={`focus-ring group relative overflow-hidden rounded-xl border border-[#f7c600]/55 bg-[#001f16] ${isSinglePhoto ? "" : "aspect-square"}`}
             >
-              <img src={photo.image} alt={photo.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" loading="lazy" />
+              <img
+                src={photo.image}
+                alt={photo.title}
+                className={isSinglePhoto ? "block h-auto w-full object-contain" : "h-full w-full object-contain"}
+                loading="lazy"
+              />
             </Link>
           ))}
         </div>
