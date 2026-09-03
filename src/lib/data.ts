@@ -233,20 +233,6 @@ export const teams: Team[] = [
     players: []
   },
   {
-    slug: "feminines",
-    name: "Féminines",
-    category: "Féminines",
-    level: "",
-    pool: null,
-    season: "2025 / 2026",
-    description: "Le développement du football féminin avec ambition et accompagnement.",
-    image: images.pitch,
-    coach: "Sarah L.",
-    assistant: "Julie C.",
-    nextMatch: "Calendrier à confirmer",
-    players: ["L. Bernard", "A. Henry", "C. Moreau", "M. Sissoko", "E. Garcia"]
-  },
-  {
     slug: "ecole-de-foot",
     name: "École de foot",
     category: "U6 à U11",

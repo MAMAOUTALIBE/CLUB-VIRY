@@ -74,7 +74,7 @@ const PAGES: Record<string, PageSeo> = {
   },
   "/equipes": {
     title: "Equipes",
-    description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors en passant par les feminines : effectifs, staff et categories."
+    description: "Toutes les equipes de l'ES Viry-Chatillon Football, de l'ecole de foot aux Seniors : effectifs, staff et categories."
   },
   "/formation": {
     title: "Formation",
@@ -94,7 +94,7 @@ const PAGES: Record<string, PageSeo> = {
   },
   "/formation/stages": {
     title: "Stages",
-    description: "Les stages de l'ES Viry-Chatillon Football : vacances, perfectionnement, gardiens, football feminin, dates indicatives et demandes d'information."
+    description: "Les stages de l'ES Viry-Chatillon Football : vacances, perfectionnement, gardiens, dates indicatives et demandes d'information."
   },
   "/actualites": {
     title: "Actualites",

@@ -261,7 +261,6 @@ export const regulationItems: RegulationItem[] = [
 export const schoolProject = [
   { year: "2026", title: "Cadre commun", text: "Mettre en place des reperes communs par categorie : comportement, rythme, contenus et evaluations." },
   { year: "2027", title: "Formation educateurs", text: "Renforcer les formations internes et l'accompagnement des jeunes educateurs." },
-  { year: "2028", title: "Developpement feminin", text: "Structurer l'accueil et la progression des joueuses sur les petites categories." },
   { year: "2029", title: "Accompagnement global", text: "Relier sport, citoyennete, scolarite et hygiene de vie autour du joueur." },
   { year: "2030", title: "Club formateur reference", text: "Installer une identite de jeu lisible et une passerelle solide vers le foot a 11." }
 ];
@@ -270,7 +269,6 @@ export const stages: Stage[] = [
   { title: "Stage vacances", audience: "U8-U13", dates: "Vacances scolaires", places: "36 places", status: "Ouvert", description: "Technique, matchs, ateliers educatifs et vie collective." },
   { title: "Stage perfectionnement", audience: "U12-U16", dates: "Bientot annonce", places: "24 places", status: "Bientot", description: "Travail par poste, intensite, finition et lecture du jeu." },
   { title: "Stage gardiens", audience: "U10-U17", dates: "Bientot annonce", places: "12 places", status: "Bientot", description: "Appuis, plongeons, relances, duel et communication." },
-  { title: "Stage feminin", audience: "U9-U15", dates: "Printemps", places: "20 places", status: "Ouvert", description: "Decouverte et progression pour les joueuses du territoire." },
   { title: "Stage elite", audience: "U14-U18", dates: "Sur selection", places: "Complet", status: "Complet", description: "Preparation exigeante pour joueurs confirmes." }
 ];
 

@@ -16,7 +16,7 @@ export function CategoriesAdmin() {
   return (
     <AdminCrud
       title="Catégories"
-      description="Gérez les catégories d'âge du club (École de foot, Préformation, Seniors, Féminines…). Elles structurent les équipes et les inscriptions. « Active » = proposée aux familles."
+      description="Gérez les catégories d'âge du club (École de foot, Préformation, Seniors…). Elles structurent les équipes et les inscriptions. « Active » = proposée aux familles."
       endpoint="/api/admin/categories"
       listKey="categories"
       itemKey="category"

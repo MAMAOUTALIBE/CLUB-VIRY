@@ -26,7 +26,7 @@ test("la vue publique regroupe et ordonne les lignes selon les catégories CRM",
 });
 
 test("un sous-titre identique au titre reste masqué", () => {
-  const [row] = publicPlanningRows([{ ...base, id: "one", categoryName: "Féminines", categorySubtitle: "FÉMININES" }]);
+  const [row] = publicPlanningRows([{ ...base, id: "one", categoryName: "Seniors", categorySubtitle: "SENIORS" }]);
   assert.equal(row.subtitle, null);
 });
 

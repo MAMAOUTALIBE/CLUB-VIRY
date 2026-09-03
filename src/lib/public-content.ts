@@ -209,7 +209,7 @@ const SETTINGS_DEFAULTS: SiteContent = {
     groups: [
       { title: "Bureau", text: "Président, vice-présidents, trésorerie, secrétariat général" },
       { title: "Direction sportive", text: "Responsable technique, coordinateurs catégories, référents gardiens" },
-      { title: "Éducateurs", text: "École de foot, jeunes, seniors, féminines" },
+      { title: "Éducateurs", text: "École de foot, jeunes, seniors" },
       { title: "Administration", text: "Licences, inscriptions, communication, partenariats" }
     ]
   },
@@ -266,7 +266,7 @@ const SETTINGS_DEFAULTS: SiteContent = {
   },
   detectionsPage: {
     heroDescription: "Tu as le talent ? Nous sommes là pour t'aider à le développer.",
-    categories: ["Football à 11", "Préformation et formation", "Seniors", "Féminines"],
+    categories: ["Football à 11", "Préformation et formation", "Seniors"],
     features: [
       { title: "Candidater", text: "Envoyer ses informations sportives de manière claire.", iconName: "Send" },
       { title: "Observer", text: "Évaluer le potentiel, le comportement et l'état d'esprit.", iconName: "Eye" },
@@ -302,8 +302,14 @@ function parseHeroSlides(raw: unknown): HomeHeroSlide[] | null {
 function withoutRetiredPublicMentions(groups: OrgGroup[]): OrgGroup[] {
   return groups.map((group) => ({
     ...group,
-    text: group.text.replace(/,\s*futsal\b/gi, "").replace(/\s+et\s+futsal\b/gi, "")
+    text: group.text
+      .replace(/,\s*(?:féminines|feminines|futsal)\b/gi, "")
+      .replace(/\s+et\s+(?:féminines|feminines|futsal)\b/gi, "")
   }));
+}
+
+function withoutRetiredFeminineSection<T>(items: T[], text: (item: T) => string): T[] {
+  return items.filter((item) => !/féminin|feminin/i.test(text(item)));
 }
 
 /** Classements publiés, groupés par compétition (vide si aucun — la section est alors masquée). */
@@ -364,8 +370,8 @@ export async function getSiteSettings(): Promise<SiteContent> {
       formationEcoleEducateurs: pickArray<StaffPerson>(fEdu?.ecoleFoot, SETTINGS_DEFAULTS.formationEcoleEducateurs),
       formationFootA11Educateurs: pickArray<StaffPerson>(fEdu?.footA11, SETTINGS_DEFAULTS.formationFootA11Educateurs),
       formationCreneaux: pickArray<TrainingSlot>(fCreneaux?.items, SETTINGS_DEFAULTS.formationCreneaux),
-      formationProjet: pickArray<SchoolProjectStep>(fProjet?.items, SETTINGS_DEFAULTS.formationProjet),
-      formationStages: pickArray<Stage>(fStages?.items, SETTINGS_DEFAULTS.formationStages),
+      formationProjet: withoutRetiredFeminineSection(pickArray<SchoolProjectStep>(fProjet?.items, SETTINGS_DEFAULTS.formationProjet), (item) => `${item.title} ${item.text}`),
+      formationStages: withoutRetiredFeminineSection(pickArray<Stage>(fStages?.items, SETTINGS_DEFAULTS.formationStages), (item) => `${item.title} ${item.audience} ${item.description}`),
       galerieArchives: pickArray<ArchivePhoto>(gal?.items, SETTINGS_DEFAULTS.galerieArchives),
       mentionsLegales: pickEditorial(all.mentions_legales as Record<string, unknown> | undefined, SETTINGS_DEFAULTS.mentionsLegales),
       politiqueConfidentialite: pickEditorial(all.politique_confidentialite as Record<string, unknown> | undefined, SETTINGS_DEFAULTS.politiqueConfidentialite),
@@ -378,7 +384,7 @@ export async function getSiteSettings(): Promise<SiteContent> {
       },
       detectionsPage: {
         heroDescription: pickStr((all.detections_page as Record<string, unknown> | undefined)?.heroDescription, SETTINGS_DEFAULTS.detectionsPage.heroDescription),
-        categories: pickArray<string>((all.detections_page as Record<string, unknown> | undefined)?.categories, SETTINGS_DEFAULTS.detectionsPage.categories),
+        categories: withoutRetiredFeminineSection(pickArray<string>((all.detections_page as Record<string, unknown> | undefined)?.categories, SETTINGS_DEFAULTS.detectionsPage.categories), (category) => category),
         features: pickArray<FeatureItem>((all.detections_page as Record<string, unknown> | undefined)?.features, SETTINGS_DEFAULTS.detectionsPage.features)
       }
     } as SiteContent;
@@ -426,7 +432,7 @@ export type DisplayTeamDetail = DisplayTeam & {
 };
 
 const DEFAULT_SEASON = "2025 / 2026";
-const RETIRED_PUBLIC_TEAM_SLUGS = new Set(["futsal"]);
+const RETIRED_PUBLIC_TEAM_SLUGS = new Set(["futsal", "feminines"]);
 
 function isPublicTeamVisible(slug: string): boolean {
   return !RETIRED_PUBLIC_TEAM_SLUGS.has(slug);
@@ -685,21 +691,6 @@ const mockEducators: DisplayEducator[] = [
     stats: { teams: 1, sessions: 0, matches: 0 }
   },
   {
-    id: "mock-4",
-    name: "Sophie Laurent",
-    title: "Éducatrice Féminines",
-    diploma: "UEFA C",
-    slug: educatorSlug("Sophie Laurent", "mock-4"),
-    joinedYear: 2019,
-    diplomas: ["UEFA C (2023)"],
-    specialties: ["Football féminin", "Mental"],
-    quote: "Faire grandir le football féminin, match après match.",
-    avatar: null,
-    bio: "Engagée pour le développement du football féminin au club, elle accompagne les joueuses tout au long de la saison.",
-    teams: [{ name: "Féminines", slug: "feminines", category: "Seniors", roleTitle: "Entraîneure principale", isHeadCoach: true }],
-    stats: { teams: 1, sessions: 28, matches: 14 }
-  },
-  {
     id: "mock-5",
     name: "Thomas Renaud",
     title: "Éducateur U15",
@@ -731,21 +722,6 @@ const mockEducators: DisplayEducator[] = [
       { name: "U16 A", slug: "u16-a", category: "U16", roleTitle: "Référente préformation", isHeadCoach: false }
     ],
     stats: { teams: 2, sessions: 42, matches: 20 }
-  },
-  {
-    id: "mock-8",
-    name: "Julie Caron",
-    title: "Adjointe Féminines",
-    diploma: "CFF2",
-    slug: educatorSlug("Julie Caron", "mock-8"),
-    joinedYear: 2023,
-    diplomas: ["CFF2 (2023)"],
-    specialties: ["Développement féminin", "Animation offensive"],
-    quote: "Chaque joueuse doit trouver sa place et oser prendre des initiatives.",
-    avatar: null,
-    bio: "Elle accompagne le groupe féminin sur les séances terrain, le suivi des jeunes joueuses et la préparation des matchs.",
-    teams: [{ name: "Féminines", slug: "feminines", category: "Seniors", roleTitle: "Adjointe", isHeadCoach: false }],
-    stats: { teams: 1, sessions: 22, matches: 11 }
   },
   {
     id: "mock-9",

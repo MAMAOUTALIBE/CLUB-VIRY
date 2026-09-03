@@ -190,7 +190,7 @@ const DEFS: SettingDef[] = [
     description: "Texte d'accroche, catégories concernées et étapes du process de la page /detections-recrutement.",
     fields: [
       { name: "heroDescription", label: "Accroche (sous le titre)", type: "textarea" },
-      { name: "categories", label: "Catégories concernées (JSON)", type: "json", help: `Liste de textes. Ex : ["Football à 11", "Seniors", "Féminines"]` },
+      { name: "categories", label: "Catégories concernées (JSON)", type: "json", help: `Liste de textes. Ex : ["Football à 11", "Seniors"]` },
       { name: "features", label: "Étapes du process (JSON)", type: "json", help: `Ex : [{ "title": "Candidater", "text": "…", "iconName": "Send" }]. ${ICON_HELP}` }
     ]
   }

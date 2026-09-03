@@ -19,7 +19,7 @@ type TeamCard = {
   image: string;
 };
 
-const filters = ["Toutes", "École de foot", "Jeunes", "Seniors", "Féminines"] as const;
+const filters = ["Toutes", "École de foot", "Jeunes", "Seniors"] as const;
 
 function normalize(value: string) {
   return value

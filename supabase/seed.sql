@@ -12,7 +12,6 @@ values
   ('Preformation', 'U12 a U13', 'MIXTE', 20, true),
   ('Formation', 'U14 a U18', 'MIXTE', 30, true),
   ('Seniors', 'R1 / R3 / D1', 'MASCULIN', 40, true),
-  ('Feminines', 'U11F a Seniors F', 'FEMININ', 50, true),
   ('Futsal', 'Competition', 'MIXTE', 60, true)
 on conflict (name) do update set
   age_range = excluded.age_range,
