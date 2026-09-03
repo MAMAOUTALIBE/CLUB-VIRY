@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Camera, Radio } from "lucide-react";
+import { ArrowRight, CalendarDays, Camera, Clapperboard, Dumbbell, Radio } from "lucide-react";
 
 import { HomeMediaPlayer } from "@/components/HomeMediaPlayer";
 import type { HomeMediaCard } from "@/lib/home-media-card";
@@ -61,19 +61,45 @@ function LiveMatchCard({ media }: { media: Extract<HomeMediaCard, { kind: "LIVE_
 }
 
 function VideoMediaCard({ media }: { media: Extract<HomeMediaCard, { kind: "VIDEO" }> }) {
+  const isReplay = media.contentKind === "MATCH";
+  const heading = isReplay ? "Replay du dernier match" : "Dans les coulisses de l’entraînement";
+  const badge = isReplay ? "Replay" : "Entraînement";
+  const action = isReplay ? "Regarder le replay" : "Voir l’entraînement";
+  const BadgeIcon = isReplay ? Clapperboard : Dumbbell;
+  const publishedLabel = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(new Date(media.publishedAt));
+
   return (
     <article className="stadium-grid relative overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-5 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)] sm:p-7">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(0,77,47,.55),rgba(0,31,22,.92))]" aria-hidden="true" />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-2xl font-black leading-tight sm:text-3xl">Dernier match en vidéo</h2>
+          <h2 className="text-2xl font-black leading-tight sm:text-3xl">{heading}</h2>
           <p className="mt-1 line-clamp-2 text-sm font-bold text-white/70">{media.title}</p>
         </div>
-        {media.isLive ? <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-red-600 px-3 py-2 text-xs font-black uppercase"><Radio size={15} aria-hidden="true" /> En direct</span> : null}
+        <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#f7c600] px-3 py-2 text-xs font-black uppercase text-[#002f1d]">
+          <BadgeIcon size={15} aria-hidden="true" /> {badge}
+        </span>
       </div>
       <div className="relative mt-5">
         <HomeMediaPlayer coverImageUrl={media.coverImageUrl} playbackKind={media.playbackKind} title={media.title} videoUrl={media.videoUrl} />
       </div>
+      <div className="relative mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-white/70">
+        {media.teamName ? <span>{media.teamName}</span> : null}
+        <span className="inline-flex items-center gap-1.5"><CalendarDays size={15} aria-hidden="true" /> {publishedLabel}</span>
+      </div>
+      <a
+        href={media.videoUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="focus-ring relative mt-5 flex min-h-14 items-center justify-center gap-3 rounded-xl border-2 border-[#f7c600] px-5 pt-0.5 text-sm font-black uppercase text-[#f7c600] transition hover:bg-[#f7c600] hover:text-[#002f1d] sm:text-base"
+      >
+        {action} <ArrowRight size={19} aria-hidden="true" />
+      </a>
     </article>
   );
 }
@@ -84,18 +110,18 @@ function DynamicMediaCard({ media }: { media: HomeMediaCard }) {
 
 function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
   return (
-    <article className="stadium-grid relative flex min-h-[25rem] flex-col overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-5 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)] sm:p-7">
+    <article className="stadium-grid relative flex flex-col overflow-hidden rounded-3xl border border-[#f7c600]/55 bg-[#002f1d] p-5 text-white shadow-[0_20px_45px_rgba(0,31,22,0.22)] sm:p-7">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(0,77,47,.48),rgba(0,31,22,.94))]" aria-hidden="true" />
       <h2 className="relative text-2xl font-black leading-tight sm:text-3xl">Dernières images des matchs</h2>
 
       {photos.length > 0 ? (
-        <div className="relative mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <div className={`relative mt-6 grid gap-2.5 ${photos.length === 1 ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-4"}`}>
           {photos.map((photo) => (
             <Link
               key={photo.id}
               href="/medias"
               aria-label={`${photo.title} : ouvrir la galerie`}
-              className="focus-ring group relative aspect-square overflow-hidden rounded-xl border border-[#f7c600]/55 bg-[#001f16]"
+              className={`focus-ring group relative overflow-hidden rounded-xl border border-[#f7c600]/55 bg-[#001f16] ${photos.length === 1 ? "aspect-video" : "aspect-square"}`}
             >
               <img src={photo.image} alt={photo.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" loading="lazy" />
             </Link>
@@ -110,7 +136,7 @@ function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
 
       <Link
         href="/medias"
-        className="focus-ring relative mt-auto flex min-h-14 items-center justify-center gap-3 rounded-xl border-2 border-[#f7c600] px-5 pt-0.5 text-sm font-black uppercase text-[#f7c600] transition hover:bg-[#f7c600] hover:text-[#002f1d] sm:text-base"
+        className="focus-ring relative mt-6 flex min-h-14 items-center justify-center gap-3 rounded-xl border-2 border-[#f7c600] px-5 pt-0.5 text-sm font-black uppercase text-[#f7c600] transition hover:bg-[#f7c600] hover:text-[#002f1d] sm:text-base"
       >
         Voir toutes les photos <ArrowRight size={19} aria-hidden="true" />
       </Link>
@@ -121,7 +147,7 @@ function LatestPhotosCard({ photos }: { photos: DisplayGalleryPhoto[] }) {
 export function HomeLiveGallery({ media, photos }: { media: HomeMediaCard | null; photos: DisplayGalleryPhoto[] }) {
   return (
     <>
-      <section aria-label="Match en direct, dernier match ou photos" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
+      <section aria-label="Match en direct, replay, entraînement ou photos" className="mx-auto max-w-7xl px-4 pb-10 pt-10 md:hidden">
         <div className="grid gap-5">
           {media ? <DynamicMediaCard media={media} /> : <LatestPhotosCard photos={photos} />}
         </div>

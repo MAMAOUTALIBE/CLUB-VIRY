@@ -88,7 +88,7 @@ test("le repli média reste mobile et le direct est aussi disponible sur tablett
   assert.doesNotMatch(page, /Rejoignez la[\s\S]{0,30}famille Viry/);
   assert.match(page, /selectHomeMediaCard\(mobileMatchFeed\.live, homepageVideoMedia, now\)/);
   assert.match(page, /<HomeLiveGallery media=\{homepageMedia\} photos=\{latestGalleryPhotos\} \/>/);
-  assert.match(homeLiveGallery, /aria-label="Match en direct, dernier match ou photos" className="[^"]*md:hidden"/);
+  assert.match(homeLiveGallery, /aria-label="Match en direct, replay, entraînement ou photos" className="[^"]*md:hidden"/);
   assert.match(homeLiveGallery, /\{media \? <DynamicMediaCard media=\{media\} \/> : <LatestPhotosCard photos=\{photos\} \/>\}/);
   assert.equal((homeLiveGallery.match(/<LatestPhotosCard photos=\{photos\} \/>/g) ?? []).length, 1);
   assert.match(homeLiveGallery, /media\?\.kind === "LIVE_MATCH"[\s\S]*aria-label="Match en direct sur ordinateur" className="[^"]*hidden[^"]*xl:block/);
@@ -97,6 +97,10 @@ test("le repli média reste mobile et le direct est aussi disponible sur tablett
   assert.match(homeLiveGallery, /Aucune photo publiée/);
   assert.match(homeLiveGallery, /href="\/medias"/);
   assert.match(homeLiveGallery, /Voir toutes les photos/);
+  assert.match(homeLiveGallery, /Replay du dernier match/);
+  assert.match(homeLiveGallery, /Dans les coulisses de l’entraînement/);
+  assert.match(homeLiveGallery, /Regarder le replay/);
+  assert.match(homeLiveGallery, /Voir l’entraînement/);
 
   // Les autres blocs mobiles déjà présents restent inchangés.
   assert.match(page, /<section className="bg-\[#f7f8f4\] xl:hidden">[\s\S]*<MobileLiveResults/);

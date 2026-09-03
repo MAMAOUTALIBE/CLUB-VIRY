@@ -258,14 +258,14 @@ test.describe("Appels a l'action", () => {
 
   test("la carte match ou photos est visible uniquement sur mobile", async ({ page }, testInfo) => {
     await page.goto("/");
-    const section = page.locator('section[aria-label="Match en direct, dernier match ou photos"]');
+    const section = page.locator('section[aria-label="Match en direct, replay, entraînement ou photos"]');
     if (testInfo.project.name !== "mobile") {
       await expect(section).toBeHidden();
       return;
     }
 
     await expect(section).toBeVisible();
-    const selectedHeading = section.getByRole("heading", { name: /Match en direct|Dernier match en vidéo|Dernières images des matchs/ });
+    const selectedHeading = section.getByRole("heading", { name: /Match en direct|Replay du dernier match|Dans les coulisses de l’entraînement|Dernières images des matchs/ });
     await expect(selectedHeading).toHaveCount(1);
     const galleryLink = section.getByRole("link", { name: "Voir toutes les photos" });
     const heading = await selectedHeading.textContent();

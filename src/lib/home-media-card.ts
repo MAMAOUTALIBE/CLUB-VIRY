@@ -4,7 +4,7 @@ import type { MobileMatchCard } from "@/lib/mobile-match-feed";
 export type HomepageMediaAsset = Pick<
   MediaAsset,
   "id" | "content_kind" | "playback_kind" | "status" | "type" | "title" | "url" | "thumbnail_url" | "is_live" | "starts_at" | "ends_at" | "published_at" | "created_at"
->;
+> & { teams?: { name: string } | null };
 
 export type HomeMediaCard =
   | { kind: "LIVE_MATCH"; match: MobileMatchCard }
@@ -17,6 +17,8 @@ export type HomeMediaCard =
       title: string;
       videoUrl: string;
       coverImageUrl: string | null;
+      teamName: string | null;
+      publishedAt: string;
     };
 
 function validDate(value: string | null): number | null {
@@ -53,7 +55,9 @@ function toVideoCard(asset: HomepageMediaAsset | null): HomeMediaCard | null {
     isLive: asset.is_live,
     title: asset.title,
     videoUrl: asset.url ?? "",
-    coverImageUrl: asset.thumbnail_url
+    coverImageUrl: asset.thumbnail_url,
+    teamName: asset.teams?.name?.trim() || null,
+    publishedAt: asset.published_at ?? asset.created_at
   };
 }
 
@@ -62,5 +66,8 @@ export function selectHomeMediaCard(liveMatch: MobileMatchCard | null, assets: H
 
   const visible = assets.filter((asset) => isVisibleVideo(asset, now.getTime()));
   const latestMatchVideo = latest(visible.filter((asset) => asset.content_kind === "MATCH" && !asset.is_live));
-  return toVideoCard(latestMatchVideo);
+  if (latestMatchVideo) return toVideoCard(latestMatchVideo);
+
+  const latestTrainingVideo = latest(visible.filter((asset) => asset.content_kind === "TRAINING" && !asset.is_live));
+  return toVideoCard(latestTrainingVideo);
 }

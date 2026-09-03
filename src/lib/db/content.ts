@@ -311,11 +311,13 @@ export async function listLatestPublishedPhotos(limit = 4): Promise<MediaAsset[]
 }
 
 /** CRM-only candidates for the dynamic homepage media card. */
-export async function listHomepageVideoMedia(limit = 50): Promise<MediaAsset[]> {
+export type HomepageVideoMedia = MediaAsset & { teams: { name: string } | null };
+
+export async function listHomepageVideoMedia(limit = 50): Promise<HomepageVideoMedia[]> {
   const nowIso = new Date().toISOString();
   const { data, error } = await getSupabaseAdminClient()
     .from("media_assets")
-    .select("*")
+    .select("*,teams(name)")
     .eq("type", "VIDEO")
     .eq("access_level", "PUBLIC")
     .eq("status", "PUBLISHED")
@@ -329,7 +331,7 @@ export async function listHomepageVideoMedia(limit = 50): Promise<MediaAsset[]> 
     throw new Error(`Unable to fetch homepage video media: ${error.message}`);
   }
 
-  return (data ?? []) as MediaAsset[];
+  return (data ?? []) as HomepageVideoMedia[];
 }
 
 export async function listMediaForAdmin(limit = 100): Promise<MediaPayload> {

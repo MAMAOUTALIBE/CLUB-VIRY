@@ -45,22 +45,31 @@ test("priorité 1 : un vrai match en direct masque tous les médias", () => {
 test("priorité 2 : la dernière vidéo de match publiée est utilisée", () => {
   const selected = selectHomeMediaCard(null, [
     media({ id: "older-match", content_kind: "MATCH", published_at: "2026-08-25T09:00:00.000Z" }),
-    media({ id: "latest-match", content_kind: "MATCH", published_at: "2026-08-26T09:00:00.000Z" })
+    media({ id: "latest-match", content_kind: "MATCH", published_at: "2026-08-26T09:00:00.000Z" }),
+    media({ id: "newer-training", published_at: "2026-08-27T09:00:00.000Z" })
   ], now);
   assert.equal(selected?.kind, "VIDEO");
   assert.equal(selected?.id, "latest-match");
 });
 
-test("priorité 3 : les contenus d'entraînement ne remplacent jamais les photos", () => {
+test("priorité 3 : la dernière vidéo d'entraînement remplace les photos", () => {
   const selected = selectHomeMediaCard(null, [
-    media({ id: "recording" }),
-    media({ id: "training-live", is_live: true, starts_at: "2026-08-27T11:00:00.000Z", ends_at: "2026-08-27T13:00:00.000Z" })
+    media({ id: "older-training", published_at: "2026-08-25T09:00:00.000Z" }),
+    media({ id: "latest-training", published_at: "2026-08-26T09:00:00.000Z", teams: { name: "U16 A" } })
   ], now);
-  assert.equal(selected, null);
+  assert.equal(selected?.kind, "VIDEO");
+  assert.equal(selected?.id, "latest-training");
+  assert.equal(selected?.contentKind, "TRAINING");
+  assert.equal(selected?.teamName, "U16 A");
 });
 
 test("un média de match marqué direct ne simule pas un match LIVE du calendrier", () => {
   const selected = selectHomeMediaCard(null, [media({ content_kind: "MATCH", is_live: true })], now);
+  assert.equal(selected, null);
+});
+
+test("un direct d'entraînement ne remplace pas une vidéo publiée", () => {
+  const selected = selectHomeMediaCard(null, [media({ is_live: true, starts_at: "2026-08-27T11:00:00.000Z", ends_at: "2026-08-27T13:00:00.000Z" })], now);
   assert.equal(selected, null);
 });
 
